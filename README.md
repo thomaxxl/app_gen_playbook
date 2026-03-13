@@ -1,0 +1,67 @@
+# App Development Playbook
+
+This directory is now organized around the following top-level areas:
+
+- `playbook/`
+  Static role, process, phase, and compatibility instructions.
+- `specs/`
+  Generic artifact templates plus durable technical contracts.
+- `templates/`
+  Copy-and-adapt templates that mirror the generated `app/` shape.
+- `runs/`
+  Mutable execution state for the active run.
+- `example/`
+  A cleaned preserved example generated from this playbook.
+- `app/`
+  The generated-application output slot for the active or most recent run.
+- this `README.md`
+  The top-level index.
+
+## Start here
+
+1. [playbook/README.md](playbook/README.md)
+2. [runs/README.md](runs/README.md)
+3. [specs/README.md](specs/README.md)
+4. [templates/README.md](templates/README.md)
+5. [example/README.md](example/README.md)
+6. [app/README.md](app/README.md)
+
+## Complexity envelope
+
+This playbook currently fits best when the target app stays within a modest
+admin-app shape:
+
+- a small number of core resources
+- one or a few reference resources
+- limited LogicBank rules
+- one or a few custom pages
+- SQLite bootstrap data
+
+It MAY be adapted to larger domains, but the operator SHOULD expect more
+manual artifact work and non-starter template substitution.
+
+## Run-local files
+
+The active run root is:
+
+- [runs/current/README.md](runs/current/README.md)
+
+The canonical run brief copy is:
+
+- [runs/current/input.md](runs/current/input.md)
+
+Run-local remarks and verification state live under:
+
+- [runs/current/remarks.md](runs/current/remarks.md)
+- [runs/current/artifacts/README.md](runs/current/artifacts/README.md)
+- [runs/current/evidence/README.md](runs/current/evidence/README.md)
+
+Artifact location rule:
+
+- `specs/product/`, `specs/architecture/`, `specs/ux/`, and
+  `specs/backend-design/` are generic template sources
+- run-specific artifacts MUST be authored under `runs/current/artifacts/`
+- accepted artifacts MAY later be copied into `app/docs/`
+- the preserved airport-specific filled example lives under `example/specs/`
+- an explicit app-only maintenance pass MAY update `app/` while leaving
+  `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`

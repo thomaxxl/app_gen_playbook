@@ -1,0 +1,200 @@
+resources:
+  Gate:
+    endpoint: /api/gates
+    label: Gates
+    user_key: code
+    menu_order: 10
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      code:
+        type: text
+        label: Gate
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      terminal:
+        type: text
+        label: Terminal
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      flight_count:
+        type: number
+        label: Flights Assigned
+        readonly: true
+        order: 30
+        list: true
+        show: true
+        create: false
+        edit: false
+      total_delay_minutes:
+        type: number
+        label: Total Delay Minutes
+        readonly: true
+        order: 40
+        list: true
+        show: true
+        create: false
+        edit: false
+    tab_groups:
+      related:
+        label: Related Flights
+        relationships:
+          - flights
+
+  Flight:
+    endpoint: /api/flights
+    label: Flights
+    user_key: flight_number
+    menu_order: 20
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      flight_number:
+        type: text
+        label: Flight Number
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      destination:
+        type: text
+        label: Destination
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      scheduled_departure:
+        type: datetime
+        label: Scheduled Departure
+        required: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+      actual_departure:
+        type: datetime
+        label: Actual Departure
+        order: 40
+        list: true
+        show: true
+        create: true
+        edit: true
+      delay_minutes:
+        type: number
+        label: Delay Minutes
+        required: true
+        order: 50
+        list: true
+        show: true
+        create: true
+        edit: true
+      gate_id:
+        type: reference
+        label: Gate
+        reference: Gate
+        required: true
+        order: 60
+        list: true
+        show: true
+        create: true
+        edit: true
+      status_id:
+        type: reference
+        label: Status
+        reference: FlightStatus
+        required: true
+        order: 70
+        list: true
+        show: true
+        create: true
+        edit: true
+      status_code:
+        type: text
+        label: Status Code
+        readonly: true
+        order: 80
+        list: false
+        show: true
+        create: false
+        edit: false
+      is_departed:
+        type: boolean
+        label: Departed
+        readonly: true
+        order: 90
+        list: true
+        show: true
+        create: false
+        edit: false
+    tab_groups:
+      related:
+        label: Related Records
+        relationships:
+          - gate
+          - status
+
+  FlightStatus:
+    endpoint: /api/flight_statuses
+    label: Flight Statuses
+    user_key: label
+    menu_order: 30
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      code:
+        type: text
+        label: Code
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      label:
+        type: text
+        label: Label
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      is_departed:
+        type: boolean
+        label: Departure Final
+        required: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+    tab_groups:
+      related:
+        label: Related Flights
+        relationships:
+          - flights

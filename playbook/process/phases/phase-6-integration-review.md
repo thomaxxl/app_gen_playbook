@@ -1,0 +1,44 @@
+# Phase 6 - Integration Review
+
+Lead: Architect
+
+## Goal
+
+Verify that the app works as a system, not only as separate outputs.
+
+## Trigger
+
+This phase begins when the Architect agent receives an integration-review or
+readiness note in:
+
+- `runs/current/role-state/architect/inbox/`
+
+## Activities
+
+- run end-to-end flows
+- compare implementation against `runs/current/artifacts/product/`
+- compare implementation against `runs/current/artifacts/architecture/`
+- compare implementation against `runs/current/artifacts/ux/`
+- compare implementation against `runs/current/artifacts/backend-design/`
+- compare implementation against `specs/contracts/frontend/`,
+  `specs/contracts/backend/`, and `specs/contracts/rules/` technical
+  contracts
+- verify schema/runtime wiring
+- verify frontend behavior against real backend data
+- verify rules across create/update/delete/reparent flows
+- verify empty/loading/error states
+- verify docs match what was built
+
+## Outputs
+
+- `runs/current/artifacts/architecture/integration-review.md`
+- updated `runs/current/artifacts/architecture/decision-log.md` when new
+  cross-layer decisions are
+  required
+
+## Exit criteria
+
+- frontend and backend contracts align
+- documentation matches implementation
+- the app can be explained without caveats
+- follow-up inbox notes are sent if more work is required

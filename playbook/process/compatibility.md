@@ -1,0 +1,132 @@
+# Compatibility Matrix
+
+This file defines the baseline local runtime expectations for the playbook.
+
+## Python
+
+- baseline: Python `3.12`
+- requirement level: required for the standard backend profile
+
+## Node
+
+- baseline: Node `24+`
+- requirement level: required for the standard frontend profile
+
+The current validated frontend stack uses Vite `6.2.2` with Node `24+`.
+Do not assume an arbitrary system `node` binary is compatible.
+
+## Virtual environments
+
+Preferred path:
+
+- `python3.12 -m venv .venv`
+
+Fallback if `venv` or `ensurepip` is unavailable:
+
+- use a pre-provisioned virtual environment
+- use an already-existing interpreter environment
+- use another documented local environment manager
+
+Do not assume venv creation always works in the target environment.
+
+Mounted or restricted filesystems MAY also block or degrade:
+
+- executable-bit preservation
+- symlink-heavy install layouts
+- `python -m venv` creation
+- `pip install --target ...` behavior compared with a normal local disk
+- frontend typecheck/build performance or completion on large dependency trees
+
+If the target path is a mounted or host-shared filesystem and the standard
+environment path is unstable, the operator MAY:
+
+- install backend dependencies into a local `.deps/` directory with
+  `pip install --target`
+- run backend commands with `PYTHONPATH` pointing at that directory
+- verify frontend build or typecheck from a local-disk copy such as `/tmp`
+  when the mounted path stalls or fails for environmental reasons
+
+Any such workaround MUST be recorded as a compatibility deviation.
+
+Generated scripts such as `app/run.sh` SHOULD be runnable as:
+
+- `bash ./run.sh`
+
+and MUST NOT rely only on preserved executable bits.
+
+## Early environment gate
+
+Before implementation starts, record whether the local environment can provide:
+
+- a working Python `3.12` environment
+- a working `venv` or equivalent isolated interpreter
+- the declared frontend Node runtime
+- local socket creation / localhost verification where required
+
+If any of those are not available, the agent must record a compatibility
+deviation and the chosen workaround before continuing.
+
+## Backend package policy
+
+- SAFRS: install as a normal pip package
+- LogicBank: temporarily install from a local checkout only when explicitly
+  requested through `LOCAL_LOGICBANK_PATH`
+
+The playbook does not infer a universal SAFRS version pin. Each generated app
+must record the validated published `safrs==...` version it actually uses once
+that version is selected and verified.
+
+The local LogicBank checkout override is temporary. Switch back to the normal
+published pip package when the next LogicBank release with the required fix is
+available.
+
+Current validated example:
+
+- `LOCAL_LOGICBANK_PATH=/home/t/lab/LogicBank`
+
+Important:
+
+- if `LOCAL_LOGICBANK_PATH` is set, install with:
+  `pip install --no-deps "$LOCAL_LOGICBANK_PATH"`
+- if that override is unavailable or unset, install the published package
+  with `pip install --no-deps logicbank`
+- do not let the local LogicBank checkout downgrade the backend SQLAlchemy
+  stack through its own dependency metadata
+
+## Frontend package policy
+
+- keep the frontend dependency set aligned with Node `24+`
+- `safrs-jsonapi-client` SHOULD be pinned through an immutable tarball URL or
+  a published registry release, not a git dependency
+- if the selected package artifact references built outputs such as `dist/`
+  that are missing from the installed artifact, the operator MUST replace that
+  artifact with a validated tarball or published release before continuing
+- if the available environment cannot provide the house Node runtime, record an
+  explicit compatibility deviation and repin the frontend stack intentionally
+  rather than silently mixing incompatible versions
+
+## Verification caveat
+
+The normal expectation is that local backend verification uses HTTP-style
+integration tests. If the local environment breaks the in-process ASGI/HTTP
+path, follow:
+
+- `../../specs/contracts/backend/verification-fallbacks.md`
+
+and record the fallback path used.
+
+Local sandbox or container restrictions may also block socket creation or
+localhost probing. Treat those as environment constraints that must be
+recorded, not as silent test failures.
+
+Browser-level Playwright verification may require execution outside a strict
+sandbox if the sandbox cannot create local sockets or launch the required
+browser runtime. If that happens, the agent MUST record that constraint and
+run the smoke suite in the nearest available host environment instead of
+dropping the gate silently.
+
+## Package-install layout caveat
+
+If the environment does not support symlink-friendly or editable-install
+layouts reliably, the generated app SHOULD prefer plain pip/npm installs over
+filesystem tricks that depend on preserved links across mounted paths.

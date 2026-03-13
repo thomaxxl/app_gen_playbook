@@ -1,0 +1,343 @@
+resources:
+  Tournament:
+    endpoint: /api/tournaments
+    label: Tournaments
+    user_key: code
+    menu_order: 10
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      code:
+        type: text
+        label: Code
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      name:
+        type: text
+        label: Tournament
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      city:
+        type: text
+        label: City
+        required: true
+        search: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+      start_date:
+        type: datetime
+        label: Start
+        required: true
+        order: 40
+        list: true
+        show: true
+        create: true
+        edit: true
+      end_date:
+        type: datetime
+        label: End
+        order: 50
+        list: true
+        show: true
+        create: true
+        edit: true
+      player_count:
+        type: number
+        label: Players
+        readonly: true
+        order: 60
+        list: true
+        show: true
+        create: false
+        edit: false
+      pairing_count:
+        type: number
+        label: Pairings
+        readonly: true
+        order: 70
+        list: true
+        show: true
+        create: false
+        edit: false
+      reported_pairing_count:
+        type: number
+        label: Reported Pairings
+        readonly: true
+        order: 80
+        list: true
+        show: true
+        create: false
+        edit: false
+    tab_groups:
+      related:
+        label: Related Records
+        relationships:
+          - players
+          - pairings
+
+  Player:
+    endpoint: /api/players
+    label: Players
+    user_key: full_name
+    menu_order: 20
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      full_name:
+        type: text
+        label: Player
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      federation_id:
+        type: text
+        label: Federation ID
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      rating:
+        type: number
+        label: Rating
+        required: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+      seed_number:
+        type: number
+        label: Seed
+        required: true
+        order: 40
+        list: true
+        show: true
+        create: true
+        edit: true
+      tournament_id:
+        type: reference
+        label: Tournament
+        reference: Tournament
+        required: true
+        order: 50
+        list: true
+        show: true
+        create: true
+        edit: true
+    tab_groups:
+      related:
+        label: Related Records
+        relationships:
+          - tournament
+          - white_pairings
+          - black_pairings
+
+  Pairing:
+    endpoint: /api/pairings
+    label: Pairings
+    user_key: pairing_code
+    menu_order: 30
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      pairing_code:
+        type: text
+        label: Pairing Code
+        readonly: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: false
+        edit: false
+      round_number:
+        type: number
+        label: Round
+        required: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      board_number:
+        type: number
+        label: Board
+        required: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+      scheduled_at:
+        type: datetime
+        label: Scheduled
+        required: true
+        order: 40
+        list: true
+        show: true
+        create: true
+        edit: true
+      reported_at:
+        type: datetime
+        label: Reported
+        order: 50
+        list: true
+        show: true
+        create: true
+        edit: true
+      result_summary:
+        type: text
+        label: Result
+        search: true
+        order: 60
+        list: true
+        show: true
+        create: true
+        edit: true
+      tournament_id:
+        type: reference
+        label: Tournament
+        reference: Tournament
+        required: true
+        order: 70
+        list: true
+        show: true
+        create: true
+        edit: true
+      white_player_id:
+        type: reference
+        label: White
+        reference: Player
+        required: true
+        order: 80
+        list: true
+        show: true
+        create: true
+        edit: true
+      black_player_id:
+        type: reference
+        label: Black
+        reference: Player
+        required: true
+        order: 90
+        list: true
+        show: true
+        create: true
+        edit: true
+      status_id:
+        type: reference
+        label: Status
+        reference: PairingStatus
+        required: true
+        order: 100
+        list: true
+        show: true
+        create: true
+        edit: true
+      status_code:
+        type: text
+        label: Status Code
+        readonly: true
+        order: 110
+        list: false
+        show: true
+        create: false
+        edit: false
+      is_reported:
+        type: boolean
+        label: Reported
+        readonly: true
+        order: 120
+        list: true
+        show: true
+        create: false
+        edit: false
+      reported_value:
+        type: number
+        label: Reported Flag
+        readonly: true
+        hidden: true
+        order: 130
+        list: false
+        show: false
+        create: false
+        edit: false
+    tab_groups:
+      related:
+        label: Related Records
+        relationships:
+          - tournament
+          - white_player
+          - black_player
+          - status
+
+  PairingStatus:
+    endpoint: /api/pairing_statuses
+    label: Pairing Statuses
+    user_key: label
+    menu_order: 40
+    attributes:
+      id:
+        type: number
+        readonly: true
+        hidden: true
+      code:
+        type: text
+        label: Code
+        required: true
+        search: true
+        order: 10
+        list: true
+        show: true
+        create: true
+        edit: true
+      label:
+        type: text
+        label: Label
+        required: true
+        search: true
+        order: 20
+        list: true
+        show: true
+        create: true
+        edit: true
+      is_reported:
+        type: boolean
+        label: Final Result
+        required: true
+        order: 30
+        list: true
+        show: true
+        create: true
+        edit: true
+    tab_groups:
+      related:
+        label: Related Pairings
+        relationships:
+          - pairings

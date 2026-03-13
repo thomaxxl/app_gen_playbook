@@ -1,0 +1,103 @@
+# Frontend Scaffold
+
+This file defines the minimal file tree for a runnable starter frontend.
+
+Load this file when creating the frontend skeleton from scratch or checking
+whether the shipped templates are complete.
+
+## Required files
+
+```text
+frontend/
+  index.html
+  package.json
+  tsconfig.json
+  tsconfig.app.json
+  tsconfig.node.json
+  vite.config.ts
+  vitest.config.ts
+  playwright.config.ts
+  src/
+    App.tsx
+    Landing.tsx
+    config.ts
+    main.tsx
+    vite-env.d.ts
+    generated/
+      resourcePages.ts
+      resources/
+        <one wrapper file per resource named in ../../architecture/resource-naming.md>
+    shared-runtime/
+      SchemaDrivenAdminApp.tsx
+      resourceRegistry.tsx
+      admin/
+        schemaContext.tsx
+        resourceMetadata.ts
+        createSearchEnabledDataProvider.ts
+    shims/
+      fs-promises.ts
+  tests/
+    SchemaDrivenAdminApp.smoke.test.tsx
+    schemaContext.test.ts
+    createSearchEnabledDataProvider.test.ts
+    vite.config.test.ts
+    smoke.e2e.spec.ts
+```
+
+## Template source
+
+These files are shipped under `templates/app/frontend/`:
+
+- `index.html.md`
+- `package.json.md`
+- `tsconfig.json.md`
+- `tsconfig.app.json.md`
+- `tsconfig.node.json.md`
+- `vite.config.ts.md`
+- `vitest.config.ts.md`
+- `playwright.config.ts.md`
+- `main.tsx.md`
+- `vite-env.d.ts.md`
+- `config.ts.md`
+- `App.tsx.md`
+- `Landing.tsx.md`
+- `generated/resources/Collection.tsx.md`
+- `generated/resources/Item.tsx.md`
+- `generated/resources/Status.tsx.md`
+- `resourcePages.ts.md`
+- `SchemaDrivenAdminApp.tsx.md`
+- `shared-runtime/admin/schemaContext.tsx.md`
+- `shared-runtime/admin/resourceMetadata.ts.md`
+- `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
+- `shared-runtime/resourceRegistry.tsx.md`
+- `fs-promises.ts.md`
+- `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+- `tests/schemaContext.test.ts.md`
+- `tests/resourceMetadata.test.ts.md`
+- `tests/createSearchEnabledDataProvider.test.ts.md`
+- `tests/vite.config.test.ts.md`
+- `tests/smoke.e2e.spec.ts.md`
+
+## Required build scripts
+
+The starter frontend must support:
+
+- `npm run dev`
+- `npm run check`
+- `npm run test`
+- `npm run test:e2e`
+- `npm run build`
+
+`npm run build` should run type-checking before the Vite production build.
+
+## Notes
+
+- The frontend scaffold must be complete enough to run without first generating
+  a hidden Vite starter app elsewhere.
+- Additional project-specific files are allowed, but the required files above
+  are the minimum contract for the starter playbook.
+- For non-starter domains, the wrapper files under `generated/resources/` MUST
+  be replaced with one file per resource declared in
+  `../../architecture/resource-naming.md`.
+- The starter `Collection`, `Item`, and `Status` wrapper templates are worked
+  examples, not a universal file-name contract for every app.

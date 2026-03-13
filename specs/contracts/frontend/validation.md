@@ -1,0 +1,91 @@
+# Frontend Validation
+
+This file defines the minimum frontend validation checklist for generated apps.
+
+## Build validation
+
+- `npm install` succeeds
+- `npm run check` succeeds
+- `npm run test` succeeds
+- `npm run test:e2e` succeeds
+- `npm run build` succeeds
+- built app loads under `/admin-app/`
+
+## Route validation
+
+- `/admin-app/#/Landing` works
+- `/admin-app/#/<Resource>` works for at least one generated resource
+- hard refresh on a hash route still works
+
+## Contract validation
+
+- `/ui/admin/admin.yaml` loads successfully
+- `admin.yaml` load failure is visible
+- explicit `resourcePages` are wired into the app
+- reference fields display readable labels, not raw ids, in custom views
+
+## Automated smoke validation
+
+The starter frontend MUST ship automated tests for:
+
+- `SchemaDrivenAdminApp` bootstrap success and bootstrap failure rendering
+- metadata lookup by React-Admin resource name, including a multi-word
+  resource such as `FlightStatus` resolving through `schema.resourceByType`
+- render-time resource-registration failure with a visible fallback screen
+- grouped search-filter composition when `q` and other list filters are both
+  present
+- Vite base-path and proxy configuration for `/admin-app/`, `/jsonapi.json`,
+  and `/ui`
+
+These tests do not replace browser-level QA, but they are the minimum
+executable contract for the frontend starter.
+
+## Mandatory Playwright smoke validation
+
+Before delivery, the generated app MUST pass a browser-level Playwright smoke
+suite with at least this flow:
+
+1. start the app on fixed ports
+2. wait for backend `/healthz` and frontend `/admin-app/`
+3. open `/admin-app/#/Landing`
+4. fail on browser console errors, page errors, and failed same-origin
+   network requests
+5. assert `/ui/admin/admin.yaml` returns `200`
+6. assert the landing page loads without the bootstrap-error or landing-error
+   screen
+7. assert the key seeded collection request returns `200`
+8. navigate to at least one generated resource route and verify seeded records
+   render
+9. prove generated React-Admin resources are registered as direct `Admin`
+   children by verifying the resource route resolves to a list page rather
+   than a catch-all error route
+10. retain trace, screenshot, and video on failure
+
+If browser execution is blocked by sandbox or host constraints, the agent MUST
+record the constraint and run the suite in the nearest available host
+environment instead of skipping it silently.
+
+## CRUD validation
+
+- one list view works
+- one show view works
+- one create flow works
+- one edit flow works
+- one delete flow works
+
+## Relationship validation
+
+- one reference field resolves correctly
+- one custom view or chart handles related labels correctly
+
+## Custom-view validation
+
+- `Landing.tsx` is reachable
+- it links or navigates into the admin resources
+- loading, empty, and error states are visible
+
+If D3 is used:
+
+- the chart renders
+- the chart handles empty data
+- the chart does not break the surrounding layout on a narrow viewport

@@ -1,0 +1,66 @@
+# Artifact Metadata
+
+Use this file when creating or reviewing persistent artifacts in:
+
+- `runs/current/artifacts/product/`
+- `runs/current/artifacts/architecture/`
+- `runs/current/artifacts/ux/`
+- `runs/current/artifacts/backend-design/`
+- `app/docs/` after promotion, when used
+
+Required metadata block format:
+
+```md
+owner: product_manager
+phase: phase-1-product-definition
+status: stub
+depends_on:
+  - none
+unresolved:
+  - none
+last_updated_by: product_manager
+```
+
+Allowed `status` values:
+
+- `stub`
+- `draft`
+- `ready-for-handoff`
+- `approved`
+- `blocked`
+- `superseded`
+
+Rules:
+
+- the metadata block belongs at the top of the file
+- `depends_on` should name concrete files when there are real prerequisites
+- `unresolved` should be explicit; use `none` only when nothing material is
+  open
+- `stub` means seeded placeholder content and must not be treated as a real
+  authored artifact
+- the owning role may set `draft` and `ready-for-handoff`
+- `approved` must be set by the receiving or gate-owning review role, not by
+  the current owner self-approving its own artifact
+- that review role MAY edit only the metadata block when setting `approved`,
+  `blocked`, `superseded`, `unresolved`, or `last_updated_by`
+- the review role MUST NOT change artifact body content as part of approval
+- an artifact MUST NOT be marked `approved` unless the gate-owning role has a
+  corresponding processed inbox item and records the approval in its
+  `context.md`
+- if an approved artifact claims backend tests, frontend tests, or Playwright
+  success, the artifact SHOULD reference supporting files under `evidence/`
+- a handoff with `gate status: pass` or `pass with assumptions` should only
+  reference artifacts marked `ready-for-handoff` or `approved`
+
+## Approval example
+
+Example lifecycle:
+
+1. the owner writes the artifact and sets `status: draft`
+2. the owner completes the first pass and sets `status: ready-for-handoff`
+3. the receiving or gate-owning role reviews the artifact
+4. if the body is acceptable, that review role MAY update only the metadata
+   block to `status: approved`
+5. if the body is not acceptable, that review role MAY update only the
+   metadata block to `status: blocked` and record the unresolved review points
+6. any body-content fix after a blocked review returns to the owning role

@@ -1,0 +1,24 @@
+# Runs
+
+This directory contains mutable execution state.
+
+Use it for:
+
+- active run brief copies
+- run-local remarks
+- transient artifact staging
+- active role inboxes
+- processed handoffs
+- role runtime contexts
+- verification evidence
+
+Current run:
+
+- [current/README.md](current/README.md)
+
+Rules:
+
+- `current/` SHOULD be neutral before a new run begins
+- preserved historical runs SHOULD move under `../example/` or another archive
+- `current/` MAY remain unchanged during an explicit app-only maintenance pass
+  that updates only `../app/`
