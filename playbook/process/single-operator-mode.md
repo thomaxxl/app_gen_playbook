@@ -21,7 +21,7 @@ same artifact and inbox discipline as a multi-agent run.
 ## Historical-preserving app-only path
 
 A single operator MAY preserve `../../runs/current/` and modify only
-`../../app/` when all of the following are true:
+local `../../app/` when all of the following are true:
 
 - the task is explicitly scoped to an already-generated app
 - the operator is not claiming to perform a new full run

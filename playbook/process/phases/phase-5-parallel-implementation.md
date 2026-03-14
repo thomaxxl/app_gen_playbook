@@ -12,7 +12,7 @@ Implement frontend and backend against the approved contract.
 
 Implementation output belongs under:
 
-- `app/`
+- local gitignored `app/`
 
 ## Entry conditions
 

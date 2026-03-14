@@ -25,7 +25,7 @@ The active run uses:
 - `../../runs/current/artifacts/`
 - `../../runs/current/role-state/`
 - `../../runs/current/evidence/`
-- `../../app/`
+- local ignored `../../app/`
 
 Brief rule:
 
@@ -57,17 +57,19 @@ The playbook distinguishes three different states:
 - `../../runs/current/`
   The canonical run-state area for a new full run.
 - `../../app/`
-  The generated application output slot for the active or most recent run.
+  A local ignored generated application working tree for the active or most
+  recent run.
 
 If the task is a new full run, `../../runs/current/` MUST become the
 authoritative run record for that app and MUST be updated accordingly.
 
 If the task is explicitly an app-only maintenance pass on an existing app,
-`../../app/` MAY be updated without rewriting `../../runs/current/`. In that
+local `../../app/` MAY be updated without rewriting `../../runs/current/`. In
+that
 case, the operator MUST preserve the distinction between:
 
 - historical or neutral run-state under `../../runs/current/`
-- current implementation state under `../../app/`
+- current implementation state under local `../../app/`
 
 ## Fresh-run initialization
 
@@ -95,6 +97,10 @@ To start a new run:
    - `../../runs/current/input.md`
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
+9. create local gitignored `../../app/`
+10. seed local `../../app/` from the relevant `../../templates/app/` files as
+    later phases require
+
 This procedure applies to a new full run. It does not apply to an app-only
 maintenance pass that intentionally preserves `../../runs/current/`.
 
@@ -102,7 +108,7 @@ maintenance pass that intentionally preserves `../../runs/current/`.
 
 When a run is complete:
 
-- `../../app/` MUST contain the generated app
+- local `../../app/` MUST contain the generated app
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree
@@ -112,6 +118,6 @@ When a run is complete:
   show the final enabled/disabled capability decisions
 - `../../runs/current/artifacts/architecture/load-plan.md` SHOULD preserve the
   final role-scoped load set used during the run
-- `../../app/docs/` MAY contain promoted accepted copies of those artifacts
+- local `../../app/docs/` MAY contain promoted accepted copies of those artifacts
 - `../../runs/current/evidence/` SHOULD contain verification summaries
 - all core-agent inboxes under `../../runs/current/role-state/` MUST be empty

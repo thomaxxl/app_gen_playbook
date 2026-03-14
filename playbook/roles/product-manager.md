@@ -75,6 +75,13 @@ For a fresh run, the Product Manager MUST NOT use `../../example/` or
 - app maintenance
 - playbook maintenance
 
+Fresh-run initialization note:
+
+- for a new run, the Product Manager SHOULD ensure local gitignored
+  `../../app/` exists before handoff so later roles have a stable output root
+- that directory creation step MUST NOT be treated as product evidence or as
+  committed playbook content
+
 Research and framing artifacts MUST separate:
 
 - input-derived facts

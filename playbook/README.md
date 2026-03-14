@@ -17,7 +17,8 @@ Path rule:
 - `../specs/product/`, `../specs/architecture/`, `../specs/ux/`, and
   `../specs/backend-design/` contain generic artifact templates
 - run-owned artifacts MUST be written under `../runs/current/artifacts/`
-- accepted artifacts MAY later be copied into `../app/docs/`
+- accepted artifacts MAY later be copied into local `../app/docs/`
+- local generated-app implementation output lives under gitignored `../app/`
 
 Capability rule:
 
@@ -44,7 +45,7 @@ Segmentation rule:
   - `../specs/features/`
   - `../templates/`
   - `../runs/current/`
-  - `../app/`
+  - local ignored `../app/`
 - a change that increases cross-layer reading or mixes optional material back
   into core layers MUST include an explicit documented justification
 

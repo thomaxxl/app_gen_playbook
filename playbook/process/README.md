@@ -4,7 +4,7 @@ This directory contains the static phased workflow for the playbook.
 
 Generated application output belongs under:
 
-- `../../app/`
+- local gitignored `../../app/`
 
 Interpretation rule:
 
@@ -21,7 +21,7 @@ Mutable run state belongs under:
 
 - `../../runs/current/`
 
-An explicit app-only maintenance pass MAY update `../../app/` without
+An explicit app-only maintenance pass MAY update local `../../app/` without
 rewriting `../../runs/current/`; see
 `playbook-execution-outputs.md` and `single-operator-mode.md`.
 

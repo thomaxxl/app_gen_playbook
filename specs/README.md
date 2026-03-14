@@ -18,5 +18,5 @@ Rules:
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are generic artifact templates.
 - Run-specific artifacts MUST be written under `../runs/current/artifacts/`.
-- Accepted artifacts MAY later be copied into `../app/docs/`.
+- Accepted artifacts MAY later be copied into local `../app/docs/`.
 - `../example/` is a preserved runnable example app, not a second spec source.

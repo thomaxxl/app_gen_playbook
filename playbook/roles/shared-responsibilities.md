@@ -12,7 +12,7 @@ These rules apply to every agent.
 - Load only the core contracts, templates, and feature packs authorized for
   the current role by `runs/current/artifacts/architecture/load-plan.md`.
 - Disabled or undecided optional feature packs MUST NOT be loaded, summarized,
-  copied into `app/`, or used as design input.
+  copied into local gitignored `app/`, or used as design input.
 
 ## Artifact discipline
 

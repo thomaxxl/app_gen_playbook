@@ -15,7 +15,8 @@ A feature is done only when all of these are true:
 - docs and templates match the implementation
 - product acceptance has passed
 - no required artifact remains `status: stub`
-- generated application output lives under `app/`, not mixed into the
+- generated application output lives under local gitignored `app/`, not mixed
+  into the
   playbook contract directories
 - integration and acceptance approvals have matching processed inbox items and
   matching gate-owner `context.md` entries

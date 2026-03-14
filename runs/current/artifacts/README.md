@@ -19,7 +19,7 @@ Generic template sources live in:
 
 Accepted copies MAY later be promoted into:
 
-- `../../../app/docs/`
+- local `../../../app/docs/`
 
 Architecture artifacts MUST also include:
 

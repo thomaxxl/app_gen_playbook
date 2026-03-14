@@ -6,7 +6,7 @@ Use this file when creating or reviewing persistent artifacts in:
 - `runs/current/artifacts/architecture/`
 - `runs/current/artifacts/ux/`
 - `runs/current/artifacts/backend-design/`
-- `app/docs/` after promotion, when used
+- local `app/docs/` after promotion, when used
 
 Required metadata header format:
 

@@ -22,15 +22,17 @@ The preserved generated example remains outside this directory in:
 
 - [../../example/README.md](../../example/README.md)
 
-The current generated-app output slot is:
+The generated-app working tree for the active run is:
 
-- [../../app/README.md](../../app/README.md)
+- local gitignored `../../app/`
 
 Rules:
 
 - `input.md` MUST be replaced with the next real brief before execution
 - `remarks.md` MUST stay run-local and neutral until the next run produces new
   findings
+- the Product Manager or run initializer SHOULD create local `../../app/`
+  before implementation begins
 - `artifacts/` holds the run-owned product, architecture, UX, and
   backend-design artifacts
 - `evidence/` holds the run-owned verification summaries

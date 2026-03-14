@@ -21,7 +21,7 @@ Rules:
 - `current/` SHOULD be neutral before a new run begins
 - preserved historical runs SHOULD move under `../example/` or another archive
 - `current/` MAY remain unchanged during an explicit app-only maintenance pass
-  that updates only `../app/`
+  that updates only local `../app/`
 - `current/artifacts/architecture/capability-profile.md` and
   `current/artifacts/architecture/load-plan.md` MUST control optional
   feature-pack loading for the run

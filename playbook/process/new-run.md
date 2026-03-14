@@ -26,6 +26,9 @@ Required steps:
    from the starter template shape
 9. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
+10. create local gitignored `../../app/`
+11. treat local `../../app/` as implementation workspace, not as the
+    canonical brief source
 
 Rules:
 
@@ -38,3 +41,5 @@ Rules:
 - if `../../runs/current/input.md` and the Product Manager inbox `INPUT.md`
   ever diverge during setup, `../../runs/current/input.md` MUST win and the
   inbox copy MUST be refreshed before execution starts
+- local `../../app/` MUST remain outside git and MUST be recreated locally for
+  each new run as needed

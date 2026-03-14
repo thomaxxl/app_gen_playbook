@@ -44,8 +44,8 @@ mode.
 
 In app-only maintenance mode:
 
-- `../../app/` is the only implementation tree that MAY be modified
-- `../../app/REMARKS.md` MAY be updated to record app-local findings
+- local `../../app/` is the only implementation tree that MAY be modified
+- local `../../app/REMARKS.md` MAY be updated to record app-local findings
 - `../../runs/current/` MAY remain neutral or historical
 - `../../example/` MUST remain unchanged unless the task explicitly asks to
   archive or refresh the preserved example
@@ -59,11 +59,11 @@ it was intentionally left unchanged.
 Once the process reaches implementation, generated application code, tests,
 and run scripts MUST be created under:
 
-- `../../app/`
+- local gitignored `../../app/`
 
 Accepted artifact copies MAY later be placed under:
 
-- `../../app/docs/`
+- local `../../app/docs/`
 
 Implementation work MUST NOT patch the static playbook source while building
 the app unless the task explicitly asks for a playbook update.

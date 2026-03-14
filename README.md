@@ -26,7 +26,7 @@ This directory is now organized around the following top-level areas:
 - `example/`
   A cleaned preserved example generated from this playbook.
 - `app/`
-  The generated-application output slot for the active or most recent run.
+  A local ignored generated-application working tree created when a run starts.
 - this `README.md`
   The top-level index.
 
@@ -49,7 +49,7 @@ segmentation:
 - keep optional capability packs under `specs/features/`
 - keep literal code templates under `templates/`
 - keep mutable run state under `runs/current/`
-- keep generated implementation output under `app/`
+- keep generated implementation output under the local ignored `app/`
 
 Agents MUST NOT collapse these layers together or broaden role reading
 requirements without an explicit documented reason.
@@ -63,7 +63,7 @@ Use these files to understand the repository layout and the current run state:
 3. [specs/README.md](specs/README.md)
 4. [templates/README.md](templates/README.md)
 5. [example/README.md](example/README.md)
-6. [app/README.md](app/README.md)
+6. [templates/app/project/README.app.md](templates/app/project/README.app.md)
 
 ## Fresh-run agent reading rule
 
@@ -116,10 +116,18 @@ Artifact location rule:
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are generic template sources
 - run-specific artifacts MUST be authored under `runs/current/artifacts/`
-- accepted artifacts MAY later be copied into `app/docs/`
+- accepted artifacts MAY later be copied into local `app/docs/`
 - `example/` is a preserved runnable example app generated from this playbook
-- an explicit app-only maintenance pass MAY update `app/` while leaving
+- an explicit app-only maintenance pass MAY update local `app/` while leaving
   `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`
+
+Generated-app working-tree rule:
+
+- `app/` MUST be gitignored
+- `app/` MUST be created locally when a run starts
+- `app/` MUST NOT be treated as committed playbook source
+- for a fresh run, the Product Manager SHOULD create local `app/` after intake
+  setup so later roles have a stable output root
 
 Capability-loading rule:
 
