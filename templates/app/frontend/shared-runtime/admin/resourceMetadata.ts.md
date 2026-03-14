@@ -70,6 +70,7 @@ export interface ResourceAttributeMeta extends SchemaAttribute {
   reference?: string;
   required?: boolean;
   purpose?: string;
+  relationship?: ResourceRelationshipMeta;
   search?: boolean;
   show?: boolean;
   isPrimaryKey: boolean;
@@ -83,6 +84,7 @@ export interface ResourceMeta {
   label: string;
   menuOrder?: number;
   name: string;
+  relationshipByName: Record<string, ResourceRelationshipMeta>;
   relationships: ResourceRelationshipMeta[];
   searchColumns: Array<SearchCol & { label: string }>;
   userKey?: string;
@@ -209,8 +211,18 @@ function isLikelyPluralRelationship(value: string): boolean {
 }
 
 function inferRelationshipDirection(name: string, explicitDirection: unknown): "toone" | "tomany" {
-  if (explicitDirection === "toone" || explicitDirection === "tomany") {
-    return explicitDirection;
+  const normalized = String(explicitDirection ?? "").toLowerCase();
+
+  if (normalized === "tomany" || normalized === "many" || normalized === "to-many") {
+    return "tomany";
+  }
+
+  if (normalized === "toone" || normalized === "one" || normalized === "to-one") {
+    return "toone";
+  }
+
+  if (name.toLowerCase().endsWith("_records")) {
+    return "tomany";
   }
 
   return isLikelyPluralRelationship(name) ? "tomany" : "toone";
@@ -418,8 +430,15 @@ function buildRelationshipMeta(
   const orderedNames = Object.values(rawResource?.tab_groups ?? {}).flatMap(
     (group) => group.relationships ?? [],
   );
+  const schemaRelationshipNames = getSchemaRelationshipInputs(schema, resource)
+    .map((relationship) => relationship.name?.trim())
+    .filter((name): name is string => Boolean(name));
+  const orderedRelationshipNames = [
+    ...orderedNames,
+    ...schemaRelationshipNames.filter((name) => !orderedNames.includes(name)),
+  ];
 
-  for (const relationshipName of orderedNames) {
+  for (const relationshipName of orderedRelationshipNames) {
     if (relationshipsByName.has(relationshipName)) {
       continue;
     }
@@ -446,11 +465,11 @@ function buildRelationshipMeta(
     });
   }
 
-  const orderedRelationships = orderedNames
+  const orderedRelationships = orderedRelationshipNames
     .map((name) => relationshipsByName.get(name))
     .filter((relationship): relationship is ResourceRelationshipMeta => Boolean(relationship));
   const unorderedRelationships = [...relationshipsByName.values()].filter(
-    (relationship) => !orderedNames.includes(relationship.name),
+    (relationship) => !orderedRelationshipNames.includes(relationship.name),
   );
 
   return [...orderedRelationships, ...unorderedRelationships];
@@ -492,10 +511,25 @@ export function buildResourceMeta(
   }
   const rawAttributeMap = buildRawAttributeMap(rawResource);
   const relationships = buildRelationshipMeta(schema, rawYaml, resource);
+  const relationshipByName = Object.fromEntries(
+    relationships.map((relationship) => [relationship.name, relationship]),
+  ) as Record<string, ResourceRelationshipMeta>;
+  const relationshipByFk = new Map<string, ResourceRelationshipMeta>();
+
+  for (const relationship of relationships) {
+    if (relationship.direction !== "toone") {
+      continue;
+    }
+
+    for (const fk of relationship.fks) {
+      relationshipByFk.set(fk, relationship);
+    }
+  }
 
   return {
     attributes: schemaResource.attributeConfigs.map((attribute) => {
       const rawAttribute = rawAttributeMap.get(attribute.name);
+      const relationship = relationshipByFk.get(attribute.name);
       return {
         ...attribute,
         accept: rawAttribute?.accept,
@@ -510,6 +544,7 @@ export function buildResourceMeta(
         reference: rawAttribute?.reference,
         required: rawAttribute?.required,
         purpose: rawAttribute?.purpose,
+        relationship,
         search: isSearchEnabled(rawAttribute?.search),
         show: rawAttribute?.show,
         isPrimaryKey: isPrimaryKeyName(resource, attribute.name),
@@ -521,6 +556,7 @@ export function buildResourceMeta(
     label: normalizeLabel(rawResource?.label, resource),
     menuOrder: rawResource?.menu_order,
     name: resource,
+    relationshipByName,
     relationships,
     searchColumns: resolveSearchColumns(schema, rawYaml, resource).map((column) => ({
       ...column,
@@ -554,8 +590,14 @@ Required relationship extension:
   - raw `admin.yaml tab_groups`
 - `buildResourceMeta(...)` MUST attach a resolved `relationship` to a `toone`
   foreign-key attribute when `schema.fkToRelationship` identifies it
+- `buildResourceMeta(...)` SHOULD also expose `relationshipByName` so
+  `resourceRegistry.tsx` and `relationshipUi.tsx` can resolve relationships
+  without rebuilding lookup logic
 - raw `tab_groups` MUST be consumed here so the runtime can preserve
   author-defined relationship ordering and labels
+- author-declared `tab_groups` relationship order MUST win, but
+  schema-discovered relationship names not already listed MUST still be
+  appended so the runtime does not drop useful relationships
 - the runtime SHOULD maintain a relationship-by-name lookup here or in a
   closely related helper so list/show rendering can collapse duplicate
   foreign-key columns into one relationship display item

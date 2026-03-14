@@ -26,7 +26,6 @@ import {
   List,
   NumberField,
   NumberInput,
-  ReferenceField,
   ReferenceInput,
   Resource,
   SearchInput,
@@ -42,9 +41,11 @@ import {
   buildResourceMeta,
   type RawAdminYaml,
   type ResourceAttributeMeta,
+  type ResourceRelationshipMeta,
   type ResourceMeta,
   useResourceMeta,
 } from "./admin/resourceMetadata";
+import { RelatedRecordDialogLink } from "./relationshipUi";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -56,6 +57,10 @@ export interface ResourcePages {
   show: () => ReactElement;
   recordRepresentation?: string;
 }
+
+type DisplayItem =
+  | { kind: "attribute"; attribute: ResourceAttributeMeta }
+  | { kind: "relationship"; relationship: ResourceRelationshipMeta };
 
 export function makeSchemaDrivenPages(resourceName: string): ResourcePages {
   const ListPage = () => <SchemaDrivenList resource={resourceName} />;
@@ -128,6 +133,23 @@ function visibleAttributes(resourceMeta: ResourceMeta, mode: "list" | "show" | "
     .map(({ attribute }) => attribute);
 }
 
+function visibleDisplayItems(resourceMeta: ResourceMeta, mode: "list" | "show"): DisplayItem[] {
+  const items: DisplayItem[] = [];
+  const emittedRelationships = new Set<string>();
+
+  for (const attribute of visibleAttributes(resourceMeta, mode)) {
+    if (attribute.relationship && !emittedRelationships.has(attribute.relationship.name)) {
+      items.push({ kind: "relationship", relationship: attribute.relationship });
+      emittedRelationships.add(attribute.relationship.name);
+      continue;
+    }
+
+    items.push({ kind: "attribute", attribute });
+  }
+
+  return items;
+}
+
 function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
   const labels = resourceMeta.searchColumns.map((column) => column.label);
   if (labels.length === 0) {
@@ -143,21 +165,28 @@ function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
 }
 
 function renderField(
-  attribute: ResourceAttributeMeta,
+  item: DisplayItem,
   schema: ReturnType<typeof useAdminSchema>,
   rawYaml: RawAdminYaml,
 ) {
-  if (attribute.kind === "reference" && attribute.reference) {
-    const targetMeta = buildResourceMeta(schema, rawYaml, attribute.reference);
+  if (item.kind === "relationship") {
     return (
-      <ReferenceField
+      <RelatedRecordDialogLink
+        key={`relationship:${item.relationship.name}`}
+        relationship={item.relationship}
+      />
+    );
+  }
+
+  const { attribute } = item;
+
+  if (attribute.kind === "reference" && attribute.reference) {
+    return (
+      <TextField
         key={attribute.name}
         label={attribute.label}
-        reference={attribute.reference}
         source={attribute.name}
-      >
-        <TextField source={targetMeta.userKey ?? "id"} />
-      </ReferenceField>
+      />
     );
   }
 
@@ -266,7 +295,7 @@ function SchemaDrivenList({ resource }: { resource: string }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
   const resourceMeta = useResourceMeta(resource);
-  const attributes = visibleAttributes(resourceMeta, "list");
+  const displayItems = visibleDisplayItems(resourceMeta, "list");
   const filters = resourceMeta.searchColumns.length > 0
     ? [<SearchInput alwaysOn key="q" placeholder={buildSearchPlaceholder(resourceMeta)} source="q" />]
     : undefined;
@@ -274,7 +303,7 @@ function SchemaDrivenList({ resource }: { resource: string }) {
   return (
     <List filters={filters} perPage={DEFAULT_PAGE_SIZE}>
       <Datagrid rowClick="show">
-        {attributes.map((attribute) => renderField(attribute, schema, rawYaml))}
+        {displayItems.map((item) => renderField(item, schema, rawYaml))}
       </Datagrid>
     </List>
   );
@@ -284,12 +313,12 @@ function SchemaDrivenShow({ resource }: { resource: string }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
   const resourceMeta = useResourceMeta(resource);
-  const attributes = visibleAttributes(resourceMeta, "show");
+  const displayItems = visibleDisplayItems(resourceMeta, "show");
 
   return (
     <Show>
       <SimpleShowLayout>
-        {attributes.map((attribute) => renderField(attribute, schema, rawYaml))}
+        {displayItems.map((item) => renderField(item, schema, rawYaml))}
       </SimpleShowLayout>
     </Show>
   );
@@ -381,12 +410,21 @@ export function buildResources(
 Required relationship extension:
 
 - this file MUST import and use the helpers from `relationshipUi.tsx`
+- this file SHOULD use an explicit display-item model such as:
+  - scalar attribute display items
+  - relationship display items
 - generated list pages MUST render `toone` foreign-key-backed columns through
   `RelatedRecordDialogLink`, not raw scalar ids
+- FK-backed scalar attributes that carry `attribute.relationship` metadata
+  SHOULD be collapsed into one relationship display item so duplicate raw-FK
+  columns are suppressed
 - generated show pages MUST render:
   - `tomany` relationships as datagrid tabs
   - `toone` relationships as summary tabs
 - the relationship tab default MUST use the priority order defined in
   `specs/contracts/frontend/relationship-ui.md`
+- relationship tab ordering SHOULD use:
+  - `tab_groups` order first
+  - schema-discovered extra relationships appended afterward
 - generated forms MUST keep scalar foreign-key inputs even though list/show
   rendering uses relationship-aware helpers

@@ -27,6 +27,20 @@ is partial. It MUST combine:
 
 instead of assuming the normalizer output is complete.
 
+## High-level design
+
+The relationship UI MUST be implemented in two layers:
+
+1. metadata construction in `templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md`
+2. UI rendering in:
+   - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
+   - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`
+
+The generated frontend MUST NOT treat normalized SAFRS schema as the only
+source of truth for relationships. Sparse apps often have incomplete
+normalized relationship metadata, so the runtime MUST combine all available
+sources and then render from the synthesized relationship model.
+
 ## Metadata prerequisites
 
 The shared runtime MUST expose relationship metadata in `ResourceMeta`.
@@ -60,19 +74,35 @@ The runtime MUST also be able to look up a relationship by name so that:
 - a foreign-key attribute can be replaced by one rendered relationship column
 - show-page tabs can be rendered in the author-defined order
 
+`ResourceMeta` MUST also expose:
+
+- `relationshipByName`
+
+and `ResourceAttributeMeta` SHOULD expose:
+
+- `relationship?: ResourceRelationshipMeta`
+
+for any scalar FK attribute that maps to a readable `toone` relationship.
+
+This is the required mechanism for collapsing raw FK columns such as
+`device_id` into one readable relationship display item in list/show views.
+
 ## Incomplete metadata fallback rules
 
 If normalized schema metadata does not fully define a relationship, the
 runtime MUST apply these fallbacks:
 
 1. explicit normalized direction wins
-2. otherwise plural relationship name => `tomany`
-3. otherwise singular relationship name => `toone`
-4. if target resource metadata is absent, infer the target resource from
+2. explicit normalized values such as `many` or `to-many` => `tomany`
+3. explicit normalized values such as `one` or `to-one` => `toone`
+4. otherwise plural relationship name => `tomany`
+5. otherwise relationship names ending in `_records` => `tomany`
+6. otherwise singular relationship name => `toone`
+7. if target resource metadata is absent, infer the target resource from
    resource-name matching
-5. for inferred `toone`, use `<singular_relationship_name>_id` when that
+8. for inferred `toone`, use `<singular_relationship_name>_id` when that
    attribute exists
-6. for inferred `tomany`, inspect the target resource for a `toone`
+9. for inferred `tomany`, inspect the target resource for a `toone`
    relationship back to the parent and use that relationship's foreign-key
    attributes as the reverse join
 
@@ -139,6 +169,21 @@ The runtime MUST NOT leave a raw scalar such as `customer_id` or `employee_id`
 visible in the default generated UI when the relationship metadata is
 available.
 
+The generated runtime SHOULD use an explicit display-item model, for example:
+
+- attribute display items
+- relationship display items
+
+so that list/show rendering can:
+
+- preserve normal scalar attributes
+- replace FK-backed scalar attributes with one relationship display item
+- suppress duplicate relationship columns
+- honor relationship-level hide flags
+
+This display-item step belongs in `resourceRegistry.tsx`, not in ad hoc
+per-page code.
+
 ## Related-record dialog behavior
 
 Clickable related labels MUST use a dialog interaction with this behavior:
@@ -179,6 +224,11 @@ For `toone` tabs:
 
 - the runtime MUST fetch the related record lazily when it is not embedded
 - the runtime MUST show a summary panel rather than a one-row grid
+
+Relationship tab ordering MUST use:
+
+1. author-defined `tab_groups` ordering first
+2. schema-discovered relationships not already listed appended afterward
 
 ## Default tab selection
 

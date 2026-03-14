@@ -56,6 +56,7 @@ describe("resourceMetadata", () => {
       "code",
       "label",
     ]);
+    expect(resourceMeta.relationshipByName).toEqual({});
   });
 
   it("resolves search columns by React-Admin resource name", () => {
@@ -101,22 +102,24 @@ describe("resourceMetadata", () => {
 
     const sparseSchema = normalizeAdminYaml(adaptAdminYamlForClient(sparseYaml));
     const deviceMeta = buildResourceMeta(sparseSchema, sparseYaml, "Device");
+    const sessionMeta = buildResourceMeta(sparseSchema, sparseYaml, "Session");
 
     expect(deviceMeta.name).toBe("Device");
     expect(deviceMeta.endpoint).toBe("/api/devices");
-    // Replace this placeholder with concrete relationship assertions in the
-    // generated app. The runtime contract requires relationship synthesis
-    // from raw tab_groups plus reference/fallback metadata when the
-    // normalized relationship graph is incomplete.
-    expect(deviceMeta.relationships).toBeDefined();
+    expect(deviceMeta.relationships.map((relationship) => relationship.name)).toContain("sessions");
+    expect(deviceMeta.relationshipByName.sessions.direction).toBe("tomany");
+    expect(deviceMeta.relationshipByName.sessions.targetResource).toBe("Session");
+    expect(deviceMeta.relationshipByName.sessions.fks).toContain("device_id");
+    expect(sessionMeta.relationshipByName.device.direction).toBe("toone");
+    expect(sessionMeta.attributes.find((attribute) => attribute.name === "device_id")?.relationship?.name).toBe(
+      "device",
+    );
   });
 });
 ```
 
 Notes:
 
-- Generated apps SHOULD replace the sparse fallback placeholder assertion above
-  with concrete relationship expectations for the actual domain.
 - At minimum, the generated runtime MUST prove one sparse relationship example
   where `tab_groups` plus fallback inference still produce a usable
   relationship metadata entry.

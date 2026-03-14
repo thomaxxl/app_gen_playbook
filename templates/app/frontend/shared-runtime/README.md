@@ -30,3 +30,11 @@ the Northwind reference runtime.
 `admin/resourceMetadata.ts.md` is equally critical: it MUST synthesize
 relationship metadata from normalized schema, `fkToRelationship`, and raw
 `admin.yaml` so sparse-schema apps do not collapse back to raw-id-only UI.
+
+The relationship runtime is intentionally split into two layers:
+
+- `admin/resourceMetadata.ts.md` for metadata construction
+- `resourceRegistry.tsx.md` plus `relationshipUi.tsx.md` for rendering
+
+Do not collapse those layers into ad hoc per-page logic. Generated list/show
+pages MUST consume the synthesized relationship metadata instead.

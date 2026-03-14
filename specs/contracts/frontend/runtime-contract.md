@@ -178,6 +178,10 @@ At minimum, the runtime MUST:
 - render `tomany` show-page tabs as datagrids
 - render `toone` show-page tabs as summary panels
 - keep generated forms bound to scalar foreign-key inputs
+- attach resolved `toone` relationships to FK attributes so generated
+  list/show views can replace raw FK columns with relationship display items
+- expose relationship ordering and lookup metadata through `ResourceMeta`
+  instead of rebuilding that logic independently in each page component
 
 The runtime MUST NOT rely on raw-id-only rendering for generated relationship
 columns when relationship metadata is available.
