@@ -26,3 +26,5 @@ Rules:
   `../../runs/current/artifacts/architecture/load-plan.md`
 - disabled or undecided feature packs MUST NOT be loaded or used as design
   input
+- `deployment/` remains the packaging and runtime-toolchain contract namespace
+  even though the canonical role name is now DevOps

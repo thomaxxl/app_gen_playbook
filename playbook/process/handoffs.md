@@ -64,6 +64,21 @@ This handoff starts:
 - Phase 3 for UX/UI + Frontend
 - Phase 4 for Backend
 
+## Architect -> DevOps
+
+Complete only when:
+
+- `runs/current/artifacts/architecture/runtime-bom.md` is written
+- `runs/current/artifacts/architecture/route-and-entry-model.md` is written
+- `runs/current/artifacts/architecture/capability-profile.md` is written
+- `runs/current/artifacts/architecture/load-plan.md` is written
+- packaging, runtime normalization, or same-origin delivery is explicitly in
+  scope for the run
+
+Inbox target:
+
+- `../../runs/current/role-state/devops/inbox/`
+
 ## Frontend -> Architect
 
 Complete only when:
@@ -133,14 +148,83 @@ Inbox target:
 
 - `../../runs/current/role-state/architect/inbox/`
 
+## Frontend -> DevOps
+
+Complete only when:
+
+- the inbox message records the confirmed frontend build command
+- the inbox message records the required frontend runtime or Node version
+- the message identifies any packaging-relevant frontend constraints such as
+  `/admin-app/` asset paths or required same-origin routes
+
+Inbox target:
+
+- `../../runs/current/role-state/devops/inbox/`
+
+## Backend -> DevOps
+
+Complete only when:
+
+- the inbox message records the confirmed backend start command
+- the inbox message records the required backend runtime or Python version
+- the message identifies any packaging-relevant backend constraints such as
+  `/api`, `/docs`, `/ui`, or `/jsonapi.json`
+
+Inbox target:
+
+- `../../runs/current/role-state/devops/inbox/`
+
+## DevOps -> Architect
+
+Complete only when:
+
+- the inbox message identifies the packaging issue clearly
+- the message explains whether the issue changes public routes, route meaning,
+  or runtime/toolchain policy
+- the message points to the affected DevOps artifact or generated app file
+
+Inbox target:
+
+- `../../runs/current/role-state/architect/inbox/`
+
+## DevOps -> Frontend / Backend
+
+Complete only when:
+
+- the packaging issue is traceable to missing build or runtime behavior
+- the message identifies the exact implementation gap
+- the message points to the affected generated app file or packaging command
+
+Inbox targets:
+
+- `../../runs/current/role-state/frontend/inbox/`
+- `../../runs/current/role-state/backend/inbox/`
+
+## DevOps -> Product Manager Acceptance
+
+Complete only when:
+
+- packaging is in scope
+- packaged acceptance instructions are written in
+  `runs/current/artifacts/devops/verification.md`
+- the inbox message points to the packaged run path and any remaining
+  packaging limitations
+
+Inbox target:
+
+- `../../runs/current/role-state/product_manager/inbox/`
+
 ## Architect -> Product Manager Acceptance
 
 Complete only when:
 
 - implementation has been reviewed against `runs/current/artifacts/product/`,
   `runs/current/artifacts/architecture/`, `runs/current/artifacts/ux/`,
-  `runs/current/artifacts/backend-design/`, `specs/contracts/frontend/`,
-  `specs/contracts/backend/`, and `specs/contracts/rules/`
+  `runs/current/artifacts/backend-design/`, and when packaging is in scope,
+  `runs/current/artifacts/devops/`
+- implementation has been reviewed against `specs/contracts/frontend/`,
+  `specs/contracts/backend/`, `specs/contracts/rules/`, and when packaging is
+  in scope, `specs/contracts/deployment/`
 - follow-up findings are either fixed or explicitly handed back
 
 Inbox target:

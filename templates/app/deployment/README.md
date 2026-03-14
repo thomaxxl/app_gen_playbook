@@ -3,10 +3,14 @@
 These snippets correspond to:
 
 - [../../../specs/contracts/deployment/README.md](../../../specs/contracts/deployment/README.md)
+- [../../../specs/contracts/deployment/package-management.md](../../../specs/contracts/deployment/package-management.md)
 - [../../../specs/contracts/frontend/README.md](../../../specs/contracts/frontend/README.md)
 - [../../../specs/contracts/backend/README.md](../../../specs/contracts/backend/README.md)
 
 Use these when the generated app should run behind one origin.
+
+This template lane is owned by the optional DevOps role when packaging is in
+scope.
 
 Recommended public routes:
 
@@ -22,3 +26,10 @@ and exit non-zero.
 
 For production-style builds, prefer a multi-stage image with a Node 24 build
 stage for the frontend and a Python/nginx runtime stage for the deployed app.
+
+The DevOps role SHOULD also verify:
+
+- runtime versions remain aligned with `runtime-bom.md`
+- package-install behavior remains reproducible
+- Docker, Compose, nginx, and entrypoint files remain consistent with the
+  approved route model

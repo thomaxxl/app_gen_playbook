@@ -14,8 +14,14 @@ Role files:
 - [architect.md](architect.md)
 - [frontend.md](frontend.md)
 - [backend.md](backend.md)
+- [devops.md](devops.md)
 - [deployment.md](deployment.md)
 - [shared-responsibilities.md](shared-responsibilities.md)
+
+Role naming rule:
+
+- `devops.md` is the canonical optional packaging role
+- `deployment.md` is a compatibility alias only
 
 All role execution MUST follow the capability-gating rules in:
 

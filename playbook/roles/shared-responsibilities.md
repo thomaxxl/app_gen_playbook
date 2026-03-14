@@ -20,6 +20,9 @@ These rules apply to every agent.
   mirroring.
 - Mirrored frontend validation exists for UX and latency only; it MUST NOT
   replace backend enforcement.
+- DevOps owns package-management policy, runtime or toolchain packaging, and
+  deployment packaging. DevOps MUST NOT silently change application semantics,
+  API behavior, UX behavior, or business-rule enforcement.
 
 ## Artifact discipline
 
@@ -37,10 +40,11 @@ Ownership map:
 - `runs/current/artifacts/architecture/` -> Architect
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
+- `runs/current/artifacts/devops/` -> DevOps
 - `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
 - `specs/contracts/backend/` -> Backend technical contracts
 - `specs/contracts/rules/` -> Backend technical contracts
-- `specs/contracts/deployment/` -> optional Deployment role when packaging is in scope
+- `specs/contracts/deployment/` -> optional DevOps technical contracts when packaging is in scope
 - `specs/contracts/files/` -> uploads-support contract, loaded only through
   the uploads feature pack unless the task explicitly says otherwise
 - `specs/features/` -> optional feature-pack contracts, loaded only when
@@ -52,8 +56,9 @@ Ownership map:
 
 Persistent artifact files in `runs/current/artifacts/product/`,
 `runs/current/artifacts/architecture/`, `runs/current/artifacts/ux/`, and
-`runs/current/artifacts/backend-design/` must start with a small metadata
-block containing:
+`runs/current/artifacts/backend-design/`, and
+`runs/current/artifacts/devops/` must start with a small metadata block
+containing:
 
 - `owner`
 - `phase`

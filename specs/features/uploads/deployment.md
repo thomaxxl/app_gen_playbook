@@ -1,7 +1,7 @@
 # Uploads Feature: Deployment
 
 ```yaml
-owner: deployment
+owner: devops
 scope: optional-feature
 feature: uploads
 load_when:
@@ -11,12 +11,12 @@ depends_on:
   - ../../contracts/files/storage-and-serving.md
 ```
 
-This file is the deployment entrypoint for the uploads feature.
+This file is the DevOps deployment entrypoint for the uploads feature.
 
-When enabled, the deployment role MUST additionally load:
+When enabled, the DevOps role MUST additionally load:
 
 - `../../contracts/files/storage-and-serving.md`
 - `../../../templates/features/uploads/deployment/README.md`
 
-If deployment is out of scope for the run, this file MAY remain unread even
+If DevOps packaging is out of scope for the run, this file MAY remain unread even
 when uploads are enabled.

@@ -59,10 +59,11 @@ Backend:
   must_not_read:
     - specs/features/* when capability != enabled for backend
 
-Deployment:
+DevOps:
   core:
     - specs/contracts/deployment/README.md
+    - specs/contracts/deployment/package-management.md
   optional: []
   must_not_read:
-    - specs/features/* when capability != enabled for deployment
+    - specs/features/* when capability != enabled for devops
 ```

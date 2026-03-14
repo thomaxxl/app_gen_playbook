@@ -1,6 +1,7 @@
 # Uploads Feature Templates: Deployment
 
-Use this entrypoint only when uploads are enabled and deployment is in scope.
+Use this entrypoint only when uploads are enabled and DevOps packaging is in
+scope.
 
 Load these concrete snippets:
 

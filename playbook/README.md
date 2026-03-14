@@ -17,6 +17,8 @@ Path rule:
 - `../specs/product/`, `../specs/architecture/`, `../specs/ux/`, and
   `../specs/backend-design/` contain generic artifact templates
 - run-owned artifacts MUST be written under `../runs/current/artifacts/`
+- optional DevOps run-owned artifacts live under
+  `../runs/current/artifacts/devops/` only when packaging is in scope
 - `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
   approved business-rules catalog
 - accepted artifacts MAY later be copied into local `../app/docs/`

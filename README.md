@@ -30,6 +30,11 @@ This directory is now organized around the following top-level areas:
 - this `README.md`
   The top-level index.
 
+Role note:
+
+- the canonical optional packaging role is now `playbook/roles/devops.md`
+- `playbook/roles/deployment.md` remains only as a compatibility alias
+
 ## Version control rule
 
 Changes to this playbook repository MUST be committed in git.

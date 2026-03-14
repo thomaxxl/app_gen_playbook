@@ -20,13 +20,16 @@ readiness note in:
 - compare implementation against `runs/current/artifacts/architecture/`
 - compare implementation against `runs/current/artifacts/ux/`
 - compare implementation against `runs/current/artifacts/backend-design/`
+- compare packaging behavior against `runs/current/artifacts/devops/` when
+  packaging is in scope
 - compare implementation against `specs/contracts/frontend/`,
-  `specs/contracts/backend/`, and `specs/contracts/rules/` technical
-  contracts
+  `specs/contracts/backend/`, `specs/contracts/rules/`, and
+  `specs/contracts/deployment/` technical contracts when packaging is in scope
 - verify schema/runtime wiring
 - verify frontend behavior against real backend data
 - verify rules across create/update/delete/reparent flows
 - verify empty/loading/error states
+- verify packaged route behavior when packaging is in scope
 - verify docs match what was built
 - reject undocumented business-rule drift
 - verify Playwright is installed for the generated app and install it if the
@@ -43,6 +46,7 @@ readiness note in:
 ## Exit criteria
 
 - frontend and backend contracts align
+- if packaging is in scope, the deployment contract and DevOps artifacts align
 - no business behavior exists in code without a matching rule entry in
   `runs/current/artifacts/product/business-rules.md`
 - no frontend-mirrored rule exists unless the catalog explicitly allows that

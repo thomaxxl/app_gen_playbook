@@ -56,3 +56,7 @@ Recommended reading order:
 Maintainer-only reference:
 
 - [ui-system-change-policy.md](ui-system-change-policy.md)
+
+Optional late-stage packaging role:
+
+- `../roles/devops.md`

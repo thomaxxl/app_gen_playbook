@@ -26,8 +26,11 @@ A feature is done only when all of these are true:
   exist under `evidence/`
 - all core-agent inboxes are empty
 
-If packaging was explicitly in scope, the optional deployment inbox must also
-be empty.
+If packaging was explicitly in scope:
+
+- the optional DevOps inbox must also be empty
+- `runs/current/artifacts/devops/verification.md` must exist
+- packaged route verification must be recorded
 
 If fallback verification was used, the fallback path and justification must be
 documented.

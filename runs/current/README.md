@@ -31,4 +31,5 @@ Rules:
   before implementation begins
 - `artifacts/` holds the run-owned product, architecture, UX, and
   backend-design artifacts
+- `artifacts/devops/` is used only when the optional DevOps role is active
 - `evidence/` holds the run-owned verification summaries

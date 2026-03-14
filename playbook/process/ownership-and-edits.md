@@ -9,10 +9,11 @@ Ownership map:
 - `runs/current/artifacts/architecture/` -> Architect
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
+- `runs/current/artifacts/devops/` -> DevOps
 - `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
 - `specs/contracts/backend/` -> Backend technical contracts
 - `specs/contracts/rules/` -> Backend technical contracts
-- `specs/contracts/deployment/` -> optional Deployment role when packaging is in scope
+- `specs/contracts/deployment/` -> optional DevOps role when packaging is in scope
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` -> generic playbook template source, only editable
   when explicitly updating the playbook itself

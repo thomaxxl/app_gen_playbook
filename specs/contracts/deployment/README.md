@@ -10,12 +10,19 @@ Use it late in the process, after:
 
 Primary agent entrypoint:
 
+- `../../playbook/roles/devops.md`
+
+Compatibility alias:
+
 - `../../playbook/roles/deployment.md`
 
-The Deployment agent MUST also consult:
+The DevOps role MUST also consult:
 
+- [package-management.md](package-management.md)
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
+- `../../runs/current/artifacts/architecture/runtime-bom.md`
+- `../../runs/current/artifacts/architecture/route-and-entry-model.md`
 
 Optional deployment feature packs live under `../../features/` and MUST be
 loaded only when enabled by the run capability profile. Disabled or undecided
@@ -29,6 +36,10 @@ run or deployed without custom local setup.
 Companion snippets:
 
 - `../../templates/app/deployment/`
+
+Run-owned DevOps artifacts live under:
+
+- `../../runs/current/artifacts/devops/`
 
 Recommended public routes:
 
@@ -61,6 +72,21 @@ is in scope:
 - exit non-zero if either one fails
 - terminate the sibling on failure or shutdown
 - clean up on `SIGINT` / `SIGTERM`
+
+## Role boundary
+
+DevOps owns:
+
+- package-manager policy for packaging
+- runtime and toolchain packaging enforcement
+- Docker, Compose, nginx, and same-origin packaging behavior
+- packaged route verification
+
+Frontend and Backend still own their application dependency manifests and
+runtime behavior.
+
+DevOps MUST NOT silently change application semantics, API behavior, UX
+behavior, or business-rule enforcement.
 
 ## Container responsibilities
 
@@ -136,6 +162,15 @@ Optional dev override behavior:
 - mount the project tree
 - keep frontend `node_modules` in a volume
 - enable backend auto-reload
+
+## Packaging verification artifacts
+
+When DevOps is active, it MUST write or update:
+
+- `../../runs/current/artifacts/devops/package-policy.md`
+- `../../runs/current/artifacts/devops/packaging-plan.md`
+- `../../runs/current/artifacts/devops/build-matrix.md`
+- `../../runs/current/artifacts/devops/verification.md`
 
 ## Docker validation checks
 

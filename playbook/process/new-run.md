@@ -24,12 +24,16 @@ Required steps:
    from the starter template shape
 8. recreate `../../runs/current/artifacts/architecture/load-plan.md`
    from the starter template shape
-9. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
+9. if packaging or runtime normalization is expected for the run, recreate
+   `../../runs/current/artifacts/devops/` from the starter stub set
+10. if packaging or runtime normalization is expected for the run, ensure
+    `../../runs/current/role-state/devops/` exists
+11. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
-10. create local gitignored `../../app/`
-11. treat local `../../app/` as implementation workspace, not as the
+12. create local gitignored `../../app/`
+13. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
-12. when the Product business-rules catalog becomes available, seed local
+14. when the Product business-rules catalog becomes available, seed local
     `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
 
 Rules:

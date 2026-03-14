@@ -26,6 +26,11 @@ Canonical template tree:
 - `nonstarter/`
 - `features/`
 
+Ownership note:
+
+- `app/deployment/` is the core template lane used by the optional DevOps
+  packaging role when packaging is in scope
+
 Rules:
 
 - use only the subtrees needed for the current task

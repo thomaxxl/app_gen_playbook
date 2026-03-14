@@ -8,6 +8,7 @@ Use it for:
 - current run architecture artifacts
 - current run UX artifacts
 - current run backend-design artifacts
+- current run DevOps artifacts when packaging is in scope
 - current run capability-gating artifacts
 
 Generic template sources live in:
@@ -34,3 +35,10 @@ Architecture artifacts MUST also include:
 - `architecture/load-plan.md`
 
 These files control which optional feature packs may be loaded for the run.
+
+If the optional DevOps role is active, this directory MUST also include:
+
+- `devops/package-policy.md`
+- `devops/packaging-plan.md`
+- `devops/build-matrix.md`
+- `devops/verification.md`

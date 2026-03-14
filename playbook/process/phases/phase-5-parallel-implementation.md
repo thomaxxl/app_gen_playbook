@@ -5,6 +5,7 @@ Leads:
 - UX/UI + Frontend for frontend work
 - Backend for backend work
 - Architect for contract consistency
+- DevOps when packaging or runtime normalization is in scope
 
 ## Goal
 
@@ -36,6 +37,18 @@ record:
 If the current run lane is `rename-only` or `non-starter`, the Backend
 implementation lane MUST also complete a starter-template replacement sweep
 before treating any starter backend template as implementation-ready.
+
+## Optional DevOps activation
+
+The DevOps role SHOULD activate only after the app runs end-to-end without
+Docker.
+
+The DevOps role MAY activate earlier only when runtime or toolchain issues
+block implementation progress.
+
+When DevOps is active, it owns packaging implementation and packaging
+verification work. It MUST NOT silently change application semantics,
+business-rule behavior, or route meaning.
 
 ## Frontend responsibilities
 
@@ -79,6 +92,16 @@ before treating any starter backend template as implementation-ready.
 - review generated/custom boundary changes
 - reject undocumented deviations
 
+## DevOps responsibilities when active
+
+- enforce generated-app package-manager policy
+- verify runtime and toolchain alignment with `runtime-bom.md`
+- implement Docker, Compose, nginx, and same-origin packaging
+- keep packaging artifacts in sync with the approved route model
+- verify packaged startup and packaged route behavior
+- record packaging decisions and verification in
+  `runs/current/artifacts/devops/`
+
 ## Exit criteria
 
 - app runs end-to-end
@@ -100,4 +123,6 @@ before treating any starter backend template as implementation-ready.
 - every rule marked with a frontend mirror mode other than `none` has a
   concrete frontend validator strategy and corresponding test plan or explicit
   reason for no frontend test
+- if packaging is in scope, the DevOps artifacts are written and packaged
+  route verification exists
 - no unresolved contract drift remains

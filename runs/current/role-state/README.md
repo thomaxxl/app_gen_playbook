@@ -13,3 +13,9 @@ Static role definitions do not live here.
 Static role definitions live in:
 
 - [../../../playbook/roles/README.md](../../../playbook/roles/README.md)
+
+Canonical packaging-role note:
+
+- `devops/` is the canonical optional packaging role-state directory
+- `deployment/` may remain as a compatibility holdover while old references
+  are retired

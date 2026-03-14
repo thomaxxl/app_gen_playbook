@@ -41,6 +41,7 @@ The run-owned artifact roots are:
 - `../../runs/current/artifacts/architecture/`
 - `../../runs/current/artifacts/ux/`
 - `../../runs/current/artifacts/backend-design/`
+- `../../runs/current/artifacts/devops/` when the DevOps role is active
 
 The run-owned feature gating artifacts are:
 
@@ -115,7 +116,7 @@ When a run is complete:
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned
-  product, architecture, UX, and backend-design artifacts
+  product, architecture, UX, backend-design, and optional DevOps artifacts
 - `../../runs/current/artifacts/architecture/capability-profile.md` SHOULD
   show the final enabled/disabled capability decisions
 - `../../runs/current/artifacts/architecture/load-plan.md` SHOULD preserve the

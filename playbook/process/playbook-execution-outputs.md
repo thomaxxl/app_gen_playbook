@@ -25,6 +25,7 @@ A normal run MAY create or update run-owned artifact files in:
 - `../../runs/current/artifacts/architecture/`
 - `../../runs/current/artifacts/ux/`
 - `../../runs/current/artifacts/backend-design/`
+- `../../runs/current/artifacts/devops/` when packaging is in scope
 
 ## Mutable run-state output
 

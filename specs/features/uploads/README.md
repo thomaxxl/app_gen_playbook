@@ -27,7 +27,7 @@ Load order inside this feature pack:
 1. [activation.md](activation.md)
 2. [frontend.md](frontend.md) when frontend work is in scope
 3. [backend.md](backend.md) when backend work is in scope
-4. [deployment.md](deployment.md) when deployment is in scope
+4. [deployment.md](deployment.md) when DevOps packaging is in scope
 5. [validation.md](validation.md)
 
 This feature pack orchestrates the uploads capability.

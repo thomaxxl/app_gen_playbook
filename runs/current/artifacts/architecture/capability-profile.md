@@ -30,7 +30,7 @@ Starter placeholder:
 - capability: uploads
   status: undecided
   reason: pending product and architecture review
-  owner_roles: [architect, backend, frontend, deployment]
+  owner_roles: [architect, backend, frontend, devops]
   depends_on: []
   load_modules: []
 - capability: d3-custom-views
@@ -48,7 +48,7 @@ Starter placeholder:
 - capability: background-jobs
   status: undecided
   reason: pending backend-design review
-  owner_roles: [architect, backend, deployment]
+  owner_roles: [architect, backend, devops]
   depends_on: []
   load_modules: []
 ```

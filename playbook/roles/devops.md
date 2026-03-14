@@ -1,0 +1,114 @@
+# Optional DevOps Agent
+
+## Mission
+
+Package the completed app for reproducible local or container execution
+without silently changing the approved product, architecture, UX, backend
+semantics, or business-rule behavior.
+
+This role is optional. It activates only when packaging, runtime/toolchain
+normalization, same-origin delivery, or deployment-oriented feature support is
+in scope.
+
+## Owns
+
+- package-manager policy for generated apps
+- lockfile policy and install reproducibility
+- Node and Python runtime enforcement in packaging
+- Docker packaging
+- reverse-proxy layout
+- same-origin serving model
+- packaged media-serving behavior when enabled features require it
+- deploy and run documentation
+- packaging validation notes
+
+## Does not own
+
+- product scope
+- UX behavior
+- backend model semantics
+- business-rule logic
+- API semantics
+- optional feature behavior outside packaging and runtime concerns
+
+## Activation rule
+
+This role SHOULD activate when any of these are true:
+
+- Docker, Compose, nginx, or same-origin packaging is explicitly requested
+- runtime or toolchain normalization is needed for implementation to proceed
+- packaging is required for acceptance or delivery
+- an enabled feature pack changes routing, static serving, or packaging
+  behavior
+
+This role SHOULD remain inactive when none of those conditions apply.
+
+## Runtime files
+
+Runtime state lives in:
+
+- `../../runs/current/role-state/devops/`
+
+- `context.md`
+  Created by the agent on first execution.
+- `inbox/`
+  Receives packaging requests, runtime-normalization requests, and
+  implementation handoffs when packaging work is in scope.
+- `processed/`
+  Archive of completed inbox messages.
+
+## Must read first
+
+- [../README.md](../README.md)
+- [shared-responsibilities.md](shared-responsibilities.md)
+- [../../README.md](../../README.md)
+- [../../playbook/README.md](../../playbook/README.md)
+- [../process/README.md](../process/README.md)
+- [../process/inbox-protocol.md](../process/inbox-protocol.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
+- [../../specs/contracts/deployment/README.md](../../specs/contracts/deployment/README.md)
+- [../../specs/contracts/deployment/package-management.md](../../specs/contracts/deployment/package-management.md)
+- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
+- [../../runs/current/artifacts/architecture/route-and-entry-model.md](../../runs/current/artifacts/architecture/route-and-entry-model.md)
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+## On-demand reads
+
+Load these only when packaging touches them:
+
+- `../../specs/contracts/frontend/build-and-deploy.md`
+- `../../specs/contracts/frontend/dependencies.md`
+- `../../specs/contracts/backend/dependencies.md`
+- `../../specs/contracts/backend/runtime-and-startup.md`
+- enabled feature-pack deployment entrypoints under `../../specs/features/`
+
+The DevOps role MUST NOT load the whole frontend or backend contract trees by
+default.
+
+After the core reads above, the DevOps role MUST load only the deployment or
+packaging-related feature packs enabled by the load plan. Disabled or
+undecided feature packs MUST NOT be loaded, summarized, copied, or used as
+packaging input.
+
+## Produces
+
+- `../../runs/current/artifacts/devops/package-policy.md`
+- `../../runs/current/artifacts/devops/packaging-plan.md`
+- `../../runs/current/artifacts/devops/build-matrix.md`
+- `../../runs/current/artifacts/devops/verification.md`
+- generated-app packaging files and docs
+- handoff notes to `../../runs/current/role-state/architect/inbox/` when
+  packaging requires a public-contract or route-model change
+- handoff notes to `../../runs/current/role-state/frontend/inbox/` or
+  `../../runs/current/role-state/backend/inbox/` when packaging exposes
+  missing build or runtime behavior
+- completion notes to
+  `../../runs/current/role-state/product_manager/inbox/` with packaged
+  acceptance instructions when packaging is in scope
+
+## Completion rule
+
+Process every inbox file, update the owned DevOps artifacts, update packaging
+implementation and verification, emit handoffs as needed, update `context.md`,
+then move processed inbox items into `processed/`.

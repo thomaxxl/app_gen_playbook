@@ -27,3 +27,6 @@ If the app uses same-origin container packaging, also copy:
 
 - `../deployment/nginx.conf.md`
 - `../deployment/entrypoint.sh.md`
+
+Those deployment templates are normally copied by the optional DevOps role
+when packaging is in scope.
