@@ -5,11 +5,17 @@ This file defines the minimum frontend validation checklist for generated apps.
 ## Build validation
 
 - `npm install` succeeds
+- `npm install` does not immediately force a baseline-maintenance step such as
+  `npm audit fix --force` for the starter dependency set
 - `npm run check` succeeds
 - `npm run test` succeeds
 - `npm run test:e2e` succeeds
 - `npm run build` succeeds
 - built app loads under `/admin-app/`
+
+If dependency maintenance changes direct frontend versions during a run, the
+agent MUST sync those versions back into the playbook dependency contract and
+frontend package template before treating the playbook baseline as current.
 
 ## Route validation
 

@@ -19,7 +19,7 @@ Required runtime dependencies:
 - `react@19.1.0`
 - `react-dom@19.1.0`
 - `react-admin@5.8.0`
-- `react-router-dom@6.30.1`
+- `react-router-dom@6.30.3`
 - `@mui/material@7.0.1`
 - `@mui/icons-material@7.0.1`
 - `@emotion/react@11.14.0`
@@ -39,10 +39,10 @@ Required dev dependencies:
 - `@types/node@24.3.0`
 - `@types/react@19.1.2`
 - `@types/react-dom@19.1.2`
-- `vitest@2.1.8`
+- `vitest@2.1.9`
 - `jsdom@25.0.1`
 - `@testing-library/react@16.3.0`
-- `@playwright/test@1.53.1`
+- `@playwright/test@1.58.2`
 
 ## Install commands
 
@@ -53,7 +53,7 @@ npm install \
   react@19.1.0 \
   react-dom@19.1.0 \
   react-admin@5.8.0 \
-  react-router-dom@6.30.1 \
+  react-router-dom@6.30.3 \
   @mui/material@7.0.1 \
   @mui/icons-material@7.0.1 \
   @emotion/react@11.14.0 \
@@ -82,10 +82,10 @@ npm install -D \
   @types/node@24.3.0 \
   @types/react@19.1.2 \
   @types/react-dom@19.1.2 \
-  vitest@2.1.8 \
+  vitest@2.1.9 \
   jsdom@25.0.1 \
   @testing-library/react@16.3.0 \
-  @playwright/test@1.53.1
+  @playwright/test@1.58.2
 ```
 
 ## Notes
@@ -96,6 +96,10 @@ npm install -D \
   whatever `node` happens to be present on the machine or in the base image.
 - The current starter dependency set is intentionally pinned to a Node 24-
   validated Vite 6 stack.
+- The current audited starter delta relative to the older baseline is:
+  - `react-router-dom@6.30.3`
+  - `vitest@2.1.9`
+  - `@playwright/test@1.58.2`
 - `safrs-jsonapi-client` MUST be pinned through an immutable tarball URL or a
   published registry release. For this playbook, the preferred source is a
   GitHub release asset from `thomaxxl/safrs-jsonapi-client`. The frontend MUST
@@ -109,6 +113,11 @@ npm install -D \
   - the referenced GitHub release exists
   - the referenced `.tgz` asset exists
   - the asset version and the package filename agree
+- A generated app MUST NOT require an immediate `npm audit fix --force` after
+  the initial install just to reach the expected starter baseline. If an audit
+  fix changes direct dependency versions, the playbook dependency baseline MUST
+  be repinned and the affected template files MUST be updated together before
+  the run is considered clean.
 - `yaml` MUST be a direct dependency because the runtime loads `admin.yaml`
   client-side.
 - `@types/node` MUST be present because the scaffold includes

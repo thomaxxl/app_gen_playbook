@@ -33,7 +33,7 @@ or YAML parsing.
     "react": "19.1.0",
     "react-admin": "5.8.0",
     "react-dom": "19.1.0",
-    "react-router-dom": "6.30.1",
+    "react-router-dom": "6.30.3",
     "safrs-jsonapi-client": "<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>",
     "yaml": "2.8.1"
   },
@@ -43,11 +43,11 @@ or YAML parsing.
     "@types/react": "19.1.2",
     "@types/react-dom": "19.1.2",
     "@vitejs/plugin-react": "4.3.4",
-    "@playwright/test": "1.53.1",
+    "@playwright/test": "1.58.2",
     "jsdom": "25.0.1",
     "typescript": "5.8.2",
     "vite": "6.2.2",
-    "vitest": "2.1.8"
+    "vitest": "2.1.9"
   }
 }
 ```
@@ -65,6 +65,11 @@ URL from `thomaxxl/safrs-jsonapi-client`. Do not switch it to a git dependency
 or a raw `codeload` source archive in generated apps. If the selected artifact
 is missing the built outputs referenced by its own package metadata, replace it
 with a validated release asset before continuing.
+
+If the first `npm install` on a newly generated app still requires an
+immediate `npm audit fix --force`, treat that as a stale playbook baseline and
+repin the template dependency set instead of documenting `audit fix` as normal
+generated-app setup.
 
 `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is an intentional unresolved
 token. A generated app is incomplete until it is replaced with a real verified
