@@ -20,4 +20,4 @@ Optional upload-related files:
 - `files/fileFieldHelpers.ts.md`
 
 These are part of the archive so the starter frontend does not depend on
-hidden repo-local code outside `one_shot_gen/templates/`.
+hidden repo-local code outside `app_gen_playbook/templates/`.

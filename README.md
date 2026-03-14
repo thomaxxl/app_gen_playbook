@@ -5,8 +5,11 @@ This playbook is now also exposed at:
 - `../app_gen_playbook/`
 
 Prefer the `app_gen_playbook/` name in new discussion and future external
-references. `one_shot_gen/` remains the current backing directory for local
-compatibility.
+references.
+
+If a local filesystem still exposes `one_shot_gen/`, treat it as a temporary
+compatibility alias only. New documentation and discussion MUST use
+`app_gen_playbook/`.
 
 This directory is now organized around the following top-level areas:
 
