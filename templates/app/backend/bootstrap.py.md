@@ -188,6 +188,9 @@ def seed_reference_data(session) -> None:
 
 Notes:
 
+- This is a starter-lane implementation template. For a `rename-only` or
+  `non-starter` run, the Backend role MUST rewrite the starter-specific
+  constant blocks before treating this file as implementation-ready.
 - Validate `admin.yaml` static contract shape before exposing routes.
 - Seed only on an empty DB.
 - The seed must be idempotent.

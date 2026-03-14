@@ -26,6 +26,16 @@ Logic/rules dependency:
 
 - optional temporary local checkout override via `LOCAL_LOGICBANK_PATH`
 
+Runtime/package freeze ownership:
+
+- The Architect MUST freeze the intended backend package set in
+  `../../runs/current/artifacts/architecture/runtime-bom.md` before
+  implementation starts, or explicitly delegate a change proposal to Backend
+  during Phase 4.
+- The Backend role MAY propose a dependency deviation during Phase 4, but the
+  deviation MUST be recorded in `runtime-bom.md` before implementation depends
+  on it.
+
 ## Install command
 
 ```bash
@@ -56,13 +66,20 @@ fi
   published release.
 - This local-path LogicBank override is temporary. Switch back to the normal
   published pip package when the next fixed release is available.
-- Current validated example:
-  `LOCAL_LOGICBANK_PATH=/home/t/lab/LogicBank`
 - Use `--no-deps` when installing the local LogicBank checkout so it does not
   override the backend SQLAlchemy version selected for SAFRS compatibility.
 - If the local LogicBank checkout is unavailable or unset, the implementation
   SHOULD install the published package with
   `pip install --no-deps logicbank`.
+- If a local dependency override is used, the run MUST record:
+  - the reason for the override
+  - the package affected
+  - the local path or local artifact source
+  - the expected removal condition
+  in:
+  - `../../runs/current/artifacts/architecture/runtime-bom.md`
+  - the relevant role `context.md`
+  - and any handoff note that depends on the override
 - `python-multipart` is REQUIRED when the app exposes FastAPI multipart upload
   endpoints. The starter dependency set includes it so upload-capable apps do
   not need an undocumented extra install step.

@@ -9,12 +9,17 @@ last_updated_by: playbook
 
 # Relationship Map Template
 
-This file is a generic template. The Backend role MUST create the run-owned
-version at `../../runs/current/artifacts/backend-design/relationship-map.md`.
+Replace this stub with the run-specific relationship map.
 
-The real artifact MUST define:
+## Required relationship table
 
-- relationship directions
-- exact relationship names
-- delete behavior
-- nullability and foreign-key rules
+| From resource | To resource | FK column | Relationship name | Cardinality | Nullable | Delete behavior | Exposed relationship | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `<from>` | `<to>` | `<fk>` | `<orm relationship>` | `<one-to-many / many-to-one / many-to-many>` | `<yes/no>` | `<cascade/restrict/set null/etc.>` | `<yes/no>` | `<notes>` |
+
+## Required notes
+
+- exact ORM-side relationship names
+- exact foreign-key nullability rules
+- exact delete behavior and enforcement layer
+- any internal-only relationship

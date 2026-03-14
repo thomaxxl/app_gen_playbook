@@ -5,6 +5,10 @@ See also:
 - [../../../specs/contracts/backend/validation.md](../../../specs/contracts/backend/validation.md)
 - [../../../specs/contracts/backend/api-contract.md](../../../specs/contracts/backend/api-contract.md)
 
+This is a starter-lane preferred-path template. For a `rename-only` or
+`non-starter` run, the Backend role MUST perform a starter-template
+replacement sweep before copying this file as implementation-ready.
+
 ```python
 import os
 from pathlib import Path

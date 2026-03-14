@@ -51,3 +51,10 @@ Put that evidence in:
 
 The playbook MUST ship the fallback harness as a real starter test file, not
 only as prose guidance.
+
+The shipped fallback harness MUST remain run-agnostic:
+
+- it MUST use run-local `reference/admin.yaml` and run-owned artifacts as the
+  source of truth
+- it MUST NOT hardcode starter model names
+- it MUST NOT hardcode starter row counts

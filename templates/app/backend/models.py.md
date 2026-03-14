@@ -7,6 +7,10 @@ See also:
 
 This is the complete starter model trio.
 
+For a `rename-only` or `non-starter` run, the Backend role MUST NOT copy this
+file directly until the run-owned backend-design artifacts identify which
+starter assumptions remain valid and which sections must be replaced.
+
 ```python
 from __future__ import annotations
 

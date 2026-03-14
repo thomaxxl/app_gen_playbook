@@ -33,6 +33,10 @@ record:
 - local socket / localhost verification constraints
 - any required dependency deviations from the house defaults
 
+If the current run lane is `rename-only` or `non-starter`, the Backend
+implementation lane MUST also complete a starter-template replacement sweep
+before treating any starter backend template as implementation-ready.
+
 ## Frontend responsibilities
 
 - implement runtime shell
@@ -53,7 +57,7 @@ record:
 - expose SAFRS resources
 - implement startup/bootstrap lifecycle
 - implement rules and validation
-- seed starter data
+- implement the run-owned bootstrap and sample-data plan
 - implement tests
 - implement the preferred HTTP/ASGI verification path
 - keep the fallback verification harness available when the preferred path is

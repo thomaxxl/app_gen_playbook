@@ -16,4 +16,11 @@ Template files:
 - `relationship-map.md`
 - `rule-mapping.md`
 - `bootstrap-strategy.md`
+- `resource-exposure-policy.md`
+- `query-behavior.md`
 - `test-plan.md`
+
+These templates are intentionally more structured than earlier versions. The
+Backend role MUST turn them into run-owned backend-design artifacts that make
+resource exposure, query commitments, lifecycle behavior, and verification
+obligations explicit before implementation begins.

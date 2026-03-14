@@ -10,13 +10,18 @@ last_updated_by: playbook
 
 # Model Design Template
 
-This file is a generic template. The Backend role MUST create the run-owned
-version at `../../runs/current/artifacts/backend-design/model-design.md`.
+Replace this stub with the run-specific model design.
 
-The real artifact MUST define:
+## Required resource table
 
-- resources
-- stored fields
-- derived persisted fields
-- relationships
-- rule-facing fields
+| Resource | Exposed | Table | Core stored fields | Derived persisted fields | Relationship fields | Read-only fields | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `<resource>` | `yes/no/internal/singleton/deferred` | `<table_name>` | `<field list>` | `<field list or none>` | `<relationship list>` | `<field list or none>` | `<notes>` |
+
+## Required interpretation notes
+
+- singleton or settings-style concepts
+- internal or non-exposed concepts
+- same-target multiple-reference cases
+- persisted derived fields versus runtime-only values
+- any resource with limited mutability

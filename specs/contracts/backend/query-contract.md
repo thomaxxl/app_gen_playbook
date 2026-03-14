@@ -4,7 +4,8 @@ This file defines the subset of SAFRS query behavior that the generated
 frontend runtime and data provider rely on.
 
 The concrete endpoint examples below use the starter `Item` resource. They are
-worked examples, not a claim that every app will expose `/api/items`.
+worked examples only. They MUST NOT be treated as a commitment that every app
+will expose `/api/items`.
 
 ## Supported query features
 
@@ -96,6 +97,28 @@ Search semantics:
 The starter frontend/runtime contract only treats `text` fields as searchable
 in v1. Numeric and datetime search require an explicit project-specific search
 strategy.
+
+If product artifacts expect search/filter behavior beyond starter text search,
+the Backend role MUST define the exact supported behavior in:
+
+- `../../runs/current/artifacts/backend-design/query-behavior.md`
+
+before implementation starts.
+
+The run-owned `query-behavior.md` artifact MUST define, per exposed resource:
+
+| Resource | Search fields | Filter fields | Sort fields | Include paths | Unsupported query asks | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+
+Boolean, enum, numeric, date, datetime, range, and compound search/filter
+behavior MUST NOT be promised implicitly. If the frontend may depend on such
+behavior, the run-owned `query-behavior.md` artifact MUST define:
+
+- the exact supported fields
+- the exact SAFRS filter shape or parameter form
+- whether the behavior is case-sensitive or partial/exact
+- whether the behavior composes with search and pagination
+- what remains out of scope in v1
 
 The frontend MUST NOT assume an extra ad hoc `/search` endpoint.
 

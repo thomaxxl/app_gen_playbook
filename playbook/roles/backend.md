@@ -46,6 +46,8 @@ Runtime state lives in:
 - [../process/phases/phase-4-backend-design-and-rules-mapping.md](../process/phases/phase-4-backend-design-and-rules-mapping.md)
 - [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
 - [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
+- [../../runs/current/artifacts/product/resource-inventory.md](../../runs/current/artifacts/product/resource-inventory.md)
+- [../../runs/current/artifacts/product/resource-behavior-matrix.md](../../runs/current/artifacts/product/resource-behavior-matrix.md)
 - [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
 - [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
 - [../../runs/current/artifacts/product/business-rules.md](../../runs/current/artifacts/product/business-rules.md)
@@ -56,12 +58,15 @@ Runtime state lives in:
 - [../../runs/current/artifacts/architecture/overview.md](../../runs/current/artifacts/architecture/overview.md)
 - [../../runs/current/artifacts/architecture/integration-boundary.md](../../runs/current/artifacts/architecture/integration-boundary.md)
 - [../../runs/current/artifacts/architecture/resource-naming.md](../../runs/current/artifacts/architecture/resource-naming.md)
+- [../../runs/current/artifacts/architecture/resource-classification.md](../../runs/current/artifacts/architecture/resource-classification.md)
 - [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
 - [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
 - [../../runs/current/artifacts/backend-design/model-design.md](../../runs/current/artifacts/backend-design/model-design.md)
 - [../../runs/current/artifacts/backend-design/relationship-map.md](../../runs/current/artifacts/backend-design/relationship-map.md)
 - [../../runs/current/artifacts/backend-design/rule-mapping.md](../../runs/current/artifacts/backend-design/rule-mapping.md)
 - [../../runs/current/artifacts/backend-design/bootstrap-strategy.md](../../runs/current/artifacts/backend-design/bootstrap-strategy.md)
+- [../../runs/current/artifacts/backend-design/resource-exposure-policy.md](../../runs/current/artifacts/backend-design/resource-exposure-policy.md)
+- [../../runs/current/artifacts/backend-design/query-behavior.md](../../runs/current/artifacts/backend-design/query-behavior.md)
 - [../../runs/current/artifacts/backend-design/test-plan.md](../../runs/current/artifacts/backend-design/test-plan.md)
 - [../../specs/contracts/backend/README.md](../../specs/contracts/backend/README.md)
 - [../../specs/contracts/rules/README.md](../../specs/contracts/rules/README.md)
@@ -81,12 +86,54 @@ After the core reads above, the Backend agent MUST load only the enabled
 feature packs assigned to the backend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
 
+If the current run lane is `rename-only` or `non-starter`, the Backend agent
+MUST also read:
+
+- [../../runs/current/artifacts/architecture/domain-adaptation.md](../../runs/current/artifacts/architecture/domain-adaptation.md)
+
+Backend design MUST start from the Product Manager's resource inventory and
+resource behavior matrix, then reconcile those artifacts with the Architect's
+resource classification before choosing exposure shape, mutability, or query
+behavior for any resource.
+
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
 
 The Backend agent MUST treat
 `../../runs/current/artifacts/architecture/runtime-bom.md` as the
 authoritative runtime/package decision record for implementation.
+
+## Required backend design decisions before coding
+
+Before copying starter implementation templates into `app/`, the Backend
+agent MUST explicitly resolve and record:
+
+1. exposure decision per resource
+   - exposed through SAFRS, internal only, singleton/settings, deferred, or
+     omitted
+2. mutability decision per resource
+   - full CRUD, limited CRUD, read-only, or singleton-specific flow
+3. relationship naming and nullability
+   - exact ORM names, foreign-key nullability, and delete behavior
+4. derived-field storage policy
+   - persisted backend-managed field versus runtime-only value
+5. query commitment per resource
+   - supported sorts, filters, include paths, text search, and explicit
+     out-of-scope asks
+6. rule implementation pattern per product rule
+   - formula, sum, count, copy, constraint, custom Python, or explicitly out
+     of scope
+7. bootstrap minimum dataset
+   - exact reference data and sample data required for backend and frontend
+     verification
+
+If the current run lane is `rename-only` or `non-starter`, the Backend agent
+MUST perform a starter-template replacement sweep before treating any starter
+implementation template as copy-ready. That sweep MUST be reflected in the
+run-owned backend-design artifacts, especially:
+
+- `../../runs/current/artifacts/backend-design/resource-exposure-policy.md`
+- `../../runs/current/artifacts/backend-design/query-behavior.md`
 
 ## Produces
 

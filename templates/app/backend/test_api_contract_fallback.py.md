@@ -14,11 +14,11 @@ verification harness instead of only prose instructions.
 from pathlib import Path
 
 import yaml
+from sqlalchemy import inspect, text
 
 from my_app import create_app
 from my_app.config import get_settings
 from my_app.db import session_scope
-from my_app.models import Collection, Item, Status
 
 
 def configure_test_env(monkeypatch, tmp_path: Path) -> None:
@@ -34,10 +34,15 @@ def load_admin_schema() -> dict:
         return yaml.safe_load(handle)
 
 
-def endpoint_for(schema: dict, resource_key: str) -> str:
-    endpoint = schema["resources"][resource_key].get("endpoint")
-    assert endpoint, resource_key
-    return endpoint
+def exposed_endpoints(schema: dict) -> dict[str, str]:
+    resources = schema.get("resources") or {}
+    endpoints: dict[str, str] = {}
+    for resource_key, resource in resources.items():
+        endpoint = resource.get("endpoint")
+        assert isinstance(endpoint, str) and endpoint.startswith("/api/"), resource_key
+        endpoints[resource_key] = endpoint
+    assert endpoints
+    return endpoints
 
 
 def test_app_builds_and_registers_core_routes(monkeypatch, tmp_path):
@@ -50,9 +55,8 @@ def test_app_builds_and_registers_core_routes(monkeypatch, tmp_path):
     assert "/docs" in route_paths
     assert "/jsonapi.json" in route_paths
     assert "/ui/admin/admin.yaml" in route_paths
-    assert endpoint_for(schema, "Collection") in route_paths
-    assert endpoint_for(schema, "Item") in route_paths
-    assert endpoint_for(schema, "Status") in route_paths
+    for endpoint in exposed_endpoints(schema).values():
+        assert endpoint in route_paths, endpoint
 
 
 def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):
@@ -62,28 +66,20 @@ def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):
     spec = app.openapi()
 
     assert "paths" in spec
-    assert endpoint_for(schema, "Collection") in spec["paths"]
-    assert endpoint_for(schema, "Item") in spec["paths"]
-    assert endpoint_for(schema, "Status") in spec["paths"]
+    for endpoint in exposed_endpoints(schema).values():
+        assert endpoint in spec["paths"], endpoint
 
 
-def test_seed_and_rule_behavior_via_session_factory(monkeypatch, tmp_path):
+def test_session_factory_and_tables_exist_without_http_client(monkeypatch, tmp_path):
     configure_test_env(monkeypatch, tmp_path)
     app = create_app()
     session_factory = app.state.session_factory
+    inspector = inspect(app.state.engine)
+    table_names = set(inspector.get_table_names())
 
+    assert table_names
     with session_scope(session_factory) as session:
-        assert session.query(Status).count() == 3
-        assert session.query(Collection).count() == 1
-        assert session.query(Item).count() == 2
-
-        item = session.get(Item, 1)
-        collection = session.query(Collection).one()
-        assert item is not None
-        assert item.status_code == "scheduled"
-        assert item.is_completed is False
-        assert collection.item_count == 2
-        assert collection.total_estimate_hours > 0
+        assert session.execute(text("SELECT 1")).scalar_one() == 1
 ```
 
 Notes:
@@ -93,3 +89,6 @@ Notes:
 - Record the fallback choice in the role `context.md` and handoff note.
 - Keep the normal `test_api_contract.py` file in the project even if this
   fallback harness is the path that actually runs in the current environment.
+- This fallback harness MUST remain run-agnostic. Domain-specific seed and
+  rule assertions belong in `test_bootstrap.py` and `test_rules.py`, not in
+  starter hardcoded model-name checks here.

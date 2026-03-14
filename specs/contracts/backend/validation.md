@@ -23,6 +23,8 @@ This file defines the minimum backend validation checklist.
 - one happy-path API create works
 - one happy-path API update works
 - one happy-path API delete works
+- query/search/filter verification MUST follow the commitments recorded in
+  `../../runs/current/artifacts/backend-design/query-behavior.md`
 
 If the app supports uploaded files:
 

@@ -10,11 +10,16 @@ last_updated_by: playbook
 
 # Rule Mapping Template
 
-This file is a generic template. The Backend role MUST create the run-owned
-version at `../../runs/current/artifacts/backend-design/rule-mapping.md`.
+Replace this stub with the run-specific rule mapping.
 
-The real artifact MUST define:
+## Required rule table
 
-- plain-language rule to LogicBank rule mapping
-- derived-field storage policy
-- out-of-scope logic
+| Product rule | Backend fields involved | LogicBank pattern | Trigger story | Persistence impact | Error behavior | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `<plain-language rule>` | `<fields>` | `<formula/sum/count/copy/constraint/custom>` | `<create/update/delete/reparent/etc.>` | `<stored derived field / validation only / both>` | `<rollback message or no error>` | `<notes>` |
+
+## Required notes
+
+- which product rules are declarative LogicBank rules
+- which rules require custom Python behavior
+- which rule requests are deferred or out of scope
