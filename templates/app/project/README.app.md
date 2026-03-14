@@ -73,6 +73,9 @@ After `./install.sh` completes:
 `run.sh` starts both processes together. If either process exits or fails, the
 other one is terminated too.
 
+If dependencies were not installed yet, `run.sh` must stop immediately and
+print a clear instruction to run `./install.sh`.
+
 By default `run.sh` serves the frontend in preview mode so the canonical
 `/admin-app/` path behaves like packaged delivery.
 

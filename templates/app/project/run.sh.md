@@ -11,6 +11,7 @@ servers but should still be easy to start with one command.
 The key behavior is:
 
 - start backend and frontend together
+- fail fast if dependencies were not installed yet
 - print the main URLs
 - if either child process exits or fails, terminate the other one too
 - clean up on `Ctrl+C`
@@ -52,6 +53,31 @@ export VITE_BACKEND_ORIGIN="${VITE_BACKEND_ORIGIN:-http://${PROXY_BACKEND_HOST}:
 backend_pid=""
 frontend_pid=""
 
+require_installed_dependencies() {
+  local missing=()
+
+  if [[ ! -d "$BACKEND_DIR/.deps" ]] || [[ ! -d "$BACKEND_DIR/.deps/fastapi" ]] || [[ ! -d "$BACKEND_DIR/.deps/safrs" ]]; then
+    missing+=("backend Python dependencies in backend/.deps")
+  fi
+
+  if [[ ! -d "$FRONTEND_DIR/node_modules" ]] || [[ ! -d "$FRONTEND_DIR/node_modules/vite" ]]; then
+    missing+=("frontend npm dependencies in frontend/node_modules")
+  fi
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  {
+    echo "Dependencies are not installed."
+    for item in "${missing[@]}"; do
+      echo "- Missing $item"
+    done
+    echo "Run ./install.sh from $PROJECT_DIR before starting ./run.sh."
+  } >&2
+  exit 1
+}
+
 cleanup() {
   trap - EXIT INT TERM
 
@@ -75,6 +101,8 @@ handle_signal() {
 
 trap handle_signal INT TERM
 trap 'status=$?; cleanup; exit "$status"' EXIT
+
+require_installed_dependencies
 
 (
   cd "$BACKEND_DIR"
@@ -135,6 +163,8 @@ Notes:
 - Keep this at the project root, not inside `backend/` or `frontend/`.
 - Use it for local development, not as the production process model.
 - The backend and frontend should still remain runnable independently.
+- `run.sh` MUST fail with a clear `./install.sh` instruction when the backend
+  or frontend dependencies have not been installed yet.
 - The startup guard above is intentional: do not start the frontend and hang on
   a dead backend process.
 - Keep the backend/frontend host and port values configurable so the same
