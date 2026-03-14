@@ -34,6 +34,31 @@ export VITE_BACKEND_ORIGIN="${VITE_BACKEND_ORIGIN:-http://${PROXY_BACKEND_HOST}:
 backend_pid=""
 frontend_pid=""
 
+activate_backend_venv() {
+  local candidate
+  for candidate in ".venv" "venv"; do
+    if [[ -f "$candidate/bin/activate" ]]; then
+      . "$candidate/bin/activate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+wait_for_first_exit() {
+  while true; do
+    if ! kill -0 "$backend_pid" 2>/dev/null; then
+      wait "$backend_pid"
+      return $?
+    fi
+    if ! kill -0 "$frontend_pid" 2>/dev/null; then
+      wait "$frontend_pid"
+      return $?
+    fi
+    sleep 1
+  done
+}
+
 cleanup() {
   trap - EXIT INT TERM
 
@@ -60,11 +85,9 @@ trap 'status=$?; cleanup; exit "$status"' EXIT
 
 (
   cd "$BACKEND_DIR"
-  if [[ -f .venv/bin/activate ]]; then
-    . .venv/bin/activate
-  fi
-  export CIMAGE_APP_HOST="$BACKEND_HOST"
-  export CIMAGE_APP_PORT="$BACKEND_PORT"
+  activate_backend_venv || true
+  export C2DB_ADMIN_HOST="$BACKEND_HOST"
+  export C2DB_ADMIN_PORT="$BACKEND_PORT"
   exec python3 run.py
 ) &
 backend_pid=$!
@@ -99,7 +122,7 @@ echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
 
-wait -n "$backend_pid" "$frontend_pid"
+wait_for_first_exit
 exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
