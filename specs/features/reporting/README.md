@@ -13,4 +13,5 @@ depends_on:
 
 This pack is a placeholder for export/report generation behavior.
 
-It MUST remain unloaded unless the capability profile enables it.
+It is not yet a fully specified feature pack. It MUST remain unloaded unless
+the current run explicitly expands it and the capability profile enables it.

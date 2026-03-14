@@ -63,9 +63,16 @@ artifacts:
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
+Before loading any optional feature pack or any on-demand contract file beyond
+the core set above, the Architect MUST read those two gating artifacts and
+treat them as authoritative.
+
 After the core reads above, the Architect MUST load only the feature packs
 explicitly enabled in the capability profile and assigned in the load plan.
 Disabled or undecided feature packs MUST NOT be loaded as design input.
+
+The Architect MUST replace starter-placeholder content in those gating
+artifacts before Phase 2 is handed off for implementation.
 
 Use the architecture template sources above when producing the run-owned
 artifacts under `../../runs/current/artifacts/architecture/`.

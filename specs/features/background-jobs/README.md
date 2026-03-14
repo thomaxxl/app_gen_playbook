@@ -13,4 +13,5 @@ depends_on:
 This pack is a placeholder for out-of-band processing such as queues,
 scheduled jobs, or deferred reconciliation.
 
-It MUST remain unloaded unless the capability profile enables it.
+It is not yet a fully specified feature pack. It MUST remain unloaded unless
+the current run explicitly expands it and the capability profile enables it.

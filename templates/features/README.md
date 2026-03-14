@@ -17,6 +17,20 @@ Rules:
 - the feature entrypoint is the canonical load boundary, not the scattered
   target-path snippets
 
+Maturity rule:
+
+- `uploads/` is the only feature-template pack that is currently documented as
+  implementation-ready
+- the other feature-template packs remain placeholders and MUST stay disabled
+  or undecided unless the current run expands them deliberately
+
+Segmentation rule:
+
+- the existence of a no-op extension point in a core template does not, by
+  itself, enable the feature
+- the feature remains disabled until the capability profile enables it and the
+  feature-owned template entrypoint is loaded
+
 Available packs:
 
 - [uploads/README.md](uploads/README.md)

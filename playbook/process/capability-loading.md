@@ -34,6 +34,11 @@ The load plan is the shortest role-specific statement of:
 - what each role MUST read
 - what each role MUST NOT read
 
+These files MAY start as stubs, but they MUST NOT remain starter-placeholder
+stubs once Phase 2 is handed off for implementation. A run MUST treat them as
+authoritative only after the Architect replaces the placeholder content with
+run-specific decisions.
+
 ## Positive loading rule
 
 After loading role/process core docs and the role's owned core contract
@@ -81,3 +86,27 @@ under:
 - `../../templates/features/`
 
 The operator MUST NOT scan all optional template trees "just in case".
+
+## Segmentation semantics
+
+Capability segmentation is primarily a reading, planning, copy, and activation
+boundary.
+
+It MUST be interpreted as:
+
+- which optional contracts may be loaded
+- which optional templates may be copied
+- which optional integrations may be activated
+
+It MUST NOT be interpreted as an automatic guarantee that the core runtime has
+zero dormant extension points for optional features.
+
+If a feature pack documents baseline no-op extension points in core templates,
+that is still considered compliant segmentation as long as:
+
+- the feature remains disabled in the capability profile
+- the feature templates are not loaded or copied
+- the feature-owned activation steps are not applied
+
+Only a feature pack that explicitly promises full isolation MAY be treated as
+having zero core-runtime footprint.

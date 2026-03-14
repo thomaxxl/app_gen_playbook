@@ -11,6 +11,10 @@ last_updated_by: none
 This file is the authoritative enable/disable decision record for optional
 capability packs.
 
+This starter placeholder MUST be replaced with run-specific decisions before
+Phase 2 is handed off for implementation. A run MUST NOT treat this file as
+authoritative while it still contains only the starter placeholder block.
+
 Each capability entry MUST record:
 
 - `capability`

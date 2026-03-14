@@ -67,6 +67,10 @@ The Frontend agent MUST also read:
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
+Before loading any optional feature pack or any on-demand contract file beyond
+the core set above, the Frontend agent MUST read those two gating artifacts
+and treat them as authoritative.
+
 After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.

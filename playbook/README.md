@@ -25,6 +25,8 @@ Capability rule:
   `../runs/current/artifacts/architecture/capability-profile.md`
 - role-scoped reads and template loads MUST follow
   `process/capability-loading.md`
+- those gating artifacts MUST be replaced with run-specific decisions before
+  Phase 2 is handed off for implementation
 
 Version-control rule:
 

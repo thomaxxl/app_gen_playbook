@@ -15,3 +15,7 @@ Those files control which optional feature packs may be loaded by each role.
 The preserved filled reference under `../../../example/artifacts/architecture/`
 MAY be consulted for document shape, but it MUST NOT replace run-owned
 architecture decisions.
+
+The gating files `capability-profile.md` and `load-plan.md` MAY start as
+stubs, but they MUST be replaced with run-specific content before Phase 2 is
+handed off for implementation.

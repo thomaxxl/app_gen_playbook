@@ -10,6 +10,11 @@ last_updated_by: none
 
 This file is the shortest role-scoped reading plan for the active run.
 
+This starter placeholder MUST be replaced with run-specific role decisions
+before Phase 2 is handed off for implementation. A run MUST NOT treat this
+file as authoritative while it still contains only the starter placeholder
+block.
+
 It MUST answer:
 
 - what each role MUST read

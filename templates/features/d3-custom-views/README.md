@@ -12,3 +12,6 @@ It MUST be loaded only when:
 
 If the capability is disabled or undecided, this directory MUST remain
 unloaded.
+
+This is still a placeholder feature-template pack. It MUST NOT be treated as a
+ready-made implementation lane unless the current run expands it deliberately.

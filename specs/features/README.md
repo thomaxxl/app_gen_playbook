@@ -23,6 +23,25 @@ Rules:
   - owning roles
   - dependent core contracts
 
+Maturity rule:
+
+- `uploads/` is the current fully documented feature pack
+- `d3-custom-views/`, `reporting/`, and `background-jobs/` are placeholder
+  packs only
+- placeholder packs MUST remain `disabled` or `undecided` in the capability
+  profile unless the current run explicitly expands them into real
+  run-specific feature work
+- agents MUST NOT treat placeholder pack names as proof that the feature is
+  already fully specified
+
+Segmentation rule:
+
+- feature-pack segmentation controls reading, planning, copy scope, and
+  activation
+- it MAY coexist with baseline no-op extension points in core templates
+- agents MUST rely on the feature-pack docs to determine whether a feature is
+  fully isolated or merely activation-gated
+
 Available packs:
 
 - [uploads/README.md](uploads/README.md)

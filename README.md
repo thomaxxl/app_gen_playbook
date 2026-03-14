@@ -128,3 +128,5 @@ Capability-loading rule:
 - role-scoped reading and copy scope MUST be controlled by
   `runs/current/artifacts/architecture/load-plan.md`
 - disabled or undecided feature packs MUST NOT be loaded or copied into `app/`
+- capability segmentation is a loading/copy/activation rule first; it does not
+  imply zero dormant runtime footprint unless the relevant feature pack says so
