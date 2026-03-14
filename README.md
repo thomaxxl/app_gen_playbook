@@ -25,6 +25,13 @@ This directory is now organized around the following top-level areas:
 - this `README.md`
   The top-level index.
 
+## Version control rule
+
+Changes to this playbook repository MUST be committed in git.
+
+Agents MUST NOT leave playbook edits uncommitted at the end of a playbook
+maintenance task unless the user explicitly asks for an uncommitted state.
+
 ## Start here
 
 1. [playbook/README.md](playbook/README.md)

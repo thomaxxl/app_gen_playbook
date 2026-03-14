@@ -29,6 +29,9 @@ Rules:
 - implementation work for a generated app MUST stay inside `app/`
 - implementation work MUST NOT patch the playbook contract files while
   creating the app unless the user explicitly requests a playbook update
+- when the task updates the playbook itself, those playbook changes MUST be
+  committed in the playbook git repository before the task is treated as
+  complete, unless the user explicitly asks to keep them uncommitted
 - phase artifacts and inbox traces outside `app/` are expected output of a
   real playbook run; see `playbook-execution-outputs.md`
 - required decisions must live in owned artifacts, not only in inbox messages

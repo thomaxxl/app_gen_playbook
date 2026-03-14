@@ -18,6 +18,13 @@ Path rule:
 - run-owned artifacts MUST be written under `../runs/current/artifacts/`
 - accepted artifacts MAY later be copied into `../app/docs/`
 
+Version-control rule:
+
+- edits to this playbook repository MUST be committed in git
+- a playbook maintenance task is not complete until the relevant playbook
+  changes are committed, unless the user explicitly asks to keep them
+  uncommitted
+
 ## Structure
 
 - [roles/README.md](roles/README.md)
