@@ -8,6 +8,7 @@ See also:
 fastapi==0.135.1
 uvicorn==0.41.0
 SQLAlchemy==2.0.48
+python-multipart==0.0.20
 PyYAML==6.0.3
 pytest==9.0.2
 httpx==0.28.1

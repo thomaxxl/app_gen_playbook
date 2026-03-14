@@ -59,3 +59,15 @@ This is why `admin.yaml` must define both:
 
 - `endpoint`
 - `user_key`
+
+## File-value note
+
+If the app includes upload-backed fields, the persisted record shape MUST still
+carry only stable backend values such as:
+
+- `hero_image_file_id`
+- attachment resource ids
+- logical media URLs inside fetched `StoredFile` metadata resources
+
+Temporary browser-only values containing `rawFile` are form-state artifacts,
+not persisted record fields.

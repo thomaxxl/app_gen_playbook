@@ -41,8 +41,8 @@ async function resolveEsbuildBinary() {
       const target = path.join(
         os.tmpdir(),
         scriptPath.includes("/vitest/")
-          ? `chess-tournament-esbuild-vitest-${process.platform}-${process.arch}-${process.pid}`
-          : `chess-tournament-esbuild-vite-${process.platform}-${process.arch}-${process.pid}`,
+          ? `cimage-app-esbuild-vitest-${process.platform}-${process.arch}-${process.pid}`
+          : `cimage-app-esbuild-vite-${process.platform}-${process.arch}-${process.pid}`,
       );
       await fs.rm(target, { force: true });
       await fs.copyFile(source, target);

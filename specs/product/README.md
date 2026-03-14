@@ -7,7 +7,8 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Product Manager run output MUST be written under
   `../../runs/current/artifacts/product/`.
-- The preserved airport example lives under `../../example/specs/product/`.
+- `../../example/` MAY be consulted as a runnable reference app, but it MUST
+  NOT replace run-owned product artifacts.
 
 Template files:
 

@@ -25,7 +25,7 @@ Required runtime dependencies:
 - `@emotion/react@11.14.0`
 - `@emotion/styled@11.14.1`
 - `yaml@2.8.1`
-- `safrs-jsonapi-client@https://codeload.github.com/thomaxxl/safrs-jsonapi-client/tar.gz/484c8f7b3195b31b8c56e4abc2641e8fa1ab12cb`
+- `safrs-jsonapi-client@https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz`
 
 Optional but standard for custom figures:
 
@@ -59,8 +59,12 @@ npm install \
   @emotion/react@11.14.0 \
   @emotion/styled@11.14.1 \
   yaml@2.8.1 \
-  https://codeload.github.com/thomaxxl/safrs-jsonapi-client/tar.gz/484c8f7b3195b31b8c56e4abc2641e8fa1ab12cb
+  https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz
 ```
+
+The placeholder `<release-tag>` / `<package-version>` pair MUST be replaced
+with a real verified release asset before the generated app is considered
+complete.
 
 Optional charts/graphs:
 
@@ -93,12 +97,18 @@ npm install -D \
 - The current starter dependency set is intentionally pinned to a Node 24-
   validated Vite 6 stack.
 - `safrs-jsonapi-client` MUST be pinned through an immutable tarball URL or a
-  published registry release. The frontend MUST NOT use a git dependency for
-  this package in the generated app.
+  published registry release. For this playbook, the preferred source is a
+  GitHub release asset from `thomaxxl/safrs-jsonapi-client`. The frontend MUST
+  NOT use a git dependency or raw GitHub source archive for this package in
+  the generated app.
 - If the selected `safrs-jsonapi-client` artifact references built outputs
   such as `dist/` that are missing from the installed artifact, the agent MUST
   stop using that artifact and replace it with a validated tarball or
   published release before continuing.
+- Before freezing the generated app dependency, the agent MUST verify that:
+  - the referenced GitHub release exists
+  - the referenced `.tgz` asset exists
+  - the asset version and the package filename agree
 - `yaml` MUST be a direct dependency because the runtime loads `admin.yaml`
   client-side.
 - `@types/node` MUST be present because the scaffold includes

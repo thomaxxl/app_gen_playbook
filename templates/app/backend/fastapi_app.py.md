@@ -29,6 +29,7 @@ from .db import (
 )
 from .models import EXPOSED_MODELS
 from .rules import activate_logic
+# from .files.api import build_files_router
 
 
 def create_app() -> FastAPI:
@@ -84,6 +85,10 @@ def create_app() -> FastAPI:
     def admin_yaml() -> FileResponse:
         return FileResponse(settings.admin_yaml_path, media_type="text/yaml")
 
+    # If the app supports uploaded files, enable the explicit multipart/media
+    # boundary here instead of trying to push raw bytes through SAFRS.
+    # app.include_router(build_files_router(session_factory, settings))
+
     return app
 ```
 
@@ -95,3 +100,5 @@ Notes:
 - Activate LogicBank against the real app session factory before seed/bootstrap.
 - Perform `admin.yaml` validation and idempotent seed/bootstrap before exposing
   SAFRS routes.
+- If the app supports uploaded files, import a router from `files/api.py` and
+  include it before returning the app.

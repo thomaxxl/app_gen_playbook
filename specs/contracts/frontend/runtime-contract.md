@@ -15,10 +15,14 @@ The starter archive MUST ship these runtime snippets:
 - `templates/app/frontend/shared-runtime/admin/schemaContext.tsx.md`
 - `templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md`
 - `templates/app/frontend/shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
+- `templates/app/frontend/shared-runtime/files/uploadAwareDataProvider.ts.md`
+- `templates/app/frontend/shared-runtime/files/fileValueAdapters.ts.md`
+- `templates/app/frontend/shared-runtime/files/fileFieldHelpers.ts.md`
 
 The starter frontend scaffold MUST also ship:
 
 - `templates/app/frontend/index.html.md`
+- `templates/app/frontend/Home.tsx.md`
 - `templates/app/frontend/tsconfig.json.md`
 - `templates/app/frontend/tsconfig.app.json.md`
 - `templates/app/frontend/tsconfig.node.json.md`
@@ -84,6 +88,7 @@ type SchemaDrivenAdminAppProps = {
 
 That `children` slot is the official extension point for:
 
+- direct custom `Resource` elements such as the required `Home` page
 - `CustomRoutes noLayout`
 - custom landing pages
 - extra dashboard routes
@@ -122,6 +127,20 @@ The runtime MUST NOT hide generated `<Resource>` elements behind a nested
 wrapper component that React-Admin cannot introspect. `Admin` route
 registration depends on direct child elements at render time.
 
+## Required Home page integration
+
+Every generated app MUST add a direct `Resource` child for the `Home` page.
+
+That `Resource` MUST:
+
+- use the name `Home`
+- include a visible Home icon
+- produce a left-sidebar entry labeled `Home`
+- route to the `Home.tsx` page component
+
+The `Home` page MUST be treated as a project page, not as a backend resource
+declared in `admin.yaml`.
+
 ## YAML parsing
 
 The frontend runtime relies on `safrs-jsonapi-client` for:
@@ -141,6 +160,34 @@ The runtime still owns:
 The runtime contract MUST NOT depend on an undocumented `schema.raw` field.
 If the runtime needs raw `admin.yaml` metadata for labels, ordering, or
 visibility, it must carry that raw YAML in local app state explicitly.
+
+## File-upload extension
+
+If the app includes upload-backed fields, the frontend runtime MUST add an
+upload-aware data-provider wrapper above the normal SAFRS provider path.
+
+Required behavior:
+
+1. start from the normal SAFRS base provider
+2. apply the search-enabled wrapper
+3. apply the upload-aware wrapper
+
+The upload-aware wrapper MUST:
+
+- intercept `create` and `update`
+- detect values containing `rawFile`
+- create pending file metadata through SAFRS
+- upload bytes through the dedicated multipart endpoint
+- replace temporary form values with stable file metadata or file-id payloads
+- apply upload-field mapping per resource, not through one global flat field
+  map
+
+If the app declares upload fields in `admin.yaml`, the runtime SHOULD derive
+the upload mapping from raw `admin.yaml` metadata instead of forcing each app
+to hand-code a separate provider map.
+
+The runtime MUST NOT push raw `File` objects into the normal SAFRS JSON:API
+provider path.
 
 ## Required normalized schema surface
 

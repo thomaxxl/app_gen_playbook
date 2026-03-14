@@ -8,9 +8,11 @@ See also:
 Keep the app root thin, but make resource wiring explicit.
 
 ```tsx
-import { CustomRoutes } from "react-admin";
+import HomeIcon from "@mui/icons-material/Home";
+import { CustomRoutes, Resource } from "react-admin";
 import { Navigate, Route } from "react-router-dom";
 
+import Home from "./Home";
 import Landing from "./Landing";
 import { appConfig } from "./config";
 import { resourcePages } from "./generated/resourcePages";
@@ -22,10 +24,18 @@ export default function App() {
       appConfig={appConfig}
       resourcePages={resourcePages}
     >
-      <CustomRoutes noLayout>
-        <Route element={<Navigate replace to="/Landing" />} path="/" />
-        <Route element={<Landing />} path="/Landing" />
-      </CustomRoutes>
+      <>
+        <Resource
+          icon={HomeIcon}
+          list={Home}
+          name="Home"
+          options={{ label: "Home" }}
+        />
+        <CustomRoutes noLayout>
+          <Route element={<Navigate replace to="/Home" />} path="/" />
+          <Route element={<Landing />} path="/Landing" />
+        </CustomRoutes>
+      </>
     </SchemaDrivenAdminApp>
   );
 }
@@ -35,6 +45,7 @@ Notes:
 
 - Do not bury project-specific API paths in the component tree.
 - Keep app title and endpoint config in `config.ts`.
-- `Landing.tsx` is part of the starter app, not an optional afterthought.
+- `Home.tsx` is the required in-admin landing page with sidebar presence.
+- `Landing.tsx` is the optional no-layout companion route for the starter app.
 - `children` inside `SchemaDrivenAdminApp` is the official custom-route
   extension point.

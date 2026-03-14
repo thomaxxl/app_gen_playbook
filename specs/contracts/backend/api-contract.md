@@ -64,3 +64,16 @@ Instead, the implementation MUST:
   message such as `errors[].title` and `errors[].detail`
 - field-pointer semantics are out of scope for the starter contract unless the
   project adds them explicitly
+
+## File-metadata extension
+
+If the app supports uploaded files, the backend MAY expose file metadata
+resources such as `StoredFile`, `FileVariant`, and `FileAttachment` through
+SAFRS.
+
+In that case:
+
+- file metadata resources MUST behave like normal SAFRS JSON:API resources
+- binary upload bodies MUST still go through dedicated multipart endpoints
+- frontend-visible file attributes MUST expose logical URLs such as
+  `/media/{file_id}`, not raw storage paths

@@ -41,6 +41,9 @@ The agent MAY load these files on demand:
   when writing tests or checking the generated backend contract
 - [verification-fallbacks.md](verification-fallbacks.md)
   when the preferred local HTTP/ASGI verification path is broken
+- [../files/README.md](../files/README.md)
+  when the app includes uploaded binaries, media download routes, or file
+  attachment metadata
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also

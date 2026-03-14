@@ -28,6 +28,7 @@ Recommended public routes:
 - `/docs` for FastAPI docs
 - `/ui/admin/admin.yaml` for the frontend contract
 - `/jsonapi.json` for the backend schema
+- `/media/` for logical uploaded-media URLs when the app supports files
 
 ## Recommended files
 
@@ -94,13 +95,16 @@ nginx should:
 - proxy `/ui`
 - proxy `/jsonapi.json`
 - optionally proxy `/swagger.json`
+- proxy `/media/` when the backend serves media directly
+- or serve internal protected media targets when using `X-Accel-Redirect`
 
 The image must also install that nginx config into nginx's active config path,
 not just copy it into an arbitrary application directory.
 
 For reproducibility, prefer a multi-stage build with a pinned Node image for
 the frontend build step rather than relying on distro `nodejs` packages in the
-runtime image.
+runtime image. That build image SHOULD stay aligned with the frontend Node 24
+contract.
 
 ## Suggested compose behavior
 
@@ -125,3 +129,9 @@ Optional dev override behavior:
 - `GET /ui/admin/admin.yaml` works
 - frontend CRUD works through the proxied API
 - container restart preserves SQLite data if a volume is used
+
+If the app supports uploaded files:
+
+- `GET /media/{file_id}` works through the selected serve mode
+- nginx internal media serving works when `MEDIA_SERVE_MODE=nginx`
+- raw storage paths are not exposed in frontend-visible payloads

@@ -10,7 +10,7 @@ It contains:
 - [role-state/README.md](role-state/README.md)
 - [evidence/README.md](evidence/README.md)
 
-The preserved generated airport example remains outside this directory in:
+The preserved generated example remains outside this directory in:
 
 - [../../example/README.md](../../example/README.md)
 

@@ -48,3 +48,10 @@ If the app later adds custom non-SAFRS write endpoints:
 - commit on success
 - rollback on failure
 - MUST NOT leave the session dirty after exceptions
+
+If the app adds custom file-upload endpoints:
+
+- those endpoints MUST follow the same session rules
+- object-storage failure MUST roll back or mark the file row `failed`
+- the endpoint MUST NOT leave a dirty SQLAlchemy session behind after upload
+  errors

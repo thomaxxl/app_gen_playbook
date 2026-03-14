@@ -49,12 +49,18 @@ test("starter app smoke flow works", async ({ page, request }) => {
     response.url().includes("/api/collections") && response.status() === 200,
   );
 
-  await page.goto("/admin-app/#/Landing");
+  await page.goto("/admin-app/#/Home");
   await collectionResponsePromise;
 
   await expect(
     page.getByText(/failed to initialize the schema or data provider/i),
   ).toHaveCount(0);
+  await expect(page.getByText(/home/i)).toBeVisible();
+
+  const homeMenuLink = page.getByRole("link", { name: /home/i });
+  await expect(homeMenuLink).toBeVisible();
+
+  await page.goto("/admin-app/#/Landing");
   await expect(page.getByText(/landing error/i)).toHaveCount(0);
 
   await page.goto("/admin-app/#/Collection");

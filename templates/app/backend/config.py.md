@@ -20,6 +20,7 @@ PROJECT_DIR = BACKEND_DIR.parent
 REFERENCE_DIR = PROJECT_DIR / "reference"
 DEFAULT_DB_PATH = BACKEND_DIR / "data" / "app.sqlite"
 DEFAULT_ADMIN_YAML_PATH = REFERENCE_DIR / "admin.yaml"
+DEFAULT_MEDIA_ROOT = BACKEND_DIR / "data" / "media"
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,9 @@ class Settings:
     db_path: Path
     database_url: str
     admin_yaml_path: Path
+    media_root: Path
+    media_serve_mode: str
+    media_internal_prefix: str
 
 
 def _resolve_path(value: str, default: Path) -> Path:
@@ -50,6 +54,12 @@ def get_settings() -> Settings:
             os.getenv("MY_APP_ADMIN_YAML_PATH", ""),
             DEFAULT_ADMIN_YAML_PATH,
         ),
+        media_root=_resolve_path(
+            os.getenv("MY_APP_MEDIA_ROOT", ""),
+            DEFAULT_MEDIA_ROOT,
+        ),
+        media_serve_mode=os.getenv("MY_APP_MEDIA_SERVE_MODE", "app"),
+        media_internal_prefix=os.getenv("MY_APP_MEDIA_INTERNAL_PREFIX", "/_protected_media"),
     )
 ```
 
@@ -58,3 +68,6 @@ Notes:
 - Keep env var names app-specific.
 - Keep `/jsonapi.json` as the canonical schema URL.
 - Put `reference/admin.yaml` under the project root, not inside `backend/`.
+- The media settings are harmless defaults for apps that do not use uploaded
+  files. Apps with uploads SHOULD use them rather than inventing a second
+  config pattern.

@@ -22,10 +22,17 @@ function adminAppDevBase() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const backendOrigin = env.VITE_BACKEND_ORIGIN || "http://127.0.0.1:5656";
+  const proxyConfig = {
+    "/api": backendOrigin,
+    "/media": backendOrigin,
+    "/ui": backendOrigin,
+    "/jsonapi.json": backendOrigin,
+    "/swagger.json": backendOrigin,
+  };
   const fsPromisesShim = fileURLToPath(
     new URL("./src/shims/fs-promises.ts", import.meta.url),
   );
-  const safrsJsonApiClientEntry = fileURLToPath(
+  const safrsClientEntry = fileURLToPath(
     new URL("./node_modules/safrs-jsonapi-client/src/index.ts", import.meta.url),
   );
 
@@ -36,17 +43,12 @@ export default defineConfig(({ mode }) => {
       alias: {
         "fs/promises": fsPromisesShim,
         "node:fs/promises": fsPromisesShim,
-        "safrs-jsonapi-client": safrsJsonApiClientEntry,
+        "safrs-jsonapi-client": safrsClientEntry,
       },
     },
     server: {
       strictPort: true,
-      proxy: {
-        "/api": backendOrigin,
-        "/ui": backendOrigin,
-        "/jsonapi.json": backendOrigin,
-        "/swagger.json": backendOrigin,
-      },
+      proxy: proxyConfig,
     },
   };
 });

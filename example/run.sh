@@ -63,8 +63,8 @@ trap 'status=$?; cleanup; exit "$status"' EXIT
   if [[ -f .venv/bin/activate ]]; then
     . .venv/bin/activate
   fi
-  export AIRPORT_OPS_HOST="$BACKEND_HOST"
-  export AIRPORT_OPS_PORT="$BACKEND_PORT"
+  export CIMAGE_APP_HOST="$BACKEND_HOST"
+  export CIMAGE_APP_PORT="$BACKEND_PORT"
   exec python3 run.py
 ) &
 backend_pid=$!
@@ -94,6 +94,7 @@ echo "Backend pid: $backend_pid"
 echo "Frontend pid: $frontend_pid"
 echo "Frontend mode: $FRONTEND_MODE"
 echo "Frontend URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/"
+echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Home"
 echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Landing"
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"

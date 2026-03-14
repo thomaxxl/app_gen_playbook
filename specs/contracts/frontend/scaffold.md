@@ -19,6 +19,7 @@ frontend/
   playwright.config.ts
   src/
     App.tsx
+    Home.tsx
     Landing.tsx
     config.ts
     main.tsx
@@ -34,12 +35,17 @@ frontend/
         schemaContext.tsx
         resourceMetadata.ts
         createSearchEnabledDataProvider.ts
+      files/
+        uploadAwareDataProvider.ts
+        fileValueAdapters.ts
+        fileFieldHelpers.ts
     shims/
       fs-promises.ts
   tests/
     SchemaDrivenAdminApp.smoke.test.tsx
     schemaContext.test.ts
     createSearchEnabledDataProvider.test.ts
+    uploadAwareDataProvider.test.ts   # required only if the app supports uploads
     vite.config.test.ts
     smoke.e2e.spec.ts
 ```
@@ -60,6 +66,7 @@ These files are shipped under `templates/app/frontend/`:
 - `vite-env.d.ts.md`
 - `config.ts.md`
 - `App.tsx.md`
+- `Home.tsx.md`
 - `Landing.tsx.md`
 - `generated/resources/Collection.tsx.md`
 - `generated/resources/Item.tsx.md`
@@ -70,13 +77,23 @@ These files are shipped under `templates/app/frontend/`:
 - `shared-runtime/admin/resourceMetadata.ts.md`
 - `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
 - `shared-runtime/resourceRegistry.tsx.md`
+- `shared-runtime/files/uploadAwareDataProvider.ts.md`
+- `shared-runtime/files/fileValueAdapters.ts.md`
+- `shared-runtime/files/fileFieldHelpers.ts.md`
 - `fs-promises.ts.md`
 - `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
 - `tests/schemaContext.test.ts.md`
 - `tests/resourceMetadata.test.ts.md`
 - `tests/createSearchEnabledDataProvider.test.ts.md`
+- `tests/uploadAwareDataProvider.test.ts.md`
 - `tests/vite.config.test.ts.md`
 - `tests/smoke.e2e.spec.ts.md`
+
+Optional upload-related templates:
+
+Optional upload-related template:
+
+- `tests/uploadAwareDataProvider.test.ts.md`
 
 ## Required build scripts
 
@@ -94,8 +111,12 @@ The starter frontend must support:
 
 - The frontend scaffold must be complete enough to run without first generating
   a hidden Vite starter app elsewhere.
+- `Home.tsx` is required even when `Landing.tsx` is omitted or replaced.
 - Additional project-specific files are allowed, but the required files above
   are the minimum contract for the starter playbook.
+- The `shared-runtime/files/` helper files are baseline runtime files. They
+  must compile even when the app has no upload fields and should no-op in that
+  case.
 - For non-starter domains, the wrapper files under `generated/resources/` MUST
   be replaced with one file per resource declared in
   `../../architecture/resource-naming.md`.

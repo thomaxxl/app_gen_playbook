@@ -33,7 +33,7 @@ vi.mock("../src/shared-runtime/admin/schemaContext", async () => {
 const appConfig = {
   adminYamlUrl: "/ui/admin/admin.yaml",
   apiRoot: "/api",
-  title: "Chess Tournament Management Admin",
+  title: "Cimage Sharing and Management",
 };
 
 const bootstrapPayload = {
@@ -69,14 +69,14 @@ describe("SchemaDrivenAdminApp", () => {
     loadAdminBootstrap.mockResolvedValueOnce(bootstrapPayload);
 
     render(
-        <SchemaDrivenAdminApp
-          appConfig={appConfig}
-          resourcePages={[
-            {
-              name: "Tournament",
-              list: () => <div />,
-              create: () => <div />,
-              edit: () => <div />,
+      <SchemaDrivenAdminApp
+        appConfig={appConfig}
+        resourcePages={[
+          {
+            name: "Gallery",
+            list: () => <div />,
+            create: () => <div />,
+            edit: () => <div />,
             show: () => <div />,
           },
         ]}

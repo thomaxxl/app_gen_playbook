@@ -31,6 +31,15 @@ Frontend behavior:
 - do not hide the failure behind a spinner
 - leave enough context for the user to retry
 
+## Upload errors
+
+If the app supports uploaded files:
+
+- failed pending-metadata creation MUST produce a visible error
+- failed multipart upload MUST produce a visible error
+- the frontend MUST NOT silently continue the final record save after an upload
+  failure
+
 ## Custom-view errors
 
 For `Landing.tsx` or any D3-driven summary page:

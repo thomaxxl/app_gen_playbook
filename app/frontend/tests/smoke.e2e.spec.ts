@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("chess tournament smoke flow works", async ({ page, request }) => {
+test("cimage sharing smoke flow works", async ({ page, request }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -28,21 +28,25 @@ test("chess tournament smoke flow works", async ({ page, request }) => {
   const adminYamlResponse = await request.get("http://127.0.0.1:5173/ui/admin/admin.yaml");
   expect(adminYamlResponse.status()).toBe(200);
 
-  const pairingsResponsePromise = page.waitForResponse(
+  const imageResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes("/api/pairings") && response.status() === 200,
+      response.url().includes("/api/image_assets") && response.status() === 200,
   );
 
-  await page.goto("/admin-app/#/Landing");
-  await pairingsResponsePromise;
+  await page.goto("/admin-app/#/Home");
+  await imageResponsePromise;
 
   await expect(
     page.getByText(/failed to initialize the schema or data provider/i),
   ).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
+  await expect(page.getByText(/cimage sharing and management/i)).toBeVisible();
+
+  await page.goto("/admin-app/#/Landing");
   await expect(page.getByText(/landing error/i)).toHaveCount(0);
 
-  await page.goto("/admin-app/#/Tournament");
-  await expect(page.getByText("OPEN26")).toBeVisible();
+  await page.goto("/admin-app/#/Gallery");
+  await expect(page.getByText("SEA-SET")).toBeVisible();
 
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);

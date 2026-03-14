@@ -17,4 +17,4 @@ Rules:
   `specs/backend-design/` are generic artifact templates.
 - Run-specific artifacts MUST be written under `../runs/current/artifacts/`.
 - Accepted artifacts MAY later be copied into `../app/docs/`.
-- Preserved airport-specific filled artifacts live under `../example/specs/`.
+- `../example/` is a preserved runnable example app, not a second spec source.

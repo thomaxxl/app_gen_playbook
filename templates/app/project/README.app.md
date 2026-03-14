@@ -57,6 +57,7 @@ npm run dev
 Default frontend URLs:
 
 - `http://127.0.0.1:5173/admin-app/`
+- `http://127.0.0.1:5173/admin-app/#/Home`
 - `http://127.0.0.1:5173/admin-app/#/Landing`
 
 ## Run both
@@ -88,6 +89,12 @@ Notes:
 - Keep this README short and runnable.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
+- Document `/admin-app/#/Home` as the required in-admin entry page. Treat
+  `/admin-app/#/Landing` as optional unless the generated app actually ships a
+  starter custom page.
+- If the app supports uploaded files, also document the logical `/media/...`
+  route and make clear that those URLs are logical app routes, not raw storage
+  paths.
 - If the current validated stack still needs the temporary local LogicBank
   override, document it through `LOCAL_LOGICBANK_PATH` and note that it should
   be removed once the fixed release is published.

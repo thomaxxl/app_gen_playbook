@@ -10,6 +10,7 @@ The generated SPA is served under:
 
 All in-app routes are hash-based under that base path:
 
+- `/admin-app/#/Home`
 - `/admin-app/#/Landing`
 - `/admin-app/#/Collection`
 - `/admin-app/#/Item/123/show`
@@ -53,7 +54,7 @@ Vite dev must preserve the same public base path:
 
 Expected dev URL:
 
-- `http://127.0.0.1:5173/admin-app/#/Landing`
+- `http://127.0.0.1:5173/admin-app/#/Home`
 
 Vite proxy targets:
 
@@ -73,3 +74,17 @@ Assets must resolve under:
 
 Do not mix `/assets/...` and `/admin-app/assets/...` in the documented deploy
 contract for generated frontends.
+
+## Entry expectations
+
+Every generated React-Admin app MUST provide:
+
+- a `Home` page at `/admin-app/#/Home`
+- a visible `Home` sidebar entry with icon
+
+The starter scaffold MAY also provide:
+
+- a no-layout `Landing` page at `/admin-app/#/Landing`
+
+If both routes exist, `Home` SHOULD be treated as the primary in-admin entry
+point.

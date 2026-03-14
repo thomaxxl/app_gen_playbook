@@ -1,50 +1,36 @@
 # Playbook Remarks
 
-Status: integrated into the playbook on 2026-03-13. Keep this file as a
-historical record of issues discovered during the airport-management app run.
+## Observed During This Run
 
-These notes were recorded while creating the airport management app.
-
-## Inconsistencies Found
-
-- The root [README.md](../README.md) says app
-  creation must not modify files outside `app/`, but the playbook also
-  requires durable phase artifacts in `specs/product/`,
-  `specs/architecture/`, `specs/ux/`, `specs/backend-design/`, and run-state
-  inbox traces under `runs/current/role-state/`.
-- The ownership rules say only the owning role may edit its artifact area, but
-  the metadata rules also say `approved` should be set by a receiving or
-  gate-owning review role. Those two rules conflict unless approval is moved
-  out of the artifact file or cross-role approval edits are explicitly allowed.
-- [specs/contracts/backend/runtime-and-startup.md](../specs/contracts/backend/runtime-and-startup.md)
-  and [specs/contracts/rules/lifecycle.md](../specs/contracts/rules/lifecycle.md)
-  disagree with [specs/backend-design/bootstrap-strategy.md](../specs/backend-design/bootstrap-strategy.md)
-  about whether `admin.yaml` validation happens before or after LogicBank
-  activation.
-- The contracts say SAFRS collection routes must be runtime-validated instead
-  of inferred, but the starter bootstrap validator pattern hardcodes expected
-  endpoints before route exposure. That should be resolved into one sanctioned
-  validation pattern.
-- [specs/contracts/frontend/dependencies.md](../specs/contracts/frontend/dependencies.md)
-  pins `react-router-dom@6.30.1`, while
-  [templates/app/frontend/package.json.md](../templates/app/frontend/package.json.md)
-  uses `7.13.1`.
-
-## Improvements Suggested
-
-- Add a single explicit "playbook execution outputs" section that says whether
-  playbook-test runs are expected to edit `runs/current/role-state/`,
-  `specs/product/`, `specs/architecture/`, `specs/ux/`, and
-  `specs/backend-design/`.
-- Add a single canonical startup-order source and have template snippets point
-  only to that source.
-- Add a documented strategy for custom domains with multi-word SAFRS resources
-  like `FlightStatus`, including how to validate final collection paths.
-- Provide a small approval model example that shows how statuses move from
-  `draft` to `ready-for-handoff` to `approved` without violating ownership
-  rules.
-- Add a template variant for non-starter domains so the first adaptation step
-  is less manual.
-- Add a runtime-environment note that says whether the generated scripts may
-  assume executable bits, symlink-friendly package installs, and `python -m
-  venv` support on mounted filesystems.
+- The user asked for a `"cimage"` app, which reads like a typo of `"image"`.
+  The playbook does not say whether likely typos in app names should be
+  normalized or preserved. I preserved `Cimage` as the product name.
+- App-only mode is now documented and workable, but an empty `app/` still has
+  no canonical stub `README.md` or `REMARKS.md`. A tiny starter template would
+  reduce ambiguity at generation time.
+- The previous preserved example scaffold was airport-specific, which made
+  non-airport runs harder to adapt. This has since been corrected by replacing
+  the preserved example with the Cimage app.
+- Backend dependency guidance is still inconsistent with reality on this host:
+  `logicbank==1.30.1` and `SQLAlchemy==2.0.48` do not install cleanly together
+  from a single `requirements.txt`, so verification still needs a split install
+  where LogicBank is added with `--no-deps`.
+- LogicBank behavior is subtler than the current playbook suggests. Copy rules
+  worked reliably on child create/update/reassignment, but changing fields on a
+  referenced parent status did not obviously back-propagate to already-linked
+  child rows in this setup. The playbook should clarify whether that propagation
+  is expected, required, or out of scope.
+- Frontend dependency delivery is still brittle. Installing
+  `safrs-jsonapi-client` from Git transport is unreliable here, while the
+  GitHub tarball installs but requires Vite/TypeScript aliasing to the package's
+  `src/index.ts` because the distributed `dist/` entry is not available in the
+  installed artifact.
+- Frontend test naming is easier to get wrong than it looks. A file named
+  `vite.config.test.ts` was excluded by Vitest's default config-file ignore
+  pattern, and the Vite config test also needed an explicit Node test
+  environment instead of the suite-wide `jsdom` default. The playbook should
+  call out both constraints for config-level tests.
+- Environment guidance still needs to be more explicit for mounted filesystems.
+  `pip --target` and a temp frontend copy were the reliable verification path;
+  the playbook should make that fallback a first-class documented option instead
+  of an implementation detail discovered during the run.

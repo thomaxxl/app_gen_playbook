@@ -39,6 +39,8 @@ The agent MAY load these files on demand:
   when configuring Vite build, nginx, or subpath deployment
 - [validation.md](validation.md)
   when proving the generated frontend is deployable and stable
+- [../files/README.md](../files/README.md)
+  when the app includes upload-backed fields, file inputs, or media previews
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also

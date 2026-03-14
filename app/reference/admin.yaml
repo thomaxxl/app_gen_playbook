@@ -1,7 +1,7 @@
 resources:
-  Tournament:
-    endpoint: /api/tournaments
-    label: Tournaments
+  Gallery:
+    endpoint: /api/galleries
+    label: Galleries
     user_key: code
     menu_order: 10
     attributes:
@@ -11,7 +11,7 @@ resources:
         hidden: true
       code:
         type: text
-        label: Code
+        label: Gallery Code
         required: true
         search: true
         order: 10
@@ -21,7 +21,7 @@ resources:
         edit: true
       name:
         type: text
-        label: Tournament
+        label: Name
         required: true
         search: true
         order: 20
@@ -29,9 +29,9 @@ resources:
         show: true
         create: true
         edit: true
-      city:
+      owner_name:
         type: text
-        label: City
+        label: Owner
         required: true
         search: true
         order: 30
@@ -39,70 +39,52 @@ resources:
         show: true
         create: true
         edit: true
-      start_date:
-        type: datetime
-        label: Start
-        required: true
+      image_count:
+        type: number
+        label: Images
+        readonly: true
         order: 40
         list: true
         show: true
-        create: true
-        edit: true
-      end_date:
-        type: datetime
-        label: End
+        create: false
+        edit: false
+      public_image_count:
+        type: number
+        label: Public Images
+        readonly: true
         order: 50
         list: true
         show: true
-        create: true
-        edit: true
-      player_count:
+        create: false
+        edit: false
+      total_size_mb:
         type: number
-        label: Players
+        label: Total Size (MB)
         readonly: true
         order: 60
         list: true
         show: true
         create: false
         edit: false
-      pairing_count:
-        type: number
-        label: Pairings
-        readonly: true
-        order: 70
-        list: true
-        show: true
-        create: false
-        edit: false
-      reported_pairing_count:
-        type: number
-        label: Reported Pairings
-        readonly: true
-        order: 80
-        list: true
-        show: true
-        create: false
-        edit: false
     tab_groups:
       related:
-        label: Related Records
+        label: Gallery Images
         relationships:
-          - players
-          - pairings
+          - images
 
-  Player:
-    endpoint: /api/players
-    label: Players
-    user_key: full_name
+  ImageAsset:
+    endpoint: /api/image_assets
+    label: Images
+    user_key: title
     menu_order: 20
     attributes:
       id:
         type: number
         readonly: true
         hidden: true
-      full_name:
+      title:
         type: text
-        label: Player
+        label: Title
         required: true
         search: true
         order: 10
@@ -110,9 +92,9 @@ resources:
         show: true
         create: true
         edit: true
-      federation_id:
+      filename:
         type: text
-        label: Federation ID
+        label: Filename
         required: true
         search: true
         order: 20
@@ -120,188 +102,100 @@ resources:
         show: true
         create: true
         edit: true
-      rating:
-        type: number
-        label: Rating
+      preview_url:
+        type: text
+        label: Preview URL
         required: true
         order: 30
-        list: true
+        list: false
         show: true
         create: true
         edit: true
-      seed_number:
-        type: number
-        label: Seed
+      uploaded_at:
+        type: datetime
+        label: Uploaded At
         required: true
         order: 40
         list: true
         show: true
         create: true
         edit: true
-      tournament_id:
-        type: reference
-        label: Tournament
-        reference: Tournament
-        required: true
+      published_at:
+        type: datetime
+        label: Published At
         order: 50
         list: true
         show: true
         create: true
         edit: true
-    tab_groups:
-      related:
-        label: Related Records
-        relationships:
-          - tournament
-          - white_pairings
-          - black_pairings
-
-  Pairing:
-    endpoint: /api/pairings
-    label: Pairings
-    user_key: pairing_code
-    menu_order: 30
-    attributes:
-      id:
+      file_size_mb:
         type: number
-        readonly: true
-        hidden: true
-      pairing_code:
-        type: text
-        label: Pairing Code
-        readonly: true
-        search: true
-        order: 10
-        list: true
-        show: true
-        create: false
-        edit: false
-      round_number:
-        type: number
-        label: Round
+        label: File Size (MB)
         required: true
-        order: 20
-        list: true
-        show: true
-        create: true
-        edit: true
-      board_number:
-        type: number
-        label: Board
-        required: true
-        order: 30
-        list: true
-        show: true
-        create: true
-        edit: true
-      scheduled_at:
-        type: datetime
-        label: Scheduled
-        required: true
-        order: 40
-        list: true
-        show: true
-        create: true
-        edit: true
-      reported_at:
-        type: datetime
-        label: Reported
-        order: 50
-        list: true
-        show: true
-        create: true
-        edit: true
-      result_summary:
-        type: text
-        label: Result
-        search: true
         order: 60
         list: true
         show: true
         create: true
         edit: true
-      tournament_id:
+      gallery_id:
         type: reference
-        label: Tournament
-        reference: Tournament
+        label: Gallery
+        reference: Gallery
         required: true
         order: 70
         list: true
         show: true
         create: true
         edit: true
-      white_player_id:
+      status_id:
         type: reference
-        label: White
-        reference: Player
+        label: Share Status
+        reference: ShareStatus
         required: true
         order: 80
         list: true
         show: true
         create: true
         edit: true
-      black_player_id:
-        type: reference
-        label: Black
-        reference: Player
-        required: true
+      share_status_code:
+        type: text
+        label: Status Code
+        readonly: true
         order: 90
-        list: true
+        list: false
         show: true
-        create: true
-        edit: true
-      status_id:
-        type: reference
-        label: Status
-        reference: PairingStatus
-        required: true
+        create: false
+        edit: false
+      is_public:
+        type: boolean
+        label: Public
+        readonly: true
         order: 100
         list: true
         show: true
-        create: true
-        edit: true
-      status_code:
-        type: text
-        label: Status Code
+        create: false
+        edit: false
+      public_value:
+        type: number
+        label: Public Value
         readonly: true
         order: 110
         list: false
         show: true
         create: false
         edit: false
-      is_reported:
-        type: boolean
-        label: Reported
-        readonly: true
-        order: 120
-        list: true
-        show: true
-        create: false
-        edit: false
-      reported_value:
-        type: number
-        label: Reported Flag
-        readonly: true
-        hidden: true
-        order: 130
-        list: false
-        show: false
-        create: false
-        edit: false
     tab_groups:
       related:
         label: Related Records
         relationships:
-          - tournament
-          - white_player
-          - black_player
+          - gallery
           - status
 
-  PairingStatus:
-    endpoint: /api/pairing_statuses
-    label: Pairing Statuses
+  ShareStatus:
+    endpoint: /api/share_statuses
+    label: Share Statuses
     user_key: label
-    menu_order: 40
+    menu_order: 30
     attributes:
       id:
         type: number
@@ -327,17 +221,26 @@ resources:
         show: true
         create: true
         edit: true
-      is_reported:
+      is_public:
         type: boolean
-        label: Final Result
+        label: Public Release
         required: true
         order: 30
         list: true
         show: true
         create: true
         edit: true
+      public_value:
+        type: number
+        label: Public Value
+        required: true
+        order: 40
+        list: true
+        show: true
+        create: true
+        edit: true
     tab_groups:
       related:
-        label: Related Pairings
+        label: Related Images
         relationships:
-          - pairings
+          - images

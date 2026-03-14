@@ -1,17 +1,18 @@
 from pathlib import Path
 
+import pytest
 import yaml
 
-from airport_ops import create_app
-from airport_ops.config import get_settings
-from airport_ops.db import session_scope
-from airport_ops.models import Flight, FlightStatus, Gate
+from cimage_app import create_app
+from cimage_app.config import get_settings
+from cimage_app.db import session_scope
+from cimage_app.models import Gallery, ImageAsset, ShareStatus
 
 
 def configure_test_env(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("AIRPORT_OPS_DB_PATH", str(tmp_path / "fallback.sqlite"))
+    monkeypatch.setenv("CIMAGE_APP_DB_PATH", str(tmp_path / "fallback.sqlite"))
     monkeypatch.setenv(
-        "AIRPORT_OPS_ADMIN_YAML_PATH",
+        "CIMAGE_APP_ADMIN_YAML_PATH",
         str(Path(__file__).resolve().parents[2] / "reference" / "admin.yaml"),
     )
 
@@ -37,9 +38,11 @@ def test_app_builds_and_registers_core_routes(monkeypatch, tmp_path):
     assert "/docs" in route_paths
     assert "/jsonapi.json" in route_paths
     assert "/ui/admin/admin.yaml" in route_paths
-    assert endpoint_for(schema, "Gate") in route_paths
-    assert endpoint_for(schema, "Flight") in route_paths
-    assert endpoint_for(schema, "FlightStatus") in route_paths
+    assert "/api/uploads/images" in route_paths
+    assert "/media/uploads" in route_paths
+    assert endpoint_for(schema, "Gallery") in route_paths
+    assert endpoint_for(schema, "ImageAsset") in route_paths
+    assert endpoint_for(schema, "ShareStatus") in route_paths
 
 
 def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):
@@ -49,9 +52,10 @@ def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):
     spec = app.openapi()
 
     assert "paths" in spec
-    assert endpoint_for(schema, "Gate") in spec["paths"]
-    assert endpoint_for(schema, "Flight") in spec["paths"]
-    assert endpoint_for(schema, "FlightStatus") in spec["paths"]
+    assert "/api/uploads/images" in spec["paths"]
+    assert endpoint_for(schema, "Gallery") in spec["paths"]
+    assert endpoint_for(schema, "ImageAsset") in spec["paths"]
+    assert endpoint_for(schema, "ShareStatus") in spec["paths"]
 
 
 def test_seed_and_rule_behavior_via_session_factory(monkeypatch, tmp_path):
@@ -60,14 +64,16 @@ def test_seed_and_rule_behavior_via_session_factory(monkeypatch, tmp_path):
     session_factory = app.state.session_factory
 
     with session_scope(session_factory) as session:
-        assert session.query(FlightStatus).count() == 3
-        assert session.query(Gate).count() == 2
-        assert session.query(Flight).count() == 3
+        assert session.query(ShareStatus).count() == 3
+        assert session.query(Gallery).count() == 2
+        assert session.query(ImageAsset).count() == 4
 
-        flight = session.get(Flight, 1)
-        gate = session.query(Gate).filter(Gate.code == "A1").one()
-        assert flight is not None
-        assert flight.status_code == "scheduled"
-        assert flight.is_departed is False
-        assert gate.flight_count == 2
-        assert gate.total_delay_minutes == 25
+        image = session.get(ImageAsset, 1)
+        gallery = session.query(Gallery).filter(Gallery.code == "SEA-SET").one()
+        assert image is not None
+        assert image.share_status_code == "public"
+        assert image.is_public is True
+        assert image.public_value == 1
+        assert gallery.image_count == 2
+        assert gallery.public_image_count == 1
+        assert gallery.total_size_mb == pytest.approx(10.7)

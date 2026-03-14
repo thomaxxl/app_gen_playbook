@@ -39,21 +39,27 @@ Suggested copy order:
 16. `generated/resources/Status.tsx.md`
 17. `resourcePages.ts.md`
 18. `App.tsx.md`
-19. `Landing.tsx.md`
-20. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
-21. `D3Visualization.tsx.md` if the app needs charts or figures
-22. `fs-promises.ts.md`
-23. `vite.config.ts.md`
-24. `vitest.config.ts.md`
-25. `playwright.config.ts.md`
-26. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
-27. `tests/schemaContext.test.ts.md`
-28. `tests/resourceMetadata.test.ts.md`
-29. `tests/createSearchEnabledDataProvider.test.ts.md`
-30. `tests/vite.config.test.ts.md`
-31. `tests/smoke.e2e.spec.ts.md`
-32. `../project/run.sh.md`
-33. `../project/README.app.md`
+19. `Home.tsx.md`
+20. `Landing.tsx.md`
+21. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
+22. `D3Visualization.tsx.md` if the app needs charts or figures
+23. `shared-runtime/files/README.md`
+24. `shared-runtime/files/uploadAwareDataProvider.ts.md`
+25. `shared-runtime/files/fileValueAdapters.ts.md`
+26. `shared-runtime/files/fileFieldHelpers.ts.md`
+27. `fs-promises.ts.md`
+28. `vite.config.ts.md`
+29. `vitest.config.ts.md`
+30. `playwright.config.ts.md`
+31. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+32. `tests/schemaContext.test.ts.md`
+33. `tests/resourceMetadata.test.ts.md`
+34. `tests/createSearchEnabledDataProvider.test.ts.md`
+35. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+36. `tests/vite.config.test.ts.md`
+37. `tests/smoke.e2e.spec.ts.md`
+38. `../project/run.sh.md`
+39. `../project/README.app.md`
 
 Notes:
 
@@ -63,6 +69,13 @@ Notes:
   `../../../runs/current/artifacts/architecture/resource-naming.md`.
 - `resourcePages.ts.md` MUST register the actual resource wrapper set for the
   current app, not the starter trio by default.
+- `Home.tsx.md` is required for every generated app. It is the standard
+  sidebar-visible in-admin landing page.
 - For non-starter domains, `CustomDashboard.tsx.md` SHOULD be the default
   custom-page starting point. `Landing.tsx.md` remains the starter-domain
   example.
+- The upload helper files under `shared-runtime/files/` are part of the
+  baseline shared runtime. They MUST remain present even when the app has no
+  upload fields so `schemaContext.tsx` can import them safely.
+- If the app supports uploads, the upload-aware provider unit test MUST also
+  be added to the generated frontend test suite.

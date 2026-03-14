@@ -13,9 +13,9 @@ describe("createSearchEnabledDataProvider helpers", () => {
 
     const merged = mergeSearchWithExistingFilters(
       query,
-      buildJsonApiSearchFilter("round 1", [
-        { name: "pairing_code" },
-        { name: "result_summary", op: "eq", val: "{q}" },
+      buildJsonApiSearchFilter("seattle", [
+        { name: "title" },
+        { name: "filename", op: "eq", val: "{q}" },
       ]),
     );
 
@@ -24,8 +24,8 @@ describe("createSearchEnabledDataProvider helpers", () => {
         { name: "status_id", op: "eq", val: 2 },
         {
           or: [
-            { name: "pairing_code", op: "ilike", val: "%round 1%" },
-            { name: "result_summary", op: "eq", val: "round 1" },
+            { name: "title", op: "ilike", val: "%seattle%" },
+            { name: "filename", op: "eq", val: "seattle" },
           ],
         },
       ],
@@ -35,19 +35,19 @@ describe("createSearchEnabledDataProvider helpers", () => {
 
   it("keeps existing JSON filters and combines them with search", () => {
     const query: Record<string, string | number | boolean> = {
-      filter: JSON.stringify({ name: "tournament_id", op: "eq", val: 7 }),
+      filter: JSON.stringify({ name: "gallery_id", op: "eq", val: 7 }),
     };
 
     const merged = mergeSearchWithExistingFilters(
       query,
-      buildJsonApiSearchFilter("sofia", [{ name: "full_name" }]),
+      buildJsonApiSearchFilter("poster", [{ name: "title" }]),
     );
 
     expect(JSON.parse(merged)).toEqual({
       and: [
-        { name: "tournament_id", op: "eq", val: 7 },
+        { name: "gallery_id", op: "eq", val: 7 },
         {
-          or: [{ name: "full_name", op: "ilike", val: "%sofia%" }],
+          or: [{ name: "title", op: "ilike", val: "%poster%" }],
         },
       ],
     });

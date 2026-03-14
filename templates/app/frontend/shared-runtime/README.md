@@ -13,5 +13,11 @@ Required files:
 - `admin/createSearchEnabledDataProvider.ts.md`
 - `resourceRegistry.tsx.md`
 
+Optional upload-related files:
+
+- `files/uploadAwareDataProvider.ts.md`
+- `files/fileValueAdapters.ts.md`
+- `files/fileFieldHelpers.ts.md`
+
 These are part of the archive so the starter frontend does not depend on
 hidden repo-local code outside `one_shot_gen/templates/`.

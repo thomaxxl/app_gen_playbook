@@ -34,7 +34,7 @@ or YAML parsing.
     "react-admin": "5.8.0",
     "react-dom": "19.1.0",
     "react-router-dom": "6.30.1",
-    "safrs-jsonapi-client": "https://codeload.github.com/thomaxxl/safrs-jsonapi-client/tar.gz/484c8f7b3195b31b8c56e4abc2641e8fa1ab12cb",
+    "safrs-jsonapi-client": "https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz",
     "yaml": "2.8.1"
   },
   "devDependencies": {
@@ -60,10 +60,14 @@ deliberate compatibility deviation, update this field and the pinned frontend
 toolchain together instead of mixing incompatible versions ad hoc.
 
 The `safrs-jsonapi-client` entry MUST remain an immutable tarball URL or a
-published registry release. Do not switch it to a git dependency in generated
-apps. If the selected artifact is missing the built outputs referenced by its
-own package metadata, replace it with a validated tarball or registry release
-before continuing.
+published registry release. For this playbook, prefer a GitHub release asset
+URL from `thomaxxl/safrs-jsonapi-client`. Do not switch it to a git dependency
+or a raw `codeload` source archive in generated apps. If the selected artifact
+is missing the built outputs referenced by its own package metadata, replace it
+with a validated release asset before continuing.
+
+Replace `<release-tag>` and `<package-version>` with a real verified release
+asset before using this template in a generated app.
 
 See `../../../playbook/process/compatibility.md` for the declared local runtime
 baseline.

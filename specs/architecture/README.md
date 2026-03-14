@@ -8,7 +8,8 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Architect run output MUST be written under
   `../../runs/current/artifacts/architecture/`.
-- The preserved airport example lives under `../../example/specs/architecture/`.
+- `../../example/` MAY be consulted as a runnable reference app, but it MUST
+  NOT be treated as the architecture source of truth.
 
 Template files:
 

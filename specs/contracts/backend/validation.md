@@ -24,6 +24,15 @@ This file defines the minimum backend validation checklist.
 - one happy-path API update works
 - one happy-path API delete works
 
+If the app supports uploaded files:
+
+- pending file metadata create works through SAFRS
+- multipart content upload works through the custom FastAPI endpoint
+- logical `/media/...` retrieval works
+- upload failure marks file status `failed` and returns a visible error
+- backend upload tests run through an explicit `test_uploads.py` file or an
+  equivalent clearly named upload-focused test module
+
 ## Bootstrap validation
 
 - first startup seeds reference data
@@ -52,6 +61,10 @@ This file defines the minimum backend validation checklist.
 - `backend/tests/test_api_contract_fallback.py`
 - `backend/tests/test_bootstrap.py`
 - `backend/tests/test_rules.py`
+
+If the app supports uploaded files:
+
+- `backend/tests/test_uploads.py`
 
 ## Default command behavior
 

@@ -9,5 +9,6 @@ Subdirectories:
 
 - [frontend/README.md](frontend/README.md)
 - [backend/README.md](backend/README.md)
+- [files/README.md](files/README.md)
 - [rules/README.md](rules/README.md)
 - [deployment/README.md](deployment/README.md)

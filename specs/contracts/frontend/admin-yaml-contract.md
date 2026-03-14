@@ -64,6 +64,14 @@ resources:
         show: true
         create: true
         edit: true
+      hero_image:
+        type: image
+        label: Hero Image
+        upload_target: hero_image_file_id
+        purpose: hero-image
+        accept: image/*
+        create: true
+        edit: true
     tab_groups:
       related:
         label: Related
@@ -98,7 +106,8 @@ resources:
 ## Supported attribute keys
 
 - `type`
-  One of `text`, `number`, `boolean`, `datetime`, `reference`
+  One of `text`, `number`, `boolean`, `datetime`, `reference`, `file`,
+  `image`
 - `label`
 - `required`
 - `readonly`
@@ -112,6 +121,17 @@ resources:
   Required when `type: reference`
 - `search`
   Boolean. Marks this field as part of the generated list-search contract.
+- `upload_target`
+  Required when `type: file` or `type: image`. This is the persisted
+  SAFRS scalar or relationship-driving field that receives the stable file id.
+- `purpose`
+  Optional upload-purpose hint passed to the upload subsystem.
+- `accept`
+  Optional browser-side accept hint for file/image input widgets.
+
+Upload-backed persistence SHOULD still be represented through normal file-id
+fields or relationships. The generator MUST NOT define a raw binary attribute
+as a normal SAFRS scalar field in `admin.yaml`.
 
 ## Runtime-consumed attribute keys
 
@@ -129,6 +149,9 @@ The shipped starter runtime consumes these keys directly:
 - `order`
 - `reference`
 - `search`
+- `upload_target`
+- `purpose`
+- `accept`
 
 ## Generator-time-only attribute keys
 
@@ -146,6 +169,7 @@ The shipped starter runtime does not implement these behaviors:
 - relationship tabs or grouped show-page sections from `tab_groups`
 - per-field widget selection beyond the built-in type mapping
 - per-field help/placeholder rendering as a first-class contract
+- multi-file upload widgets from one generated field
 
 ## Visibility rules
 
@@ -180,6 +204,18 @@ If a resource contains multiple reference fields that point to the same target
 resource, each field MUST remain distinct by its own attribute key and label.
 The generator and runtime MUST NOT collapse those fields into one display slot
 just because they share the same `reference` target.
+
+## Upload field rules
+
+For `type: file` or `type: image`:
+
+- `upload_target` MUST be present
+- the generated form field is a frontend upload widget, not a persisted SAFRS
+  scalar field by itself
+- the persisted write path MUST go through the upload-aware data provider
+- the starter runtime assumes a single-file field, not a multi-file list
+- `list` and `show` views SHOULD only expose the field when the record shape
+  provides a stable logical file value or preview/download URL
 
 ## Search rules
 

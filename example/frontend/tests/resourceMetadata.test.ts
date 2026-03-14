@@ -9,27 +9,27 @@ import {
 
 const rawYaml = {
   resources: {
-    Gate: {
-      endpoint: "/api/gates",
-      label: "Gates",
+    Gallery: {
+      endpoint: "/api/galleries",
+      label: "Galleries",
       user_key: "code",
       attributes: {
         code: {
-          label: "Gate Code",
+          label: "Gallery Code",
           required: true,
           search: true,
           type: "text",
         },
-        terminal: {
-          label: "Terminal",
+        name: {
+          label: "Name",
           search: true,
           type: "text",
         },
       },
     },
-    FlightStatus: {
-      endpoint: "/api/flight_statuses",
-      label: "Flight Statuses",
+    ShareStatus: {
+      endpoint: "/api/share_statuses",
+      label: "Share Statuses",
       user_key: "label",
       attributes: {
         code: {
@@ -53,34 +53,34 @@ describe("resourceMetadata", () => {
   it("resolves metadata by resource type when the schema is keyed by collection path", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    const resourceMeta = buildResourceMeta(schema, rawYaml, "Gate");
+    const resourceMeta = buildResourceMeta(schema, rawYaml, "Gallery");
 
-    expect(resourceMeta.name).toBe("Gate");
-    expect(resourceMeta.endpoint).toBe("/api/gates");
+    expect(resourceMeta.name).toBe("Gallery");
+    expect(resourceMeta.endpoint).toBe("/api/galleries");
     expect(resourceMeta.userKey).toBe("code");
     expect(resourceMeta.attributes.map((attribute) => attribute.name)).toEqual([
       "code",
-      "terminal",
+      "name",
     ]);
   });
 
   it("resolves search columns by resource type", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    expect(resolveSearchColumns(schema, rawYaml, "Gate")).toEqual([
+    expect(resolveSearchColumns(schema, rawYaml, "Gallery")).toEqual([
       { name: "code" },
-      { name: "terminal" },
+      { name: "name" },
     ]);
   });
 
   it("resolves multi-word resources through resourceByType", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    const resourceMeta = buildResourceMeta(schema, rawYaml, "FlightStatus");
+    const resourceMeta = buildResourceMeta(schema, rawYaml, "ShareStatus");
 
-    expect(resourceMeta.name).toBe("FlightStatus");
-    expect(resourceMeta.endpoint).toBe("/api/flight_statuses");
-    expect(resolveSearchColumns(schema, rawYaml, "FlightStatus")).toEqual([
+    expect(resourceMeta.name).toBe("ShareStatus");
+    expect(resourceMeta.endpoint).toBe("/api/share_statuses");
+    expect(resolveSearchColumns(schema, rawYaml, "ShareStatus")).toEqual([
       { name: "code" },
       { name: "label" },
     ]);

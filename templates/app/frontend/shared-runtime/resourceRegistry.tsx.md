@@ -17,6 +17,10 @@ import {
   DateField,
   DateInput,
   Edit,
+  FileField,
+  FileInput,
+  ImageField,
+  ImageInput,
   List,
   NumberField,
   NumberInput,
@@ -167,6 +171,28 @@ function renderField(
     return <DateField key={attribute.name} label={attribute.label} source={attribute.name} />;
   }
 
+  if (attribute.kind === "image") {
+    return (
+      <ImageField
+        key={attribute.name}
+        label={attribute.label}
+        source={`${attribute.name}.src`}
+        title={`${attribute.name}.title`}
+      />
+    );
+  }
+
+  if (attribute.kind === "file") {
+    return (
+      <FileField
+        key={attribute.name}
+        label={attribute.label}
+        source={`${attribute.name}.src`}
+        title={`${attribute.name}.title`}
+      />
+    );
+  }
+
   return <TextField key={attribute.name} label={attribute.label} source={attribute.name} />;
 }
 
@@ -210,6 +236,25 @@ function renderInput(
 
   if (attribute.kind === "date") {
     return <DateInput {...commonProps} />;
+  }
+
+  if (attribute.kind === "image") {
+    return (
+      <ImageInput
+        {...commonProps}
+        accept={attribute.accept ?? "image/*"}
+      >
+        <ImageField source="src" title="title" />
+      </ImageInput>
+    );
+  }
+
+  if (attribute.kind === "file") {
+    return (
+      <FileInput {...commonProps} accept={attribute.accept}>
+        <FileField source="src" title="title" />
+      </FileInput>
+    );
   }
 
   return <TextInput {...commonProps} />;

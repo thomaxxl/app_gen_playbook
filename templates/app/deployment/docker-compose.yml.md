@@ -28,3 +28,5 @@ Notes:
 
 - Keep SQLite on a volume.
 - Publish nginx on one host port and proxy the rest internally.
+- If the app supports uploaded files, keep the media root on a persistent
+  volume too.

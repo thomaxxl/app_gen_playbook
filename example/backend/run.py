@@ -11,8 +11,8 @@ if DEPS_DIR.exists() and str(DEPS_DIR) not in sys.path:
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from airport_ops import create_app
-from airport_ops.config import get_settings
+from cimage_app import create_app
+from cimage_app.config import get_settings
 
 
 def main() -> None:

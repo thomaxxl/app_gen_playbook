@@ -1,12 +1,10 @@
 import type { ResourcePages } from "../shared-runtime/resourceRegistry";
-import { PairingPages } from "./resources/Pairing";
-import { PairingStatusPages } from "./resources/PairingStatus";
-import { PlayerPages } from "./resources/Player";
-import { TournamentPages } from "./resources/Tournament";
+import { GalleryPages } from "./resources/Gallery";
+import { ImageAssetPages } from "./resources/ImageAsset";
+import { ShareStatusPages } from "./resources/ShareStatus";
 
 export const resourcePages: ResourcePages[] = [
-  TournamentPages,
-  PlayerPages,
-  PairingPages,
-  PairingStatusPages,
+  GalleryPages,
+  ImageAssetPages,
+  ShareStatusPages,
 ];

@@ -98,9 +98,15 @@ Important:
 - keep the frontend dependency set aligned with Node `24+`
 - `safrs-jsonapi-client` SHOULD be pinned through an immutable tarball URL or
   a published registry release, not a git dependency
+- the preferred non-npm source for `safrs-jsonapi-client` is a GitHub release
+  asset from `thomaxxl/safrs-jsonapi-client`, not a raw `codeload` source
+  archive
 - if the selected package artifact references built outputs such as `dist/`
   that are missing from the installed artifact, the operator MUST replace that
   artifact with a validated tarball or published release before continuing
+- the operator MUST verify that the chosen release asset exists and that its
+  tag and filename match the intended package version before freezing the app
+  dependency
 - if the available environment cannot provide the house Node runtime, record an
   explicit compatibility deviation and repin the frontend stack intentionally
   rather than silently mixing incompatible versions

@@ -1,5 +1,13 @@
 # App Development Playbook
 
+This playbook is now also exposed at:
+
+- `../app_gen_playbook/`
+
+Prefer the `app_gen_playbook/` name in new discussion and future external
+references. `one_shot_gen/` remains the current backing directory for local
+compatibility.
+
 This directory is now organized around the following top-level areas:
 
 - `playbook/`
@@ -62,6 +70,6 @@ Artifact location rule:
   `specs/backend-design/` are generic template sources
 - run-specific artifacts MUST be authored under `runs/current/artifacts/`
 - accepted artifacts MAY later be copied into `app/docs/`
-- the preserved airport-specific filled example lives under `example/specs/`
+- `example/` is a preserved runnable example app generated from this playbook
 - an explicit app-only maintenance pass MAY update `app/` while leaving
   `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`

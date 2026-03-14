@@ -7,8 +7,8 @@ describe("schemaContext admin.yaml adapter", () => {
   it("converts object-shaped resource attributes into the client schema format", () => {
     const adapted = adaptAdminYamlForClient({
       resources: {
-        Tournament: {
-          endpoint: "/api/tournaments",
+        Gallery: {
+          endpoint: "/api/galleries",
           user_key: "code",
           attributes: {
             code: {
@@ -33,17 +33,17 @@ describe("schemaContext admin.yaml adapter", () => {
           adapted as {
             resources: Record<string, { attributes: unknown[] }>;
           }
-        ).resources.tournaments.attributes,
+        ).resources.galleries.attributes,
       ),
     ).toBe(true);
-    expect(schema.resourceByType.Tournament).toBe("tournaments");
+    expect(schema.resourceByType.Gallery).toBe("galleries");
     expect(
-      schema.resources.tournaments.attributeConfigs.map((attribute) => attribute.name),
+      schema.resources.galleries.attributeConfigs.map((attribute) => attribute.name),
     ).toEqual(["code", "name"]);
-    expect(schema.resources.tournaments.searchCols).toEqual([
+    expect(schema.resources.galleries.searchCols).toEqual([
       { name: "code" },
       { name: "name" },
     ]);
-    expect(schema.resources.tournaments.userKey).toBe("code");
+    expect(schema.resources.galleries.userKey).toBe("code");
   });
 });

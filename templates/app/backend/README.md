@@ -29,3 +29,6 @@ Suggested copy order:
 16. `../project/run.sh.md`
 17. `../project/README.app.md`
 18. `run_with_spa.py.md` if the app should serve a built SPA itself
+19. `files/README.md` plus the `files/` snippets if the app supports uploaded
+    media
+20. `test_uploads.py.md` if the app supports uploaded media

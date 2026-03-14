@@ -3,15 +3,32 @@
 This file defines how project-specific frontend pages fit into the generated
 app.
 
+## Required admin home route
+
+Every generated React-admin app MUST include a `Home` view inside the normal
+React-admin chrome.
+
+Required behavior:
+
+- public route: `/admin-app/#/Home`
+- visible left-sidebar menu entry labeled `Home`
+- visible home icon in the sidebar
+- a short basic description of the app
+- at least one visible navigation link or button into the main app flow
+
+The `Home` view SHOULD be implemented as a normal React-admin page component
+and SHOULD be registered through a direct `<Resource name="Home" ... />`
+element so the sidebar link appears without a custom menu implementation.
+
 ## Custom no-layout route
 
-The starter app includes a mandatory landing route:
+The app MAY also include a no-layout landing route:
 
 - `/#/Landing` inside the hash router
 - public URL `/admin-app/#/Landing`
 
-The frontend MUST use `CustomRoutes noLayout` for pages that should not show the normal
-React-admin chrome.
+The frontend MUST use `CustomRoutes noLayout` for pages that should not show
+the normal React-admin chrome.
 
 The shipped `Landing.tsx` template is a starter-domain example built around the
 default `Collection` / `Item` / `Status` trio. Treat it as a starter example,
@@ -19,10 +36,13 @@ not as a generic generated landing page.
 
 ## Required navigation behavior
 
-- `Landing.tsx` MUST be the default human-facing entry route in the starter app
+- `Home.tsx` MUST exist in every generated app
+- `Home.tsx` MUST appear in the sidebar automatically
+- `Home.tsx` SHOULD be the default in-admin route
+- `Home.tsx` SHOULD provide a visible way into the main resource pages
 - `Landing.tsx` MUST NOT appear in the sidebar automatically
-- `Landing.tsx` SHOULD provide a visible way into the admin resources, for
-  example a link or button to the first resource list
+- if `Landing.tsx` is present, it SHOULD provide a visible way into `Home` or
+  the main admin resources
 
 ## D3 pattern
 
@@ -57,6 +77,7 @@ If the custom view includes a chart:
 
 Use:
 
+- `templates/app/frontend/Home.tsx.md`
 - `templates/app/frontend/Landing.tsx.md`
 - `templates/app/frontend/CustomDashboard.tsx.md`
 - `templates/app/frontend/D3Visualization.tsx.md`

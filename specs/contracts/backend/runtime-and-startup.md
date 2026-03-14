@@ -52,6 +52,19 @@ The backend MUST perform startup in this order:
 12. add request cleanup middleware that removes the scoped session
 13. expose `/docs`, `/jsonapi.json`, `/healthz`, and `/ui/admin/admin.yaml`
 
+If the app includes uploaded files or media routes, it MUST also:
+
+14. include the custom file-upload and media router
+15. expose logical media routes under `/media/...` instead of raw storage paths
+
+If the app includes uploaded files, the backend source tree SHOULD also add:
+
+- `backend/src/my_app/files/models.py`
+- `backend/src/my_app/files/storage.py`
+- `backend/src/my_app/files/schemas.py`
+- `backend/src/my_app/files/service.py`
+- `backend/src/my_app/files/api.py`
+
 ## Route validation boundary
 
 The startup-time `admin.yaml` validation in step 6 MUST validate only static
@@ -85,3 +98,13 @@ contract URL.
 Backend root `/` MUST redirect to `/docs`.
 
 It MUST NOT return an ad hoc JSON metadata object in this starter contract.
+
+## File-route extension
+
+If the app supports uploaded files, the backend MUST keep the file route
+boundary explicit:
+
+- SAFRS continues to expose file metadata resources
+- FastAPI custom routes handle multipart upload and media serving indirection
+
+The backend MUST NOT treat binary upload as a normal JSON:API request body.

@@ -12,11 +12,12 @@ import type { Schema, SchemaAttribute, SearchCol } from "safrs-jsonapi-client";
 
 import { useAdminSchema, useRawAdminYaml } from "./schemaContext";
 
-type AttributeType = "boolean" | "date" | "number" | "reference" | "text";
+type AttributeType = "boolean" | "date" | "file" | "image" | "number" | "reference" | "text";
 
 type VisibilitySetting = boolean | string | undefined;
 
 interface RawAttribute {
+  accept?: string;
   create?: boolean;
   edit?: boolean;
   hidden?: VisibilitySetting;
@@ -27,9 +28,11 @@ interface RawAttribute {
   readonly?: boolean;
   reference?: string;
   required?: boolean;
+  purpose?: string;
   search?: boolean | string;
   show?: boolean;
   type?: string;
+  upload_target?: string;
   widget?: string;
   help?: string;
 }
@@ -49,6 +52,7 @@ export interface RawAdminYaml {
 }
 
 export interface ResourceAttributeMeta extends SchemaAttribute {
+  accept?: string;
   create?: boolean;
   edit?: boolean;
   hidden?: VisibilitySetting;
@@ -59,9 +63,11 @@ export interface ResourceAttributeMeta extends SchemaAttribute {
   readonly?: boolean;
   reference?: string;
   required?: boolean;
+  purpose?: string;
   search?: boolean;
   show?: boolean;
   isPrimaryKey: boolean;
+  uploadTarget?: string;
 }
 
 export interface ResourceMeta {
@@ -103,6 +109,14 @@ function normalizeLabel(label: string | undefined, fallbackName: string): string
 function inferFieldKind(attribute: SchemaAttribute, rawAttribute: RawAttribute | undefined): AttributeType {
   if (rawAttribute?.type === "reference" || rawAttribute?.reference) {
     return "reference";
+  }
+
+  if (rawAttribute?.type === "image") {
+    return "image";
+  }
+
+  if (rawAttribute?.type === "file") {
+    return "file";
   }
 
   const rawType = String(attribute.type ?? rawAttribute?.type ?? "").toLowerCase();
@@ -183,6 +197,7 @@ export function buildResourceMeta(
       const rawAttribute = rawAttributeMap.get(attribute.name);
       return {
         ...attribute,
+        accept: rawAttribute?.accept,
         create: rawAttribute?.create,
         edit: rawAttribute?.edit,
         hidden: rawAttribute?.hidden,
@@ -193,9 +208,11 @@ export function buildResourceMeta(
         readonly: rawAttribute?.readonly,
         reference: rawAttribute?.reference,
         required: rawAttribute?.required,
+        purpose: rawAttribute?.purpose,
         search: isSearchEnabled(rawAttribute?.search),
         show: rawAttribute?.show,
         isPrimaryKey: isPrimaryKeyName(resource, attribute.name),
+        uploadTarget: rawAttribute?.upload_target,
       } satisfies ResourceAttributeMeta;
     }),
     endpoint: rawResource.endpoint,

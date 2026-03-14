@@ -33,13 +33,13 @@ The run-owned artifact roots are:
 - `../../runs/current/artifacts/ux/`
 - `../../runs/current/artifacts/backend-design/`
 
-## Historical example plus fresh app rule
+## Preserved example plus fresh app rule
 
 The playbook distinguishes three different states:
 
 - `../../example/`
-  A preserved historical example. Ordinary app generation MUST NOT overwrite
-  it.
+  A preserved runnable example app. Ordinary app generation MUST NOT overwrite
+  it unless the task explicitly refreshes the preserved example.
 - `../../runs/current/`
   The canonical run-state area for a new full run.
 - `../../app/`
@@ -78,9 +78,6 @@ To start a new run:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.example.md`
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
-8. replace the example contents with the real brief or copy the content from
-   `../../runs/current/input.md`
-
 This procedure applies to a new full run. It does not apply to an app-only
 maintenance pass that intentionally preserves `../../runs/current/`.
 

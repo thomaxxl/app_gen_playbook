@@ -14,10 +14,11 @@ Recommended public routes:
 - `/api`
 - `/docs`
 - `/ui/admin/admin.yaml`
+- `/media/` when the app supports uploaded files
 
 The entrypoint template must supervise sibling processes the same way the root
 `run.sh` template does: if nginx or the backend exits, terminate the other one
 and exit non-zero.
 
-For production-style builds, prefer a multi-stage image with a Node 22 build
+For production-style builds, prefer a multi-stage image with a Node 24 build
 stage for the frontend and a Python/nginx runtime stage for the deployed app.

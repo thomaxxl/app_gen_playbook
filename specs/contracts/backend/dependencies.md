@@ -16,6 +16,7 @@ Pinned packages:
 - `fastapi==0.135.1`
 - `uvicorn==0.41.0`
 - `SQLAlchemy==2.0.48`
+- `python-multipart==0.0.20`
 - `PyYAML==6.0.3`
 - `pytest==9.0.2`
 - `httpx==0.28.1`
@@ -33,6 +34,7 @@ pip install \
   fastapi==0.135.1 \
   uvicorn==0.41.0 \
   SQLAlchemy==2.0.48 \
+  python-multipart==0.0.20 \
   PyYAML==6.0.3 \
   pytest==9.0.2 \
   httpx==0.28.1
@@ -61,6 +63,9 @@ fi
 - If the local LogicBank checkout is unavailable or unset, the implementation
   SHOULD install the published package with
   `pip install --no-deps logicbank`.
+- `python-multipart` is REQUIRED when the app exposes FastAPI multipart upload
+  endpoints. The starter dependency set includes it so upload-capable apps do
+  not need an undocumented extra install step.
 - Expect SQLAlchemy deprecation warnings under the current LogicBank stack.
 - Delete/cascade behavior involving rule-managed child relationships must be
   tested explicitly; do not assume default passive-delete behavior is safe.

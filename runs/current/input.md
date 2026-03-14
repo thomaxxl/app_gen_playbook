@@ -10,7 +10,3 @@ Required action before execution:
 
 - replace this file with the actual incoming brief
 - then seed the Product Manager inbox from this content
-
-Historical airport run input was archived to:
-
-- [../../example/run-history/input.md](../../example/run-history/input.md)

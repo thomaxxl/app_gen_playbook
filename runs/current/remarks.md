@@ -10,8 +10,3 @@ Status:
   that updates only `../../app/`
 
 Use this file only for the currently active run.
-
-Historical airport run remarks were archived to:
-
-- [../../example/run-history/remarks.md](../../example/run-history/remarks.md)
-- [../../example/REMARKS.md](../../example/REMARKS.md)

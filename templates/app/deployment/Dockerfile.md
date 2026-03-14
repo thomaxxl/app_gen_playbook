@@ -7,7 +7,7 @@ See also:
 Minimal same-origin image shape:
 
 ```dockerfile
-FROM node:22-bookworm-slim AS frontend-build
+FROM node:24-bookworm-slim AS frontend-build
 
 WORKDIR /frontend
 COPY frontend/package.json /frontend/package.json
@@ -40,7 +40,9 @@ CMD ["/app/entrypoint.sh"]
 Notes:
 
 - Build the frontend in-image for a self-contained deployable image.
-- Build the frontend in a Node `22.x` stage so the runtime Node version is not
+- Build the frontend in a Node `24.x` stage so the runtime Node version is not
   left to distro package defaults.
 - Install `nginx.conf` into nginx's active config path, not just `/app/`.
 - For dev mode, use a compose override instead of changing the default image.
+- If the app supports uploaded files, create or mount a persistent media root
+  in the runtime image instead of keeping uploaded bytes in an ephemeral layer.

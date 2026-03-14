@@ -1,10 +1,10 @@
 import type { ResourcePages } from "../shared-runtime/resourceRegistry";
-import { FlightPages } from "./resources/Flight";
-import { FlightStatusPages } from "./resources/FlightStatus";
-import { GatePages } from "./resources/Gate";
+import { GalleryPages } from "./resources/Gallery";
+import { ImageAssetPages } from "./resources/ImageAsset";
+import { ShareStatusPages } from "./resources/ShareStatus";
 
 export const resourcePages: ResourcePages[] = [
-  GatePages,
-  FlightPages,
-  FlightStatusPages,
+  GalleryPages,
+  ImageAssetPages,
+  ShareStatusPages,
 ];

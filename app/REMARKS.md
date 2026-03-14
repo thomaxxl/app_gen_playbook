@@ -1,51 +1,36 @@
-# Playbook Remarks For Chess Tournament Run
+# Playbook Remarks
 
-Status: integrated into the playbook on 2026-03-13. Keep this file as a
-historical record of issues discovered during the chess-tournament app run.
+## Observed During This Run
 
-These notes were recorded while generating the chess tournament management app
-under `app/`.
-
-## Inconsistencies Found
-
-- The durable `specs/` documents and `runs/current/` state are still tied to
-  the preserved airport example, while the user-facing output slot for a new
-  run is `app/`. The playbook does not clearly say whether a new playbook-test
-  request should regenerate those durable artifacts or leave them historical.
-- `playbook/process/single-operator-mode.md` requires inbox/handoff discipline
-  even for one operator, but the top-level output guidance around `app/`
-  implies an app-only mutation workflow. That leaves a gap for repository
-  states where `runs/current/` is intentionally historical and should not be
-  overwritten.
-- The starter backend dependency story is currently broken as written:
-  `logicbank==1.30.1` pins `sqlalchemy==2.0.39`, while the same generated app
-  also pins `SQLAlchemy==2.0.48` for SAFRS. A straight `pip install -r
-  requirements.txt` fails resolver checks.
-- The frontend dependency story is also brittle: the provided
-  `safrs-jsonapi-client` dependency can hang during `npm install` when consumed
-  as a git dependency, and the fetched package metadata points to `dist/`
-  outputs that are not present in the installed tarball.
-- The playbook has good guidance for multi-word resources, but no explicit
-  adaptation example for multiple references to the same target resource, such
-  as `white_player_id` and `black_player_id` both referencing `Player`.
-
-## Improvements Suggested
-
-- Add one canonical rule for “historical example repo, fresh app output run” so
-  agents know whether to touch `specs/`, `runs/current/`, both, or neither.
-- Add a documented single-operator exception path for preserving historical
-  run-state while still producing a valid new `app/` output.
-- Update the backend dependency contract to either use a LogicBank version that
-  matches the required SQLAlchemy version or explicitly document/install
-  LogicBank in a separate `--no-deps` step.
-- Replace git-based frontend dependency examples with immutable tarball or
-  registry URLs, and specify what to do when a package ships TypeScript source
-  but not the built `dist/` outputs referenced by its `package.json`.
-- Add one non-starter domain example that demonstrates:
-  four resources instead of the starter trio,
-  multiple references to the same target resource,
-  and a custom dashboard that joins several reference resources.
-- Add an environment note about mounted filesystems on host-shared paths:
-  `python -m venv` may fail, `pip --target` behavior may differ from local disk,
-  and frontend typecheck/build steps can stall on the mount even when the same
-  files verify correctly from `/tmp`.
+- The user asked for a `"cimage"` app, which reads like a typo of `"image"`.
+  The playbook does not say whether likely typos in app names should be
+  normalized or preserved. I preserved `Cimage` as the product name.
+- App-only mode is now documented and workable, but an empty `app/` still has
+  no canonical stub `README.md` or `REMARKS.md`. A tiny starter template would
+  reduce ambiguity at generation time.
+- The previous preserved example scaffold was airport-specific, which made
+  non-airport runs harder to adapt. This has since been corrected by replacing
+  the preserved example with the Cimage app.
+- Backend dependency guidance is still inconsistent with reality on this host:
+  `logicbank==1.30.1` and `SQLAlchemy==2.0.48` do not install cleanly together
+  from a single `requirements.txt`, so verification still needs a split install
+  where LogicBank is added with `--no-deps`.
+- LogicBank behavior is subtler than the current playbook suggests. Copy rules
+  worked reliably on child create/update/reassignment, but changing fields on a
+  referenced parent status did not obviously back-propagate to already-linked
+  child rows in this setup. The playbook should clarify whether that propagation
+  is expected, required, or out of scope.
+- Frontend dependency delivery is still brittle. Installing
+  `safrs-jsonapi-client` from Git transport is unreliable here, while the
+  GitHub tarball installs but requires Vite/TypeScript aliasing to the package's
+  `src/index.ts` because the distributed `dist/` entry is not available in the
+  installed artifact.
+- Frontend test naming is easier to get wrong than it looks. A file named
+  `vite.config.test.ts` was excluded by Vitest's default config-file ignore
+  pattern, and the Vite config test also needed an explicit Node test
+  environment instead of the suite-wide `jsdom` default. The playbook should
+  call out both constraints for config-level tests.
+- Environment guidance still needs to be more explicit for mounted filesystems.
+  `pip --target` and a temp frontend copy were the reliable verification path;
+  the playbook should make that fallback a first-class documented option instead
+  of an implementation detail discovered during the run.

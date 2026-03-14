@@ -12,7 +12,8 @@ Read these first:
 2. [../specs/contracts/frontend/README.md](../specs/contracts/frontend/README.md)
 3. [../specs/contracts/backend/README.md](../specs/contracts/backend/README.md)
 4. [../specs/contracts/rules/README.md](../specs/contracts/rules/README.md)
-5. [../specs/contracts/deployment/README.md](../specs/contracts/deployment/README.md)
+5. [../specs/contracts/files/README.md](../specs/contracts/files/README.md) when the app supports uploads
+6. [../specs/contracts/deployment/README.md](../specs/contracts/deployment/README.md)
 
 Canonical template tree:
 

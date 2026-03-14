@@ -32,7 +32,8 @@ This ensures asset URLs are emitted under:
 ## Required production URLs
 
 - SPA: `/admin-app/`
-- hash route example: `/admin-app/#/Landing`
+- required in-admin entry: `/admin-app/#/Home`
+- starter custom-route example: `/admin-app/#/Landing`
 - API: `/api`
 - admin schema: `/ui/admin/admin.yaml`
 - docs schema: `/jsonapi.json`

@@ -21,6 +21,10 @@ import type {
 
 import { createSearchEnabledDataProvider } from "./createSearchEnabledDataProvider";
 import type { RawAdminYaml } from "./resourceMetadata";
+import {
+  buildUploadFieldMap,
+  createUploadAwareDataProvider,
+} from "../files/uploadAwareDataProvider";
 
 interface AdminSchemaContextValue {
   rawYaml: RawAdminYaml;
@@ -135,13 +139,20 @@ export async function loadAdminBootstrap(config: AdminAppConfig): Promise<{
       apiRoot: config.apiRoot,
       schema,
     }) as unknown as SafrsDataProvider;
-    const dataProvider = createSearchEnabledDataProvider({
+    const searchEnabledProvider = createSearchEnabledDataProvider({
       apiRoot: config.apiRoot,
       baseProvider,
       fetch,
       rawYaml,
       schema,
     }) as unknown as DataProvider;
+    const uploadFieldMap = buildUploadFieldMap(rawYaml);
+    const dataProvider = Object.keys(uploadFieldMap).length > 0
+      ? createUploadAwareDataProvider(searchEnabledProvider, {
+          apiRoot: config.apiRoot,
+          uploadFieldMap,
+        })
+      : searchEnabledProvider;
 
     return {
       dataProvider,
@@ -165,3 +176,9 @@ Notes:
   `safrs-jsonapi-client` normalizer input shape are not identical.
 - `adaptAdminYamlForClient(...)` is therefore part of the required runtime
   contract, not a project-specific optional workaround.
+- If the app supports upload-backed fields, wrap the returned provider with the
+  `shared-runtime/files/uploadAwareDataProvider.ts` helper after the
+  search-enabled provider is created.
+- The shipped upload wrapper is expected to derive its mapping from raw
+  `admin.yaml` upload field declarations; do not leave upload support as an
+  undocumented manual integration step.

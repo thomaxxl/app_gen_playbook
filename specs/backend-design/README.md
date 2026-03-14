@@ -7,8 +7,8 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Backend run output MUST be written under
   `../../runs/current/artifacts/backend-design/`.
-- The preserved airport example lives under
-  `../../example/specs/backend-design/`.
+- `../../example/` MAY be consulted as a runnable reference app, but it MUST
+  NOT replace run-owned backend-design artifacts.
 
 Template files:
 

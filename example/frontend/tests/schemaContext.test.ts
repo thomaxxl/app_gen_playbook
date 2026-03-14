@@ -7,8 +7,8 @@ describe("schemaContext admin.yaml adapter", () => {
   it("converts object-shaped resource attributes into the client schema format", () => {
     const adapted = adaptAdminYamlForClient({
       resources: {
-        Gate: {
-          endpoint: "/api/gates",
+        Gallery: {
+          endpoint: "/api/galleries",
           user_key: "code",
           attributes: {
             code: {
@@ -16,7 +16,7 @@ describe("schemaContext admin.yaml adapter", () => {
               search: true,
               type: "text",
             },
-            terminal: {
+            name: {
               search: true,
               type: "text",
             },
@@ -33,17 +33,17 @@ describe("schemaContext admin.yaml adapter", () => {
           adapted as {
             resources: Record<string, { attributes: unknown[] }>;
           }
-        ).resources.gates.attributes,
+        ).resources.galleries.attributes,
       ),
     ).toBe(true);
-    expect(schema.resourceByType.Gate).toBe("gates");
+    expect(schema.resourceByType.Gallery).toBe("galleries");
     expect(
-      schema.resources.gates.attributeConfigs.map((attribute) => attribute.name),
-    ).toEqual(["code", "terminal"]);
-    expect(schema.resources.gates.searchCols).toEqual([
+      schema.resources.galleries.attributeConfigs.map((attribute) => attribute.name),
+    ).toEqual(["code", "name"]);
+    expect(schema.resources.galleries.searchCols).toEqual([
       { name: "code" },
-      { name: "terminal" },
+      { name: "name" },
     ]);
-    expect(schema.resources.gates.userKey).toBe("code");
+    expect(schema.resources.galleries.userKey).toBe("code");
   });
 });

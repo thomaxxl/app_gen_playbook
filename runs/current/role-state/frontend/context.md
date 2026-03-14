@@ -27,5 +27,4 @@
 - none
 
 ## Implementation Evidence
-
-- historical airport context was archived to `../../../example/run-history/role-state/`
+- none
