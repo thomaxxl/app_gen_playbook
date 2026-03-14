@@ -34,6 +34,23 @@ Changes to this playbook repository MUST be committed in git.
 Agents MUST NOT leave playbook edits uncommitted at the end of a playbook
 maintenance task unless the user explicitly asks for an uncommitted state.
 
+## Segmentation preservation rule
+
+Playbook segmentation exists to avoid context overload during agent execution.
+
+When updating the playbook, agents MUST preserve and reinforce that
+segmentation:
+
+- keep static process instructions under `playbook/`
+- keep durable contracts under `specs/contracts/`
+- keep optional capability packs under `specs/features/`
+- keep literal code templates under `templates/`
+- keep mutable run state under `runs/current/`
+- keep generated implementation output under `app/`
+
+Agents MUST NOT collapse these layers together or broaden role reading
+requirements without an explicit documented reason.
+
 ## Operator orientation
 
 Use these files to understand the repository layout and the current run state:

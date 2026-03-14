@@ -33,6 +33,19 @@ Version-control rule:
   changes are committed, unless the user explicitly asks to keep them
   uncommitted
 
+Segmentation rule:
+
+- playbook segmentation exists to reduce context load for agents
+- playbook changes MUST preserve clear boundaries between:
+  - `../playbook/`
+  - `../specs/contracts/`
+  - `../specs/features/`
+  - `../templates/`
+  - `../runs/current/`
+  - `../app/`
+- a change that increases cross-layer reading or mixes optional material back
+  into core layers MUST include an explicit documented justification
+
 ## Structure
 
 - [roles/README.md](roles/README.md)

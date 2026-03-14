@@ -32,6 +32,11 @@ Rules:
 - when the task updates the playbook itself, those playbook changes MUST be
   committed in the playbook git repository before the task is treated as
   complete, unless the user explicitly asks to keep them uncommitted
+- playbook maintenance MUST preserve segmentation intended to reduce context
+  overload; do not merge optional capability packs into core contracts, widen
+  role reading lists unnecessarily, or blur the boundary between playbook
+  source, templates, run state, and generated app output without an explicit
+  documented reason
 - phase artifacts and inbox traces outside `app/` are expected output of a
   real playbook run; see `playbook-execution-outputs.md`
 - required decisions must live in owned artifacts, not only in inbox messages
