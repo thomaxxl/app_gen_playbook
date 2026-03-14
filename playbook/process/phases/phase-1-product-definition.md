@@ -12,7 +12,7 @@ Turn business intent into an implementable product definition.
 - define list/detail/edit/create needs per resource
 - define resource inventory, CRUD surface, and key relationships explicitly
 - define success and failure criteria
-- define business rules in plain English
+- define business rules in controlled natural language
 - define sample data expectations
 - define required custom pages
 - record assumptions and unresolved questions explicitly
@@ -37,7 +37,12 @@ Turn business intent into an implementable product definition.
 ## Exit criteria
 
 - desired user-facing behavior is explicit
-- business rules exist in plain language
+- business rules exist in human-readable controlled language
+- `runs/current/artifacts/product/business-rules.md` is no longer a stub
+- `runs/current/artifacts/product/business-rules.md` includes a rule index
+- `runs/current/artifacts/product/business-rules.md` distinguishes defaults
+  from app-specific behavior
+- every known non-default business rule has a stable rule ID
 - resource-level expectations are clear
 - resource inventory and resource behavior matrix exist and are explicit enough
   for downstream roles to stop guessing about CRUD, search, menu exposure, and

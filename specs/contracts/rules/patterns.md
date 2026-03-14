@@ -7,6 +7,12 @@ This file defines the starter LogicBank DSL pattern.
 Natural-language requirements MAY help draft logic, but the source of truth is
 the documented `Rule.*` DSL plus `LogicBank.activate(...)`.
 
+Human-readable rule intent MUST come from:
+
+- `../../../runs/current/artifacts/product/business-rules.md`
+
+Implementation traceability MUST use stable rule IDs from that file.
+
 The implementation MUST NOT invent decorators or APIs such as:
 
 - `@LogicBank.rule(...)`

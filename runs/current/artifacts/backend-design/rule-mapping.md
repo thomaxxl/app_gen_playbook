@@ -12,14 +12,17 @@ last_updated_by: playbook
 
 Replace this stub with the run-specific rule mapping.
 
-## Required rule table
+This artifact is implementation-oriented. It MUST NOT replace the
+human-readable business-rules catalog.
 
-| Product rule | Backend fields involved | LogicBank pattern | Trigger story | Persistence impact | Error behavior | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `<plain-language rule>` | `<fields>` | `<formula/sum/count/copy/constraint/custom>` | `<create/update/delete/reparent/etc.>` | `<stored derived field / validation only / both>` | `<rollback message or no error>` | `<notes>` |
+## Required rule traceability table
+
+| Rule ID | Backend fields involved | Backend enforcement location | LogicBank pattern | API behavior | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `BR-001` | `<fields>` | `<file/function>` | `<formula/sum/count/copy/constraint/custom>` | `<save rejected / derived update / none>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
 
 ## Required notes
 
-- which product rules are declarative LogicBank rules
-- which rules require custom Python behavior
-- which rule requests are deferred or out of scope
+- which rule IDs are declarative LogicBank rules
+- which rule IDs require custom Python behavior
+- which rule IDs are deferred or out of scope

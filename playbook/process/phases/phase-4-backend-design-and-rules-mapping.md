@@ -16,7 +16,7 @@ and tests.
   or explicitly omitted
 - design SQLAlchemy models and relationships
 - define per-resource readonly and mutability policy
-- map plain-language rules to LogicBank patterns
+- map approved rule IDs to LogicBank patterns, backend enforcement, and tests
 - define derived vs stored fields
 - define per-resource query commitments
 - define bootstrap/seed behavior
@@ -40,7 +40,7 @@ and tests.
 - every PM resource is classified as exposed, internal, singleton/settings,
   deferred, or omitted
 - every exposed resource has an explicit mutability policy
-- every product rule maps to a backend implementation pattern
+- every approved rule ID maps to backend implementation and backend tests
 - every frontend-visible field maps to backend truth
 - every frontend-needed query behavior is either committed or explicitly out
   of scope

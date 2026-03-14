@@ -56,3 +56,9 @@ packs MUST NOT be used as design input.
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also
 shipped under `../../templates/`.
+
+The backend MUST enforce every approved rule ID listed in:
+
+- `../../../runs/current/artifacts/product/business-rules.md`
+
+even when the same rule is mirrored in the frontend.

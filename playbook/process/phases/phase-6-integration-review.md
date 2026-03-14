@@ -28,6 +28,7 @@ readiness note in:
 - verify rules across create/update/delete/reparent flows
 - verify empty/loading/error states
 - verify docs match what was built
+- reject undocumented business-rule drift
 
 ## Outputs
 
@@ -39,6 +40,11 @@ readiness note in:
 ## Exit criteria
 
 - frontend and backend contracts align
+- no business behavior exists in code without a matching rule entry in
+  `runs/current/artifacts/product/business-rules.md`
+- no frontend-mirrored rule exists unless the catalog explicitly allows that
+  mirror mode
+- every approved rule ID has backend test coverage
 - documentation matches implementation
 - the app can be explained without caveats
 - follow-up inbox notes are sent if more work is required

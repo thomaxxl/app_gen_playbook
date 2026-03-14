@@ -3,6 +3,8 @@
 This file defines the minimum transactional test matrix for starter LogicBank
 integration.
 
+Every approved rule ID MUST map to at least one backend test.
+
 ## Required mutation stories
 
 Generated backends MUST test at least:

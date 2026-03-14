@@ -115,6 +115,30 @@ Later acceptance-phase reference:
 - handoff notes to `../../runs/current/role-state/architect/inbox/`
 - later-stage acceptance/review notes to implementation agents if required
 
+## Business-rules catalog obligations
+
+The Product Manager MUST treat
+`../../runs/current/artifacts/product/business-rules.md` as the single
+authoritative human-readable business-rule catalog for the run.
+
+The Product Manager MUST:
+
+- record every non-default business rule with a stable rule ID such as
+  `BR-001`
+- assign a rule class
+- provide controlled-natural-language wording
+- define trigger, preconditions, valid outcome, invalid outcome, and examples
+- state whether frontend mirroring is desirable from a product/UX standpoint
+- choose a `Frontend Mirror` mode from:
+  - `none`
+  - `input`
+  - `form`
+  - `schema`
+  - `async`
+
+The Product Manager MUST NOT create a second competing human-readable rule
+file elsewhere in the run artifacts.
+
 ## Owned artifact set across the lifecycle
 
 - `runs/current/artifacts/product/input-interpretation.md`

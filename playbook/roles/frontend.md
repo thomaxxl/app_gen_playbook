@@ -49,6 +49,7 @@ Runtime state lives in:
 - [../../runs/current/artifacts/product/resource-behavior-matrix.md](../../runs/current/artifacts/product/resource-behavior-matrix.md)
 - [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
 - [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
+- [../../runs/current/artifacts/product/business-rules.md](../../runs/current/artifacts/product/business-rules.md)
 - [../../runs/current/artifacts/product/custom-pages.md](../../runs/current/artifacts/product/custom-pages.md)
 - [../../runs/current/artifacts/product/acceptance-criteria.md](../../runs/current/artifacts/product/acceptance-criteria.md)
 - [../../runs/current/artifacts/product/sample-data.md](../../runs/current/artifacts/product/sample-data.md)
@@ -96,6 +97,18 @@ The Frontend agent MUST treat
 authoritative package/source decision record for implementation. The Frontend
 agent MUST NOT leave `safrs-jsonapi-client` unresolved while proceeding with
 implementation.
+
+## Business-rules mirroring boundary
+
+The Frontend agent MUST NOT invent domain validation or workflow behavior that
+is absent from `../../runs/current/artifacts/product/business-rules.md`.
+
+The Frontend agent MAY mirror only the subset of approved rules whose
+`Frontend Mirror` field is not `none`.
+
+For forms with more than trivial mirrored validation, the Frontend agent
+SHOULD use schema/resolver validation as the default implementation lane
+instead of scattering unrelated input-level validators.
 
 ## Produces
 

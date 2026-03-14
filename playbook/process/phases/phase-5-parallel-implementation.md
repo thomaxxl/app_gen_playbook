@@ -46,6 +46,8 @@ before treating any starter backend template as implementation-ready.
 - implement page wrappers and resource registry
 - implement custom pages
 - implement navigation and user-visible states
+- mirror only the approved business rules whose `Frontend Mirror` field is not
+  `none`
 - run `npm run check`
 - run `npm run test`
 - implement and run `npm run test:e2e`
@@ -85,4 +87,7 @@ before treating any starter backend template as implementation-ready.
   host/sandbox constraint explains the approved external verification path
 - backend verification evidence exists for either the preferred path or the
   documented fallback path
+- every rule marked with a frontend mirror mode other than `none` has a
+  concrete frontend validator strategy and corresponding test plan or explicit
+  reason for no frontend test
 - no unresolved contract drift remains

@@ -4,6 +4,7 @@ See also:
 
 - [../../../specs/contracts/rules/validation.md](../../../specs/contracts/rules/validation.md)
 - [../../../specs/contracts/rules/boundaries-and-errors.md](../../../specs/contracts/rules/boundaries-and-errors.md)
+- [../../../runs/current/artifacts/product/business-rules.md](../../../runs/current/artifacts/product/business-rules.md)
 
 ```python
 import os
@@ -210,6 +211,8 @@ Notes:
 - Cover at least one API-path failure and multiple ORM-path mutation stories.
 - Discover runtime collection paths and wire `type` values from the running
   backend instead of inferring them from SQL naming conventions.
+- Keep backend test coverage traceable to approved rule IDs from
+  `runs/current/artifacts/product/business-rules.md`.
 - The HTTP-path tests in this file MAY be gated behind
   `MY_APP_ENABLE_TESTCLIENT=1` when the local in-process transport is
   unstable, but the ORM/session rule stories MUST remain runnable by default.

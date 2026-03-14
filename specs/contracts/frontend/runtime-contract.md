@@ -6,6 +6,11 @@ MUST follow.
 The generated frontend MUST NOT depend on hidden behavior outside this
 contract.
 
+The frontend MUST NOT introduce domain validation or workflow behavior that is
+absent from `../../runs/current/artifacts/product/business-rules.md`. It MAY
+mirror only the subset of approved rules whose `Frontend Mirror` field is not
+`none`.
+
 ## Archive-contained runtime files
 
 The starter archive MUST ship these runtime snippets:

@@ -127,6 +127,13 @@ agent MUST explicitly resolve and record:
    - exact reference data and sample data required for backend and frontend
      verification
 
+The Backend agent MUST map every approved rule ID from
+`../../runs/current/artifacts/product/business-rules.md` to:
+
+- backend enforcement
+- backend test coverage
+- and, when applicable, the API-visible failure behavior
+
 If the current run lane is `rename-only` or `non-starter`, the Backend agent
 MUST perform a starter-template replacement sweep before treating any starter
 implementation template as copy-ready. That sweep MUST be reflected in the
@@ -134,6 +141,9 @@ run-owned backend-design artifacts, especially:
 
 - `../../runs/current/artifacts/backend-design/resource-exposure-policy.md`
 - `../../runs/current/artifacts/backend-design/query-behavior.md`
+
+If the business-rules catalog is too vague to implement, the Backend agent
+MUST send the ambiguity back upstream instead of inventing rule meaning.
 
 ## Produces
 

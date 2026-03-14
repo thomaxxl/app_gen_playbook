@@ -51,6 +51,13 @@ The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local rule file as the source of truth unless the required pattern is
 also shipped under `../../templates/`.
 
+Human-readable business-rule intent is owned by:
+
+- `../../../runs/current/artifacts/product/business-rules.md`
+
+The rules contract in this directory defines executable enforcement only. It
+MUST NOT become a second competing human-readable source of business meaning.
+
 Optional feature packs live under `../../features/` and MUST be loaded only
 when enabled by the run capability profile and assigned to backend/rules work
 in the load plan.

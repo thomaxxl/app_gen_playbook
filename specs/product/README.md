@@ -12,6 +12,9 @@ Rules:
 - For a fresh run, `../../example/` and local `../../app/` MUST NOT be used
   as product inputs unless the task explicitly requests comparison or
   maintenance.
+- `business-rules.md` is the single authoritative human-readable business-rule
+  catalog for the run. Product templates MUST NOT create a second competing
+  rule-intent file.
 
 Template files:
 

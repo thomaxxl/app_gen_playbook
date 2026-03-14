@@ -13,13 +13,16 @@ last_updated_by: playbook
 This file is a generic template. The Backend role MUST create the run-owned
 version at `../../runs/current/artifacts/backend-design/rule-mapping.md`.
 
-## Required rule table
+This artifact is implementation-oriented. It MUST NOT restate business meaning
+that already belongs in `../../runs/current/artifacts/product/business-rules.md`.
+
+## Required rule traceability table
 
 The real artifact MUST include a table with this shape:
 
-| Product rule | Backend fields involved | LogicBank pattern | Trigger story | Persistence impact | Error behavior | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `<plain-language rule>` | `<fields>` | `<formula/sum/count/copy/constraint/custom>` | `<create/update/delete/reparent/etc.>` | `<stored derived field / validation only / both>` | `<rollback message or no error>` | `<notes>` |
+| Rule ID | Backend fields involved | Backend enforcement location | LogicBank pattern | API behavior | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `BR-001` | `<fields>` | `<file/function>` | `<formula/sum/count/copy/constraint/custom>` | `<save rejected / derived update / none>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row.
 
@@ -27,7 +30,7 @@ The Backend role MUST replace the placeholder row.
 
 The real artifact MUST also define:
 
-- which product rules are declarative LogicBank rules
-- which rules require custom Python behavior
+- which rule IDs are declarative LogicBank rules
+- which rule IDs require custom Python behavior
 - which fields are backend-managed because of those rules
-- which rule requests are explicitly deferred or out of scope
+- which rule IDs are explicitly deferred or out of scope

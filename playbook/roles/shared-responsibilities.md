@@ -13,6 +13,13 @@ These rules apply to every agent.
   the current role by `runs/current/artifacts/architecture/load-plan.md`.
 - Disabled or undecided optional feature packs MUST NOT be loaded, summarized,
   copied into local gitignored `app/`, or used as design input.
+- Business-rule intent is owned by Product through
+  `runs/current/artifacts/product/business-rules.md`.
+- Authoritative rule execution is owned by Backend.
+- Frontend MAY mirror only the subset of approved rules explicitly marked for
+  mirroring.
+- Mirrored frontend validation exists for UX and latency only; it MUST NOT
+  replace backend enforcement.
 
 ## Artifact discipline
 

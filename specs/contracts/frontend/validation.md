@@ -2,6 +2,11 @@
 
 This file defines the minimum frontend validation checklist for generated apps.
 
+The frontend MUST NOT invent new business rules. It MAY mirror only the subset
+of approved rules whose `Frontend Mirror` field is not `none` in:
+
+- `../../runs/current/artifacts/product/business-rules.md`
+
 ## Build validation
 
 - `npm install` succeeds
@@ -16,6 +21,14 @@ This file defines the minimum frontend validation checklist for generated apps.
 If dependency maintenance changes direct frontend versions during a run, the
 agent MUST sync those versions back into the playbook dependency contract and
 frontend package template before treating the playbook baseline as current.
+
+## Business-rule mirror validation
+
+- every mirrored rule maps to a rule ID in
+  `../../runs/current/artifacts/product/business-rules.md`
+- no frontend validator introduces a domain rule absent from the catalog
+- if a form mirrors multiple non-trivial rules, schema/resolver validation is
+  the default implementation lane unless the run documents a different choice
 
 ## Route validation
 

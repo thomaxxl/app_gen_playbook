@@ -24,6 +24,8 @@ Frontend behavior:
 - always show a visible form-level or toast error using the backend message
 - field-level mapping is optional and only in scope if the project explicitly
   defines a JSON:API pointer contract plus frontend adapter support
+- when practical, frontend validation and error-handling code SHOULD preserve
+  the originating rule ID or canonical message from the business-rules catalog
 
 ## Non-validation API errors
 

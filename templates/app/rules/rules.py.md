@@ -5,6 +5,7 @@ See also:
 - [../../../specs/contracts/rules/README.md](../../../specs/contracts/rules/README.md)
 - [../../../specs/contracts/rules/lifecycle.md](../../../specs/contracts/rules/lifecycle.md)
 - [../../../specs/contracts/rules/patterns.md](../../../specs/contracts/rules/patterns.md)
+- [../../../runs/current/artifacts/product/business-rules.md](../../../runs/current/artifacts/product/business-rules.md)
 
 Starter LogicBank shape:
 
@@ -59,3 +60,6 @@ Notes:
 - The starter template guards activation by marking the actual session-factory
   object, instead of relying on `id(...)` reuse behavior.
 - All rule-triggering writes must go through the ORM session/commit path.
+- For a real run, keep rule traceability by annotating the implemented rules
+  with the corresponding business-rule IDs from
+  `runs/current/artifacts/product/business-rules.md`.
