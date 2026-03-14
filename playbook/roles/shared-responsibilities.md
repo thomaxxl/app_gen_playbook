@@ -9,6 +9,10 @@ These rules apply to every agent.
 - Do not treat assumptions as confirmed facts.
 - Record any assumption made because the input or upstream artifacts were
   incomplete.
+- Load only the core contracts, templates, and feature packs authorized for
+  the current role by `runs/current/artifacts/architecture/load-plan.md`.
+- Disabled or undecided optional feature packs MUST NOT be loaded, summarized,
+  copied into `app/`, or used as design input.
 
 ## Artifact discipline
 
@@ -30,6 +34,10 @@ Ownership map:
 - `specs/contracts/backend/` -> Backend technical contracts
 - `specs/contracts/rules/` -> Backend technical contracts
 - `specs/contracts/deployment/` -> optional Deployment role when packaging is in scope
+- `specs/contracts/files/` -> uploads-support contract, loaded only through
+  the uploads feature pack unless the task explicitly says otherwise
+- `specs/features/` -> optional feature-pack contracts, loaded only when
+  enabled in the run capability profile
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` -> generic playbook template source
 

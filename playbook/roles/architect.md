@@ -39,12 +39,23 @@ Runtime state lives in:
 - [../../playbook/README.md](../../playbook/README.md)
 - [../process/README.md](../process/README.md)
 - [../process/inbox-protocol.md](../process/inbox-protocol.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
 - [../process/phases/phase-2-architecture-contract.md](../process/phases/phase-2-architecture-contract.md)
 - [../process/phases/phase-6-integration-review.md](../process/phases/phase-6-integration-review.md)
 - [../process/handoffs.md](../process/handoffs.md)
 - [../../specs/architecture/README.md](../../specs/architecture/README.md)
 - [../../specs/architecture/domain-adaptation.md](../../specs/architecture/domain-adaptation.md)
 - [../../specs/architecture/integration-review.md](../../specs/architecture/integration-review.md)
+
+The Architect owns and MUST maintain the current run's feature-gating
+artifacts:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+After the core reads above, the Architect MUST load only the feature packs
+explicitly enabled in the capability profile and assigned in the load plan.
+Disabled or undecided feature packs MUST NOT be loaded as design input.
 
 Use the architecture template sources above when producing the run-owned
 artifacts under `../../runs/current/artifacts/architecture/`.
@@ -81,6 +92,8 @@ read the current run's UX and backend-design artifacts:
 
 - completed architecture artifacts in
   `../../runs/current/artifacts/architecture/`
+- maintained `../../runs/current/artifacts/architecture/capability-profile.md`
+- maintained `../../runs/current/artifacts/architecture/load-plan.md`
 - `../../runs/current/artifacts/architecture/integration-review.md` for Phase 6
 - handoff notes to `../../runs/current/role-state/frontend/inbox/` and `../../runs/current/role-state/backend/inbox/`
 - contract corrections back to `../../runs/current/role-state/product_manager/inbox/` if product intent is

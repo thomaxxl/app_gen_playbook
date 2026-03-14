@@ -24,6 +24,15 @@ media, or attachment metadata:
 - [storage-and-serving.md](storage-and-serving.md)
 - [uploads-and-frontend-integration.md](uploads-and-frontend-integration.md)
 
+This directory is a supporting contract for the uploads feature pack.
+
+Rules:
+
+- the agent MUST normally enter this directory only through
+  `../../features/uploads/README.md`
+- the agent MUST NOT treat this directory as a core contract layer
+- if uploads are disabled or undecided, this directory MUST remain unloaded
+
 The spec in this directory is the contract. The agent MUST NOT invent a
 database-binary upload design, raw-path frontend contract, or direct-DB BLOB
 model outside the rules defined here.

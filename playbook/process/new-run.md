@@ -19,8 +19,12 @@ Required steps:
    - `../../runs/current/evidence/`
    - `../../runs/current/role-state/`
 6. seed `INPUT.md` into the Product Manager inbox
-7. leave `../../specs/contracts/` and the generic template directories
-   unchanged
+7. recreate `../../runs/current/artifacts/architecture/capability-profile.md`
+   from the starter template shape
+8. recreate `../../runs/current/artifacts/architecture/load-plan.md`
+   from the starter template shape
+9. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
+   template directories unchanged
 
 Rules:
 
@@ -28,3 +32,5 @@ Rules:
   `../../runs/current/`
 - the operator SHOULD preserve any historically useful run under
   `../../example/` or another archive before reset
+- optional feature packs MUST remain disabled or undecided until the new
+  capability profile explicitly enables them

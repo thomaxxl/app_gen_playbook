@@ -8,6 +8,7 @@ Use it for:
 - current run architecture artifacts
 - current run UX artifacts
 - current run backend-design artifacts
+- current run capability-gating artifacts
 
 Generic template sources live in:
 
@@ -19,3 +20,10 @@ Generic template sources live in:
 Accepted copies MAY later be promoted into:
 
 - `../../../app/docs/`
+
+Architecture artifacts MUST also include:
+
+- `architecture/capability-profile.md`
+- `architecture/load-plan.md`
+
+These files control which optional feature packs may be loaded for the run.

@@ -40,6 +40,7 @@ Runtime state lives in:
 - [../process/README.md](../process/README.md)
 - [../process/inbox-protocol.md](../process/inbox-protocol.md)
 - [../process/compatibility.md](../process/compatibility.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
 - [../process/phases/phase-3-ux-and-interaction-design.md](../process/phases/phase-3-ux-and-interaction-design.md)
 - [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
 - [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
@@ -60,6 +61,15 @@ Runtime state lives in:
 - [../../runs/current/artifacts/ux/state-handling.md](../../runs/current/artifacts/ux/state-handling.md)
 - [../../specs/contracts/frontend/README.md](../../specs/contracts/frontend/README.md)
 - [../../specs/contracts/frontend/validation.md](../../specs/contracts/frontend/validation.md)
+
+The Frontend agent MUST also read:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+After the core reads above, the Frontend agent MUST load only the enabled
+feature packs assigned to the frontend role by the load plan. Disabled or
+undecided feature packs MUST NOT be loaded, summarized, or copied.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/ux/`.

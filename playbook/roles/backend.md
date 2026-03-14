@@ -42,6 +42,7 @@ Runtime state lives in:
 - [../process/README.md](../process/README.md)
 - [../process/inbox-protocol.md](../process/inbox-protocol.md)
 - [../process/compatibility.md](../process/compatibility.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
 - [../process/phases/phase-4-backend-design-and-rules-mapping.md](../process/phases/phase-4-backend-design-and-rules-mapping.md)
 - [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
 - [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
@@ -65,6 +66,15 @@ Runtime state lives in:
 - [../../specs/contracts/rules/README.md](../../specs/contracts/rules/README.md)
 - [../../specs/contracts/backend/validation.md](../../specs/contracts/backend/validation.md)
 - [../../specs/contracts/backend/verification-fallbacks.md](../../specs/contracts/backend/verification-fallbacks.md)
+
+The Backend agent MUST also read:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+After the core reads above, the Backend agent MUST load only the enabled
+feature packs assigned to the backend role by the load plan. Disabled or
+undecided feature packs MUST NOT be loaded, summarized, or copied.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.

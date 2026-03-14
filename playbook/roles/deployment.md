@@ -37,11 +37,21 @@ Runtime state lives in:
 - [../../playbook/README.md](../../playbook/README.md)
 - [../process/README.md](../process/README.md)
 - [../process/inbox-protocol.md](../process/inbox-protocol.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
 - [../../specs/contracts/deployment/README.md](../../specs/contracts/deployment/README.md)
 - [../../specs/contracts/frontend/build-and-deploy.md](../../specs/contracts/frontend/build-and-deploy.md)
 
-Load architecture, frontend build/deploy docs, and backend runtime docs before
-packaging.
+The Deployment agent MUST also read:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+After the core reads above, the Deployment agent MUST load only the enabled
+feature packs assigned to the deployment role by the load plan. Disabled or
+undecided feature packs MUST NOT be loaded, summarized, or copied.
+
+Load architecture, frontend build/deploy docs, backend runtime docs, and only
+the enabled deployment feature packs before packaging.
 
 ## Produces
 

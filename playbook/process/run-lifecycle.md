@@ -10,6 +10,7 @@ Static source lives in:
 - `../../playbook/`
 - `../../templates/`
 - `../../specs/contracts/`
+- `../../specs/features/`
 - `../../specs/product/`
 - `../../specs/architecture/`
 - `../../specs/ux/`
@@ -32,6 +33,11 @@ The run-owned artifact roots are:
 - `../../runs/current/artifacts/architecture/`
 - `../../runs/current/artifacts/ux/`
 - `../../runs/current/artifacts/backend-design/`
+
+The run-owned feature gating artifacts are:
+
+- `../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../runs/current/artifacts/architecture/load-plan.md`
 
 ## Preserved example plus fresh app rule
 
@@ -74,7 +80,10 @@ To start a new run:
    - `../../specs/architecture/`
    - `../../specs/ux/`
    - `../../specs/backend-design/`
-7. seed the Product Manager inbox by copying:
+7. seed or update the capability-gating artifacts:
+   - `../../runs/current/artifacts/architecture/capability-profile.md`
+   - `../../runs/current/artifacts/architecture/load-plan.md`
+8. seed the Product Manager inbox by copying:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.example.md`
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
@@ -91,6 +100,10 @@ When a run is complete:
   not belong in the app tree
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned
   product, architecture, UX, and backend-design artifacts
+- `../../runs/current/artifacts/architecture/capability-profile.md` SHOULD
+  show the final enabled/disabled capability decisions
+- `../../runs/current/artifacts/architecture/load-plan.md` SHOULD preserve the
+  final role-scoped load set used during the run
 - `../../app/docs/` MAY contain promoted accepted copies of those artifacts
 - `../../runs/current/evidence/` SHOULD contain verification summaries
 - all core-agent inboxes under `../../runs/current/role-state/` MUST be empty

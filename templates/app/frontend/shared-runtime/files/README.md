@@ -2,6 +2,7 @@
 
 These snippets correspond to:
 
+- [../../../../../specs/features/uploads/README.md](../../../../../specs/features/uploads/README.md)
 - [../../../../../specs/contracts/files/README.md](../../../../../specs/contracts/files/README.md)
 - [../../../../../specs/contracts/frontend/runtime-contract.md](../../../../../specs/contracts/frontend/runtime-contract.md)
 

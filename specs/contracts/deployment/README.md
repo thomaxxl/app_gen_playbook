@@ -1,4 +1,4 @@
-# Docker Guide
+# Deployment Spec
 
 This file is the deployment/packaging contract index.
 
@@ -11,6 +11,15 @@ Use it late in the process, after:
 Primary agent entrypoint:
 
 - `../../playbook/roles/deployment.md`
+
+The Deployment agent MUST also consult:
+
+- `../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../runs/current/artifacts/architecture/load-plan.md`
+
+Optional deployment feature packs live under `../../features/` and MUST be
+loaded only when enabled by the run capability profile. Disabled or undecided
+feature packs MUST NOT be used as packaging input.
 
 ## Goal
 
@@ -28,7 +37,6 @@ Recommended public routes:
 - `/docs` for FastAPI docs
 - `/ui/admin/admin.yaml` for the frontend contract
 - `/jsonapi.json` for the backend schema
-- `/media/` for logical uploaded-media URLs when the app supports files
 
 ## Recommended files
 
@@ -95,8 +103,9 @@ nginx should:
 - proxy `/ui`
 - proxy `/jsonapi.json`
 - optionally proxy `/swagger.json`
-- proxy `/media/` when the backend serves media directly
-- or serve internal protected media targets when using `X-Accel-Redirect`
+
+If uploads are enabled, load `../../features/uploads/README.md` for `/media/`
+or protected-media behavior.
 
 The image must also install that nginx config into nginx's active config path,
 not just copy it into an arbitrary application directory.
@@ -130,8 +139,5 @@ Optional dev override behavior:
 - frontend CRUD works through the proxied API
 - container restart preserves SQLite data if a volume is used
 
-If the app supports uploaded files:
-
-- `GET /media/{file_id}` works through the selected serve mode
-- nginx internal media serving works when `MEDIA_SERVE_MODE=nginx`
-- raw storage paths are not exposed in frontend-visible payloads
+If uploads are enabled, the deployment validation MUST also include the
+uploads feature-pack checks before the app is considered complete.

@@ -3,9 +3,11 @@
 See also:
 
 - [../../../specs/contracts/backend/validation.md](../../../specs/contracts/backend/validation.md)
+- [../../../specs/features/uploads/README.md](../../../specs/features/uploads/README.md)
 - [../../../specs/contracts/files/README.md](../../../specs/contracts/files/README.md)
 
-Use this file when the app supports uploaded files.
+Use this file only when the uploads feature pack is enabled and the app
+supports uploaded files.
 
 ```python
 from pathlib import Path

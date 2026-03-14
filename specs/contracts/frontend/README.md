@@ -25,6 +25,11 @@ The agent MUST load these files first:
 - [runtime-contract.md](runtime-contract.md)
 - [routing-and-paths.md](routing-and-paths.md)
 
+The agent MUST also consult:
+
+- `../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../runs/current/artifacts/architecture/load-plan.md`
+
 The agent MAY load these files on demand:
 
 - [admin-yaml-contract.md](admin-yaml-contract.md)
@@ -39,8 +44,12 @@ The agent MAY load these files on demand:
   when configuring Vite build, nginx, or subpath deployment
 - [validation.md](validation.md)
   when proving the generated frontend is deployable and stable
-- [../files/README.md](../files/README.md)
-  when the app includes upload-backed fields, file inputs, or media previews
+- [../../features/uploads/README.md](../../features/uploads/README.md)
+  only when uploads are enabled for the run and frontend work is in scope
+
+Optional feature packs live under `../../features/` and MUST be loaded only
+when enabled by the run capability profile. Disabled or undecided feature
+packs MUST NOT be used as design input.
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also

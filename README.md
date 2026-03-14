@@ -13,9 +13,11 @@ This directory is now organized around the following top-level areas:
 - `playbook/`
   Static role, process, phase, and compatibility instructions.
 - `specs/`
-  Generic artifact templates plus durable technical contracts.
+  Generic artifact templates, durable technical contracts, and optional
+  feature packs.
 - `templates/`
-  Copy-and-adapt templates that mirror the generated `app/` shape.
+  Copy-and-adapt core templates plus feature-gated template packs that mirror
+  the generated `app/` shape.
 - `runs/`
   Mutable execution state for the active run.
 - `example/`
@@ -80,3 +82,11 @@ Artifact location rule:
 - `example/` is a preserved runnable example app generated from this playbook
 - an explicit app-only maintenance pass MAY update `app/` while leaving
   `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`
+
+Capability-loading rule:
+
+- optional capabilities MUST be controlled by
+  `runs/current/artifacts/architecture/capability-profile.md`
+- role-scoped reading and copy scope MUST be controlled by
+  `runs/current/artifacts/architecture/load-plan.md`
+- disabled or undecided feature packs MUST NOT be loaded or copied into `app/`

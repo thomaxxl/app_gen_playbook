@@ -13,10 +13,18 @@ It is the canonical home for:
 Path rule:
 
 - `../specs/contracts/` contains durable technical contracts
+- `../specs/features/` contains optional feature-pack contracts
 - `../specs/product/`, `../specs/architecture/`, `../specs/ux/`, and
   `../specs/backend-design/` contain generic artifact templates
 - run-owned artifacts MUST be written under `../runs/current/artifacts/`
 - accepted artifacts MAY later be copied into `../app/docs/`
+
+Capability rule:
+
+- optional feature packs MUST be gated by
+  `../runs/current/artifacts/architecture/capability-profile.md`
+- role-scoped reads and template loads MUST follow
+  `process/capability-loading.md`
 
 Version-control rule:
 

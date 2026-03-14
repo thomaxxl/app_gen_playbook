@@ -24,6 +24,11 @@ The agent MUST load these files first:
 - [models-and-naming.md](models-and-naming.md)
 - [runtime-and-startup.md](runtime-and-startup.md)
 
+The agent MUST also consult:
+
+- `../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../runs/current/artifacts/architecture/load-plan.md`
+
 The agent MAY load these files on demand:
 
 - [bootstrap-and-db-lifecycle.md](bootstrap-and-db-lifecycle.md)
@@ -41,9 +46,12 @@ The agent MAY load these files on demand:
   when writing tests or checking the generated backend contract
 - [verification-fallbacks.md](verification-fallbacks.md)
   when the preferred local HTTP/ASGI verification path is broken
-- [../files/README.md](../files/README.md)
-  when the app includes uploaded binaries, media download routes, or file
-  attachment metadata
+- [../../features/uploads/README.md](../../features/uploads/README.md)
+  only when uploads are enabled for the run and backend work is in scope
+
+Optional feature packs live under `../../features/` and MUST be loaded only
+when enabled by the run capability profile. Disabled or undecided feature
+packs MUST NOT be used as design input.
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also

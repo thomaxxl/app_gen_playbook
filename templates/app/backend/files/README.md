@@ -2,11 +2,12 @@
 
 These snippets correspond to:
 
+- [../../../../specs/features/uploads/README.md](../../../../specs/features/uploads/README.md)
 - [../../../../specs/contracts/files/README.md](../../../../specs/contracts/files/README.md)
 - [../../../../specs/contracts/backend/README.md](../../../../specs/contracts/backend/README.md)
 
-Copy them only when the generated app supports uploaded files or logical media
-serving.
+Copy them only when the uploads feature pack is enabled for the run and the
+generated app supports uploaded files or logical media serving.
 
 Suggested copy order:
 

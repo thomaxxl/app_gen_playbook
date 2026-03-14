@@ -45,11 +45,20 @@ Runtime state lives in:
 - [../process/README.md](../process/README.md)
 - [../process/input-policy.md](../process/input-policy.md)
 - [../process/inbox-protocol.md](../process/inbox-protocol.md)
+- [../process/capability-loading.md](../process/capability-loading.md)
 - [../process/phases/phase-0-intake-and-framing.md](../process/phases/phase-0-intake-and-framing.md)
 - [../process/phases/phase-1-product-definition.md](../process/phases/phase-1-product-definition.md)
 - [../process/handoffs.md](../process/handoffs.md)
 - [../process/done.md](../process/done.md)
 - [../../specs/product/README.md](../../specs/product/README.md)
+
+The Product Manager MUST also read the current run's feature-gating artifacts:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+The Product Manager MUST describe requested optional capabilities in product
+artifacts, but MUST NOT load disabled or undecided feature packs.
 
 Use the template sources below when producing the run-owned artifacts under
 `../../runs/current/artifacts/product/`:

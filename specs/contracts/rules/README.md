@@ -34,6 +34,11 @@ For a non-starter domain:
 
 Then use the starter rule docs as examples rather than as domain truth.
 
+The agent MUST also consult:
+
+- `../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../runs/current/artifacts/architecture/load-plan.md`
+
 The agent MAY load these files on demand:
 
 - [boundaries-and-errors.md](boundaries-and-errors.md)
@@ -45,3 +50,7 @@ The agent MAY load these files on demand:
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local rule file as the source of truth unless the required pattern is
 also shipped under `../../templates/`.
+
+Optional feature packs live under `../../features/` and MUST be loaded only
+when enabled by the run capability profile and assigned to backend/rules work
+in the load plan.

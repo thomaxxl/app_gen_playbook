@@ -9,10 +9,12 @@ It is organized by spec kind:
 - [ux/README.md](ux/README.md)
 - [backend-design/README.md](backend-design/README.md)
 - [contracts/README.md](contracts/README.md)
+- [features/README.md](features/README.md)
 
 Rules:
 
 - `specs/contracts/` is the durable implementation contract.
+- `specs/features/` contains optional feature-pack contracts.
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are generic artifact templates.
 - Run-specific artifacts MUST be written under `../runs/current/artifacts/`.

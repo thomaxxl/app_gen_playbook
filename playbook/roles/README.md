@@ -16,3 +16,14 @@ Role files:
 - [backend.md](backend.md)
 - [deployment.md](deployment.md)
 - [shared-responsibilities.md](shared-responsibilities.md)
+
+All role execution MUST follow the capability-gating rules in:
+
+- [../process/capability-loading.md](../process/capability-loading.md)
+
+Each role MUST read the current run's:
+
+- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
+- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+before loading optional feature packs or feature templates.
