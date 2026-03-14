@@ -166,6 +166,8 @@ function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
 }
 
 function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
+  const fieldName = attribute.name.toLowerCase();
+
   if (attribute.fullWidth || attribute.formSpan === 12) {
     return 12;
   }
@@ -180,6 +182,23 @@ function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
 
   if (attribute.widget === "textarea") {
     return 12;
+  }
+
+  if (
+    attribute.isPrimaryKey
+    || attribute.kind === "boolean"
+    || attribute.kind === "number"
+    || fieldName.endsWith("_id")
+    || fieldName.endsWith("id")
+    || fieldName.endsWith("_code")
+    || fieldName.endsWith("code")
+    || fieldName.includes("count")
+    || fieldName.includes("total")
+    || fieldName.includes("amount")
+    || fieldName.includes("limit")
+    || fieldName.includes("balance")
+  ) {
+    return 3;
   }
 
   return 4;
@@ -510,6 +529,7 @@ Required relationship extension:
   rendering every field full-width by default
 - the baseline form-layout heuristics SHOULD be:
   - desktop default `span 4` for standard fields
+  - desktop `span 3` for compact ids/codes/counts/small numeric fields
   - desktop `span 12` for textarea/file/image fields
   - mobile full-width for all fields
 - explicit metadata overrides such as `formSpan`, `fullWidth`, and `rows`

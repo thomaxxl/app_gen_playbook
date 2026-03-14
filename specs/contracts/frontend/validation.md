@@ -112,6 +112,9 @@ environment instead of skipping it silently.
 - one delete flow works
 - one create or edit form shows multiple standard fields on the same desktop
   row when the resource has enough non-wide attributes
+- one create or edit form shows at least one compact scalar field rendered
+  narrower than the standard three-up field width when the resource includes
+  such a field
 - one multiline textarea-style field renders taller than a one-line text input
   when the app defines such a field
 

@@ -20,7 +20,7 @@ The real artifact MUST define, per resource field:
 
 | Resource | Field | Label | List | Show | Create | Edit | Readonly | Hidden | Display format | Searchable | Sortable | Reference-label behavior | Widget intent | Form span | Rows | Reason when non-default |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | yes/no | yes/no | yes/no | yes/no | yes/no | yes/no | replace | yes/no | yes/no | replace | replace | 4/6/12 | 3/5/etc | replace |
+| replace | replace | replace | yes/no | yes/no | yes/no | yes/no | yes/no | yes/no | replace | yes/no | yes/no | replace | replace | 3/4/6/12 | 3/5/etc | replace |
 
 ## Required rules
 
@@ -31,4 +31,5 @@ The real artifact MUST record:
 - reference-label expectations for related resources
 - any non-default widget or formatting intent
 - any non-default form width or textarea height intent
+- whether the field should be compact, standard, or wide in desktop forms
 - the reason whenever the field behavior differs from default generated CRUD

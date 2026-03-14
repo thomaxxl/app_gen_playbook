@@ -195,8 +195,10 @@ rendering every field full-width in a single vertical stack.
 
 At minimum, the runtime MUST:
 
-- default most fields to one-third desktop width
+- default standard fields to one-third desktop width
 - allow three standard fields on the same row at desktop sizes
+- apply narrower widths to compact scalar fields when the field shape suggests
+  it
 - default multiline textarea-style fields to full width
 - default upload/file/image inputs to full width
 - honor explicit form-width overrides from runtime metadata

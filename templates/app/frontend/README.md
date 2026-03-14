@@ -91,6 +91,9 @@ Notes:
 - `shared-runtime/resourceRegistry.tsx.md` MUST also implement responsive form
   layout heuristics so generated create/edit pages do not default to one
   full-width input per row.
+- the default generated form should visually resemble a typical admin form:
+  mostly three standard fields per row, with compact scalar fields narrower
+  and multiline fields full-width.
 - `tests/resourceMetadata.test.ts.md` and `tests/schemaContext.test.ts.md`
   are part of the baseline relationship contract because sparse-schema apps
   must prove tab-group preservation and relationship fallback behavior.

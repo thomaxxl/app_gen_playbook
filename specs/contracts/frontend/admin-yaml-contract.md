@@ -218,8 +218,14 @@ Generated create/edit forms MUST use a responsive 12-column layout.
 
 Desktop defaults:
 
-- most attributes SHOULD use `form_span: 4`
-- that default yields three fields per row
+- standard attributes SHOULD use `form_span: 4`
+- that default yields three standard fields per row
+- compact scalar fields such as ids, codes, counts, and small numeric values
+  SHOULD use a narrower span such as `3`
+- the runtime SHOULD therefore produce a mix of:
+  - compact fields
+  - standard three-up fields
+  - full-width multiline or upload fields
 - `file` and `image` inputs SHOULD default to `form_span: 12`
 - `widget: textarea` SHOULD default to `form_span: 12`
 
