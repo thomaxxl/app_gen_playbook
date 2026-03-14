@@ -35,8 +35,8 @@ from the SAFRS app-development playbook.
 ```
 
 `install.sh` installs backend Python packages into `backend/.deps`, prefers a
-local LogicBank checkout when available, and runs `npm install` in
-`frontend/`.
+local LogicBank checkout when available, runs `npm install` in `frontend/`,
+and prepares the Playwright Chromium runtime used by the delivery smoke suite.
 
 ## Backend
 
@@ -102,6 +102,8 @@ Notes:
 - The generated app root SHOULD be ready to become its own repository without
   restructuring first.
 - Prefer documenting `./install.sh` as the default setup step.
+- Make it explicit that `./install.sh` also prepares the Playwright delivery
+  gate.
 - Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.

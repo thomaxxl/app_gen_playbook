@@ -29,6 +29,9 @@ readiness note in:
 - verify empty/loading/error states
 - verify docs match what was built
 - reject undocumented business-rule drift
+- verify Playwright is installed for the generated app and install it if the
+  delivery environment does not already have it
+- run the basic Playwright smoke suite as the final pre-delivery step
 
 ## Outputs
 
@@ -46,5 +49,7 @@ readiness note in:
   mirror mode
 - every approved rule ID has backend test coverage
 - documentation matches implementation
+- the final validation action was a real Playwright smoke run or a documented
+  blocked-environment fallback
 - the app can be explained without caveats
 - follow-up inbox notes are sent if more work is required

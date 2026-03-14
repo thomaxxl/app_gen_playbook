@@ -75,29 +75,36 @@ executable contract for the frontend starter.
 Before delivery, the generated app MUST pass a browser-level Playwright smoke
 suite with at least this flow:
 
-1. start the app on fixed ports
-2. wait for backend `/healthz` and frontend `/admin-app/`
-3. open `/admin-app/#/Home`
-4. fail on browser console errors, page errors, and failed same-origin
+1. verify `npx playwright --version` works from `app/frontend/`
+2. if Playwright or its browser runtime is missing, install it before
+   continuing, for example with `npx playwright install chromium`
+3. start the app on fixed ports
+4. wait for backend `/healthz` and frontend `/admin-app/`
+5. open `/admin-app/#/Home`
+6. fail on browser console errors, page errors, and failed same-origin
    network requests
-5. assert `/ui/admin/admin.yaml` returns `200`
-6. assert the Home sidebar entry is visible
-7. assert the Home page loads without the bootstrap-error or home-error
-8. if the app includes `Landing.tsx`, assert the landing page loads without
+7. assert `/ui/admin/admin.yaml` returns `200`
+8. assert the Home sidebar entry is visible
+9. assert the Home page loads without the bootstrap-error or home-error
+10. if the app includes `Landing.tsx`, assert the landing page loads without
    the bootstrap-error or landing-error screen
-9. assert the key seeded collection request returns `200`
-10. navigate to at least one generated resource route and verify seeded records
+11. assert the key seeded collection request returns `200`
+12. navigate to at least one generated resource route and verify seeded records
    render
-11. prove generated React-Admin resources are registered as direct `Admin`
+13. prove generated React-Admin resources are registered as direct `Admin`
    children by verifying the resource route resolves to a list page rather
    than a catch-all error route
-12. on at least one generated list route, open a relationship dialog from a
+14. on at least one generated list route, open a relationship dialog from a
     readable related label and verify the dialog summary renders
-13. on at least one generated show route, verify a relationship tab renders
+15. on at least one generated show route, verify a relationship tab renders
     for a related resource
-14. when the app relies on sparse relationship metadata, verify a `tomany`
+16. when the app relies on sparse relationship metadata, verify a `tomany`
     relationship tab still loads rows through fallback inference
-15. retain trace, screenshot, and video on failure
+17. retain trace, screenshot, and video on failure
+
+The Playwright smoke run is the final pre-delivery validation gate. A
+generated app MUST NOT be treated as delivered before that run completes or a
+documented environment constraint blocks it.
 
 If browser execution is blocked by sandbox or host constraints, the agent MUST
 record the constraint and run the suite in the nearest available host

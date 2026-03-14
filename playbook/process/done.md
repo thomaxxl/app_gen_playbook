@@ -12,6 +12,8 @@ A feature is done only when all of these are true:
 - Backend has implemented the data/rule behavior
 - automated tests prove the important backend behavior
 - the mandatory Playwright smoke suite passes for the generated app
+- the final pre-delivery step was an actual Playwright smoke run against the
+  app, not just a claim that the tests should pass
 - docs and templates match the implementation
 - product acceptance has passed
 - no required artifact remains `status: stub`
@@ -32,5 +34,8 @@ documented.
 
 If browser-level verification required execution outside the default sandbox,
 that execution path and justification must also be documented.
+
+If Playwright or its browser runtime was missing, the operator must install it
+before the final smoke run instead of skipping that gate.
 
 If one layer works only because another layer guessed, the feature is not done.

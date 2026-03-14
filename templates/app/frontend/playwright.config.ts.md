@@ -48,6 +48,8 @@ export default defineConfig({
 Notes:
 
 - The starter smoke gate MUST run the combined app through `run.sh`.
+- Before delivery, the operator MUST verify Playwright is available and install
+  the Chromium runtime if it is missing.
 - The canonical browser base path for the starter app is `/admin-app/`.
 - Keep trace, screenshot, and video on failure so delivery regressions are
   diagnosable.

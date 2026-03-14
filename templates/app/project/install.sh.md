@@ -14,6 +14,8 @@ The key behavior is:
 - prefer a local LogicBank checkout when documented by the playbook
 - fall back cleanly to `pip install --no-deps logicbank`
 - run `npm install` for the frontend
+- verify Playwright is available for the frontend smoke suite
+- install the Chromium browser runtime for Playwright if it is missing
 
 ```sh
 #!/usr/bin/env bash
@@ -42,6 +44,14 @@ echo "Installing frontend dependencies in $FRONTEND_DIR"
 (
   cd "$FRONTEND_DIR"
   npm install
+
+  if ! npx playwright --version >/dev/null 2>&1; then
+    echo "Playwright CLI not found after npm install. Installing @playwright/test."
+    npm install --save-dev @playwright/test
+  fi
+
+  echo "Ensuring Playwright Chromium runtime is installed"
+  npx playwright install chromium
 )
 
 echo "Dependency installation completed."
@@ -52,5 +62,7 @@ Notes:
 - Keep this at the project root, next to `run.sh`.
 - Keep backend packages isolated under `backend/.deps` so the generated app
   does not require a user-managed virtualenv just to start.
+- `install.sh` SHOULD prepare the Playwright delivery gate so `npm run test:e2e`
+  does not fail later just because the browser runtime was never installed.
 - If the app no longer needs the temporary LogicBank local-path override,
   update this template and the generated app together.
