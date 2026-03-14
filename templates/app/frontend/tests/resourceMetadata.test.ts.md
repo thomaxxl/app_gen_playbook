@@ -66,5 +66,57 @@ describe("resourceMetadata", () => {
       { name: "label" },
     ]);
   });
+
+  it("documents the sparse-relationship fallback expectation", () => {
+    const sparseYaml = {
+      resources: {
+        Device: {
+          endpoint: "/api/devices",
+          label: "Devices",
+          user_key: "name",
+          tab_groups: {
+            related: {
+              label: "Related",
+              relationships: ["sessions"],
+            },
+          },
+          attributes: {
+            name: { type: "text" },
+          },
+        },
+        Session: {
+          endpoint: "/api/sessions",
+          label: "Sessions",
+          user_key: "name",
+          attributes: {
+            name: { type: "text" },
+            device_id: {
+              type: "reference",
+              reference: "Device",
+            },
+          },
+        },
+      },
+    };
+
+    const sparseSchema = normalizeAdminYaml(adaptAdminYamlForClient(sparseYaml));
+    const deviceMeta = buildResourceMeta(sparseSchema, sparseYaml, "Device");
+
+    expect(deviceMeta.name).toBe("Device");
+    expect(deviceMeta.endpoint).toBe("/api/devices");
+    // Replace this placeholder with concrete relationship assertions in the
+    // generated app. The runtime contract requires relationship synthesis
+    // from raw tab_groups plus reference/fallback metadata when the
+    // normalized relationship graph is incomplete.
+    expect(deviceMeta.relationships).toBeDefined();
+  });
 });
 ```
+
+Notes:
+
+- Generated apps SHOULD replace the sparse fallback placeholder assertion above
+  with concrete relationship expectations for the actual domain.
+- At minimum, the generated runtime MUST prove one sparse relationship example
+  where `tab_groups` plus fallback inference still produce a usable
+  relationship metadata entry.

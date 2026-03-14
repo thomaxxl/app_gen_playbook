@@ -110,7 +110,13 @@ export function adaptAdminYamlForClient(
             hide_edit: attribute.readonly === true || attribute.edit === false,
           }),
         ),
-        tab_groups: [],
+        tab_groups: Object.entries(resource.tab_groups ?? {}).map(
+          ([groupName, group]) => ({
+            name: groupName,
+            label: group.label,
+            relationships: [...(group.relationships ?? [])],
+          }),
+        ),
       },
     ]),
   );
@@ -176,6 +182,9 @@ Notes:
   `safrs-jsonapi-client` normalizer input shape are not identical.
 - `adaptAdminYamlForClient(...)` is therefore part of the required runtime
   contract, not a project-specific optional workaround.
+- The adapter MUST preserve `tab_groups` because the runtime uses raw
+  relationship groups as authoritative UI input when normalized relationship
+  metadata is incomplete.
 - If the app supports upload-backed fields, wrap the returned provider with the
   `shared-runtime/files/uploadAwareDataProvider.ts` helper after the
   search-enabled provider is created.

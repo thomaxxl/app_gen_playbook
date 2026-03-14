@@ -102,6 +102,8 @@ resources:
   Relationship group definitions for generated show/detail pages.
   Consumed by the starter runtime for relationship tabs and relationship label
   metadata.
+  The adapter/runtime MUST preserve this data and treat it as authoritative
+  relationship ordering/input, not generator-only decoration.
 
 ## Supported attribute keys
 
@@ -221,6 +223,13 @@ The starter runtime MUST support:
 - distinguishing `toone` and `tomany` tabs
 
 The starter runtime MUST NOT treat `tab_groups` as generator-only metadata.
+
+When normalized relationship metadata is incomplete, `tab_groups` MUST still
+remain available to the runtime as an authoritative source for:
+
+- which relationships to render
+- the author-defined order
+- the author-visible relationship labels
 
 ## Upload field rules
 

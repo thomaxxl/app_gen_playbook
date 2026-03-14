@@ -94,6 +94,16 @@ type SchemaDrivenAdminAppProps = {
 16. render generated relationships using the relationship contract in
     `relationship-ui.md`
 
+The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
+layer and MUST remain functional when `schema.resources[...].relationships` is
+partial. The runtime MUST combine:
+
+- normalized schema relationship metadata
+- `schema.fkToRelationship`
+- raw `admin.yaml`
+
+instead of assuming the normalized relationship graph is complete.
+
 That `children` slot is the official extension point for:
 
 - direct custom `Resource` elements such as the required `Home` page
@@ -187,6 +197,9 @@ The runtime still owns:
 The runtime contract MUST NOT depend on an undocumented `schema.raw` field.
 If the runtime needs raw `admin.yaml` metadata for labels, ordering, or
 visibility, it must carry that raw YAML in local app state explicitly.
+
+The adapter MUST NOT drop `tab_groups` or other runtime-consumed relationship
+inputs during normalization preparation.
 
 Upload segmentation note:
 

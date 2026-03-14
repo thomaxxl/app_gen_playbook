@@ -41,7 +41,7 @@ import {
   useRecordContext,
 } from "react-admin";
 
-import { useAdminSchema } from "./admin/schemaContext";
+import { useAdminSchema, useRawAdminYaml } from "./admin/schemaContext";
 import {
   buildResourceMeta,
   type ResourceMeta,
@@ -114,11 +114,12 @@ export function RelatedRecordDialogLink({
   relationship: ResourceRelationshipMeta;
 }) {
   const schema = useAdminSchema();
+  const rawYaml = useRawAdminYaml();
   const dataProvider = useDataProvider();
   const redirect = useRedirect();
   const targetMeta = useMemo(
-    () => buildResourceMeta(schema, relationship.targetResource),
-    [relationship.targetResource, schema],
+    () => buildResourceMeta(schema, rawYaml, relationship.targetResource),
+    [rawYaml, relationship.targetResource, schema],
   );
   const embeddedRelated = useMemo(
     () => getRecordRelationValue(parentRecord, relationship.name) ?? null,
@@ -253,3 +254,9 @@ Implementation notes:
   relationship rendering
 - the runtime SHOULD keep `getDefaultRelationshipTabIndex(...)` here so the
   default-tab priority stays centralized
+- this helper MUST consume the same raw-`admin.yaml`-backed relationship
+  metadata produced by `admin/resourceMetadata.ts`, not a separate ad hoc
+  relationship lookup path
+- this module MUST assume `ResourceRelationshipMeta` may contain
+  fallback-synthesized relationships rather than only relationships declared
+  completely by the normalizer

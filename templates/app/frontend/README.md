@@ -86,6 +86,11 @@ Notes:
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It
   defines the Northwind-style foreign-key display, relationship dialog, and
   show-tab behavior that generated pages MUST reuse.
+- `shared-runtime/admin/resourceMetadata.ts.md` MUST synthesize usable
+  relationship metadata even when the normalized schema is partial.
+- `tests/resourceMetadata.test.ts.md` and `tests/schemaContext.test.ts.md`
+  are part of the baseline relationship contract because sparse-schema apps
+  must prove tab-group preservation and relationship fallback behavior.
 - For non-starter domains, `CustomDashboard.tsx.md` SHOULD be the default
   custom-page starting point. `Landing.tsx.md` remains the starter-domain
   example.

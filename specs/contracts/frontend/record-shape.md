@@ -53,6 +53,8 @@ Related resources are still separate records for canonical fetch/write flows:
 - generated list/show/edit pages MAY read scalar fields directly
 - generated list/show pages MAY also use optional embedded related objects for
   display when available
+- generated relationship rendering MUST remain functional even when embedded
+  related objects are absent and normalized relationship metadata is partial
 - custom pages MUST fetch related resources explicitly or reuse the shared
   relationship helper when they need readable labels
 - custom pages MUST NOT assume only one embedded-object field name unless they
@@ -67,6 +69,10 @@ When displaying a related record in a custom view:
 2. otherwise read the local scalar id field such as `status_id`
 3. fetch the related resource by id
 4. display the related resource's `user_key` field or `label`
+
+If normalized schema relationship metadata is incomplete, custom pages SHOULD
+reuse the shared relationship helper instead of inventing their own fallback
+logic.
 
 This is why `admin.yaml` must define both:
 

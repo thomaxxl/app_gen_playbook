@@ -52,8 +52,11 @@ frontend package template before treating the playbook baseline as current.
 The starter frontend MUST ship automated tests for:
 
 - `SchemaDrivenAdminApp` bootstrap success and bootstrap failure rendering
+- raw `admin.yaml tab_groups` preservation through the adapter layer
 - metadata lookup by React-Admin resource name, including a multi-word
   resource such as `FlightStatus` resolving through `schema.resourceByType`
+- sparse relationship fallback resolution when normalized relationship
+  metadata is partial
 - render-time resource-registration failure with a visible fallback screen
 - grouped search-filter composition when `q` and other list filters are both
   present
@@ -88,7 +91,9 @@ suite with at least this flow:
     readable related label and verify the dialog summary renders
 13. on at least one generated show route, verify a relationship tab renders
     for a related resource
-14. retain trace, screenshot, and video on failure
+14. when the app relies on sparse relationship metadata, verify a `tomany`
+    relationship tab still loads rows through fallback inference
+15. retain trace, screenshot, and video on failure
 
 If browser execution is blocked by sandbox or host constraints, the agent MUST
 record the constraint and run the suite in the nearest available host
@@ -117,6 +122,8 @@ If the app supports uploaded files:
 - one generated show route renders a `tomany` relationship tab
 - one generated show route renders a `toone` relationship summary tab when the
   resource has such a relationship
+- when schema relationship metadata is sparse, one generated show route proves
+  that a `tab_groups`-driven `tomany` relationship still loads rows
 - one custom view or chart handles related labels correctly when the app
   includes custom relationship-aware views
 

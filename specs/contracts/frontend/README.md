@@ -37,6 +37,9 @@ The agent MAY load these files on demand:
 - [relationship-ui.md](relationship-ui.md)
   when implementing generated list/show relationship rendering, foreign-key
   columns, or related-record dialogs
+- [relationship-sparse-example.md](relationship-sparse-example.md)
+  when the app has incomplete normalized relationship metadata or lacks real
+  database foreign-key constraints
 - [record-shape.md](record-shape.md)
   when implementing data-provider mapping or custom views
 - [custom-views.md](custom-views.md)

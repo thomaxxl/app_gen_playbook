@@ -71,3 +71,13 @@ test("starter app smoke flow works", async ({ page, request }) => {
   expect(failedResponses).toEqual([]);
 });
 ```
+
+Notes:
+
+- If the generated app relies on sparse or incomplete normalized relationship
+  metadata, extend this smoke suite to prove at least one fallback-driven
+  `tomany` relationship tab loads rows and at least one `toone` relationship
+  opens the related-record dialog.
+- The sparse relationship scenario SHOULD use the same domain/resource names
+  documented in the app's own run-owned architecture and UX artifacts rather
+  than hardcoding the starter `Collection` example.

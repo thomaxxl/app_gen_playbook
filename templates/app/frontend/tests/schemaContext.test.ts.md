@@ -20,6 +20,12 @@ describe("schemaContext admin.yaml adapter", () => {
         Collection: {
           endpoint: "/api/collections",
           user_key: "name",
+          tab_groups: {
+            related: {
+              label: "Related",
+              relationships: ["items"],
+            },
+          },
           attributes: {
             name: {
               required: true,
@@ -49,6 +55,17 @@ describe("schemaContext admin.yaml adapter", () => {
     ]);
     expect(schema.resources.collections.searchCols).toEqual([{ name: "name" }]);
     expect(schema.resources.collections.userKey).toBe("name");
+    expect(
+      (adapted as {
+        resources: Record<string, { tab_groups: Array<{ relationships: string[] }> }>;
+      }).resources.collections.tab_groups,
+    ).toEqual([
+      {
+        relationships: ["items"],
+        label: "Related",
+        name: "related",
+      },
+    ]);
   });
 });
 ```

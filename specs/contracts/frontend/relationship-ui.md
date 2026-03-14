@@ -14,6 +14,15 @@ reference frontend does:
 - forms MUST still write scalar foreign-key ids through standard
   `ReferenceInput` controls
 
+The runtime MUST remain functional even when normalized relationship metadata
+is partial. It MUST combine:
+
+- normalized schema relationship metadata
+- `schema.fkToRelationship`
+- raw `admin.yaml`
+
+instead of assuming the normalizer output is complete.
+
 ## Metadata prerequisites
 
 The shared runtime MUST expose relationship metadata in `ResourceMeta`.
@@ -38,10 +47,40 @@ The runtime MUST derive that metadata from:
 - foreign-key mapping such as `schema.fkToRelationship`
 - raw `admin.yaml tab_groups`
 
+`admin.yaml tab_groups` MUST be preserved through the adapter layer and used
+as authoritative relationship ordering and input even when normalized
+relationship metadata is incomplete.
+
 The runtime MUST also be able to look up a relationship by name so that:
 
 - a foreign-key attribute can be replaced by one rendered relationship column
 - show-page tabs can be rendered in the author-defined order
+
+## Incomplete metadata fallback rules
+
+If normalized schema metadata does not fully define a relationship, the
+runtime MUST apply these fallbacks:
+
+1. explicit normalized direction wins
+2. otherwise plural relationship name => `tomany`
+3. otherwise singular relationship name => `toone`
+4. if target resource metadata is absent, infer the target resource from
+   resource-name matching
+5. for inferred `toone`, use `<singular_relationship_name>_id` when that
+   attribute exists
+6. for inferred `tomany`, inspect the target resource for a `toone`
+   relationship back to the parent and use that relationship's foreign-key
+   attributes as the reverse join
+
+If fallback inference still cannot establish a safe relationship definition,
+the runtime MUST fail visibly rather than silently showing raw ids or empty
+tabs as if the contract were complete.
+
+## Minimal sparse example
+
+The runtime MUST be able to handle the sparse example defined in:
+
+- [relationship-sparse-example.md](relationship-sparse-example.md)
 
 ## Canonical write shape
 
@@ -128,6 +167,9 @@ For `tomany` tabs:
 - the runtime MUST remove obvious back-reference columns that merely restate
   the parent relationship
 - the related list SHOULD sort by the target resource `user_key` when present
+- if the relationship has no direct foreign-key mapping, the runtime MUST
+  infer the reverse join from the target resource's `toone` relationship back
+  to the parent when that mapping is available
 
 For `toone` tabs:
 
@@ -165,3 +207,5 @@ The frontend validation suite MUST prove at least one end-to-end example of:
 - opening the related-record dialog from that list
 - the dialog showing `EDIT` and `VIEW`
 - a generated show page with both `toone` and `tomany` relationship tabs
+- a sparse-schema relationship example where `tab_groups` plus fallback
+  inference still produce a working `tomany` tab
