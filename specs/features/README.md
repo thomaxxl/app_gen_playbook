@@ -25,7 +25,9 @@ Rules:
 
 Maturity rule:
 
-- `uploads/` is the current fully documented feature pack
+- `uploads/` is the current fully documented implementation feature pack
+- `ux-measurement/` is a documented optional UX review and validation pack,
+  but it does not imply prebuilt starter instrumentation templates
 - `d3-custom-views/`, `reporting/`, and `background-jobs/` are placeholder
   packs only
 - placeholder packs MUST remain `disabled` or `undecided` in the capability
@@ -45,6 +47,7 @@ Segmentation rule:
 Available packs:
 
 - [uploads/README.md](uploads/README.md)
+- [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)
 - [reporting/README.md](reporting/README.md)
 - [background-jobs/README.md](background-jobs/README.md)

@@ -15,10 +15,10 @@ does not need a separate custom page component.
 
 ```tsx
 import {
-  Alert,
   Box,
   CircularProgress,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -28,6 +28,11 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDataProvider } from "react-admin";
+
+import EmptyState from "./EmptyState";
+import ErrorState from "./ErrorState";
+import PageHeader from "./PageHeader";
+import SummaryCard from "./SummaryCard";
 
 type PrimaryRecord = {
   id: string;
@@ -97,18 +102,50 @@ export default function CustomDashboard() {
   }, [dataProvider]);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Stack alignItems="center" justifyContent="center" minHeight="60vh" spacing={2}>
+        <CircularProgress />
+        <Typography color="text.secondary">Loading dashboard data...</Typography>
+      </Stack>
+    );
   }
 
   if (error) {
-    return <Alert severity="error">{error}</Alert>;
+    return (
+      <ErrorState
+        details={error}
+        message="Failed to load the custom dashboard."
+        title="Custom dashboard unavailable"
+      />
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <Box sx={{ display: "grid", gap: 3, p: 4 }}>
+        <PageHeader
+          description="Replace this starter dashboard with the run-specific overview page defined by the UX artifacts."
+          title="Custom Dashboard"
+        />
+        <EmptyState
+          message="No rows are available for this overview yet."
+          title="Nothing to summarize"
+        />
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography sx={{ mb: 2 }} variant="h4">
-        Custom Dashboard
-      </Typography>
+    <Box sx={{ display: "grid", gap: 3, p: 4 }}>
+      <PageHeader
+        description="Replace this starter dashboard with the run-specific overview page defined by the UX artifacts."
+        title="Custom Dashboard"
+      />
+      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <SummaryCard title="Primary rows">
+          <Typography variant="h4">{rows.length}</Typography>
+        </SummaryCard>
+      </Stack>
       <Paper>
         <Table>
           <TableHead>
@@ -141,3 +178,6 @@ Notes:
   artifacts.
 - Keep this page inside the React-Admin data-provider context.
 - Resolve foreign keys into readable labels instead of displaying raw ids.
+- This template SHOULD use the shared `PageHeader`, `EmptyState`,
+  `ErrorState`, and `SummaryCard` starter shell unless the run-owned UX
+  artifacts explicitly replace it.

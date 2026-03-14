@@ -25,11 +25,16 @@ The real artifact MUST define:
 - upload failure states when uploads are enabled
 - retry behavior
 - success feedback or toast behavior
+- destructive-action confirmation behavior
+- focus restoration or user-orientation behavior after save, dialog close, or
+  error
+- accessibility-specific state notes when the default contract is not
+  sufficient
 
 ## Required matrix
 
 The real artifact SHOULD include a table with at least these columns:
 
-| Scope | Trigger | User-visible state | Retry available | Success feedback | Notes |
-| --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | yes/no | replace | replace |
+| Scope | Trigger | User-visible state | Retry available | Success feedback | Focus restoration or next focus | Accessibility notes | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | replace | yes/no | replace | replace | replace | replace |

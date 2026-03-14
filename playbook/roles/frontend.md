@@ -10,12 +10,17 @@ undocumented backend or rules assumptions.
 
 - `../../runs/current/artifacts/ux/`
 - navigation and entry behavior
+- page-shell consistency
 - frontend resource wiring
 - field visibility and labels
+- content and microcopy clarity
 - loading/error/empty states
+- accessibility-visible behavior
+- responsive behavior decisions
 - landing/custom pages
 - frontend build readiness
 - frontend-side validation notes
+- approved frontend validation mirrors
 
 ## Runtime files
 
@@ -67,6 +72,8 @@ Runtime state lives in:
 - [../../runs/current/artifacts/ux/custom-view-specs.md](../../runs/current/artifacts/ux/custom-view-specs.md)
 - [../../runs/current/artifacts/ux/state-handling.md](../../runs/current/artifacts/ux/state-handling.md)
 - [../../specs/contracts/frontend/README.md](../../specs/contracts/frontend/README.md)
+- [../../specs/contracts/frontend/ui-principles.md](../../specs/contracts/frontend/ui-principles.md)
+- [../../specs/contracts/frontend/accessibility.md](../../specs/contracts/frontend/accessibility.md)
 - [../../specs/contracts/frontend/validation.md](../../specs/contracts/frontend/validation.md)
 
 The Frontend agent MUST also read:
@@ -77,6 +84,13 @@ The Frontend agent MUST also read:
 Before loading any optional feature pack or any on-demand contract file beyond
 the core set above, the Frontend agent MUST read those two gating artifacts
 and treat them as authoritative.
+
+The Frontend agent MUST treat:
+
+- `../../specs/contracts/frontend/ui-principles.md`
+- `../../specs/contracts/frontend/accessibility.md`
+
+as core implementation contract, not as optional polish material.
 
 After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or

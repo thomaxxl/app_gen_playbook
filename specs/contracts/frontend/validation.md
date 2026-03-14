@@ -51,6 +51,20 @@ frontend package template before treating the playbook baseline as current.
 - generated create/edit forms use responsive width heuristics instead of
   rendering all inputs full-width by default
 
+## UX/UI validation
+
+- `Home` renders with a visible title and basic purpose text
+- `Home` exposes a visible path into the main app flow
+- every custom page defines loading, empty, and error states
+- every empty state includes a visible next step or explanation
+- form pages show grouped structure when the run-owned UX artifacts require it
+- critical flows remain usable at narrow widths
+- keyboard and focus smoke checks exist for the core form and dialog flows
+- every mirrored frontend validation maps to an approved rule ID in
+  `../../runs/current/artifacts/product/business-rules.md`
+- custom pages use the shared page-shell defaults unless the run-owned UX
+  artifacts explicitly define a replacement
+
 ## Automated smoke validation
 
 The starter frontend MUST ship automated tests for:
@@ -86,21 +100,22 @@ suite with at least this flow:
 7. assert `/ui/admin/admin.yaml` returns `200`
 8. assert the Home sidebar entry is visible
 9. assert the Home page loads without the bootstrap-error or home-error
-10. if the app includes `Landing.tsx`, assert the landing page loads without
+10. assert the Home page shows a visible title and a visible next-step action
+11. if the app includes `Landing.tsx`, assert the landing page loads without
    the bootstrap-error or landing-error screen
-11. assert the key seeded collection request returns `200`
-12. navigate to at least one generated resource route and verify seeded records
-   render
-13. prove generated React-Admin resources are registered as direct `Admin`
-   children by verifying the resource route resolves to a list page rather
-   than a catch-all error route
-14. on at least one generated list route, open a relationship dialog from a
+12. assert the key seeded collection request returns `200`
+13. navigate to at least one generated resource route and verify seeded records
+    render
+14. prove generated React-Admin resources are registered as direct `Admin`
+    children by verifying the resource route resolves to a list page rather
+    than a catch-all error route
+15. on at least one generated list route, open a relationship dialog from a
     readable related label and verify the dialog summary renders
-15. on at least one generated show route, verify a relationship tab renders
+16. on at least one generated show route, verify a relationship tab renders
     for a related resource
-16. when the app relies on sparse relationship metadata, verify a `tomany`
+17. when the app relies on sparse relationship metadata, verify a `tomany`
     relationship tab still loads rows through fallback inference
-17. retain trace, screenshot, and video on failure
+18. retain trace, screenshot, and video on failure
 
 The Playwright smoke run is the final pre-delivery validation gate. A
 generated app MUST NOT be treated as delivered before that run completes or a
@@ -156,6 +171,8 @@ popups, the validation evidence MUST point to that documented exception.
 - if `Landing.tsx` is present, it is reachable
 - if `Landing.tsx` is present, it links or navigates into the admin resources
 - if `Landing.tsx` is present, loading, empty, and error states are visible
+- if `CustomDashboard.tsx` or another custom page is present, it shows a
+  visible page header and recovery path
 
 If D3 is used:
 

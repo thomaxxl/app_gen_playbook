@@ -27,40 +27,46 @@ Suggested copy order:
 4. `tsconfig.app.json.md`
 5. `tsconfig.node.json.md`
 6. `config.ts.md`
-7. `vite-env.d.ts.md`
-8. `main.tsx.md`
-9. `SchemaDrivenAdminApp.tsx.md`
-10. `shared-runtime/admin/schemaContext.tsx.md`
-11. `shared-runtime/admin/resourceMetadata.ts.md`
-12. `shared-runtime/relationshipUi.tsx.md`
-13. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
-14. `shared-runtime/resourceRegistry.tsx.md`
-15. `generated/resources/Collection.tsx.md`
-16. `generated/resources/Item.tsx.md`
-17. `generated/resources/Status.tsx.md`
-18. `resourcePages.ts.md`
-19. `App.tsx.md`
-20. `Home.tsx.md`
-21. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
-22. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
-23. `D3Visualization.tsx.md` if the app needs charts or figures
-24. `shared-runtime/files/README.md`
-25. `shared-runtime/files/uploadAwareDataProvider.ts.md`
-26. `shared-runtime/files/fileValueAdapters.ts.md`
-27. `shared-runtime/files/fileFieldHelpers.ts.md`
-28. `fs-promises.ts.md`
-29. `vite.config.ts.md`
-30. `vitest.config.ts.md`
-31. `playwright.config.ts.md`
-32. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
-33. `tests/schemaContext.test.ts.md`
-34. `tests/resourceMetadata.test.ts.md`
-35. `tests/createSearchEnabledDataProvider.test.ts.md`
-36. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
-37. `tests/vite.config.test.ts.md`
-38. `tests/smoke.e2e.spec.ts.md`
-39. `../project/run.sh.md`
-40. `../project/README.app.md`
+7. `theme.ts.md`
+8. `vite-env.d.ts.md`
+9. `main.tsx.md`
+10. `PageHeader.tsx.md`
+11. `EmptyState.tsx.md`
+12. `ErrorState.tsx.md`
+13. `FormSection.tsx.md`
+14. `SummaryCard.tsx.md`
+15. `SchemaDrivenAdminApp.tsx.md`
+16. `shared-runtime/admin/schemaContext.tsx.md`
+17. `shared-runtime/admin/resourceMetadata.ts.md`
+18. `shared-runtime/relationshipUi.tsx.md`
+19. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
+20. `shared-runtime/resourceRegistry.tsx.md`
+21. `generated/resources/Collection.tsx.md`
+22. `generated/resources/Item.tsx.md`
+23. `generated/resources/Status.tsx.md`
+24. `resourcePages.ts.md`
+25. `App.tsx.md`
+26. `Home.tsx.md`
+27. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
+28. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
+29. `D3Visualization.tsx.md` if the app needs charts or figures
+30. `shared-runtime/files/README.md`
+31. `shared-runtime/files/uploadAwareDataProvider.ts.md`
+32. `shared-runtime/files/fileValueAdapters.ts.md`
+33. `shared-runtime/files/fileFieldHelpers.ts.md`
+34. `fs-promises.ts.md`
+35. `vite.config.ts.md`
+36. `vitest.config.ts.md`
+37. `playwright.config.ts.md`
+38. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+39. `tests/schemaContext.test.ts.md`
+40. `tests/resourceMetadata.test.ts.md`
+41. `tests/createSearchEnabledDataProvider.test.ts.md`
+42. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+43. `tests/vite.config.test.ts.md`
+44. `tests/smoke.e2e.spec.ts.md`
+45. `../project/run.sh.md`
+46. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -83,6 +89,10 @@ Notes:
   the starter frontend templates as sufficient.
 - `Home.tsx.md` is required for every generated app. It is the standard
   sidebar-visible in-admin landing page.
+- `theme.ts.md`, `PageHeader.tsx.md`, `EmptyState.tsx.md`,
+  `ErrorState.tsx.md`, `FormSection.tsx.md`, and `SummaryCard.tsx.md`
+  define the starter UI shell. Generated pages SHOULD reuse them unless the
+  run-owned UX artifacts explicitly require a different shell.
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It
   defines the Northwind-style foreign-key display, relationship dialog, and
   show-tab behavior that generated pages MUST reuse.

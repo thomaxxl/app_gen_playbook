@@ -20,3 +20,12 @@ Template files:
 These templates MUST be treated as structured artifact skeletons, not as
 one-line prompts. The Frontend role MUST preserve their section structure when
 creating the run-owned copies under `../../runs/current/artifacts/ux/`.
+
+The run-owned UX artifacts produced from these templates MUST capture:
+
+- navigation and page hierarchy
+- page-shell and header decisions
+- form grouping and field-level content guidance
+- loading, empty, error, success, and recovery behavior
+- responsive behavior for critical flows
+- accessibility-visible expectations that differ from the default baseline

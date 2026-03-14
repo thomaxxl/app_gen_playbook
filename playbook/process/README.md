@@ -52,3 +52,7 @@ Recommended reading order:
 23. [escalation.md](escalation.md)
 24. [done.md](done.md)
 25. [cadence.md](cadence.md)
+
+Maintainer-only reference:
+
+- [ui-system-change-policy.md](ui-system-change-policy.md)

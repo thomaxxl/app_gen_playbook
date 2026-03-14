@@ -19,9 +19,9 @@ version at `../../runs/current/artifacts/ux/navigation.md`.
 
 The real artifact MUST include a table with at least these columns:
 
-| Route ID | Path | Menu label | Menu visibility | Route owner | Entry conditions | Primary CTA targets | Resource or page source | Justification |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | visible or hidden | generated/custom/singleton/hidden | replace | replace | replace | replace |
+| Route ID | Path | Menu label | Menu visibility | Route owner | Page header model | Entry conditions | Return path | Primary CTA targets | Accessibility notes | Responsive notes | Resource or page source | Justification |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | replace | visible or hidden | generated/custom/singleton/hidden | starter/non-starter/custom | replace | replace | replace | default/non-default | default/non-default | replace | replace |
 
 ## Required sections
 
@@ -33,6 +33,11 @@ The real artifact MUST define:
 - hidden, singleton, and non-menu routes
 - route ownership decisions tied to `resource-classification.md`
 - primary CTA destinations used by `Home.tsx` and any dashboard page
+- default page-header behavior per route class
+- visible return-path behavior when the route is not obviously recoverable via
+  the browser back stack
+- route-level accessibility or responsive notes when the default contract is
+  not sufficient
 
 ## Decision rules
 

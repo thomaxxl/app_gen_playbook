@@ -21,6 +21,8 @@ Maturity rule:
 
 - `uploads/` is the only feature-template pack that is currently documented as
   implementation-ready
+- `ux-measurement/` is a documented feature-template entrypoint, but it does
+  not ship starter code snippets by default
 - the other feature-template packs remain placeholders and MUST stay disabled
   or undecided unless the current run expands them deliberately
 
@@ -34,6 +36,7 @@ Segmentation rule:
 Available packs:
 
 - [uploads/README.md](uploads/README.md)
+- [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)
 - [reporting/README.md](reporting/README.md)
 - [background-jobs/README.md](background-jobs/README.md)

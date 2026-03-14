@@ -15,6 +15,12 @@ mirror only the subset of approved rules whose `Frontend Mirror` field is not
 
 The starter archive MUST ship these runtime snippets:
 
+- `templates/app/frontend/theme.ts.md`
+- `templates/app/frontend/PageHeader.tsx.md`
+- `templates/app/frontend/EmptyState.tsx.md`
+- `templates/app/frontend/ErrorState.tsx.md`
+- `templates/app/frontend/FormSection.tsx.md`
+- `templates/app/frontend/SummaryCard.tsx.md`
 - `templates/app/frontend/SchemaDrivenAdminApp.tsx.md`
 - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
 - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`
@@ -29,6 +35,7 @@ The starter frontend scaffold MUST also ship:
 
 - `templates/app/frontend/index.html.md`
 - `templates/app/frontend/Home.tsx.md`
+- `templates/app/frontend/theme.ts.md`
 - `templates/app/frontend/tsconfig.json.md`
 - `templates/app/frontend/tsconfig.app.json.md`
 - `templates/app/frontend/tsconfig.node.json.md`
@@ -95,6 +102,9 @@ type SchemaDrivenAdminAppProps = {
     `Admin` children
 17. render generated relationships using the relationship contract in
     `relationship-ui.md`
+18. expose consistent page-shell primitives for title, purpose text, empty
+    states, and error states
+19. preserve a shared theme baseline across Home and custom pages
 
 The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
 layer and MUST remain functional when `schema.resources[...].relationships` is
@@ -160,6 +170,31 @@ That `Resource` MUST:
 
 The `Home` page MUST be treated as a project page, not as a backend resource
 declared in `admin.yaml`.
+
+The `Home` page MUST provide:
+
+- a visible title
+- a short basic description or purpose text
+- a visible path into the main app flow
+
+## Required starter UI primitives
+
+The generated frontend MUST ship starter UI primitives for:
+
+- page headers
+- empty states
+- error states
+- form sections
+- summary cards
+
+Those primitives MUST be usable by:
+
+- `Home.tsx`
+- starter or non-starter custom pages
+- bootstrap and render-failure screens where appropriate
+
+The generated frontend SHOULD apply an app-local theme and CSS baseline from
+`frontend/src/theme.ts` and `frontend/src/main.tsx`.
 
 ## Required relationship behavior
 

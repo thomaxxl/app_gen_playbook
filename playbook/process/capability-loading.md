@@ -63,6 +63,15 @@ Disabled optional capability modules MUST NOT be:
 Undecided capability modules MUST also remain unloaded until the capability
 profile explicitly enables them.
 
+This negative rule applies equally to UX/UI-oriented packs such as:
+
+- uploads
+- ux-measurement
+- d3-custom-views
+- reporting
+- background-jobs
+- any future advanced accessibility or analytics packs
+
 ## Supporting-contract rule
 
 Some lower-level technical directories may exist to support feature packs.

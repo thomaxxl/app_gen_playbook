@@ -27,7 +27,11 @@ import { useEffect, useState } from "react";
 import { useDataProvider } from "react-admin";
 import { Link as RouterLink } from "react-router-dom";
 
+import EmptyState from "./EmptyState";
+import ErrorState from "./ErrorState";
+import PageHeader from "./PageHeader";
 import { resourcePages } from "./generated/resourcePages";
+import SummaryCard from "./SummaryCard";
 
 type ItemRecord = {
   id: string;
@@ -92,45 +96,75 @@ export default function Landing() {
     return (
       <Stack alignItems="center" justifyContent="center" minHeight="100vh">
         <CircularProgress />
+        <Typography color="text.secondary" sx={{ mt: 2 }}>
+          Loading starter overview...
+        </Typography>
       </Stack>
     );
   }
 
   if (error) {
     return (
-      <Stack spacing={2} sx={{ minHeight: "100vh", p: 4 }}>
-        <Typography variant="h4">Starter Overview</Typography>
-        <Typography color="error">Failed to load landing data.</Typography>
-        <Paper sx={{ p: 2 }}>
-          <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{error}</pre>
-        </Paper>
-        <Button component={RouterLink} to={primaryRoute} variant="contained">
-          Open Primary Resource
-        </Button>
-      </Stack>
+      <Box sx={{ minHeight: "100vh", p: { xs: 2, md: 4 } }}>
+        <PageHeader
+          actions={
+            <Button component={RouterLink} to={primaryRoute} variant="contained">
+              Open Primary Resource
+            </Button>
+          }
+          description="Starter no-layout overview page rendered inside the React-admin data-provider context."
+          title="Starter Overview"
+        />
+        <ErrorState
+          details={error}
+          message="Failed to load landing data."
+          title="Starter overview unavailable"
+        />
+      </Box>
     );
   }
 
   if (rows.length === 0) {
     return (
-      <Stack spacing={2} sx={{ minHeight: "100vh", p: 4 }}>
-        <Typography variant="h4">Starter Overview</Typography>
-        <Typography color="text.secondary">No items are available yet.</Typography>
-        <Button component={RouterLink} to={primaryRoute} variant="contained">
-          Open Primary Resource
-        </Button>
-      </Stack>
+      <Box sx={{ minHeight: "100vh", p: { xs: 2, md: 4 } }}>
+        <PageHeader
+          actions={
+            <Button component={RouterLink} to={primaryRoute} variant="contained">
+              Open Primary Resource
+            </Button>
+          }
+          description="Starter no-layout overview page rendered inside the React-admin data-provider context."
+          title="Starter Overview"
+        />
+        <EmptyState
+          action={
+            <Button component={RouterLink} to={primaryRoute} variant="contained">
+              Open Primary Resource
+            </Button>
+          }
+          message="No items are available yet."
+          title="Nothing to show yet"
+        />
+      </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", p: 4 }}>
+    <Box sx={{ minHeight: "100vh", p: { xs: 2, md: 4 } }}>
       <Box sx={{ mx: "auto", maxWidth: 1100 }}>
-        <Stack alignItems="center" direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h4">Starter Overview</Typography>
-          <Button component={RouterLink} to={primaryRoute} variant="contained">
-            Open Primary Resource
-          </Button>
+        <PageHeader
+          actions={
+            <Button component={RouterLink} to={primaryRoute} variant="contained">
+              Open Primary Resource
+            </Button>
+          }
+          description="Starter no-layout overview page rendered inside the React-admin data-provider context."
+          title="Starter Overview"
+        />
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 3 }}>
+          <SummaryCard title="Visible items">
+            <Typography variant="h4">{rows.length}</Typography>
+          </SummaryCard>
         </Stack>
         <TableContainer component={Paper}>
           <Table>
@@ -168,6 +202,9 @@ Notes:
   possible.
 - This template now derives its primary CTA from the first registered resource
   instead of a hard-coded starter route, but it remains starter-only overall.
+- This template SHOULD use the shared `PageHeader`, `EmptyState`,
+  `ErrorState`, and `SummaryCard` starter shell unless the run-owned UX
+  artifacts explicitly replace it.
 - If the page needs charts or trees, keep those in separate D3 components under
   `components/visualizations/` and feed them prepared data from the landing
   page.

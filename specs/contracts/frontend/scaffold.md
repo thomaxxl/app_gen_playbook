@@ -20,6 +20,12 @@ frontend/
   src/
     App.tsx
     Home.tsx
+    theme.ts
+    PageHeader.tsx
+    EmptyState.tsx
+    ErrorState.tsx
+    FormSection.tsx
+    SummaryCard.tsx
     config.ts
     main.tsx
     vite-env.d.ts
@@ -63,10 +69,16 @@ These files are shipped under `templates/app/frontend/`:
 - `vitest.config.ts.md`
 - `playwright.config.ts.md`
 - `main.tsx.md`
+- `theme.ts.md`
 - `vite-env.d.ts.md`
 - `config.ts.md`
 - `App.tsx.md`
 - `Home.tsx.md`
+- `PageHeader.tsx.md`
+- `EmptyState.tsx.md`
+- `ErrorState.tsx.md`
+- `FormSection.tsx.md`
+- `SummaryCard.tsx.md`
 - `Landing.tsx.md` when the run explicitly includes a starter no-layout page
 - `generated/resources/Collection.tsx.md`
 - `generated/resources/Item.tsx.md`
@@ -90,8 +102,6 @@ These files are shipped under `templates/app/frontend/`:
 - `tests/vite.config.test.ts.md`
 - `tests/smoke.e2e.spec.ts.md`
 
-Optional upload-related templates:
-
 Optional upload-related template:
 
 - `tests/uploadAwareDataProvider.test.ts.md`
@@ -113,6 +123,8 @@ The starter frontend must support:
 - The frontend scaffold must be complete enough to run without first generating
   a hidden Vite starter app elsewhere.
 - `Home.tsx` is required even when `Landing.tsx` is omitted or replaced.
+- `theme.ts`, `PageHeader.tsx`, `EmptyState.tsx`, `ErrorState.tsx`,
+  `FormSection.tsx`, and `SummaryCard.tsx` are part of the starter UI shell.
 - `Landing.tsx` is optional and MUST be added only when the run-owned UX
   artifacts explicitly require a no-layout page.
 - Additional project-specific files are allowed, but the required files above
@@ -123,6 +135,8 @@ The starter frontend must support:
 - `shared-runtime/relationshipUi.tsx` is a baseline runtime file. It MUST be
   present even when a given app has only a few relationships, because the
   generated list/show pages depend on it for foreign-key rendering.
+- The generated page shell SHOULD reuse the starter UI shell files unless the
+  run-owned UX artifacts document a different layout system.
 - For non-starter domains, the wrapper files under `generated/resources/` MUST
   be replaced with one file per resource declared in
   `../../architecture/resource-naming.md`.

@@ -8,12 +8,17 @@ This template makes the custom-route extension point explicit and includes the
 required bootstrap/error behavior.
 
 ```tsx
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { Component, startTransition, useEffect, useState } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { Admin } from "react-admin";
 import type { DataProvider } from "react-admin";
 import type { Schema } from "safrs-jsonapi-client";
 
+import ErrorState from "../ErrorState";
 import type { RawAdminYaml } from "./admin/resourceMetadata";
 
 import {
@@ -47,12 +52,13 @@ class ResourceRenderBoundary extends Component<
   render() {
     if (this.state.error) {
       return (
-        <main style={{ fontFamily: "sans-serif", minHeight: "100vh", padding: 24 }}>
-          <h1>{this.props.title}</h1>
-          <p>Failed to render resource metadata.</p>
-          <p>Schema URL: <code>{this.props.adminYamlUrl}</code></p>
-          <pre>{this.state.error}</pre>
-        </main>
+        <Box sx={{ maxWidth: 880, mx: "auto", p: 3 }}>
+          <ErrorState
+            details={`Schema URL: ${this.props.adminYamlUrl}\n\n${this.state.error}`}
+            message="Failed to render resource metadata."
+            title={this.props.title}
+          />
+        </Box>
       );
     }
 
@@ -108,21 +114,27 @@ export function SchemaDrivenAdminApp({
 
   if (error) {
     return (
-      <main style={{ fontFamily: "sans-serif", minHeight: "100vh", padding: 24 }}>
-        <h1>{appConfig.title}</h1>
-        <p>Failed to initialize the schema or data provider.</p>
-        <p>Schema URL: <code>{appConfig.adminYamlUrl}</code></p>
-        <pre>{error}</pre>
-      </main>
+      <Box sx={{ maxWidth: 880, mx: "auto", p: 3 }}>
+        <ErrorState
+          details={`Schema URL: ${appConfig.adminYamlUrl}\n\n${error}`}
+          message="Failed to initialize the schema or data provider."
+          title={appConfig.title}
+        />
+      </Box>
     );
   }
 
   if (!bootstrap) {
     return (
-      <main style={{ fontFamily: "sans-serif", minHeight: "100vh", padding: 24 }}>
-        <h1>{appConfig.title}</h1>
-        <p>Loading `admin.yaml` and wiring `safrs-jsonapi-client`...</p>
-      </main>
+      <Stack alignItems="center" justifyContent="center" minHeight="100vh" spacing={2}>
+        <CircularProgress />
+        <Typography component="h1" variant="h5">
+          {appConfig.title}
+        </Typography>
+        <Typography color="text.secondary">
+          Loading `admin.yaml` and wiring `safrs-jsonapi-client`...
+        </Typography>
+      </Stack>
     );
   }
 
@@ -153,3 +165,5 @@ Notes:
 - Resource registration must happen inside a child rendered under the boundary,
   so metadata failures thrown by `buildResources(...)` are actually caught by
   the visible error screen.
+- Bootstrap and render-time failures SHOULD use the shared page-level error
+  pattern so the app shell stays visually consistent.

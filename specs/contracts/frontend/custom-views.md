@@ -13,7 +13,7 @@ Required behavior:
 - public route: `/admin-app/#/Home`
 - visible left-sidebar menu entry labeled `Home`
 - visible home icon in the sidebar
-- a short basic description of the app
+- a visible page title and short purpose text
 - at least one visible navigation link or button into the main app flow
 
 The `Home` view SHOULD be implemented as a normal React-admin page component
@@ -59,6 +59,23 @@ no-layout route.
 - `CustomDashboard.tsx` is a reusable non-starter custom-page example, not a
   required second landing pattern
 
+## Shared page-shell defaults
+
+Generated project pages SHOULD reuse the starter UI shell by default.
+
+At minimum:
+
+- `Home.tsx` MUST use the shared page-header pattern or an explicitly approved
+  equivalent
+- custom pages SHOULD use the shared page-header pattern unless the run-owned
+  UX artifacts define a different layout
+- summary-style custom pages SHOULD use shared summary-card structure unless a
+  documented reason requires a different component
+- custom pages MUST expose a visible recovery action when they hit empty or
+  error states
+- custom pages MUST define a mobile fallback when their desktop layout would
+  otherwise become unreadable
+
 ## D3 pattern
 
 The frontend SHOULD use D3 only in focused visualization components.
@@ -81,10 +98,12 @@ Every custom view MUST define:
 - empty state
 - error state
 - responsive behavior
+- CTA and recovery behavior
 
 If the custom view includes a chart:
 
 - provide a textual title or label
+- provide a text fallback or summary when the chart carries core meaning
 - ensure the surrounding layout remains readable on smaller screens
 - keep colors consistent with the app theme
 
@@ -110,5 +129,9 @@ Use:
 - `templates/app/frontend/Home.tsx.md`
 - `templates/app/frontend/Landing.tsx.md`
 - `templates/app/frontend/CustomDashboard.tsx.md`
+- `templates/app/frontend/PageHeader.tsx.md`
+- `templates/app/frontend/EmptyState.tsx.md`
+- `templates/app/frontend/ErrorState.tsx.md`
+- `templates/app/frontend/SummaryCard.tsx.md`
 - `templates/app/frontend/D3Visualization.tsx.md`
 - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`

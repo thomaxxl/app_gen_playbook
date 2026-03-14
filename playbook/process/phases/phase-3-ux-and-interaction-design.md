@@ -10,11 +10,17 @@ Design the user journey and page behavior before implementation diverges.
 
 - create screen inventory
 - define navigation/menu structure
-- define default landing entry behavior
+- define default entry, return-path, and page-header behavior
 - define per-resource CRUD layouts
+- define form grouping, content clarity, and field-level guidance
 - define loading/error/empty states
+- define success and destructive-confirmation behavior
+- define responsive expectations and mobile fallbacks
+- define accessibility-visible behavior and any higher-risk accessibility notes
 - define custom-page behavior
 - define relationship display patterns
+- define any approved frontend validation mirrors and trace them to business
+  rule IDs
 
 ## Outputs
 
@@ -27,6 +33,14 @@ Design the user journey and page behavior before implementation diverges.
 ## Exit criteria
 
 - the UX package is traceable to the product artifacts it implements
+- loading, empty, error, success, and recovery behavior are documented for the
+  critical paths
+- page-shell, page-header, and primary CTA decisions are documented for the
+  main routes
+- responsive behavior is documented for the critical flows
+- accessibility baseline expectations and any non-default route-level notes are
+  documented
+- any mirrored frontend validation is traceable to approved business-rule IDs
 - architect signs off on boundary compliance
 - backend understands frontend data needs
 - the `runs/current/artifacts/ux/` package is marked `ready-for-handoff` or

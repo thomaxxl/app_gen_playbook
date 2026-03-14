@@ -45,9 +45,13 @@ before treating any starter backend template as implementation-ready.
   `safrs-jsonapi-client` normalizer
 - implement page wrappers and resource registry
 - implement custom pages
+- implement shared page-shell and header consistency
 - implement navigation and user-visible states
+- implement accessibility-visible behavior and focus/orientation handling
+- implement responsive behavior for core CRUD pages and custom pages
 - mirror only the approved business rules whose `Frontend Mirror` field is not
   `none`
+- keep mirrored validation traceable to business-rule IDs
 - run `npm run check`
 - run `npm run test`
 - implement and run `npm run test:e2e`
@@ -80,9 +84,15 @@ before treating any starter backend template as implementation-ready.
 - app runs end-to-end
 - schema-driven resources load
 - custom pages work
+- `Home` and any custom pages follow the approved page-shell defaults or an
+  explicitly documented replacement
+- visible loading, empty, error, success, and recovery states exist and are
+  testable for the critical flows
 - domain rules fire correctly
 - frontend check/test/build gates pass, or an explicit compatibility deviation
   explains why the house stack was changed
+- accessibility smoke checks exist for the core flows and complete without
+  unresolved blockers
 - browser-level Playwright smoke verification exists and passes, or a recorded
   host/sandbox constraint explains the approved external verification path
 - backend verification evidence exists for either the preferred path or the
