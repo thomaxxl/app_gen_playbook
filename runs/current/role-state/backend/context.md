@@ -1,30 +1,35 @@
 ## Last Processed Inbox Items
 
-- none for the current neutral run
+- `20260314-173000-from-architect-to-backend-design-handoff.md`
+- `20260314-180000-from-architect-to-backend-implementation-handoff.md`
 
 ## Files Created Or Updated
 
-- none
+- all backend-design artifacts under `runs/current/artifacts/backend-design/`
+- local generated backend under `app/backend/`
 
 ## Decisions Made
 
-- none
+- used Gate/Flight/FlightStatus as the exposed resource trio
+- removed upload endpoints and media routes from the preserved example backend
 
 ## Assumptions Made
 
-- none
+- LogicBank sum over boolean `is_active` is acceptable for active-flight rollups
 
 ## Unresolved Issues
 
-- none
+- runtime backend tests were authored but not executed in this session
 
 ## Handoffs Emitted
 
-- none
+- `20260314-174500-from-backend-to-architect-backend-package.md`
+- `20260314-181000-from-backend-to-architect-integration-review.md`
 
 ## Verification Path Used
 
-- none
+- Python syntax compilation and app/test consistency checks
 
 ## Implementation Evidence
-- none
+
+- `runs/current/evidence/backend-tests.md`

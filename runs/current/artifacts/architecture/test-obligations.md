@@ -1,21 +1,44 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - overview.md
 unresolved:
-  - replace with run-specific test obligations
-last_updated_by: playbook
+  - browser-level verification may remain unexecuted if dependencies cannot be installed
+last_updated_by: architect
 
-# Test Obligations Template
+# Test Obligations
 
-This file is a generic template. The Architect MUST create the run-owned
-version at `../../runs/current/artifacts/architecture/test-obligations.md`.
+## Backend contract checks
 
-The real artifact MUST define:
+- verify exposed routes and resource names
+- verify `admin.yaml` resource contract alignment
+- verify create/update validation for `Flight`
 
-- backend contract checks
-- bootstrap checks
-- rules mutation matrix
-- frontend checks
-- end-to-end checks
+## Bootstrap checks
+
+- verify seed idempotency
+- verify gate delete cascades to flights
+- verify status delete is blocked when referenced
+
+## Rules mutation matrix
+
+- count rollup after create/delete
+- active-flight rollup after status change
+- delay rollup after delay update
+- attention rule enforcement
+- departed timestamp enforcement
+
+## Frontend checks
+
+- schema bootstrap smoke
+- resource metadata parsing
+- search-enabled data-provider behavior
+- Vite base-path contract
+- form-level validation mirror for flight rules
+
+## End-to-end checks
+
+- `/admin-app/#/Home` loads
+- `/admin-app/#/Landing` loads
+- core resource navigation succeeds without console or network failures

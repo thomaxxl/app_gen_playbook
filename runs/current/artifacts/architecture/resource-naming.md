@@ -1,22 +1,23 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - ../product/domain-glossary.md
 unresolved:
-  - replace with run-specific resource naming table
-last_updated_by: playbook
+  - final wire type values must still be runtime-verified
+last_updated_by: architect
 
-# Resource Naming Template
+# Resource Naming
 
-This file is a generic template. The Architect MUST create the run-owned
-version at `../../runs/current/artifacts/architecture/resource-naming.md`.
+| Domain Resource | Python Model Class | SQL Table | admin.yaml Key | Expected SAFRS Wire Type | Collection Path | Relationship Names |
+| --- | --- | --- | --- | --- | --- | --- |
+| Gate | `Gate` | `gates` | `Gate` | `Gate` (verify at runtime) | `/api/gates` | `flights` |
+| Flight | `Flight` | `flights` | `Flight` | `Flight` (verify at runtime) | `/api/flights` | `gate`, `status` |
+| FlightStatus | `FlightStatus` | `flight_statuses` | `FlightStatus` | `FlightStatus` (verify at runtime) | `/api/flight_statuses` | `flights` |
 
-The real artifact MUST define, per resource:
+## Naming rules
 
-- Python model class
-- SQL table
-- admin.yaml key
-- SAFRS wire type
-- collection path
-- relationship names
+- ORM column names remain `snake_case`.
+- Relationship names are literal contract terms and must match `admin.yaml`.
+- Backend tests must verify the actual wire types rather than trusting these
+  expected values blindly.

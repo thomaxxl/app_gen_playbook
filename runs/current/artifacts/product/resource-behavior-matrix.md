@@ -1,21 +1,23 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: stub
+status: ready-for-handoff
 depends_on:
   - brief.md
   - resource-inventory.md
 unresolved:
-  - replace with run-specific resource behavior matrix
-last_updated_by: playbook
+  - none
+last_updated_by: product_manager
 
-# Resource Behavior Matrix Template
+# Resource Behavior Matrix
 
-This file is a generic template. The Product Manager MUST replace it with the
-run-owned version for the current app.
+| Resource | Menu | List | Show | Create | Edit | Delete | Search | Type | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Gate | yes | yes | yes | yes | yes | yes | yes | workflow anchor | delete cascades to related flights |
+| Flight | yes | yes | yes | yes | yes | yes | yes | workflow-heavy | form validation mirrors backend rules |
+| FlightStatus | yes | yes | yes | yes | yes | restricted | yes | reference-only | delete blocked while referenced |
 
-The real artifact MUST define, per resource:
+## Menu exposure
 
-- whether list/show/create/edit/delete are expected in v1
-- whether search is expected
-- whether the resource should appear in the default menu
-- whether the resource is workflow-heavy, reference-only, or custom-page heavy
+- `Home` is the required in-admin entry page.
+- `Landing` is the custom dashboard route outside the admin layout.
+- All three resources remain first-class menu items.

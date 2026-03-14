@@ -1,25 +1,22 @@
 owner: backend
 phase: phase-4-backend-design-and-rules-mapping
-status: stub
+status: ready-for-handoff
 depends_on:
   - model-design.md
 unresolved:
-  - replace with run-specific relationship map
-last_updated_by: playbook
+  - none
+last_updated_by: backend
 
-# Relationship Map Template
-
-Replace this stub with the run-specific relationship map.
-
-## Required relationship table
+# Relationship Map
 
 | From resource | To resource | FK column | Relationship name | Cardinality | Nullable | Delete behavior | Exposed relationship | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<from>` | `<to>` | `<fk>` | `<orm relationship>` | `<one-to-many / many-to-one / many-to-many>` | `<yes/no>` | `<cascade/restrict/set null/etc.>` | `<yes/no>` | `<notes>` |
+| Flight | Gate | `gate_id` | `gate` | many-to-one | no | child deleted on gate delete | yes | DB-level cascade from gate |
+| Gate | Flight | none | `flights` | one-to-many | n/a | passive deletes | yes | rollup source |
+| Flight | FlightStatus | `status_id` | `status` | many-to-one | no | restrict while referenced | yes | copied fields source |
+| FlightStatus | Flight | none | `flights` | one-to-many | n/a | no child cascade | yes | reference integrity required |
 
-## Required notes
+## Notes
 
-- exact ORM-side relationship names
-- exact foreign-key nullability rules
-- exact delete behavior and enforcement layer
-- any internal-only relationship
+- `gate_id` and `status_id` are both non-nullable.
+- SQLite foreign keys must be enabled so delete behavior matches the model.

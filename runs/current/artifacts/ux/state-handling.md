@@ -1,30 +1,21 @@
 owner: frontend
 phase: phase-3-ux-and-interaction-design
-status: stub
+status: ready-for-handoff
 depends_on:
   - ../product/workflows.md
   - ../product/acceptance-criteria.md
   - ../product/custom-pages.md
 unresolved:
-  - replace with run-specific state-handling rules
-last_updated_by: playbook
+  - none
+last_updated_by: frontend
 
-# State Handling Template
-
-This file is the run-owned state-handling artifact.
-
-## Required state sections
-
-- global shell loading/error states
-- generated CRUD page states
-- custom page states
-- relationship/reference-resolution failure states
-- upload failure states when uploads are enabled
-- retry behavior
-- success feedback or toast behavior
-
-## Suggested matrix
+# State Handling
 
 | Scope | Trigger | User-visible state | Retry available | Success feedback | Notes |
 | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | yes/no | replace | replace |
+| global shell | `admin.yaml` bootstrap | full-page loading or error screen | yes | app loads to `Home` | shared runtime handles |
+| generated list pages | empty dataset or fetch failure | empty state or error panel | yes | post-save redirect returns to list/show | applies to all resources |
+| flight form | mirrored rule failures | field-level validation message | yes | React-Admin save success behavior | BR-005 to BR-008 |
+| Landing dashboard | dashboard fetch pending | visible loading layout | yes | cards/table render | must stay readable on mobile |
+| Landing dashboard | fetch failure | error message with navigation CTAs | yes | n/a | no raw stack traces |
+| relationship display | unresolved reference metadata | readable fallback to FK or label text | limited | n/a | no blank cells |

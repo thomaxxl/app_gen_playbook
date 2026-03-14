@@ -1,19 +1,30 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: stub
+status: ready-for-handoff
 depends_on:
   - input-interpretation.md
 unresolved:
-  - replace with run-specific assumptions
-last_updated_by: playbook
+  - whether arrival tracking should become a later resource
+  - whether airline reference data should become a later resource
+last_updated_by: product_manager
 
-# Assumptions And Open Questions Template
+# Assumptions And Open Questions
 
-This file is a generic template. The Product Manager MUST create the run-owned
-version at `../../runs/current/artifacts/product/assumptions-and-open-questions.md`.
+## Assumptions made because the brief was sparse
 
-Track:
+- The first version focuses on airport staff, not passengers.
+- Departures are enough to make the app coherent.
+- Gate assignment can be stored directly on `Flight`.
+- Delay tracking can remain a simple numeric-plus-reason model in v1.
 
-- assumptions made because the brief was sparse
-- unresolved business questions
-- decisions deferred to later phases
+## Unresolved business questions
+
+- Should future versions model airlines explicitly?
+- Should gate closures or maintenance blocks become a separate resource?
+- Should arrivals be included later as a separate workflow family?
+
+## Decisions deferred to later phases
+
+- package delivery and Dockerization
+- advanced filtering beyond basic text search
+- non-admin operational reporting

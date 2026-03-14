@@ -1,43 +1,40 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - overview.md
   - route-and-entry-model.md
   - ../product/assumptions-and-open-questions.md
 unresolved:
-  - replace with run-specific runtime and package decisions
-last_updated_by: playbook
+  - `safrs-jsonapi-client` remains pinned to the preserved example tarball because no verified release asset could be checked in this network-restricted run
+last_updated_by: architect
 
-# Runtime BOM Template
-
-This file is the run-owned runtime and package decision record.
-
-The real artifact MUST freeze the runtime and package choices that later roles
-need in order to install and build the app without guessing.
+# Runtime BOM
 
 ## Backend runtime baseline
 
 | Item | Decision | Source | Notes |
 | --- | --- | --- | --- |
-| Python version | replace | replace | Replace this row |
-| SAFRS package strategy | replace | replace | Replace this row |
-| LogicBank strategy | replace | replace | Replace this row |
-| SQLite strategy | replace | replace | Replace this row |
+| Python version | `3.12+` | preserved example baseline | host verification not yet run |
+| FastAPI | `0.135.1` | `example/backend/requirements.txt` | carried forward |
+| SAFRS package strategy | `safrs==3.2.0` | preserved example baseline | direct pip package |
+| LogicBank strategy | local checkout if available, else `pip install --no-deps logicbank` | playbook/project template | same as starter guidance |
+| SQLite strategy | file-backed SQLite via `create_all()` | preserved example baseline | migrations out of scope |
+| `python-multipart` | `0.0.22` | preserved example baseline | retained even without uploads for compatibility |
 
 ## Frontend runtime baseline
 
 | Item | Decision | Source | Notes |
 | --- | --- | --- | --- |
-| Node version | replace | replace | Replace this row |
-| Package manager | replace | replace | Replace this row |
-| Vite version | replace | replace | Replace this row |
-| `safrs-jsonapi-client` source | replace | replace | Replace this row |
+| Node version | `24+` | `example/frontend/package.json` | aligns with core contract |
+| Package manager | `npm` | preserved example baseline | no lockfile freeze committed for this run |
+| Vite version | `6.2.2` | `example/frontend/package.json` | aligns with contract |
+| React Admin | `5.8.0` | preserved example baseline | carried forward |
+| `safrs-jsonapi-client` source | immutable tarball commit pin from preserved example | `example/frontend/package.json` | compatibility deviation from preferred release asset policy |
 
 ## Compatibility deviations
 
-- none
-
-## Unresolved runtime risks
-
-- replace with run-specific risks or `none`
+- Frontend dependency minors remain on the preserved example's validated set.
+- The preferred GitHub release asset for `safrs-jsonapi-client` was not
+  verified in this run due restricted network access.
+- Docker and same-origin packaging are intentionally out of scope.

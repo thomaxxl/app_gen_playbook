@@ -1,24 +1,25 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - overview.md
   - ../product/resource-inventory.md
   - ../product/resource-behavior-matrix.md
 unresolved:
-  - replace with run-specific resource classification
-last_updated_by: playbook
+  - none
+last_updated_by: architect
 
-# Resource Classification Template
+# Resource Classification
 
-This file is a generic template. The Architect MUST replace it with the
-run-owned version for the current app.
+| Resource | Resource Class | CRUD Expectation | Menu | First-Class Or Singleton | Custom-Page Implication |
+| --- | --- | --- | --- | --- | --- |
+| Gate | core parent | full CRUD | yes | first-class | feeds dashboard rollups |
+| Flight | core transactional | full CRUD | yes | first-class | feeds dashboard board rows |
+| FlightStatus | reference/status | full CRUD except referenced delete | yes | first-class | controls labels and flags shown in lists/forms |
 
-The real artifact MUST define, per resource:
+## Notes
 
-- resource class
-- CRUD expectation
-- menu expectation
-- reference-only versus core behavior
-- singleton-versus-first-class treatment
-- custom-page implications
+- No singleton settings resource exists in v1.
+- All three resources are explicit SAFRS resources and explicit frontend menu
+  entries.
+- `Home` and `Landing` are project pages, not backend resources.

@@ -1,21 +1,18 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - overview.md
 unresolved:
-  - replace with run-specific decisions
-last_updated_by: playbook
+  - none
+last_updated_by: architect
 
-# Decision Log Template
+# Decision Log
 
-This file is a generic template. The Architect MUST create the run-owned
-version at `../../runs/current/artifacts/architecture/decision-log.md`.
-
-Record only cross-layer decisions that affect:
-
-- routes
-- naming
-- packaging
-- shared-runtime use
-- backend or rules behavior
+1. The run is classified as `rename-only`, not `starter` and not `non-starter`.
+2. The product scope is limited to departure gate operations.
+3. All optional capability packs are disabled.
+4. `Home` and `Landing` are both included; `Home` remains the primary in-admin
+   entry route.
+5. The generated app keeps the preserved example runtime stack with noted
+   dependency-source deviations rather than repinning packages during this run.

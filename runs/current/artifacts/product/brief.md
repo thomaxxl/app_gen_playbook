@@ -1,23 +1,59 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: stub
+status: ready-for-handoff
 depends_on:
   - input-interpretation.md
+  - research-notes.md
 unresolved:
-  - replace with run-specific product brief
-last_updated_by: playbook
+  - none
+last_updated_by: product_manager
 
-# Product Brief Template
+# Airport Ops Control Brief
 
-This file is a generic template. The Product Manager MUST create the run-owned
-version at `../../runs/current/artifacts/product/brief.md`.
+## Problem statement
 
-Fill in:
+Airport duty managers need a compact admin app to manage departure gates,
+scheduled flights, and operational statuses without relying on scattered
+spreadsheets or free-text updates.
 
-- problem statement
-- primary users
-- app class
-- in-scope behavior
-- first-version scope boundary
-- out-of-scope behavior
-- explicit exclusions
+## Primary users
+
+- airport duty manager
+- gate coordinator
+- operations supervisor
+
+## App class
+
+Schema-driven admin app with one dashboard page, three resources, and a small
+set of backend-enforced operational rules.
+
+## In-scope behavior
+
+- manage gates and their static metadata
+- create, edit, search, and review flights assigned to gates
+- manage reusable flight-status definitions
+- surface active-flight and delay metrics on dashboard pages
+- enforce delay-reason and departure-timestamp rules
+
+## First-version scope boundary
+
+The first version supports internal airport-operations coordination for
+departures only. It does not attempt to become a passenger app, airline
+system, or real-time ATC console.
+
+## Out-of-scope behavior
+
+- check-in and boarding-pass issuance
+- baggage or cargo workflows
+- runway sequencing
+- aircraft maintenance
+- billing and vendor procurement
+- external feed ingestion
+
+## Explicit exclusions
+
+- no uploads
+- no reporting feature pack
+- no background jobs
+- no D3 custom views
+- no same-origin packaging work in this run

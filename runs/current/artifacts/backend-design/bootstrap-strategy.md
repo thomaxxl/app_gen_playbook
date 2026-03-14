@@ -1,27 +1,55 @@
 owner: backend
 phase: phase-4-backend-design-and-rules-mapping
-status: stub
+status: ready-for-handoff
 depends_on:
   - ../product/sample-data.md
 unresolved:
-  - replace with run-specific bootstrap strategy
-last_updated_by: playbook
+  - none
+last_updated_by: backend
 
-# Bootstrap Strategy Template
+# Bootstrap Strategy
 
-Replace this stub with the run-specific bootstrap strategy.
+## Canonical startup-order constraints
 
-## Required sections
+1. create tables
+2. validate `admin.yaml`
+3. activate rules
+4. seed reference statuses
+5. seed gates
+6. seed flights
 
-1. canonical startup-order constraints
-2. empty-DB detection rule
-3. reference-data seed set
-4. sample-data seed set
-5. idempotency and rerun behavior
-6. data that MUST NOT be seeded automatically
+## Empty-DB detection rule
 
-## Required bootstrap table
+Bootstrap exits early when `FlightStatus` already has rows.
+
+## Reference-data seed set
+
+- `scheduled`
+- `boarding`
+- `delayed`
+- `departed`
+
+## Sample-data seed set
+
+- Gate `A1`
+- Gate `B4`
+- four example flights spanning boarding, delayed, scheduled, and departed
+
+## Idempotency and rerun behavior
+
+- reference/status table count is the bootstrap guard
+- repeated startup must not duplicate seed records
+
+## Data that MUST NOT be seeded automatically
+
+- live schedules
+- airline directories
+- historical operations archives
+
+## Bootstrap table
 
 | Dataset | Purpose | Trigger condition | Idempotency rule | Notes |
 | --- | --- | --- | --- | --- |
-| `<dataset>` | `<why needed>` | `<first startup / empty table / explicit command>` | `<how duplicates are prevented>` | `<notes>` |
+| Flight statuses | controlled state definitions | empty `FlightStatus` table | skip when count > 0 | seeded first |
+| Gates | parent resources for sample flights | after statuses on first run | only during initial seed pass | two gates |
+| Flights | dashboard and rule exercise data | after gates on first run | only during initial seed pass | four records |

@@ -1,22 +1,40 @@
 owner: architect
 phase: phase-2-architecture-contract
-status: stub
+status: ready-for-handoff
 depends_on:
   - ../product/brief.md
   - ../product/domain-glossary.md
 unresolved:
-  - use only when the run differs from the starter trio
-last_updated_by: playbook
+  - none
+last_updated_by: architect
 
-# Domain Adaptation Template
+# Domain Adaptation
 
-This file is a generic template. The Architect MUST create the run-owned
-version at `../../runs/current/artifacts/architecture/domain-adaptation.md`
-when the app materially differs from the starter trio.
+## Actual domain resources
 
-The real artifact MUST define:
+- `Gate`
+- `Flight`
+- `FlightStatus`
 
-- actual domain resources
-- retained starter assumptions
-- replaced starter assumptions
-- consequences for templates and tests
+## Retained starter assumptions
+
+- three first-class resources
+- one parent rollup resource, one child transactional resource, one status
+  reference resource
+- derived count and sum fields persisted on the parent
+- copied fields persisted on the child
+- React-Admin generated CRUD pages plus custom `Home` and `Landing`
+
+## Replaced starter assumptions
+
+- media-oriented fields are replaced by airport operations fields
+- upload handling is removed entirely
+- public/private status semantics are replaced by active/attention semantics
+- time and delay validation replace publish-date validation
+
+## Consequences for templates and tests
+
+- resource wrappers, models, bootstrap data, and rules must all be renamed
+  together
+- upload-specific backend and frontend tests must be removed
+- dashboard copy and metrics must become gate/flight focused

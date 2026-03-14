@@ -1,31 +1,21 @@
 owner: architect
 phase: phase-2
-status: stub
+status: ready-for-handoff
 depends_on:
   - capability-profile.md
-unresolved: []
-last_updated_by: none
+unresolved:
+  - none
+last_updated_by: architect
 
 # Load Plan
-
-This file is the shortest role-scoped reading plan for the active run.
-
-This starter placeholder MUST be replaced with run-specific role decisions
-before Phase 2 is handed off for implementation. A run MUST NOT treat this
-file as authoritative while it still contains only the starter placeholder
-block.
-
-It MUST answer:
-
-- what each role MUST read
-- what each role MUST NOT read
-
-Starter placeholder:
 
 ```yaml
 ProductManager:
   core:
     - specs/product/README.md
+    - playbook/process/input-policy.md
+    - runs/current/artifacts/architecture/capability-profile.md
+    - runs/current/artifacts/architecture/load-plan.md
   optional: []
   must_not_read:
     - specs/features/*
@@ -34,8 +24,10 @@ Architect:
   core:
     - specs/architecture/README.md
     - playbook/process/capability-loading.md
+    - runs/current/artifacts/product/*
   optional: []
-  must_not_read: []
+  must_not_read:
+    - specs/features/*
 
 Frontend:
   core:
@@ -44,9 +36,13 @@ Frontend:
     - specs/contracts/frontend/scaffold.md
     - specs/contracts/frontend/runtime-contract.md
     - specs/contracts/frontend/routing-and-paths.md
+    - specs/contracts/frontend/ui-principles.md
+    - specs/contracts/frontend/accessibility.md
+    - runs/current/artifacts/architecture/*
+    - runs/current/artifacts/product/*
   optional: []
   must_not_read:
-    - specs/features/* when capability != enabled for frontend
+    - specs/features/*
 
 Backend:
   core:
@@ -54,16 +50,16 @@ Backend:
     - specs/contracts/backend/dependencies.md
     - specs/contracts/backend/models-and-naming.md
     - specs/contracts/backend/runtime-and-startup.md
-    - specs/contracts/rules/README.md
+    - runs/current/artifacts/architecture/*
+    - runs/current/artifacts/product/*
   optional: []
   must_not_read:
-    - specs/features/* when capability != enabled for backend
+    - specs/features/*
 
 DevOps:
   core:
-    - specs/contracts/deployment/README.md
-    - specs/contracts/deployment/package-management.md
+    - none; role inactive in this run
   optional: []
   must_not_read:
-    - specs/features/* when capability != enabled for devops
+    - specs/features/*
 ```
