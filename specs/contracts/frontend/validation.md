@@ -46,6 +46,8 @@ frontend package template before treating the playbook baseline as current.
 - generated relationship fields display readable labels, not raw ids
 - clicking a generated relationship label opens a related-record dialog
 - the related-record dialog shows `EDIT` and `VIEW`
+- generated show pages implement relationship tabs unless the run-owned UX
+  artifacts explicitly disable or replace them
 
 ## Automated smoke validation
 
@@ -126,6 +128,9 @@ If the app supports uploaded files:
   that a `tab_groups`-driven `tomany` relationship still loads rows
 - one custom view or chart handles related labels correctly when the app
   includes custom relationship-aware views
+
+If a run-owned UX artifact explicitly disables or replaces tabs or related
+popups, the validation evidence MUST point to that documented exception.
 
 ## Custom-view validation
 

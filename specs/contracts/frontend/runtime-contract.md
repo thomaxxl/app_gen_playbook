@@ -164,6 +164,10 @@ declared in `admin.yaml`.
 The shared runtime MUST implement the relationship UI contract in
 `relationship-ui.md`.
 
+Relationship tabs and related-record dialogs are baseline runtime behavior for
+generated apps. The runtime MUST ship and wire this behavior unless the run
+explicitly documents a different UX decision in its run-owned artifacts.
+
 At minimum, the runtime MUST:
 
 - replace visible `toone` foreign-key columns with readable relationship

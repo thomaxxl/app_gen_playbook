@@ -14,6 +14,10 @@ reference frontend does:
 - forms MUST still write scalar foreign-key ids through standard
   `ReferenceInput` controls
 
+Relationship tabs and related-record popups are the default generated
+frontend behavior. A generated app MUST implement them unless the current run
+explicitly records a different UX decision in its run-owned artifacts.
+
 The runtime MUST remain functional even when normalized relationship metadata
 is partial. It MUST combine:
 
@@ -209,3 +213,7 @@ The frontend validation suite MUST prove at least one end-to-end example of:
 - a generated show page with both `toone` and `tomany` relationship tabs
 - a sparse-schema relationship example where `tab_groups` plus fallback
   inference still produce a working `tomany` tab
+
+If a run explicitly disables or replaces relationship tabs or related-record
+popups, that exception MUST be documented in the run-owned UX artifacts before
+delivery. Silence or omission is not an override.
