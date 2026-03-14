@@ -130,6 +130,9 @@ Generated-app working-tree rule:
 - `app/` MUST NOT be treated as committed playbook source
 - for a fresh run, the Product Manager SHOULD create local `app/` after intake
   setup so later roles have a stable output root
+- the generated app itself MUST still include its own root `.gitignore`,
+  `Dockerfile`, and `docker-compose.yml` so it can be moved into its own repo
+  or packaged directly
 
 Capability-loading rule:
 

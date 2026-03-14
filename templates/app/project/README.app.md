@@ -18,12 +18,15 @@ from the SAFRS app-development playbook.
 
 ## Structure
 
+- `.gitignore`: standalone-repo ignore policy for the generated app
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS
 - `frontend/`: Vite + React-Admin + `safrs-jsonapi-client`
 - `reference/admin.yaml`: frontend contract
 - `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
+- `Dockerfile`: same-origin container build
+- `docker-compose.yml`: local container orchestration entrypoint
 
 ## Install
 
@@ -96,6 +99,8 @@ VITE_BACKEND_ORIGIN=http://127.0.0.1:9000 ./run.sh
 Notes:
 
 - Keep this README short and runnable.
+- The generated app root SHOULD be ready to become its own repository without
+  restructuring first.
 - Prefer documenting `./install.sh` as the default setup step.
 - Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
@@ -114,7 +119,8 @@ Notes:
 - If the frontend depends on `safrs-jsonapi-client`, keep it pinned through an
   immutable tarball URL or a published registry release. Do not document a git
   dependency as the default generated-app path.
-- If the app does not use Docker, do not add deployment noise here.
+- Document the root container files when the generated app ships Docker
+  packaging.
 - Keep the launcher portable. Do not document or generate a `run.sh` that
   requires Bash-5-only features such as `wait -n` unless the app explicitly
   raises the shell/runtime baseline.

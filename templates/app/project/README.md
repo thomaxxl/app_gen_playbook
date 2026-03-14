@@ -15,7 +15,15 @@ These snippets target files under:
 
 Copy these together:
 
+- `.gitignore.md`
 - `BUSINESS_RULES.app.md`
 - `install.sh.md`
 - `run.sh.md`
 - `README.app.md`
+- `../deployment/Dockerfile.md`
+- `../deployment/docker-compose.yml.md`
+
+If the app uses same-origin container packaging, also copy:
+
+- `../deployment/nginx.conf.md`
+- `../deployment/entrypoint.sh.md`

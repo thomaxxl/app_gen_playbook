@@ -69,10 +69,19 @@ Accepted artifact copies MAY later be placed under:
 
 The generated app MUST also contain:
 
+- local `../../app/.gitignore`
 - local `../../app/BUSINESS_RULES.md`
+- local `../../app/Dockerfile`
+- local `../../app/docker-compose.yml`
 
 That file is the generated-app snapshot of the approved
 `runs/current/artifacts/product/business-rules.md` catalog.
+
+Those files exist so the generated app can:
+
+- become its own repository without extra ignore-policy work
+- run through the documented same-origin container path without a second
+  packaging pass
 
 Implementation work MUST NOT patch the static playbook source while building
 the app unless the task explicitly asks for a playbook update.

@@ -38,12 +38,20 @@ Recommended public routes:
 - `/ui/admin/admin.yaml` for the frontend contract
 - `/jsonapi.json` for the backend schema
 
-## Recommended files
+## Required generated-app files
 
-Create:
+The generated app MUST contain these root packaging files:
 
 - `Dockerfile`
 - `docker-compose.yml`
+
+The generated app SHOULD also contain:
+
+- `.gitignore`
+
+Create these additional deployment helpers when the same-origin container path
+is in scope:
+
 - `nginx.conf`
 - `entrypoint.sh`
 
@@ -117,7 +125,7 @@ contract.
 
 ## Suggested compose behavior
 
-`docker-compose.yml` should:
+`docker-compose.yml` MUST:
 
 - build the image
 - publish a host port such as `8000`
