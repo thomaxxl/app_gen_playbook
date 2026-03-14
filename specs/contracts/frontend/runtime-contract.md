@@ -239,6 +239,10 @@ At minimum, the runtime MUST:
 The runtime MUST NOT rely on raw-id-only rendering for generated relationship
 columns when relationship metadata is available.
 
+A simplified runtime that omits `relationshipUi.tsx` and falls back to plain
+`ReferenceField` / `ReferenceInput` rendering without relationship tabs is
+non-conformant.
+
 ## Required form layout behavior
 
 Generated create/edit forms MUST use responsive layout heuristics rather than

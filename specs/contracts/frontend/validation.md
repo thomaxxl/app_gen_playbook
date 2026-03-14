@@ -46,6 +46,9 @@ frontend package template before treating the playbook baseline as current.
 - the app declares exactly one primary entry route across
   `landing-strategy.md` and `navigation.md`
 - explicit `resourcePages` are wired into the app
+- the baseline relationship runtime files exist and are wired:
+  `shared-runtime/relationshipUi.tsx`, `shared-runtime/resourceRegistry.tsx`,
+  and relationship-aware `shared-runtime/admin/resourceMetadata.ts`
 - a visible `Home` sidebar entry with icon is present
 - generated relationship fields display readable labels, not raw ids
 - clicking a generated relationship label opens a related-record dialog

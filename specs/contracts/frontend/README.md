@@ -25,6 +25,7 @@ The agent MUST load these files first:
 - [runtime-contract.md](runtime-contract.md)
 - [routing-and-paths.md](routing-and-paths.md)
 - [home-and-entry.md](home-and-entry.md)
+- [relationship-ui.md](relationship-ui.md)
 - [ui-principles.md](ui-principles.md)
 - [accessibility.md](accessibility.md)
 
@@ -40,9 +41,6 @@ The agent MAY load these files on demand:
   non-default layout behavior
 - [admin-yaml-contract.md](admin-yaml-contract.md)
   when generating forms, lists, reference handling, or menu metadata
-- [relationship-ui.md](relationship-ui.md)
-  when implementing generated list/show relationship rendering, foreign-key
-  columns, or related-record dialogs
 - [relationship-sparse-example.md](relationship-sparse-example.md)
   when the app has incomplete normalized relationship metadata or lacks real
   database foreign-key constraints

@@ -31,6 +31,9 @@ the Northwind reference runtime.
 relationship metadata from normalized schema, `fkToRelationship`, and raw
 `admin.yaml` so sparse-schema apps do not collapse back to raw-id-only UI.
 
+A generated app that omits `relationshipUi.tsx.md` or replaces the baseline
+relationship runtime with plain `ReferenceField`-only rendering is invalid.
+
 The relationship runtime is intentionally split into two layers:
 
 - `admin/resourceMetadata.ts.md` for metadata construction

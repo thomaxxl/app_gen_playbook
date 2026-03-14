@@ -57,6 +57,8 @@ business-rule behavior, or route meaning.
 - implement the raw-`admin.yaml` adapter layer required by the current
   `safrs-jsonapi-client` normalizer
 - implement page wrappers and resource registry
+- implement the baseline relationship runtime, including relationship metadata
+  synthesis, related-record dialogs, and show-page relationship tabs
 - implement custom pages
 - implement shared page-shell and header consistency
 - implement navigation and user-visible states
@@ -106,6 +108,8 @@ business-rule behavior, or route meaning.
 
 - app runs end-to-end
 - schema-driven resources load
+- generated list/show pages use the baseline relationship runtime rather than a
+  simplified raw-id or plain `ReferenceField` fallback
 - custom pages work
 - `Home` and any custom pages follow the approved page-shell defaults or an
   explicitly documented replacement

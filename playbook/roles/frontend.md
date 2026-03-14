@@ -74,6 +74,7 @@ Runtime state lives in:
 - [../../runs/current/artifacts/ux/custom-view-specs.md](../../runs/current/artifacts/ux/custom-view-specs.md)
 - [../../runs/current/artifacts/ux/state-handling.md](../../runs/current/artifacts/ux/state-handling.md)
 - [../../specs/contracts/frontend/README.md](../../specs/contracts/frontend/README.md)
+- [../../specs/contracts/frontend/relationship-ui.md](../../specs/contracts/frontend/relationship-ui.md)
 - [../../specs/contracts/frontend/ui-principles.md](../../specs/contracts/frontend/ui-principles.md)
 - [../../specs/contracts/frontend/accessibility.md](../../specs/contracts/frontend/accessibility.md)
 - [../../specs/contracts/frontend/validation.md](../../specs/contracts/frontend/validation.md)
