@@ -34,7 +34,7 @@ or YAML parsing.
     "react-admin": "5.8.0",
     "react-dom": "19.1.0",
     "react-router-dom": "6.30.1",
-    "safrs-jsonapi-client": "https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz",
+    "safrs-jsonapi-client": "<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>",
     "yaml": "2.8.1"
   },
   "devDependencies": {
@@ -66,8 +66,9 @@ or a raw `codeload` source archive in generated apps. If the selected artifact
 is missing the built outputs referenced by its own package metadata, replace it
 with a validated release asset before continuing.
 
-Replace `<release-tag>` and `<package-version>` with a real verified release
-asset before using this template in a generated app.
+`<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is an intentional unresolved
+token. A generated app is incomplete until it is replaced with a real verified
+release asset URL.
 
 See `../../../playbook/process/compatibility.md` for the declared local runtime
 baseline.

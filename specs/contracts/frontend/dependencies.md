@@ -25,7 +25,7 @@ Required runtime dependencies:
 - `@emotion/react@11.14.0`
 - `@emotion/styled@11.14.1`
 - `yaml@2.8.1`
-- `safrs-jsonapi-client@https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz`
+- `safrs-jsonapi-client@<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>`
 
 Optional but standard for custom figures:
 
@@ -59,10 +59,10 @@ npm install \
   @emotion/react@11.14.0 \
   @emotion/styled@11.14.1 \
   yaml@2.8.1 \
-  https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/<release-tag>/safrs-jsonapi-client-<package-version>.tgz
+  <REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>
 ```
 
-The placeholder `<release-tag>` / `<package-version>` pair MUST be replaced
+The token `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` MUST be replaced
 with a real verified release asset before the generated app is considered
 complete.
 

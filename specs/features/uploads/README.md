@@ -32,6 +32,15 @@ Load order inside this feature pack:
 
 This feature pack orchestrates the uploads capability.
 
+Segmentation note:
+
+- uploads are feature-gated for reading, planning, and activation
+- the starter frontend and backend templates MAY still contain baseline no-op
+  extension points for uploads
+- that baseline footprint does not mean uploads are enabled for the run
+- uploads become active only when this feature pack is enabled and its
+  feature-owned integration snippets are applied
+
 The low-level storage/media contract remains in:
 
 - `../../contracts/files/`

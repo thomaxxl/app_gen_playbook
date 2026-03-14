@@ -14,6 +14,10 @@ These runtime helpers are part of the baseline shared runtime because
 `schemaContext.tsx` imports them directly. They MUST compile and no-op cleanly
 when the app has no upload fields.
 
+This is intentional. In this playbook, uploads are segmented primarily through
+reading, capability gating, and activation rules rather than by requiring a
+zero-footprint frontend runtime when uploads are disabled.
+
 Baseline runtime files:
 
 - `uploadAwareDataProvider.ts.md`

@@ -161,6 +161,14 @@ The runtime contract MUST NOT depend on an undocumented `schema.raw` field.
 If the runtime needs raw `admin.yaml` metadata for labels, ordering, or
 visibility, it must carry that raw YAML in local app state explicitly.
 
+Upload segmentation note:
+
+- the starter shared runtime MAY ship baseline no-op upload helpers
+- that baseline footprint is an implementation convenience, not feature
+  enablement
+- the uploads feature remains disabled unless the run capability profile
+  enables it and the uploads feature pack is loaded
+
 ## File-upload extension
 
 If the app includes upload-backed fields, the frontend runtime MUST add an

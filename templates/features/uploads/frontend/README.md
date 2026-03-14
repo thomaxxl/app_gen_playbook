@@ -13,3 +13,6 @@ Load these concrete snippets:
 The last three files are core runtime files that already contain upload-aware
 integration points. They MUST be treated as upload-relevant only when the
 capability profile enables uploads.
+
+That core runtime footprint is intentional. It is a baseline no-op extension
+surface, not proof that uploads are enabled for the run.
