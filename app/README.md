@@ -8,6 +8,7 @@ image sharing and management under the `Cimage` product name.
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS API
 - `frontend/`: Vite + React-Admin admin app
 - `reference/admin.yaml`: frontend contract for `Gallery`, `ImageAsset`, and `ShareStatus`
+- `install.sh`: installs backend and frontend dependencies for local use
 - `run.sh`: local launcher for backend + frontend
 - `REMARKS.md`: playbook issues observed during generation
 
@@ -31,6 +32,22 @@ Implemented business rules:
 - Uploaded files are accepted via `POST /api/uploads/images` and served from
   `/media/uploads/...`
 
+## Install
+
+Install both backend and frontend dependencies from the app root:
+
+```bash
+bash ./install.sh
+```
+
+Notes:
+
+- backend Python packages are installed into `backend/.deps`
+- frontend dependencies are installed with `npm install`
+- `install.sh` prefers a local LogicBank checkout at `/home/t/lab/LogicBank`
+- if that local checkout is unavailable, it falls back to
+  `pip install --no-deps logicbank`
+
 ## Backend
 
 Recommended install on this host:
@@ -38,8 +55,14 @@ Recommended install on this host:
 ```bash
 cd backend
 python3 -m pip install --upgrade --target .deps -r requirements.txt
-python3 -m pip install --upgrade --target .deps --no-deps logicbank==1.30.1
+python3 -m pip install --upgrade --target .deps --no-deps /home/t/lab/LogicBank
 PYTHONPATH="$PWD/.deps:$PWD/src" python3 run.py
+```
+
+If `/home/t/lab/LogicBank` is unavailable on the current host, use:
+
+```bash
+python3 -m pip install --upgrade --target .deps --no-deps logicbank
 ```
 
 Default backend URLs:
