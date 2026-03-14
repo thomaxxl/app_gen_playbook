@@ -73,6 +73,21 @@ If the custom view includes a chart:
 - ensure the surrounding layout remains readable on smaller screens
 - keep colors consistent with the app theme
 
+## Relationship display in custom views
+
+If a custom view surfaces related resources, it SHOULD reuse the shared
+relationship helpers from the generated runtime instead of inventing a second
+display pattern.
+
+At minimum, a custom view MUST:
+
+- prefer readable related labels over raw foreign-key ids
+- reuse the same `user_key`-based label resolution order as generated pages
+- fetch or reuse related summaries explicitly when it offers a detail popup or
+  drill-down
+- avoid a different click behavior for relationship drill-down unless the run
+  deliberately documents that divergence
+
 ## Templates
 
 Use:
@@ -81,3 +96,4 @@ Use:
 - `templates/app/frontend/Landing.tsx.md`
 - `templates/app/frontend/CustomDashboard.tsx.md`
 - `templates/app/frontend/D3Visualization.tsx.md`
+- `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`

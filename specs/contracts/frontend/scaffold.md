@@ -30,6 +30,7 @@ frontend/
         <one wrapper file per resource named in ../../architecture/resource-naming.md>
     shared-runtime/
       SchemaDrivenAdminApp.tsx
+      relationshipUi.tsx
       resourceRegistry.tsx
       admin/
         schemaContext.tsx
@@ -73,6 +74,7 @@ These files are shipped under `templates/app/frontend/`:
 - `generated/resources/Status.tsx.md`
 - `resourcePages.ts.md`
 - `SchemaDrivenAdminApp.tsx.md`
+- `shared-runtime/relationshipUi.tsx.md`
 - `shared-runtime/admin/schemaContext.tsx.md`
 - `shared-runtime/admin/resourceMetadata.ts.md`
 - `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
@@ -117,6 +119,9 @@ The starter frontend must support:
 - The `shared-runtime/files/` helper files are baseline runtime files. They
   must compile even when the app has no upload fields and should no-op in that
   case.
+- `shared-runtime/relationshipUi.tsx` is a baseline runtime file. It MUST be
+  present even when a given app has only a few relationships, because the
+  generated list/show pages depend on it for foreign-key rendering.
 - For non-starter domains, the wrapper files under `generated/resources/` MUST
   be replaced with one file per resource declared in
   `../../architecture/resource-naming.md`.

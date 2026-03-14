@@ -4,6 +4,8 @@ See also:
 
 - [../../../../specs/contracts/frontend/runtime-contract.md](../../../../specs/contracts/frontend/runtime-contract.md)
 - [../../../../specs/contracts/frontend/admin-yaml-contract.md](../../../../specs/contracts/frontend/admin-yaml-contract.md)
+- [../../../../specs/contracts/frontend/relationship-ui.md](../../../../specs/contracts/frontend/relationship-ui.md)
+- [relationshipUi.tsx.md](relationshipUi.tsx.md)
 
 ```tsx
 import type { ReactElement, ReactNode } from "react";
@@ -375,3 +377,16 @@ export function buildResources(
     ));
 }
 ```
+
+Required relationship extension:
+
+- this file MUST import and use the helpers from `relationshipUi.tsx`
+- generated list pages MUST render `toone` foreign-key-backed columns through
+  `RelatedRecordDialogLink`, not raw scalar ids
+- generated show pages MUST render:
+  - `tomany` relationships as datagrid tabs
+  - `toone` relationships as summary tabs
+- the relationship tab default MUST use the priority order defined in
+  `specs/contracts/frontend/relationship-ui.md`
+- generated forms MUST keep scalar foreign-key inputs even though list/show
+  rendering uses relationship-aware helpers

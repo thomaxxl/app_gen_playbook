@@ -12,6 +12,7 @@ The starter archive MUST ship these runtime snippets:
 
 - `templates/app/frontend/SchemaDrivenAdminApp.tsx.md`
 - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
+- `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`
 - `templates/app/frontend/shared-runtime/admin/schemaContext.tsx.md`
 - `templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md`
 - `templates/app/frontend/shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
@@ -85,6 +86,8 @@ type SchemaDrivenAdminAppProps = {
 14. render `children` first
 15. render explicit resource elements from the `resourcePages` prop as direct
     `Admin` children
+16. render generated relationships using the relationship contract in
+    `relationship-ui.md`
 
 That `children` slot is the official extension point for:
 
@@ -140,6 +143,25 @@ That `Resource` MUST:
 
 The `Home` page MUST be treated as a project page, not as a backend resource
 declared in `admin.yaml`.
+
+## Required relationship behavior
+
+The shared runtime MUST implement the relationship UI contract in
+`relationship-ui.md`.
+
+At minimum, the runtime MUST:
+
+- replace visible `toone` foreign-key columns with readable relationship
+  display items in generated list/show views
+- resolve readable relationship labels using embedded related objects when
+  available and foreign-key fallback values when not
+- provide a related-record dialog with `EDIT` and `VIEW` actions
+- render `tomany` show-page tabs as datagrids
+- render `toone` show-page tabs as summary panels
+- keep generated forms bound to scalar foreign-key inputs
+
+The runtime MUST NOT rely on raw-id-only rendering for generated relationship
+columns when relationship metadata is available.
 
 ## YAML parsing
 
@@ -203,8 +225,10 @@ The starter runtime depends on this explicit normalized schema surface from
 `safrs-jsonapi-client`:
 
 - `schema.resources[resource].attributeConfigs`
+- `schema.resources[resource].relationships`
 - `schema.resources[resource].searchCols`
 - `schema.resources[resource].userKey`
+- `schema.fkToRelationship`
 - `schema.resourceByType`
 - `schema.delimiter`
 

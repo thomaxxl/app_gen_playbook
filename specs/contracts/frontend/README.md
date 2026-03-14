@@ -34,6 +34,9 @@ The agent MAY load these files on demand:
 
 - [admin-yaml-contract.md](admin-yaml-contract.md)
   when generating forms, lists, reference handling, or menu metadata
+- [relationship-ui.md](relationship-ui.md)
+  when implementing generated list/show relationship rendering, foreign-key
+  columns, or related-record dialogs
 - [record-shape.md](record-shape.md)
   when implementing data-provider mapping or custom views
 - [custom-views.md](custom-views.md)

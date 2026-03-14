@@ -9,6 +9,10 @@ frontend.
 - All other attribute keys MUST preserve the exact backend/admin.yaml field names
 - The runtime MUST NOT perform automatic case conversion
 - Reference fields MUST remain scalar ids in the normalized record
+- Read-only embedded related objects MAY also be present at
+  `record[relationshipName]` or `record["rel_" + relationshipName]`
+- Embedded related objects MUST be treated as optional display aids, not as the
+  canonical persisted write shape
 - At the app layer, `id` MUST be treated as opaque. The implementation MUST NOT
   rely on numeric identity semantics.
 
@@ -25,11 +29,16 @@ For an `Item` resource:
   "status_code": "scheduled",
   "is_completed": false,
   "status_id": 2,
-  "collection_id": 1
+  "collection_id": 1,
+  "status": {
+    "id": "2",
+    "code": "done",
+    "label": "Done"
+  }
 }
 ```
 
-Related resources are separate records:
+Related resources are still separate records for canonical fetch/write flows:
 
 ```json
 {
@@ -42,18 +51,22 @@ Related resources are separate records:
 ## Consequences
 
 - generated list/show/edit pages MAY read scalar fields directly
-- custom pages MUST fetch related resources explicitly when they need readable
-  labels
-- custom pages MUST NOT assume `row.Status.label` or similar implicit
-  relationship expansion
+- generated list/show pages MAY also use optional embedded related objects for
+  display when available
+- custom pages MUST fetch related resources explicitly or reuse the shared
+  relationship helper when they need readable labels
+- custom pages MUST NOT assume only one embedded-object field name unless they
+  control the producer; the shared runtime supports both `relationshipName`
+  and `rel_<relationshipName>`
 
 ## Display rule for references
 
 When displaying a related record in a custom view:
 
-1. read the local scalar id field such as `status_id`
-2. fetch the related resource by id
-3. display the related resource's `user_key` field or `label`
+1. prefer an embedded related object when one is present
+2. otherwise read the local scalar id field such as `status_id`
+3. fetch the related resource by id
+4. display the related resource's `user_key` field or `label`
 
 This is why `admin.yaml` must define both:
 

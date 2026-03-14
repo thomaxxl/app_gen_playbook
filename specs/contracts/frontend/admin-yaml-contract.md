@@ -99,9 +99,9 @@ resources:
   Hide the resource from generated menu/resource registration. Consumed by the
   starter runtime.
 - `tab_groups`
-  Relationship group definitions for show/detail pages.
-  Generator-time-only in the starter playbook. Not consumed by the shipped v1
-  runtime.
+  Relationship group definitions for generated show/detail pages.
+  Consumed by the starter runtime for relationship tabs and relationship label
+  metadata.
 
 ## Supported attribute keys
 
@@ -166,7 +166,6 @@ runtime expansions, but they are not consumed by the shipped v1 runtime:
 
 The shipped starter runtime does not implement these behaviors:
 
-- relationship tabs or grouped show-page sections from `tab_groups`
 - per-field widget selection beyond the built-in type mapping
 - per-field help/placeholder rendering as a first-class contract
 - multi-file upload widgets from one generated field
@@ -195,8 +194,12 @@ that specific view.
 For `type: reference`:
 
 - store the scalar foreign-key id in the record
-- use the related resource's `user_key` for display
-- fetch related labels explicitly for custom pages
+- map the foreign-key field to the corresponding relationship metadata when
+  the runtime can resolve it
+- use the related resource's `user_key` for display in generated pages
+- allow generated pages to use an embedded related object when present, while
+  still keeping the scalar foreign-key id as the canonical write value
+- fetch related labels explicitly for custom pages or relationship dialogs
 - use the explicit `endpoint` mapping from raw `admin.yaml` when search or
   list routing needs the collection URL
 
@@ -204,6 +207,20 @@ If a resource contains multiple reference fields that point to the same target
 resource, each field MUST remain distinct by its own attribute key and label.
 The generator and runtime MUST NOT collapse those fields into one display slot
 just because they share the same `reference` target.
+
+## Relationship tab rules
+
+`tab_groups` is the frontend authoring surface for generated show-page
+relationship tabs.
+
+The starter runtime MUST support:
+
+- author-defined relationship order
+- relationship labels
+- relationship-level visibility flags
+- distinguishing `toone` and `tomany` tabs
+
+The starter runtime MUST NOT treat `tab_groups` as generator-only metadata.
 
 ## Upload field rules
 

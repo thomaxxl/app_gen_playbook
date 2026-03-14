@@ -30,7 +30,9 @@ frontend package template before treating the playbook baseline as current.
 - `admin.yaml` load failure is visible
 - explicit `resourcePages` are wired into the app
 - a visible `Home` sidebar entry with icon is present
-- reference fields display readable labels, not raw ids, in custom views
+- generated relationship fields display readable labels, not raw ids
+- clicking a generated relationship label opens a related-record dialog
+- the related-record dialog shows `EDIT` and `VIEW`
 
 ## Automated smoke validation
 
@@ -69,7 +71,11 @@ suite with at least this flow:
 11. prove generated React-Admin resources are registered as direct `Admin`
    children by verifying the resource route resolves to a list page rather
    than a catch-all error route
-12. retain trace, screenshot, and video on failure
+12. on at least one generated list route, open a relationship dialog from a
+    readable related label and verify the dialog summary renders
+13. on at least one generated show route, verify a relationship tab renders
+    for a related resource
+14. retain trace, screenshot, and video on failure
 
 If browser execution is blocked by sandbox or host constraints, the agent MUST
 record the constraint and run the suite in the nearest available host
@@ -92,8 +98,14 @@ If the app supports uploaded files:
 
 ## Relationship validation
 
-- one reference field resolves correctly
-- one custom view or chart handles related labels correctly
+- one generated list route shows a readable related label instead of a raw id
+- one generated related label opens a dialog without triggering row navigation
+- one related-record dialog loads a summary plus `EDIT` and `VIEW`
+- one generated show route renders a `tomany` relationship tab
+- one generated show route renders a `toone` relationship summary tab when the
+  resource has such a relationship
+- one custom view or chart handles related labels correctly when the app
+  includes custom relationship-aware views
 
 ## Custom-view validation
 

@@ -4,6 +4,7 @@ See also:
 
 - [../../../../../specs/contracts/frontend/admin-yaml-contract.md](../../../../../specs/contracts/frontend/admin-yaml-contract.md)
 - [../../../../../specs/contracts/frontend/record-shape.md](../../../../../specs/contracts/frontend/record-shape.md)
+- [../../../../../specs/contracts/frontend/relationship-ui.md](../../../../../specs/contracts/frontend/relationship-ui.md)
 
 ```tsx
 import { useMemo } from "react";
@@ -243,3 +244,17 @@ export function useResourceMeta(resource: string): ResourceMeta {
   return useMemo(() => buildResourceMeta(schema, rawYaml, resource), [rawYaml, resource, schema]);
 }
 ```
+
+Required relationship extension:
+
+- `ResourceMeta` MUST also expose `relationships: ResourceRelationshipMeta[]`
+- `ResourceRelationshipMeta` MUST carry at least `name`, `label`,
+  `direction`, `targetResource`, `fks`, `attributes`, and relationship-level
+  hide flags
+- `buildResourceMeta(...)` MUST attach a resolved `relationship` to a `toone`
+  foreign-key attribute when `schema.fkToRelationship` identifies it
+- raw `tab_groups` MUST be consumed here so the runtime can preserve
+  author-defined relationship ordering and labels
+- the runtime SHOULD maintain a relationship-by-name lookup here or in a
+  closely related helper so list/show rendering can collapse duplicate
+  foreign-key columns into one relationship display item
