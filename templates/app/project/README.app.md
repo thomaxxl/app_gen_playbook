@@ -21,20 +21,23 @@ from the SAFRS app-development playbook.
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS
 - `frontend/`: Vite + React-Admin + `safrs-jsonapi-client`
 - `reference/admin.yaml`: frontend contract
+- `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
+
+## Install
+
+```bash
+./install.sh
+```
+
+`install.sh` installs backend Python packages into `backend/.deps`, prefers a
+local LogicBank checkout when available, and runs `npm install` in
+`frontend/`.
 
 ## Backend
 
 ```bash
 cd backend
-python3.12 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-if [[ -n "${LOCAL_LOGICBANK_PATH:-}" ]]; then
-  pip install --no-deps "$LOCAL_LOGICBANK_PATH"
-else
-  pip install --no-deps logicbank
-fi
 PYTHONPATH=src python run.py
 ```
 
@@ -48,7 +51,6 @@ Default backend URLs:
 
 ```bash
 cd frontend
-npm install
 npm run test
 npm run test:e2e
 npm run dev
@@ -62,7 +64,7 @@ Default frontend URLs:
 
 ## Run both
 
-After backend and frontend dependencies are installed:
+After `./install.sh` completes:
 
 ```bash
 ./run.sh
@@ -87,6 +89,7 @@ VITE_BACKEND_ORIGIN=http://127.0.0.1:9000 ./run.sh
 Notes:
 
 - Keep this README short and runnable.
+- Prefer documenting `./install.sh` as the default setup step.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
 - Document `/admin-app/#/Home` as the required in-admin entry page. Treat

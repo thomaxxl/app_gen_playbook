@@ -15,5 +15,6 @@ These snippets target files under:
 
 Copy these together:
 
+- `install.sh.md`
 - `run.sh.md`
 - `README.app.md`
