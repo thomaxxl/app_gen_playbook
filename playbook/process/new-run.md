@@ -29,6 +29,8 @@ Required steps:
 10. create local gitignored `../../app/`
 11. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
+12. when the Product business-rules catalog becomes available, seed local
+    `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
 
 Rules:
 

@@ -21,6 +21,7 @@ from the SAFRS app-development playbook.
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS
 - `frontend/`: Vite + React-Admin + `safrs-jsonapi-client`
 - `reference/admin.yaml`: frontend contract
+- `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
 
@@ -93,6 +94,7 @@ Notes:
 
 - Keep this README short and runnable.
 - Prefer documenting `./install.sh` as the default setup step.
+- Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
 - Document `/admin-app/#/Home` as the required in-admin entry page. Treat

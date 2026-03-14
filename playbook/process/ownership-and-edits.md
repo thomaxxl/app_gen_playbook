@@ -28,6 +28,8 @@ Rules:
 - a metadata-only approval edit MUST NOT change the artifact body content
 - implementation work for a generated app MUST stay inside local gitignored
   `app/`
+- `app/BUSINESS_RULES.md` is a generated-app snapshot of the run-owned
+  Product artifact, not a second source of truth
 - implementation work MUST NOT patch the playbook contract files while
   creating the app unless the user explicitly requests a playbook update
 - when the task updates the playbook itself, those playbook changes MUST be

@@ -45,6 +45,8 @@ mode.
 In app-only maintenance mode:
 
 - local `../../app/` is the only implementation tree that MAY be modified
+- local `../../app/BUSINESS_RULES.md` MUST remain aligned with the current app
+  snapshot if business rules are changed
 - local `../../app/REMARKS.md` MAY be updated to record app-local findings
 - `../../runs/current/` MAY remain neutral or historical
 - `../../example/` MUST remain unchanged unless the task explicitly asks to
@@ -64,6 +66,13 @@ and run scripts MUST be created under:
 Accepted artifact copies MAY later be placed under:
 
 - local `../../app/docs/`
+
+The generated app MUST also contain:
+
+- local `../../app/BUSINESS_RULES.md`
+
+That file is the generated-app snapshot of the approved
+`runs/current/artifacts/product/business-rules.md` catalog.
 
 Implementation work MUST NOT patch the static playbook source while building
 the app unless the task explicitly asks for a playbook update.

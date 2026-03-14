@@ -116,6 +116,8 @@ Artifact location rule:
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are generic template sources
 - run-specific artifacts MUST be authored under `runs/current/artifacts/`
+- `app/BUSINESS_RULES.md` MUST contain the generated-app copy of the approved
+  business-rules catalog
 - accepted artifacts MAY later be copied into local `app/docs/`
 - `example/` is a preserved runnable example app generated from this playbook
 - an explicit app-only maintenance pass MAY update local `app/` while leaving

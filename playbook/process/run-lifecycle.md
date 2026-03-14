@@ -109,6 +109,8 @@ maintenance pass that intentionally preserves `../../runs/current/`.
 When a run is complete:
 
 - local `../../app/` MUST contain the generated app
+- local `../../app/BUSINESS_RULES.md` MUST contain the generated-app snapshot
+  of `../../runs/current/artifacts/product/business-rules.md`
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree

@@ -21,6 +21,13 @@ Accepted copies MAY later be promoted into:
 
 - local `../../../app/docs/`
 
+The generated app MUST also include:
+
+- local `../../../app/BUSINESS_RULES.md`
+
+That file is the app-local copy of the approved
+`product/business-rules.md` artifact for the run snapshot.
+
 Architecture artifacts MUST also include:
 
 - `architecture/capability-profile.md`

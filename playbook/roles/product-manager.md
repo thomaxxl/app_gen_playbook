@@ -139,6 +139,11 @@ The Product Manager MUST:
 The Product Manager MUST NOT create a second competing human-readable rule
 file elsewhere in the run artifacts.
 
+When local `../../app/` exists for the current run, the Product Manager SHOULD
+seed `../../app/BUSINESS_RULES.md` from the approved run-owned catalog. Before
+delivery, any approved updates to the run-owned catalog MUST be reflected in
+that generated-app copy.
+
 ## Owned artifact set across the lifecycle
 
 - `runs/current/artifacts/product/input-interpretation.md`

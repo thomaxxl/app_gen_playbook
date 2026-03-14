@@ -15,6 +15,7 @@ These snippets target files under:
 
 Copy these together:
 
+- `BUSINESS_RULES.app.md`
 - `install.sh.md`
 - `run.sh.md`
 - `README.app.md`
