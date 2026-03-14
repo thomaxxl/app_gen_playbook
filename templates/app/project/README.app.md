@@ -121,8 +121,8 @@ Notes:
 - If the frontend depends on `safrs-jsonapi-client`, keep it pinned through an
   immutable tarball URL or a published registry release. Do not document a git
   dependency as the default generated-app path.
-- Document the root container files when the generated app ships Docker
-  packaging.
+- Document the root container files unconditionally because every generated app
+  MUST ship `Dockerfile` and `docker-compose.yml`.
 - Keep the launcher portable. Do not document or generate a `run.sh` that
   requires Bash-5-only features such as `wait -n` unless the app explicitly
   raises the shell/runtime baseline.

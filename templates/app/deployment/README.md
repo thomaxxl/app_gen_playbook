@@ -9,8 +9,12 @@ These snippets correspond to:
 
 Use these when the generated app should run behind one origin.
 
-This template lane is owned by the optional DevOps role when packaging is in
-scope.
+`Dockerfile.md` and `docker-compose.yml.md` are required generated-app root
+files even when the optional DevOps role is inactive.
+
+This template lane is owned by the optional DevOps role only for same-origin
+packaging refinements, packaging verification, and the optional helpers such as
+`nginx.conf` and `entrypoint.sh`.
 
 Recommended public routes:
 

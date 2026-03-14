@@ -23,10 +23,14 @@ Copy these together:
 - `../deployment/Dockerfile.md`
 - `../deployment/docker-compose.yml.md`
 
+`Dockerfile.md` and `docker-compose.yml.md` are required generated-app root
+files. They are not optional packaging extras.
+
 If the app uses same-origin container packaging, also copy:
 
 - `../deployment/nginx.conf.md`
 - `../deployment/entrypoint.sh.md`
 
-Those deployment templates are normally copied by the optional DevOps role
-when packaging is in scope.
+The optional DevOps role normally refines and verifies the deployment lane, but
+it does not control whether the root `Dockerfile` and `docker-compose.yml`
+exist. Those two files MUST be present in every generated app.

@@ -99,8 +99,9 @@ To start a new run:
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
 9. create local gitignored `../../app/`
-10. seed local `../../app/` from the relevant `../../templates/app/` files as
-    later phases require
+10. seed local `../../app/` from the relevant `../../templates/app/` files
+    needed for the generated-app baseline, including `Dockerfile` and
+    `docker-compose.yml`
 
 This procedure applies to a new full run. It does not apply to an app-only
 maintenance pass that intentionally preserves `../../runs/current/`.
@@ -112,6 +113,8 @@ When a run is complete:
 - local `../../app/` MUST contain the generated app
 - local `../../app/BUSINESS_RULES.md` MUST contain the generated-app snapshot
   of `../../runs/current/artifacts/product/business-rules.md`
+- local `../../app/Dockerfile` MUST exist
+- local `../../app/docker-compose.yml` MUST exist
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree

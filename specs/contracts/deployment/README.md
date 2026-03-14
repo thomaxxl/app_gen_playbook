@@ -56,6 +56,10 @@ The generated app MUST contain these root packaging files:
 - `Dockerfile`
 - `docker-compose.yml`
 
+This requirement applies even when the optional DevOps role is inactive. The
+presence of these two root files is part of the generated-app baseline, not an
+optional packaging upgrade.
+
 The generated app SHOULD also contain:
 
 - `.gitignore`

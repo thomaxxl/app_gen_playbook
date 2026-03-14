@@ -31,9 +31,19 @@ Required steps:
 11. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
 12. create local gitignored `../../app/`
-13. treat local `../../app/` as implementation workspace, not as the
+13. seed local `../../app/` with the required generated-app root files from
+    `../../templates/app/project/` and `../../templates/app/deployment/`,
+    including at least:
+    - `.gitignore`
+    - `install.sh`
+    - `run.sh`
+    - `README.md`
+    - `BUSINESS_RULES.md` when available
+    - `Dockerfile`
+    - `docker-compose.yml`
+14. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
-14. when the Product business-rules catalog becomes available, seed local
+15. when the Product business-rules catalog becomes available, seed local
     `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
 
 Rules:
