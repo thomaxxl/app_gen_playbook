@@ -57,6 +57,7 @@ Runtime state lives in:
 - [../../runs/current/artifacts/architecture/integration-boundary.md](../../runs/current/artifacts/architecture/integration-boundary.md)
 - [../../runs/current/artifacts/architecture/resource-naming.md](../../runs/current/artifacts/architecture/resource-naming.md)
 - [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
+- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
 - [../../runs/current/artifacts/backend-design/model-design.md](../../runs/current/artifacts/backend-design/model-design.md)
 - [../../runs/current/artifacts/backend-design/relationship-map.md](../../runs/current/artifacts/backend-design/relationship-map.md)
 - [../../runs/current/artifacts/backend-design/rule-mapping.md](../../runs/current/artifacts/backend-design/rule-mapping.md)
@@ -82,6 +83,10 @@ undecided feature packs MUST NOT be loaded, summarized, or copied.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
+
+The Backend agent MUST treat
+`../../runs/current/artifacts/architecture/runtime-bom.md` as the
+authoritative runtime/package decision record for implementation.
 
 ## Produces
 

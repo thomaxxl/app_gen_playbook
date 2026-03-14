@@ -14,11 +14,20 @@ This file is a starter-domain example for the default `Collection` / `Item` /
 `Status` trio. Projects SHOULD adapt or replace it rather than treating it as
 a generic generated page.
 
+STARTER-ONLY WARNING:
+
+- non-starter runs MUST NOT copy this file unchanged
+- non-starter runs SHOULD omit it entirely unless
+  `runs/current/artifacts/ux/custom-view-specs.md` explicitly requires a
+  no-layout page
+
 ```tsx
 import { Box, Button, CircularProgress, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDataProvider } from "react-admin";
 import { Link as RouterLink } from "react-router-dom";
+
+import { resourcePages } from "./generated/resourcePages";
 
 type ItemRecord = {
   id: string;
@@ -33,6 +42,9 @@ type StatusRecord = {
 
 export default function Landing() {
   const dataProvider = useDataProvider();
+  const primaryRoute = resourcePages[0]?.name
+    ? `/${resourcePages[0].name}`
+    : "/Home";
   const [rows, setRows] = useState<ItemRecord[]>([]);
   const [statuses, setStatuses] = useState<Record<string, StatusRecord>>({});
   const [loading, setLoading] = useState(true);
@@ -92,8 +104,8 @@ export default function Landing() {
         <Paper sx={{ p: 2 }}>
           <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{error}</pre>
         </Paper>
-        <Button component={RouterLink} to="/Collection" variant="contained">
-          Open Collections
+        <Button component={RouterLink} to={primaryRoute} variant="contained">
+          Open Primary Resource
         </Button>
       </Stack>
     );
@@ -104,8 +116,8 @@ export default function Landing() {
       <Stack spacing={2} sx={{ minHeight: "100vh", p: 4 }}>
         <Typography variant="h4">Starter Overview</Typography>
         <Typography color="text.secondary">No items are available yet.</Typography>
-        <Button component={RouterLink} to="/Collection" variant="contained">
-          Open Collections
+        <Button component={RouterLink} to={primaryRoute} variant="contained">
+          Open Primary Resource
         </Button>
       </Stack>
     );
@@ -116,8 +128,8 @@ export default function Landing() {
       <Box sx={{ mx: "auto", maxWidth: 1100 }}>
         <Stack alignItems="center" direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="h4">Starter Overview</Typography>
-          <Button component={RouterLink} to="/Collection" variant="contained">
-            Open Collections
+          <Button component={RouterLink} to={primaryRoute} variant="contained">
+            Open Primary Resource
           </Button>
         </Stack>
         <TableContainer component={Paper}>
@@ -154,6 +166,8 @@ Notes:
 - Do not use the default list/show/edit shell for this route.
 - Resolve foreign-key ids into related labels or `user_key` values whenever
   possible.
+- This template now derives its primary CTA from the first registered resource
+  instead of a hard-coded starter route, but it remains starter-only overall.
 - If the page needs charts or trees, keep those in separate D3 components under
   `components/visualizations/` and feed them prepared data from the landing
   page.

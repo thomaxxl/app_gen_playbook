@@ -73,7 +73,8 @@ generated-app setup.
 
 `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is an intentional unresolved
 token. A generated app is incomplete until it is replaced with a real verified
-release asset URL.
+release asset URL recorded in
+`../../../runs/current/artifacts/architecture/runtime-bom.md`.
 
 See `../../../playbook/process/compatibility.md` for the declared local runtime
 baseline.

@@ -11,6 +11,7 @@ backend, and rules can implement without guessing.
 - domain adaptation for non-starter apps
 - naming contracts
 - source-of-truth decisions
+- runtime and package freeze decisions
 - generated-vs-custom boundaries
 - route/base-path model
 - integration boundary decisions
@@ -118,6 +119,7 @@ read the current run's UX and backend-design artifacts:
 - maintained `../../runs/current/artifacts/architecture/capability-profile.md`
 - maintained `../../runs/current/artifacts/architecture/load-plan.md`
 - maintained `../../runs/current/artifacts/architecture/resource-classification.md`
+- maintained `../../runs/current/artifacts/architecture/runtime-bom.md`
 - `../../runs/current/artifacts/architecture/integration-review.md` for Phase 6
 - handoff notes to `../../runs/current/role-state/frontend/inbox/` and `../../runs/current/role-state/backend/inbox/`
 - contract corrections back to `../../runs/current/role-state/product_manager/inbox/` if product intent is

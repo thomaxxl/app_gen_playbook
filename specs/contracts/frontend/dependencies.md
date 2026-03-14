@@ -66,6 +66,9 @@ The token `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` MUST be replaced
 with a real verified release asset before the generated app is considered
 complete.
 
+That concrete release asset decision MUST be recorded in
+`../../architecture/runtime-bom.md` before Phase 5 implementation begins.
+
 Optional charts/graphs:
 
 ```bash
@@ -113,6 +116,8 @@ npm install -D \
   - the referenced GitHub release exists
   - the referenced `.tgz` asset exists
   - the asset version and the package filename agree
+- the selected artifact MUST also be written into the run-owned
+  `runtime-bom.md` so later roles do not have to rediscover it
 - A generated app MUST NOT require an immediate `npm audit fix --force` after
   the initial install just to reach the expected starter baseline. If an audit
   fix changes direct dependency versions, the playbook dependency baseline MUST

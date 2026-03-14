@@ -14,7 +14,7 @@ undocumented backend or rules assumptions.
 - field visibility and labels
 - loading/error/empty states
 - landing/custom pages
-- frontend build/deploy readiness
+- frontend build readiness
 - frontend-side validation notes
 
 ## Runtime files
@@ -43,17 +43,23 @@ Runtime state lives in:
 - [../process/capability-loading.md](../process/capability-loading.md)
 - [../process/phases/phase-3-ux-and-interaction-design.md](../process/phases/phase-3-ux-and-interaction-design.md)
 - [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
+- [../process/frontend-nonstarter-checklist.md](../process/frontend-nonstarter-checklist.md)
 - [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
+- [../../runs/current/artifacts/product/resource-inventory.md](../../runs/current/artifacts/product/resource-inventory.md)
+- [../../runs/current/artifacts/product/resource-behavior-matrix.md](../../runs/current/artifacts/product/resource-behavior-matrix.md)
 - [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
 - [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
 - [../../runs/current/artifacts/product/custom-pages.md](../../runs/current/artifacts/product/custom-pages.md)
 - [../../runs/current/artifacts/product/acceptance-criteria.md](../../runs/current/artifacts/product/acceptance-criteria.md)
+- [../../runs/current/artifacts/product/sample-data.md](../../runs/current/artifacts/product/sample-data.md)
 - [../../runs/current/artifacts/product/assumptions-and-open-questions.md](../../runs/current/artifacts/product/assumptions-and-open-questions.md)
 - [../../runs/current/artifacts/architecture/overview.md](../../runs/current/artifacts/architecture/overview.md)
 - [../../runs/current/artifacts/architecture/integration-boundary.md](../../runs/current/artifacts/architecture/integration-boundary.md)
+- [../../runs/current/artifacts/architecture/resource-classification.md](../../runs/current/artifacts/architecture/resource-classification.md)
 - [../../runs/current/artifacts/architecture/resource-naming.md](../../runs/current/artifacts/architecture/resource-naming.md)
 - [../../runs/current/artifacts/architecture/route-and-entry-model.md](../../runs/current/artifacts/architecture/route-and-entry-model.md)
 - [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
+- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
 - [../../runs/current/artifacts/ux/navigation.md](../../runs/current/artifacts/ux/navigation.md)
 - [../../runs/current/artifacts/ux/screen-inventory.md](../../runs/current/artifacts/ux/screen-inventory.md)
 - [../../runs/current/artifacts/ux/field-visibility-matrix.md](../../runs/current/artifacts/ux/field-visibility-matrix.md)
@@ -77,6 +83,19 @@ undecided feature packs MUST NOT be loaded, summarized, or copied.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/ux/`.
+
+Before Phase 5 implementation starts, the Frontend agent MUST also read:
+
+- [../../templates/README.md](../../templates/README.md)
+- [../../templates/app/frontend/README.md](../../templates/app/frontend/README.md)
+- the enabled frontend feature-template README entrypoints referenced by the
+  load plan
+
+The Frontend agent MUST treat
+`../../runs/current/artifacts/architecture/runtime-bom.md` as the
+authoritative package/source decision record for implementation. The Frontend
+agent MUST NOT leave `safrs-jsonapi-client` unresolved while proceeding with
+implementation.
 
 ## Produces
 

@@ -41,7 +41,7 @@ Suggested copy order:
 18. `resourcePages.ts.md`
 19. `App.tsx.md`
 20. `Home.tsx.md`
-21. `Landing.tsx.md`
+21. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
 22. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
 23. `D3Visualization.tsx.md` if the app needs charts or figures
 24. `shared-runtime/files/README.md`
@@ -62,6 +62,14 @@ Suggested copy order:
 39. `../project/run.sh.md`
 40. `../project/README.app.md`
 
+Implementation entrypoint reads:
+
+- before Phase 5 implementation, read `../../README.md`
+- read `../../../playbook/process/frontend-nonstarter-checklist.md` when the
+  run is `rename-only` or `non-starter`
+- read the enabled feature-template README entrypoints before copying any
+  feature-owned template files
+
 Notes:
 
 - For non-starter domains, the three starter wrapper files are examples, not a
@@ -70,6 +78,9 @@ Notes:
   `../../../runs/current/artifacts/architecture/resource-naming.md`.
 - `resourcePages.ts.md` MUST register the actual resource wrapper set for the
   current app, not the starter trio by default.
+- For non-starter domains, the Frontend role MUST apply
+  `../../../playbook/process/frontend-nonstarter-checklist.md` before treating
+  the starter frontend templates as sufficient.
 - `Home.tsx.md` is required for every generated app. It is the standard
   sidebar-visible in-admin landing page.
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It

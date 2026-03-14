@@ -26,7 +26,7 @@ Design the user journey and page behavior before implementation diverges.
 
 ## Exit criteria
 
-- product signs off on the user journey
+- the UX package is traceable to the product artifacts it implements
 - architect signs off on boundary compliance
 - backend understands frontend data needs
 - the `runs/current/artifacts/ux/` package is marked `ready-for-handoff` or

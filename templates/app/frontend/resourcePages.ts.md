@@ -10,6 +10,11 @@ The starter names below are examples only. For a real app, replace them with
 the wrappers declared by
 `../../../runs/current/artifacts/architecture/resource-naming.md`.
 
+STARTER-ONLY WARNING:
+
+- keeping the starter trio here in a `rename-only` or `non-starter` run is a
+  contract error
+
 ```tsx
 import type { ResourcePages } from "../shared-runtime/resourceRegistry";
 import { CollectionPages } from "./resources/Collection";

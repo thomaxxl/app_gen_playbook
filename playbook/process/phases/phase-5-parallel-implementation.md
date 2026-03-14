@@ -29,6 +29,7 @@ record:
 
 - Python / virtualenv availability
 - frontend Node compatibility
+- `runs/current/artifacts/architecture/runtime-bom.md`
 - local socket / localhost verification constraints
 - any required dependency deviations from the house defaults
 

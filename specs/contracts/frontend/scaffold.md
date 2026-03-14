@@ -20,7 +20,6 @@ frontend/
   src/
     App.tsx
     Home.tsx
-    Landing.tsx
     config.ts
     main.tsx
     vite-env.d.ts
@@ -68,7 +67,7 @@ These files are shipped under `templates/app/frontend/`:
 - `config.ts.md`
 - `App.tsx.md`
 - `Home.tsx.md`
-- `Landing.tsx.md`
+- `Landing.tsx.md` when the run explicitly includes a starter no-layout page
 - `generated/resources/Collection.tsx.md`
 - `generated/resources/Item.tsx.md`
 - `generated/resources/Status.tsx.md`
@@ -114,6 +113,8 @@ The starter frontend must support:
 - The frontend scaffold must be complete enough to run without first generating
   a hidden Vite starter app elsewhere.
 - `Home.tsx` is required even when `Landing.tsx` is omitted or replaced.
+- `Landing.tsx` is optional and MUST be added only when the run-owned UX
+  artifacts explicitly require a no-layout page.
 - Additional project-specific files are allowed, but the required files above
   are the minimum contract for the starter playbook.
 - The `shared-runtime/files/` helper files are baseline runtime files. They

@@ -13,7 +13,6 @@ import { CustomRoutes, Resource } from "react-admin";
 import { Navigate, Route } from "react-router-dom";
 
 import Home from "./Home";
-import Landing from "./Landing";
 import { appConfig } from "./config";
 import { resourcePages } from "./generated/resourcePages";
 import { SchemaDrivenAdminApp } from "./shared-runtime/SchemaDrivenAdminApp";
@@ -33,7 +32,6 @@ export default function App() {
         />
         <CustomRoutes noLayout>
           <Route element={<Navigate replace to="/Home" />} path="/" />
-          <Route element={<Landing />} path="/Landing" />
         </CustomRoutes>
       </>
     </SchemaDrivenAdminApp>
@@ -46,6 +44,9 @@ Notes:
 - Do not bury project-specific API paths in the component tree.
 - Keep app title and endpoint config in `config.ts`.
 - `Home.tsx` is the required in-admin landing page with sidebar presence.
-- `Landing.tsx` is the optional no-layout companion route for the starter app.
+- `Landing.tsx` is starter-only and MUST NOT be imported here unless the
+  run-owned custom-view spec explicitly enables it.
+- If the app needs a no-layout route, add it explicitly through
+  `CustomRoutes noLayout` after the UX artifact set defines it.
 - `children` inside `SchemaDrivenAdminApp` is the official custom-route
   extension point.

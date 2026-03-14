@@ -34,6 +34,7 @@ If the run differs from the starter trio, the Architect MUST read
 - `runs/current/artifacts/architecture/integration-boundary.md`
 - `runs/current/artifacts/architecture/route-and-entry-model.md`
 - `runs/current/artifacts/architecture/generated-vs-custom.md`
+- `runs/current/artifacts/architecture/runtime-bom.md`
 - `runs/current/artifacts/architecture/test-obligations.md`
 - `runs/current/artifacts/architecture/decision-log.md`
 - `runs/current/artifacts/architecture/capability-profile.md`
@@ -44,6 +45,8 @@ If the run differs from the starter trio, the Architect MUST read
 - no contradictory contracts remain
 - each later role can work without guessing
 - runtime dependencies are explicit
+- runtime-bom is authored and freezes frontend/backend package sources before
+  implementation
 - capability-profile and load-plan are authored and no longer treated as stub
   placeholders
 - the lane choice `starter`, `rename-only`, or `non-starter` is explicit

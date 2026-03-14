@@ -20,6 +20,15 @@ The `Home` view SHOULD be implemented as a normal React-admin page component
 and SHOULD be registered through a direct `<Resource name="Home" ... />`
 element so the sidebar link appears without a custom menu implementation.
 
+`Home` is the default in-admin landing page.
+
+`Home` MAY either:
+
+- remain a lightweight navigation hub, or
+- host the app's main dashboard content directly
+
+The run-owned UX artifacts MUST decide which mode applies.
+
 ## Custom no-layout route
 
 The app MAY also include a no-layout landing route:
@@ -34,6 +43,10 @@ The shipped `Landing.tsx` template is a starter-domain example built around the
 default `Collection` / `Item` / `Status` trio. Treat it as a starter example,
 not as a generic generated landing page.
 
+For non-starter runs, `Landing.tsx` MUST NOT be imported or wired by default
+unless `runs/current/artifacts/ux/custom-view-specs.md` explicitly enables a
+no-layout route.
+
 ## Required navigation behavior
 
 - `Home.tsx` MUST exist in every generated app
@@ -43,6 +56,8 @@ not as a generic generated landing page.
 - `Landing.tsx` MUST NOT appear in the sidebar automatically
 - if `Landing.tsx` is present, it SHOULD provide a visible way into `Home` or
   the main admin resources
+- `CustomDashboard.tsx` is a reusable non-starter custom-page example, not a
+  required second landing pattern
 
 ## D3 pattern
 

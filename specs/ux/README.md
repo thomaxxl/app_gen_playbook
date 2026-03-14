@@ -16,3 +16,7 @@ Template files:
 - `field-visibility-matrix.md`
 - `custom-view-specs.md`
 - `state-handling.md`
+
+These templates MUST be treated as structured artifact skeletons, not as
+one-line prompts. The Frontend role MUST preserve their section structure when
+creating the run-owned copies under `../../runs/current/artifacts/ux/`.

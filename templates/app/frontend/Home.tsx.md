@@ -20,8 +20,13 @@ import { Title } from "react-admin";
 import { Link } from "react-router-dom";
 
 import { appConfig } from "./config";
+import { resourcePages } from "./generated/resourcePages";
 
 export default function Home() {
+  const primaryRoute = resourcePages[0]?.name
+    ? `/${resourcePages[0].name}`
+    : null;
+
   return (
     <Card>
       <Title title="Home" />
@@ -40,19 +45,18 @@ export default function Home() {
             available resources and open the project-specific views.
           </Typography>
 
-          <Stack direction="row" spacing={2}>
-            <Button
-              component={Link}
-              to="/Landing"
-              variant="contained"
-              startIcon={<LaunchIcon />}
-            >
-              Open Landing
-            </Button>
-            <Button component={Link} to="/Collection" variant="outlined">
-              Open First Resource
-            </Button>
-          </Stack>
+          {primaryRoute ? (
+            <Stack direction="row" spacing={2}>
+              <Button
+                component={Link}
+                to={primaryRoute}
+                variant="contained"
+                startIcon={<LaunchIcon />}
+              >
+                Open Primary Resource
+              </Button>
+            </Stack>
+          ) : null}
         </Stack>
       </CardContent>
     </Card>
@@ -62,7 +66,10 @@ export default function Home() {
 
 Notes:
 
-- Replace `/Collection` with the first meaningful resource route for the app.
-- Keep this page simple. It is a basic description and navigation hub, not a
-  data-dense dashboard.
+- This template derives its primary CTA from the first registered resource so
+  it does not hard-code a starter route.
+- Replace or extend that CTA when `navigation.md` defines a better primary
+  route.
+- `Home.tsx` MAY remain a simple navigation hub or MAY host the main dashboard
+  content directly, depending on `custom-view-specs.md`.
 - The sidebar icon is supplied by the `Resource` registration in `App.tsx`.

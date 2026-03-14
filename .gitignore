@@ -28,7 +28,7 @@ test-results/
 *.tsbuildinfo
 
 # Generated app working tree
-app/
+/app/
 
 # Local databases and temp files
 *.sqlite

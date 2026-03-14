@@ -45,6 +45,7 @@ Complete only when:
 - all required contracts are written
 - resource classification is explicit
 - runtime dependencies are explicit
+- `runs/current/artifacts/architecture/runtime-bom.md` is written
 - naming is fixed
 - generated vs custom boundaries are explicit
 - app-specific behavior is separated from framework behavior
@@ -74,6 +75,8 @@ Complete only when:
 - `runs/current/artifacts/ux/state-handling.md` is written
 - all referenced `runs/current/artifacts/ux/` artifacts are marked
   `ready-for-handoff` or `approved`
+- the UX package explicitly references the product/architecture artifacts it
+  implements
 - implementation evidence expectations for the next phase are explicit
 
 Inbox target:

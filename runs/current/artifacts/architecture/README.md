@@ -9,6 +9,7 @@ This directory also owns the run-level capability-gating artifacts:
 - `capability-profile.md`
 - `load-plan.md`
 - `resource-classification.md`
+- `runtime-bom.md`
 
 Those files control which optional feature packs may be loaded by each role.
 

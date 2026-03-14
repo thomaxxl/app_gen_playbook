@@ -9,6 +9,10 @@ See also:
 Use this pattern when the app needs a non-starter custom dashboard or landing
 page and the starter `Landing.tsx.md` example is too specific.
 
+This file is a reusable non-starter example, not a required second landing
+pattern. `Home.tsx` may itself host the main dashboard content when the run
+does not need a separate custom page component.
+
 ```tsx
 import {
   Alert,
