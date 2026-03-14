@@ -19,7 +19,8 @@ Current run:
 Rules:
 
 - `current/` SHOULD be neutral before a new run begins
-- preserved historical runs SHOULD move under `../example/` or another archive
+- preserved historical runs SHOULD move to a separate archive outside the
+  neutral `current/` workspace
 - `current/` MAY remain unchanged during an explicit app-only maintenance pass
   that updates only local `../app/`
 - `current/artifacts/architecture/capability-profile.md` and

@@ -18,10 +18,6 @@ Brief rule:
 - if they differ, `input.md` MUST be treated as authoritative until the inbox
   copy is refreshed
 
-The preserved generated example remains outside this directory in:
-
-- [../../example/README.md](../../example/README.md)
-
 The generated-app working tree for the active run is:
 
 - local gitignored `../../app/`
