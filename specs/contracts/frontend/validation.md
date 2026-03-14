@@ -48,6 +48,8 @@ frontend package template before treating the playbook baseline as current.
 - the related-record dialog shows `EDIT` and `VIEW`
 - generated show pages implement relationship tabs unless the run-owned UX
   artifacts explicitly disable or replace them
+- generated create/edit forms use responsive width heuristics instead of
+  rendering all inputs full-width by default
 
 ## Automated smoke validation
 
@@ -108,6 +110,10 @@ environment instead of skipping it silently.
 - one create flow works
 - one edit flow works
 - one delete flow works
+- one create or edit form shows multiple standard fields on the same desktop
+  row when the resource has enough non-wide attributes
+- one multiline textarea-style field renders taller than a one-line text input
+  when the app defines such a field
 
 If the app supports uploaded files:
 

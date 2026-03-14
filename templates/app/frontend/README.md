@@ -88,6 +88,9 @@ Notes:
   show-tab behavior that generated pages MUST reuse.
 - `shared-runtime/admin/resourceMetadata.ts.md` MUST synthesize usable
   relationship metadata even when the normalized schema is partial.
+- `shared-runtime/resourceRegistry.tsx.md` MUST also implement responsive form
+  layout heuristics so generated create/edit pages do not default to one
+  full-width input per row.
 - `tests/resourceMetadata.test.ts.md` and `tests/schemaContext.test.ts.md`
   are part of the baseline relationship contract because sparse-schema apps
   must prove tab-group preservation and relationship fallback behavior.

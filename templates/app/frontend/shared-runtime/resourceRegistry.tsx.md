@@ -10,6 +10,7 @@ See also:
 ```tsx
 import type { ReactElement, ReactNode } from "react";
 import type { Schema } from "safrs-jsonapi-client";
+import { Box } from "@mui/material";
 import {
   AutocompleteInput,
   BooleanField,
@@ -164,6 +165,30 @@ function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
   return `Search ${labels.slice(0, 3).join(", ")}`;
 }
 
+function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
+  if (attribute.fullWidth || attribute.formSpan === 12) {
+    return 12;
+  }
+
+  if (attribute.formSpan != null) {
+    return attribute.formSpan;
+  }
+
+  if (attribute.kind === "file" || attribute.kind === "image") {
+    return 12;
+  }
+
+  if (attribute.widget === "textarea") {
+    return 12;
+  }
+
+  return 4;
+}
+
+function getTextareaRows(attribute: ResourceAttributeMeta): number {
+  return attribute.rows ?? 4;
+}
+
 function renderField(
   item: DisplayItem,
   schema: ReturnType<typeof useAdminSchema>,
@@ -288,7 +313,38 @@ function renderInput(
     );
   }
 
+  if (attribute.widget === "textarea") {
+    return <TextInput {...commonProps} multiline minRows={getTextareaRows(attribute)} />;
+  }
+
   return <TextInput {...commonProps} />;
+}
+
+function renderFormItem(
+  attribute: ResourceAttributeMeta,
+  schema: ReturnType<typeof useAdminSchema>,
+  rawYaml: RawAdminYaml,
+) {
+  const input = renderInput(attribute, schema, rawYaml);
+  if (!input) {
+    return null;
+  }
+
+  const span = getFormColumnSpan(attribute);
+
+  return (
+    <Box
+      key={`form:${attribute.name}`}
+      sx={{
+        gridColumn: {
+          xs: "1 / -1",
+          md: `span ${span}`,
+        },
+      }}
+    >
+      {input}
+    </Box>
+  );
 }
 
 function SchemaDrivenList({ resource }: { resource: string }) {
@@ -335,7 +391,18 @@ function SchemaDrivenEdit({ resource }: { resource: string }) {
   return (
     <Edit>
       <SimpleForm>
-        {attributes.map((attribute) => renderInput(attribute, schema, rawYaml))}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              md: "repeat(12, minmax(0, 1fr))",
+            },
+          }}
+        >
+          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+        </Box>
       </SimpleForm>
     </Edit>
   );
@@ -352,7 +419,18 @@ function SchemaDrivenCreate({ resource }: { resource: string }) {
   return (
     <Create>
       <SimpleForm>
-        {attributes.map((attribute) => renderInput(attribute, schema, rawYaml))}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              md: "repeat(12, minmax(0, 1fr))",
+            },
+          }}
+        >
+          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+        </Box>
       </SimpleForm>
     </Create>
   );
@@ -428,3 +506,11 @@ Required relationship extension:
   - schema-discovered extra relationships appended afterward
 - generated forms MUST keep scalar foreign-key inputs even though list/show
   rendering uses relationship-aware helpers
+- generated create/edit forms MUST use responsive width heuristics instead of
+  rendering every field full-width by default
+- the baseline form-layout heuristics SHOULD be:
+  - desktop default `span 4` for standard fields
+  - desktop `span 12` for textarea/file/image fields
+  - mobile full-width for all fields
+- explicit metadata overrides such as `formSpan`, `fullWidth`, and `rows`
+  MUST be honored

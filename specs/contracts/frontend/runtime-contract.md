@@ -83,15 +83,17 @@ type SchemaDrivenAdminAppProps = {
 7. make search requests use the explicit `admin.yaml endpoint` mapping
 8. honor runtime-consumed resource metadata for label, hidden, and menu order
 9. honor runtime-consumed field ordering metadata
-10. render a visible loading state while bootstrapping
-11. render a visible full-page error state on fetch/parse/provider failure
-12. catch render-time metadata failures such as bad resource names or bad
+10. honor runtime-consumed form layout metadata such as textarea rows and form
+    width overrides
+11. render a visible loading state while bootstrapping
+12. render a visible full-page error state on fetch/parse/provider failure
+13. catch render-time metadata failures such as bad resource names or bad
     reference targets with a visible error boundary
-13. render `<Admin dataProvider={...} title={...}>`
-14. render `children` first
-15. render explicit resource elements from the `resourcePages` prop as direct
+14. render `<Admin dataProvider={...} title={...}>`
+15. render `children` first
+16. render explicit resource elements from the `resourcePages` prop as direct
     `Admin` children
-16. render generated relationships using the relationship contract in
+17. render generated relationships using the relationship contract in
     `relationship-ui.md`
 
 The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
@@ -185,6 +187,20 @@ At minimum, the runtime MUST:
 
 The runtime MUST NOT rely on raw-id-only rendering for generated relationship
 columns when relationship metadata is available.
+
+## Required form layout behavior
+
+Generated create/edit forms MUST use responsive layout heuristics rather than
+rendering every field full-width in a single vertical stack.
+
+At minimum, the runtime MUST:
+
+- default most fields to one-third desktop width
+- allow three standard fields on the same row at desktop sizes
+- default multiline textarea-style fields to full width
+- default upload/file/image inputs to full width
+- honor explicit form-width overrides from runtime metadata
+- honor explicit textarea row hints from runtime metadata
 
 ## YAML parsing
 

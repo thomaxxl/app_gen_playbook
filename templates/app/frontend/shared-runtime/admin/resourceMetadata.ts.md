@@ -29,12 +29,15 @@ interface RawAttribute {
   readonly?: boolean;
   reference?: string;
   required?: boolean;
+  rows?: number;
   purpose?: string;
   search?: boolean | string;
   show?: boolean;
   type?: string;
   upload_target?: string;
   widget?: string;
+  form_span?: number;
+  full_width?: boolean;
   help?: string;
 }
 
@@ -69,12 +72,16 @@ export interface ResourceAttributeMeta extends SchemaAttribute {
   readonly?: boolean;
   reference?: string;
   required?: boolean;
+  rows?: number;
   purpose?: string;
   relationship?: ResourceRelationshipMeta;
   search?: boolean;
   show?: boolean;
   isPrimaryKey: boolean;
   uploadTarget?: string;
+  widget?: string;
+  formSpan?: number;
+  fullWidth?: boolean;
 }
 
 export interface ResourceMeta {
@@ -543,12 +550,16 @@ export function buildResourceMeta(
         readonly: rawAttribute?.readonly,
         reference: rawAttribute?.reference,
         required: rawAttribute?.required,
+        rows: rawAttribute?.rows,
         purpose: rawAttribute?.purpose,
         relationship,
         search: isSearchEnabled(rawAttribute?.search),
         show: rawAttribute?.show,
         isPrimaryKey: isPrimaryKeyName(resource, attribute.name),
         uploadTarget: rawAttribute?.upload_target,
+        widget: rawAttribute?.widget,
+        formSpan: rawAttribute?.form_span,
+        fullWidth: rawAttribute?.full_width,
       } satisfies ResourceAttributeMeta;
     }),
     endpoint: rawResource.endpoint,
@@ -593,6 +604,8 @@ Required relationship extension:
 - `buildResourceMeta(...)` SHOULD also expose `relationshipByName` so
   `resourceRegistry.tsx` and `relationshipUi.tsx` can resolve relationships
   without rebuilding lookup logic
+- `buildResourceMeta(...)` MUST carry runtime-consumed form layout metadata
+  such as `widget`, `rows`, `formSpan`, and `fullWidth`
 - raw `tab_groups` MUST be consumed here so the runtime can preserve
   author-defined relationship ordering and labels
 - author-declared `tab_groups` relationship order MUST win, but

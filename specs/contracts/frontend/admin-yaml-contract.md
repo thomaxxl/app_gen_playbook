@@ -56,6 +56,12 @@ resources:
         widget: text
         placeholder: Enter a value
         help: Help text
+      notes:
+        type: text
+        label: Notes
+        widget: textarea
+        rows: 5
+        form_span: 12
       status_id:
         type: reference
         reference: Status
@@ -126,6 +132,15 @@ resources:
 - `upload_target`
   Required when `type: file` or `type: image`. This is the persisted
   SAFRS scalar or relationship-driving field that receives the stable file id.
+- `widget`
+  Optional widget intent. The starter runtime MUST at least support
+  `textarea` as a multiline text signal.
+- `rows`
+  Optional multiline height hint for `widget: textarea`.
+- `form_span`
+  Optional desktop form-width override on a 12-column layout grid.
+- `full_width`
+  Optional shorthand forcing desktop `form_span: 12`.
 - `purpose`
   Optional upload-purpose hint passed to the upload subsystem.
 - `accept`
@@ -152,6 +167,10 @@ The shipped starter runtime consumes these keys directly:
 - `reference`
 - `search`
 - `upload_target`
+- `widget`
+- `rows`
+- `form_span`
+- `full_width`
 - `purpose`
 - `accept`
 
@@ -160,7 +179,6 @@ The shipped starter runtime consumes these keys directly:
 These keys may still be useful in project-specific generators or future
 runtime expansions, but they are not consumed by the shipped v1 runtime:
 
-- `widget`
 - `placeholder`
 - `help`
 
@@ -168,9 +186,12 @@ runtime expansions, but they are not consumed by the shipped v1 runtime:
 
 The shipped starter runtime does not implement these behaviors:
 
-- per-field widget selection beyond the built-in type mapping
 - per-field help/placeholder rendering as a first-class contract
 - multi-file upload widgets from one generated field
+
+The starter runtime does support one non-default widget intent directly:
+
+- `widget: textarea`
 
 ## Visibility rules
 
@@ -190,6 +211,28 @@ that specific view.
 
 - If `order` is present, sort ascending by `order`
 - otherwise preserve YAML declaration order
+
+## Form layout rules
+
+Generated create/edit forms MUST use a responsive 12-column layout.
+
+Desktop defaults:
+
+- most attributes SHOULD use `form_span: 4`
+- that default yields three fields per row
+- `file` and `image` inputs SHOULD default to `form_span: 12`
+- `widget: textarea` SHOULD default to `form_span: 12`
+
+Mobile defaults:
+
+- every field MUST span the full row
+
+Overrides:
+
+- `form_span` MAY explicitly override the desktop width
+- `full_width: true` MUST force `form_span: 12`
+- `rows` SHOULD control the initial textarea height when `widget: textarea`
+  is used
 
 ## Reference rules
 
