@@ -8,7 +8,7 @@ Use this file when creating or reviewing persistent artifacts in:
 - `runs/current/artifacts/backend-design/`
 - `app/docs/` after promotion, when used
 
-Required metadata block format:
+Required metadata header format:
 
 ```md
 owner: product_manager
@@ -20,6 +20,8 @@ unresolved:
   - none
 last_updated_by: product_manager
 ```
+
+This is an unfenced YAML-like header block at the top of the file.
 
 Allowed `status` values:
 
@@ -33,6 +35,9 @@ Allowed `status` values:
 Rules:
 
 - the metadata block belongs at the top of the file
+- do not wrap it in front-matter delimiters
+- do not wrap it in a fenced code block
+- keep one blank line between the metadata header and the document title
 - `depends_on` should name concrete files when there are real prerequisites
 - `unresolved` should be explicit; use `none` only when nothing material is
   open

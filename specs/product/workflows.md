@@ -14,9 +14,12 @@ version at `../../runs/current/artifacts/product/workflows.md`.
 
 Each workflow MUST include:
 
+- workflow ID
 - user
 - starting point
 - steps
 - success outcome
 - failure or validation outcome
-- related resources
+- touched resources
+- related user story IDs
+- explicit non-goals, if any

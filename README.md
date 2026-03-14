@@ -34,7 +34,9 @@ Changes to this playbook repository MUST be committed in git.
 Agents MUST NOT leave playbook edits uncommitted at the end of a playbook
 maintenance task unless the user explicitly asks for an uncommitted state.
 
-## Start here
+## Operator orientation
+
+Use these files to understand the repository layout and the current run state:
 
 1. [playbook/README.md](playbook/README.md)
 2. [runs/README.md](runs/README.md)
@@ -42,6 +44,22 @@ maintenance task unless the user explicitly asks for an uncommitted state.
 4. [templates/README.md](templates/README.md)
 5. [example/README.md](example/README.md)
 6. [app/README.md](app/README.md)
+
+## Fresh-run agent reading rule
+
+For a fresh run, agents MUST start from:
+
+1. [playbook/README.md](playbook/README.md)
+2. [runs/current/README.md](runs/current/README.md)
+3. the current role definition under `playbook/roles/`
+4. the run-owned artifacts and owned specs required by that role
+
+For a fresh run, agents MUST NOT use `example/` or `app/` as product or
+architecture inputs unless the task explicitly requests:
+
+- example comparison
+- app-only maintenance
+- playbook maintenance
 
 ## Complexity envelope
 

@@ -65,6 +65,7 @@ Load the current run's product artifacts when present:
 - [../../runs/current/artifacts/product/input-interpretation.md](../../runs/current/artifacts/product/input-interpretation.md)
 - [../../runs/current/artifacts/product/research-notes.md](../../runs/current/artifacts/product/research-notes.md)
 - [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
+- [../../runs/current/artifacts/product/resource-inventory.md](../../runs/current/artifacts/product/resource-inventory.md)
 - [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
 - [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
 - [../../runs/current/artifacts/product/domain-glossary.md](../../runs/current/artifacts/product/domain-glossary.md)

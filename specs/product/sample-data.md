@@ -15,6 +15,10 @@ version at `../../runs/current/artifacts/product/sample-data.md`.
 
 The real artifact MUST define:
 
-- canonical records
-- edge cases
-- validation-driving cases
+- reference records
+- canonical happy-path scenarios
+- boundary conditions
+- invalid or negative scenarios
+- workflow-specific records
+- rule-specific records
+- search or reporting test records

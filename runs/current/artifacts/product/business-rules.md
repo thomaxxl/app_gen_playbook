@@ -14,8 +14,12 @@ version at `../../runs/current/artifacts/product/business-rules.md`.
 
 Each rule entry MUST include:
 
-- plain-language rule name
+- rule ID
+- plain-language rule
+- rule class
 - triggering action
+- preconditions
 - valid outcome
 - invalid outcome
+- user-visible consequence
 - affected resources and fields

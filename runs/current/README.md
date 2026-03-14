@@ -10,6 +10,14 @@ It contains:
 - [role-state/README.md](role-state/README.md)
 - [evidence/README.md](evidence/README.md)
 
+Brief rule:
+
+- `input.md` is the canonical stored brief for the run
+- `role-state/product_manager/inbox/INPUT.md` is the seeded actionable copy
+  for the Product Manager
+- if they differ, `input.md` MUST be treated as authoritative until the inbox
+  copy is refreshed
+
 The preserved generated example remains outside this directory in:
 
 - [../../example/README.md](../../example/README.md)

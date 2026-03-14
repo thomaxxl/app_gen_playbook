@@ -18,7 +18,8 @@ Required steps:
    - `../../runs/current/artifacts/`
    - `../../runs/current/evidence/`
    - `../../runs/current/role-state/`
-6. seed `INPUT.md` into the Product Manager inbox
+6. seed `../../runs/current/role-state/product_manager/inbox/INPUT.md` from
+   `../../runs/current/input.md`
 7. recreate `../../runs/current/artifacts/architecture/capability-profile.md`
    from the starter template shape
 8. recreate `../../runs/current/artifacts/architecture/load-plan.md`
@@ -34,3 +35,6 @@ Rules:
   `../../example/` or another archive before reset
 - optional feature packs MUST remain disabled or undecided until the new
   capability profile explicitly enables them
+- if `../../runs/current/input.md` and the Product Manager inbox `INPUT.md`
+  ever diverge during setup, `../../runs/current/input.md` MUST win and the
+  inbox copy MUST be refreshed before execution starts

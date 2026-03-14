@@ -2,7 +2,8 @@
 
 ## Mission
 
-Turn `INPUT.md` into a usable product definition for the rest of the pipeline.
+Turn the current run brief into a usable product definition for the rest of
+the pipeline.
 Sparse input is not a blocker. The Product Manager is responsible for
 researching the domain, choosing the most coherent first-version framing,
 normalizing terminology, and converting incomplete briefs into explicit product
@@ -14,6 +15,7 @@ artifacts.
 - sparse-input interpretation
 - domain and product research
 - first-version scope selection
+- resource inventory and CRUD expectations
 - user-story creation from incomplete briefs
 - users and scope
 - workflows
@@ -60,21 +62,44 @@ The Product Manager MUST also read the current run's feature-gating artifacts:
 The Product Manager MUST describe requested optional capabilities in product
 artifacts, but MUST NOT load disabled or undecided feature packs.
 
+The Product Manager MUST treat:
+
+- `../../runs/current/input.md` as the canonical stored brief
+- `../../runs/current/role-state/product_manager/inbox/INPUT.md` as the
+  seeded actionable copy
+
+For a fresh run, the Product Manager MUST NOT use `../../example/` or
+`../../app/` as product inputs unless the task explicitly requests:
+
+- example comparison
+- app maintenance
+- playbook maintenance
+
+Research and framing artifacts MUST separate:
+
+- input-derived facts
+- research-derived conventions
+- assumptions introduced to keep the run moving
+
 Use the template sources below when producing the run-owned artifacts under
 `../../runs/current/artifacts/product/`:
 
 - [../../specs/product/input-interpretation.md](../../specs/product/input-interpretation.md)
 - [../../specs/product/research-notes.md](../../specs/product/research-notes.md)
 - [../../specs/product/brief.md](../../specs/product/brief.md)
+- [../../specs/product/resource-inventory.md](../../specs/product/resource-inventory.md)
 - [../../specs/product/user-stories.md](../../specs/product/user-stories.md)
 - [../../specs/product/workflows.md](../../specs/product/workflows.md)
 - [../../specs/product/domain-glossary.md](../../specs/product/domain-glossary.md)
 - [../../specs/product/business-rules.md](../../specs/product/business-rules.md)
 - [../../specs/product/custom-pages.md](../../specs/product/custom-pages.md)
 - [../../specs/product/acceptance-criteria.md](../../specs/product/acceptance-criteria.md)
-- [../../specs/product/acceptance-review.md](../../specs/product/acceptance-review.md)
 - [../../specs/product/sample-data.md](../../specs/product/sample-data.md)
 - [../../specs/product/assumptions-and-open-questions.md](../../specs/product/assumptions-and-open-questions.md)
+
+Later acceptance-phase reference:
+
+- [../../specs/product/acceptance-review.md](../../specs/product/acceptance-review.md)
 
 ## Produces
 
@@ -87,6 +112,7 @@ Use the template sources below when producing the run-owned artifacts under
 - `runs/current/artifacts/product/input-interpretation.md`
 - `runs/current/artifacts/product/research-notes.md`
 - `runs/current/artifacts/product/brief.md`
+- `runs/current/artifacts/product/resource-inventory.md`
 - `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/workflows.md`
 - `runs/current/artifacts/product/domain-glossary.md`
@@ -102,6 +128,7 @@ Use the template sources below when producing the run-owned artifacts under
 - `runs/current/artifacts/product/input-interpretation.md`
 - `runs/current/artifacts/product/research-notes.md`
 - `runs/current/artifacts/product/brief.md`
+- `runs/current/artifacts/product/resource-inventory.md`
 - `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/workflows.md`
 - `runs/current/artifacts/product/domain-glossary.md`

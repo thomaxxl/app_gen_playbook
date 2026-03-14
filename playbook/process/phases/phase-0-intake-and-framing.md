@@ -11,6 +11,10 @@ brief is sparse.
 
 Start from:
 
+- `runs/current/input.md`
+
+Use the seeded actionable copy at:
+
 - `runs/current/role-state/product_manager/inbox/INPUT.md`
 
 Classify that input using `../input-policy.md`.

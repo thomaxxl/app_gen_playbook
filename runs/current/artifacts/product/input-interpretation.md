@@ -15,6 +15,14 @@ version at `../../runs/current/artifacts/product/input-interpretation.md`.
 Fill in:
 
 - original user input
+- candidate framings considered
 - chosen framing
 - why that framing was chosen
+- rejected framings and why they were rejected
+- house-style fit assessment
+- first-version scope boundary
+- explicit exclusions
+- domain-adaptation expectation
+- input-derived facts
+- research-derived conventions
 - explicit scope assumptions forced by sparse input

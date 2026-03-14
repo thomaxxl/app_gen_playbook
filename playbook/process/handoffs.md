@@ -14,6 +14,7 @@ Complete only when:
 - `runs/current/artifacts/product/input-interpretation.md` exists for sparse
   or partial input
 - `runs/current/artifacts/product/research-notes.md` exists
+- `runs/current/artifacts/product/resource-inventory.md` exists
 - resources are named
 - user stories exist
 - workflows are defined

@@ -18,4 +18,6 @@ Fill in:
 - primary users
 - app class
 - in-scope behavior
+- first-version scope boundary
 - out-of-scope behavior
+- explicit exclusions

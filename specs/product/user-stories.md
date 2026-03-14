@@ -14,6 +14,10 @@ version at `../../runs/current/artifacts/product/user-stories.md`.
 
 Fill in:
 
-- actors
-- priority-ordered stories
-- must-have versus later stories
+- story ID
+- actor
+- story statement
+- priority (`must`, `should`, `could`)
+- related workflow IDs
+- related resources
+- acceptance note

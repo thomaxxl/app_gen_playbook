@@ -27,6 +27,14 @@ The active run uses:
 - `../../runs/current/evidence/`
 - `../../app/`
 
+Brief rule:
+
+- `../../runs/current/input.md` is the canonical stored brief
+- `../../runs/current/role-state/product_manager/inbox/INPUT.md` is the
+  seeded actionable copy for the Product Manager
+- if those files differ, `../../runs/current/input.md` MUST win until the
+  inbox copy is refreshed
+
 The run-owned artifact roots are:
 
 - `../../runs/current/artifacts/product/`
@@ -84,7 +92,7 @@ To start a new run:
    - `../../runs/current/artifacts/architecture/capability-profile.md`
    - `../../runs/current/artifacts/architecture/load-plan.md`
 8. seed the Product Manager inbox by copying:
-   - `../../runs/current/role-state/product_manager/inbox/INPUT.example.md`
+   - `../../runs/current/input.md`
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
 This procedure applies to a new full run. It does not apply to an app-only

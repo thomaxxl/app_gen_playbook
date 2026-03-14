@@ -14,8 +14,11 @@ version at `../../runs/current/artifacts/product/custom-pages.md`.
 
 For each custom page, define:
 
+- page ID or name
 - purpose
 - intended user
+- why generated resource pages are insufficient
 - entry behavior
 - required data
 - key actions or links
+- success criteria

@@ -19,3 +19,5 @@ The real artifact MUST define:
 - custom-page acceptance
 - business-rule acceptance
 - reporting or search acceptance
+- traceability to story IDs, workflow IDs, resource inventory entries, rule
+  IDs, and custom page IDs where applicable

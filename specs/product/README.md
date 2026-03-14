@@ -9,12 +9,16 @@ Rules:
   `../../runs/current/artifacts/product/`.
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
   NOT replace run-owned product artifacts.
+- For a fresh run, `../../example/` and `../../app/` MUST NOT be used as
+  product inputs unless the task explicitly requests comparison or
+  maintenance.
 
 Template files:
 
 - `input-interpretation.md`
 - `research-notes.md`
 - `brief.md`
+- `resource-inventory.md`
 - `user-stories.md`
 - `workflows.md`
 - `domain-glossary.md`
