@@ -94,6 +94,22 @@ cleanup() {
   done
 }
 
+wait_for_first_exit() {
+  while true; do
+    if [[ -n "$backend_pid" ]] && ! kill -0 "$backend_pid" 2>/dev/null; then
+      wait "$backend_pid"
+      return $?
+    fi
+
+    if [[ -n "$frontend_pid" ]] && ! kill -0 "$frontend_pid" 2>/dev/null; then
+      wait "$frontend_pid"
+      return $?
+    fi
+
+    sleep 1
+  done
+}
+
 handle_signal() {
   cleanup
   exit 130
@@ -137,6 +153,16 @@ done
 ) &
 frontend_pid=$!
 
+for _ in {1..10}; do
+  if ! kill -0 "$frontend_pid" 2>/dev/null; then
+    wait "$frontend_pid"
+    exit_code=$?
+    echo "Frontend failed to start with status $exit_code." >&2
+    exit "$exit_code"
+  fi
+  sleep 0.1
+done
+
 echo "Backend pid: $backend_pid"
 echo "Frontend pid: $frontend_pid"
 echo "Frontend mode: $FRONTEND_MODE"
@@ -146,7 +172,7 @@ echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
 
-wait -n "$backend_pid" "$frontend_pid"
+wait_for_first_exit
 exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
@@ -172,3 +198,6 @@ Notes:
 - The default frontend mode is `preview` so `/admin-app/` behaves like the
   packaged app during combined-run validation. Use `FRONTEND_MODE=dev` only
   when explicit dev-server behavior is needed.
+- The launcher MUST remain compatible with the stock macOS Bash `3.2`
+  environment. Do not use `wait -n` or other Bash-5-only supervision
+  features unless the playbook first raises the shell baseline explicitly.

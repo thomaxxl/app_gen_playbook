@@ -54,6 +54,19 @@ Generated scripts such as `app/run.sh` SHOULD be runnable as:
 
 and MUST NOT rely only on preserved executable bits.
 
+The generated launcher MUST remain compatible with the stock macOS Bash `3.2`
+environment unless the run explicitly raises the shell baseline and documents
+that decision in `runs/current/artifacts/architecture/runtime-bom.md`.
+
+In practice, generated shell helpers MUST NOT depend on Bash-5-only features
+such as:
+
+- `wait -n`
+- associative arrays
+- `mapfile`
+
+unless the run records that higher shell requirement explicitly.
+
 ## Early environment gate
 
 Before implementation starts, record whether the local environment can provide:

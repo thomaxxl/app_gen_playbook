@@ -77,6 +77,9 @@ other one is terminated too.
 If dependencies were not installed yet, `run.sh` must stop immediately and
 print a clear instruction to run `./install.sh`.
 
+`run.sh` is expected to work with the stock macOS Bash `3.2` shell as well as
+newer Linux Bash environments.
+
 By default `run.sh` serves the frontend in preview mode so the canonical
 `/admin-app/` path behaves like packaged delivery.
 
@@ -112,3 +115,6 @@ Notes:
   immutable tarball URL or a published registry release. Do not document a git
   dependency as the default generated-app path.
 - If the app does not use Docker, do not add deployment noise here.
+- Keep the launcher portable. Do not document or generate a `run.sh` that
+  requires Bash-5-only features such as `wait -n` unless the app explicitly
+  raises the shell/runtime baseline.
