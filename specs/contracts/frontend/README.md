@@ -24,6 +24,7 @@ The agent MUST load these files first:
 - [scaffold.md](scaffold.md)
 - [runtime-contract.md](runtime-contract.md)
 - [routing-and-paths.md](routing-and-paths.md)
+- [home-and-entry.md](home-and-entry.md)
 - [ui-principles.md](ui-principles.md)
 - [accessibility.md](accessibility.md)
 

@@ -86,5 +86,12 @@ The starter scaffold MAY also provide:
 
 - a no-layout `Landing` page at `/admin-app/#/Landing`
 
-If both routes exist, `Home` SHOULD be treated as the primary in-admin entry
-point.
+There MUST be exactly one declared primary entry route in the run-owned UX and
+architecture artifacts.
+
+If the run does not explicitly override the entry route,
+`/admin-app/#/Home` MUST be treated as the primary in-admin entry point.
+
+If both `Home` and `Landing` exist, `Home` SHOULD remain the primary in-admin
+entry point unless the run-owned entry artifacts explicitly approve a
+different route.

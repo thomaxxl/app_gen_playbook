@@ -16,6 +16,9 @@ Fill in:
 
 - problem statement
 - primary users
+- primary user intent on entry
+- the first action that matters most
+- the top three questions the entry page must answer
 - app class
 - in-scope behavior
 - first-version scope boundary

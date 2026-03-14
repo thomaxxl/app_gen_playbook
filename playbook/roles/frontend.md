@@ -10,6 +10,7 @@ undocumented backend or rules assumptions.
 
 - `../../runs/current/artifacts/ux/`
 - navigation and entry behavior
+- landing strategy
 - page-shell consistency
 - frontend resource wiring
 - field visibility and labels
@@ -67,6 +68,7 @@ Runtime state lives in:
 - [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
 - [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
 - [../../runs/current/artifacts/ux/navigation.md](../../runs/current/artifacts/ux/navigation.md)
+- [../../runs/current/artifacts/ux/landing-strategy.md](../../runs/current/artifacts/ux/landing-strategy.md)
 - [../../runs/current/artifacts/ux/screen-inventory.md](../../runs/current/artifacts/ux/screen-inventory.md)
 - [../../runs/current/artifacts/ux/field-visibility-matrix.md](../../runs/current/artifacts/ux/field-visibility-matrix.md)
 - [../../runs/current/artifacts/ux/custom-view-specs.md](../../runs/current/artifacts/ux/custom-view-specs.md)
@@ -128,6 +130,8 @@ instead of scattering unrelated input-level validators.
 
 - frontend implementation and doc updates
 - `runs/current/artifacts/ux/` artifacts for Phase 3
+- `runs/current/artifacts/ux/landing-strategy.md` as the source of truth for
+  the entry-page CTA hierarchy and proof structure
 - handoff notes to `../../runs/current/role-state/architect/inbox/` when contracts break
 - coordination notes to `../../runs/current/role-state/backend/inbox/` when backend support is missing
 - readiness or completion notes to `../../runs/current/role-state/architect/inbox/` for integration review

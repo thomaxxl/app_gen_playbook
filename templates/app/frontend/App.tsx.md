@@ -3,6 +3,7 @@
 See also:
 
 - [../../../specs/contracts/frontend/runtime-contract.md](../../../specs/contracts/frontend/runtime-contract.md)
+- [../../../specs/contracts/frontend/home-and-entry.md](../../../specs/contracts/frontend/home-and-entry.md)
 - [../../../specs/contracts/frontend/custom-views.md](../../../specs/contracts/frontend/custom-views.md)
 
 Keep the app root thin, but make resource wiring explicit.
@@ -44,6 +45,9 @@ Notes:
 - Do not bury project-specific API paths in the component tree.
 - Keep app title and endpoint config in `config.ts`.
 - `Home.tsx` is the required in-admin landing page with sidebar presence.
+- The starter redirect to `/Home` is correct unless the run-owned
+  `route-and-entry-model.md`, `navigation.md`, and `landing-strategy.md`
+  explicitly approve a different primary entry route.
 - `Landing.tsx` is starter-only and MUST NOT be imported here unless the
   run-owned custom-view spec explicitly enables it.
 - If the app needs a no-layout route, add it explicitly through

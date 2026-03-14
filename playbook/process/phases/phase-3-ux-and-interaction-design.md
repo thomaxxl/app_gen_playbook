@@ -10,6 +10,7 @@ Design the user journey and page behavior before implementation diverges.
 
 - create screen inventory
 - define navigation/menu structure
+- define landing strategy and primary entry CTA hierarchy
 - define default entry, return-path, and page-header behavior
 - define per-resource CRUD layouts
 - define form grouping, content clarity, and field-level guidance
@@ -25,6 +26,7 @@ Design the user journey and page behavior before implementation diverges.
 ## Outputs
 
 - `runs/current/artifacts/ux/navigation.md`
+- `runs/current/artifacts/ux/landing-strategy.md`
 - `runs/current/artifacts/ux/screen-inventory.md`
 - `runs/current/artifacts/ux/field-visibility-matrix.md`
 - `runs/current/artifacts/ux/custom-view-specs.md`
@@ -37,6 +39,8 @@ Design the user journey and page behavior before implementation diverges.
   critical paths
 - page-shell, page-header, and primary CTA decisions are documented for the
   main routes
+- the primary entry route, entry-page proof cues, and CTA hierarchy are
+  documented in `landing-strategy.md`
 - responsive behavior is documented for the critical flows
 - accessibility baseline expectations and any non-default route-level notes are
   documented

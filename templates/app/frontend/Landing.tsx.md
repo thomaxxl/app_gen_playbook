@@ -202,6 +202,9 @@ Notes:
   possible.
 - This template now derives its primary CTA from the first registered resource
   instead of a hard-coded starter route, but it remains starter-only overall.
+- If this page participates in the real entry experience, it MUST implement
+  the approved `landing-strategy.md` instead of improvising a second
+  unrelated landing pattern.
 - This template SHOULD use the shared `PageHeader`, `EmptyState`,
   `ErrorState`, and `SummaryCard` starter shell unless the run-owned UX
   artifacts explicitly replace it.

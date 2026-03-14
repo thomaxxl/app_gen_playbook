@@ -19,6 +19,7 @@ The real artifact MUST define:
 - SPA base path
 - hash-route model
 - default entry route
+- approved entry-page mode
 
 ## Backend and discovery endpoints
 

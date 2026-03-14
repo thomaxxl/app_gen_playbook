@@ -178,6 +178,9 @@ Notes:
   artifacts.
 - Keep this page inside the React-Admin data-provider context.
 - Resolve foreign keys into readable labels instead of displaying raw ids.
+- If this page becomes the real entry surface, it MUST implement the approved
+  `landing-strategy.md` and preserve the primary CTA / proof expectations from
+  `home-and-entry.md`.
 - This template SHOULD use the shared `PageHeader`, `EmptyState`,
   `ErrorState`, and `SummaryCard` starter shell unless the run-owned UX
   artifacts explicitly replace it.

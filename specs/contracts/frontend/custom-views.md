@@ -3,31 +3,9 @@
 This file defines how project-specific frontend pages fit into the generated
 app.
 
-## Required admin home route
-
-Every generated React-admin app MUST include a `Home` view inside the normal
-React-admin chrome.
-
-Required behavior:
-
-- public route: `/admin-app/#/Home`
-- visible left-sidebar menu entry labeled `Home`
-- visible home icon in the sidebar
-- a visible page title and short purpose text
-- at least one visible navigation link or button into the main app flow
-
-The `Home` view SHOULD be implemented as a normal React-admin page component
-and SHOULD be registered through a direct `<Resource name="Home" ... />`
-element so the sidebar link appears without a custom menu implementation.
-
-`Home` is the default in-admin landing page.
-
-`Home` MAY either:
-
-- remain a lightweight navigation hub, or
-- host the app's main dashboard content directly
-
-The run-owned UX artifacts MUST decide which mode applies.
+Mandatory `Home` and default entry-surface rules live in
+`home-and-entry.md`. This file covers optional no-layout landing pages,
+dashboards, D3 pages, and other extra custom routes.
 
 ## Custom no-layout route
 
@@ -47,12 +25,12 @@ For non-starter runs, `Landing.tsx` MUST NOT be imported or wired by default
 unless `runs/current/artifacts/ux/custom-view-specs.md` explicitly enables a
 no-layout route.
 
+If `Landing.tsx` is enabled and participates in the real entry experience, it
+MUST conform to `../../runs/current/artifacts/ux/landing-strategy.md`.
+
 ## Required navigation behavior
 
 - `Home.tsx` MUST exist in every generated app
-- `Home.tsx` MUST appear in the sidebar automatically
-- `Home.tsx` SHOULD be the default in-admin route
-- `Home.tsx` SHOULD provide a visible way into the main resource pages
 - `Landing.tsx` MUST NOT appear in the sidebar automatically
 - if `Landing.tsx` is present, it SHOULD provide a visible way into `Home` or
   the main admin resources
@@ -65,8 +43,6 @@ Generated project pages SHOULD reuse the starter UI shell by default.
 
 At minimum:
 
-- `Home.tsx` MUST use the shared page-header pattern or an explicitly approved
-  equivalent
 - custom pages SHOULD use the shared page-header pattern unless the run-owned
   UX artifacts define a different layout
 - summary-style custom pages SHOULD use shared summary-card structure unless a
@@ -126,12 +102,14 @@ At minimum, a custom view MUST:
 
 Use:
 
-- `templates/app/frontend/Home.tsx.md`
 - `templates/app/frontend/Landing.tsx.md`
 - `templates/app/frontend/CustomDashboard.tsx.md`
+- `templates/app/frontend/PageHero.tsx.md`
 - `templates/app/frontend/PageHeader.tsx.md`
 - `templates/app/frontend/EmptyState.tsx.md`
 - `templates/app/frontend/ErrorState.tsx.md`
+- `templates/app/frontend/SectionBlock.tsx.md`
+- `templates/app/frontend/QuickActionCard.tsx.md`
 - `templates/app/frontend/SummaryCard.tsx.md`
 - `templates/app/frontend/D3Visualization.tsx.md`
 - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`

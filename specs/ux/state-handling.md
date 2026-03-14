@@ -21,6 +21,11 @@ The real artifact MUST define:
 - global shell loading/error states
 - generated CRUD page states
 - custom page states
+- entry-page loading state
+- entry-page partial-data failure state
+- stale operational-data state
+- primary CTA unavailable state
+- nothing-to-do or empty-summary state
 - relationship/reference-resolution failure states
 - upload failure states when uploads are enabled
 - retry behavior

@@ -18,6 +18,7 @@ data with the values declared in:
 import { expect, test } from "@playwright/test";
 
 test("starter app smoke flow works", async ({ page, request }) => {
+  const landingRoute: string | null = null;
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -56,12 +57,17 @@ test("starter app smoke flow works", async ({ page, request }) => {
     page.getByText(/failed to initialize the schema or data provider/i),
   ).toHaveCount(0);
   await expect(page.getByText(/home/i)).toBeVisible();
+  await expect(page.getByTestId("entry-purpose")).toBeVisible();
+  await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
+  await expect(page.getByTestId("entry-proof-strip")).toBeVisible();
 
   const homeMenuLink = page.getByRole("link", { name: /home/i });
   await expect(homeMenuLink).toBeVisible();
 
-  await page.goto("/admin-app/#/Landing");
-  await expect(page.getByText(/landing error/i)).toHaveCount(0);
+  if (landingRoute) {
+    await page.goto(landingRoute);
+    await expect(page.getByText(/landing error/i)).toHaveCount(0);
+  }
 
   await page.goto("/admin-app/#/Collection");
   await expect(page.getByText("Spring Planning")).toBeVisible();
@@ -70,10 +76,20 @@ test("starter app smoke flow works", async ({ page, request }) => {
   expect(pageErrors).toEqual([]);
   expect(failedResponses).toEqual([]);
 });
+
+test("entry page remains discoverable on a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin-app/#/Home");
+
+  await expect(page.getByTestId("entry-purpose")).toBeVisible();
+  await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
+});
 ```
 
 Notes:
 
+- Set `landingRoute` only when the generated app actually includes an optional
+  no-layout entry page such as `Landing.tsx`.
 - If the generated app relies on sparse or incomplete normalized relationship
   metadata, extend this smoke suite to prove at least one fallback-driven
   `tomany` relationship tab loads rows and at least one `toone` relationship

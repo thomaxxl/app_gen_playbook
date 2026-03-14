@@ -14,6 +14,7 @@ backend, and rules can implement without guessing.
 - runtime and package freeze decisions
 - generated-vs-custom boundaries
 - route/base-path model
+- primary entry-mode approval
 - integration boundary decisions
 - required cross-layer test obligations
 - integration review after implementation
@@ -102,6 +103,7 @@ Before approving implementation start or performing integration review, also
 read the current run's UX and backend-design artifacts:
 
 - [../../runs/current/artifacts/ux/navigation.md](../../runs/current/artifacts/ux/navigation.md)
+- [../../runs/current/artifacts/ux/landing-strategy.md](../../runs/current/artifacts/ux/landing-strategy.md)
 - [../../runs/current/artifacts/ux/screen-inventory.md](../../runs/current/artifacts/ux/screen-inventory.md)
 - [../../runs/current/artifacts/ux/field-visibility-matrix.md](../../runs/current/artifacts/ux/field-visibility-matrix.md)
 - [../../runs/current/artifacts/ux/custom-view-specs.md](../../runs/current/artifacts/ux/custom-view-specs.md)
@@ -146,6 +148,10 @@ The Architect MAY decide:
 
 - naming and provisional endpoint strategy
 - route/base-path model
+- whether the app is `Home only`, `Home + Landing`, or `Home` with replaced
+  starter content
+- whether the landing strategy remains starter-compatible or requires a custom
+  entry implementation
 - resource classification
 - singleton-versus-first-class resource treatment
 - generated versus custom implementation lanes

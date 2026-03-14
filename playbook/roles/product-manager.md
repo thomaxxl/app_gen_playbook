@@ -18,6 +18,7 @@ artifacts.
 - resource inventory and CRUD expectations
 - user-story creation from incomplete briefs
 - users and scope
+- primary entry intent and first action
 - workflows
 - plain-language business rules
 - custom-page purpose
@@ -138,6 +139,13 @@ The Product Manager MUST:
 
 The Product Manager MUST NOT create a second competing human-readable rule
 file elsewhere in the run artifacts.
+
+The Product Manager MUST also provide enough product framing for the entry page
+strategy. At minimum, the product artifacts MUST identify:
+
+- the primary user intent on entry
+- the first action that matters most
+- the top three questions the entry page MUST answer quickly
 
 When local `../../app/` exists for the current run, the Product Manager SHOULD
 seed `../../app/BUSINESS_RULES.md` from the approved run-owned catalog. Before

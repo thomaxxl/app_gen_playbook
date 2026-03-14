@@ -21,10 +21,13 @@ frontend/
     App.tsx
     Home.tsx
     theme.ts
+    PageHero.tsx
     PageHeader.tsx
     EmptyState.tsx
     ErrorState.tsx
     FormSection.tsx
+    SectionBlock.tsx
+    QuickActionCard.tsx
     SummaryCard.tsx
     config.ts
     main.tsx
@@ -74,10 +77,13 @@ These files are shipped under `templates/app/frontend/`:
 - `config.ts.md`
 - `App.tsx.md`
 - `Home.tsx.md`
+- `PageHero.tsx.md`
 - `PageHeader.tsx.md`
 - `EmptyState.tsx.md`
 - `ErrorState.tsx.md`
 - `FormSection.tsx.md`
+- `SectionBlock.tsx.md`
+- `QuickActionCard.tsx.md`
 - `SummaryCard.tsx.md`
 - `Landing.tsx.md` when the run explicitly includes a starter no-layout page
 - `generated/resources/Collection.tsx.md`
@@ -123,8 +129,10 @@ The starter frontend must support:
 - The frontend scaffold must be complete enough to run without first generating
   a hidden Vite starter app elsewhere.
 - `Home.tsx` is required even when `Landing.tsx` is omitted or replaced.
-- `theme.ts`, `PageHeader.tsx`, `EmptyState.tsx`, `ErrorState.tsx`,
-  `FormSection.tsx`, and `SummaryCard.tsx` are part of the starter UI shell.
+- `theme.ts`, `PageHero.tsx`, `PageHeader.tsx`, `EmptyState.tsx`,
+  `ErrorState.tsx`, `FormSection.tsx`, `SectionBlock.tsx`,
+  `QuickActionCard.tsx`, and `SummaryCard.tsx` are part of the starter UI
+  shell.
 - `Landing.tsx` is optional and MUST be added only when the run-owned UX
   artifacts explicitly require a no-layout page.
 - Additional project-specific files are allowed, but the required files above

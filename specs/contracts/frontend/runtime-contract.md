@@ -15,11 +15,14 @@ mirror only the subset of approved rules whose `Frontend Mirror` field is not
 
 The starter archive MUST ship these runtime snippets:
 
+- `templates/app/frontend/PageHero.tsx.md`
 - `templates/app/frontend/theme.ts.md`
 - `templates/app/frontend/PageHeader.tsx.md`
 - `templates/app/frontend/EmptyState.tsx.md`
 - `templates/app/frontend/ErrorState.tsx.md`
 - `templates/app/frontend/FormSection.tsx.md`
+- `templates/app/frontend/SectionBlock.tsx.md`
+- `templates/app/frontend/QuickActionCard.tsx.md`
 - `templates/app/frontend/SummaryCard.tsx.md`
 - `templates/app/frontend/SchemaDrivenAdminApp.tsx.md`
 - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
@@ -35,6 +38,7 @@ The starter frontend scaffold MUST also ship:
 
 - `templates/app/frontend/index.html.md`
 - `templates/app/frontend/Home.tsx.md`
+- `templates/app/frontend/PageHero.tsx.md`
 - `templates/app/frontend/theme.ts.md`
 - `templates/app/frontend/tsconfig.json.md`
 - `templates/app/frontend/tsconfig.app.json.md`
@@ -175,16 +179,28 @@ The `Home` page MUST provide:
 
 - a visible title
 - a short basic description or purpose text
+- the primary CTA defined by
+  `../../runs/current/artifacts/ux/landing-strategy.md`
+- at least one visible proof or summary region above the fold or immediately
+  after the hero
 - a visible path into the main app flow
+
+The `Home` page MUST implement the run-owned
+`../../runs/current/artifacts/ux/landing-strategy.md` artifact. The runtime
+MUST NOT treat the thin starter `Home.tsx` as sufficient when the run-owned UX
+artifacts require richer entry behavior.
 
 ## Required starter UI primitives
 
 The generated frontend MUST ship starter UI primitives for:
 
+- page heroes
 - page headers
 - empty states
 - error states
 - form sections
+- section blocks
+- quick-action cards
 - summary cards
 
 Those primitives MUST be usable by:

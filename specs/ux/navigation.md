@@ -19,20 +19,22 @@ version at `../../runs/current/artifacts/ux/navigation.md`.
 
 The real artifact MUST include a table with at least these columns:
 
-| Route ID | Path | Menu label | Menu visibility | Route owner | Page header model | Entry conditions | Return path | Primary CTA targets | Accessibility notes | Responsive notes | Resource or page source | Justification |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | visible or hidden | generated/custom/singleton/hidden | starter/non-starter/custom | replace | replace | replace | default/non-default | default/non-default | replace | replace |
+| Route ID | Path | Menu label | Menu visibility | Route owner | Entry role | Primary intent | Page header model | Entry conditions | Return path | Primary CTA | Back path or recovery path | Accessibility notes | Responsive notes | Resource or page source | Justification |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | replace | visible or hidden | generated/custom/singleton/hidden | primary-entry/support/detail/hidden | replace | starter/non-starter/custom | replace | replace | replace | replace | default/non-default | default/non-default | replace | replace |
 
 ## Required sections
 
 The real artifact MUST define:
 
+- which route is the primary entry route
 - default in-admin entry route
 - sidebar navigation structure
 - secondary or deep-link navigation
 - hidden, singleton, and non-menu routes
 - route ownership decisions tied to `resource-classification.md`
 - primary CTA destinations used by `Home.tsx` and any dashboard page
+- whether each route supports or replaces the landing strategy
 - default page-header behavior per route class
 - visible return-path behavior when the route is not obviously recoverable via
   the browser back stack
@@ -46,4 +48,5 @@ The real artifact MUST explicitly call out:
 - which routes come from generated CRUD screens
 - which routes come from `Home.tsx`, `Landing.tsx`, or `CustomDashboard.tsx`
 - whether `Landing.tsx` is absent, starter-only, or enabled for the run
+- whether the primary entry route matches `landing-strategy.md`
 - any resource intentionally omitted from the menu and why
