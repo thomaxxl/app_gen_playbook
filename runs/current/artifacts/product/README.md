@@ -10,6 +10,7 @@ Required first-pass product artifacts include:
 - `research-notes.md`
 - `brief.md`
 - `resource-inventory.md`
+- `resource-behavior-matrix.md`
 - `user-stories.md`
 - `workflows.md`
 - `business-rules.md`

@@ -5,6 +5,10 @@ image sharing and management under the `Cimage` product name.
 
 It is the current runnable example referenced by the playbook.
 
+It also contains a preserved filled architecture example package under:
+
+- `artifacts/architecture/`
+
 ## Scope
 
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS API
@@ -12,6 +16,8 @@ It is the current runnable example referenced by the playbook.
 - `reference/admin.yaml`: frontend contract for `Gallery`, `ImageAsset`, and `ShareStatus`
 - `run.sh`: local launcher for backend + frontend
 - `REMARKS.md`: playbook issues observed during generation
+- `artifacts/architecture/`: preserved filled architecture artifacts for this
+  example domain
 
 ## Domain Model
 

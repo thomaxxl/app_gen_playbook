@@ -1,6 +1,11 @@
 # Rename Starter Trio Checklist
 
-Use this file when adapting the starter trio to a non-starter domain.
+Use this file when the current run is not pure `starter` lane.
+
+This checklist applies to both:
+
+- `rename-only` adaptation
+- `non-starter` adaptation
 
 The operator MUST review and update these areas together:
 

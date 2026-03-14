@@ -14,6 +14,7 @@ Rules:
 Template files:
 
 - `overview.md`
+- `resource-classification.md`
 - `domain-adaptation.md`
 - `domain-adaptation-template.md`
 - `nonstarter-worked-example.md`
@@ -24,3 +25,11 @@ Template files:
 - `test-obligations.md`
 - `decision-log.md`
 - `integration-review.md`
+
+Preserved filled reference:
+
+- `../../example/artifacts/architecture/`
+
+The preserved example MAY be consulted as a formatting and artifact-shape
+reference, but it MUST NOT override the current run's own product and
+architecture decisions.

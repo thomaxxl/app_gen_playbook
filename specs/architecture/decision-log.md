@@ -12,6 +12,18 @@ last_updated_by: playbook
 This file is a generic template. The Architect MUST create the run-owned
 version at `../../runs/current/artifacts/architecture/decision-log.md`.
 
+## Decision entry format
+
+Each real entry SHOULD include:
+
+- date
+- decision
+- alternatives considered
+- reason
+- downstream consequences
+
+## Required scope
+
 Record only cross-layer decisions that affect:
 
 - routes

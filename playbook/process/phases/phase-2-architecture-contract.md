@@ -8,6 +8,9 @@ Convert product requirements into a stable cross-layer contract.
 
 ## Activities
 
+- verify the product package is complete enough for architecture decisions
+- classify the run as starter, rename-only, or non-starter
+- classify each resource and record singleton-versus-first-class decisions
 - define canonical resource names
 - define backend/frontend/rules boundaries
 - decide which optional capabilities are enabled, disabled, or undecided
@@ -18,12 +21,15 @@ Convert product requirements into a stable cross-layer contract.
 - define query/search expectations the frontend relies on
 - define test obligations by layer
 
+If the run differs from the starter trio, the Architect MUST read
+`playbook/process/rename-starter-trio-checklist.md` during this phase.
+
 ## Outputs
 
 - `runs/current/artifacts/architecture/overview.md`
-- `runs/current/artifacts/architecture/domain-adaptation.md` when the app
-  materially differs from the
-  starter example
+- `runs/current/artifacts/architecture/resource-classification.md`
+- `runs/current/artifacts/architecture/domain-adaptation.md` when the run is
+  `rename-only` or `non-starter`
 - `runs/current/artifacts/architecture/resource-naming.md`
 - `runs/current/artifacts/architecture/integration-boundary.md`
 - `runs/current/artifacts/architecture/route-and-entry-model.md`
@@ -40,5 +46,8 @@ Convert product requirements into a stable cross-layer contract.
 - runtime dependencies are explicit
 - capability-profile and load-plan are authored and no longer treated as stub
   placeholders
-- any non-starter domain deviations are explicitly documented
+- the lane choice `starter`, `rename-only`, or `non-starter` is explicit
+- resource classification is explicit, including singleton-versus-first-class
+  decisions
+- any rename-only or non-starter domain deviations are explicitly documented
 - the architecture package is marked `ready-for-handoff` or `approved`

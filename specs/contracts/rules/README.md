@@ -28,9 +28,9 @@ For the starter domain:
 
 For a non-starter domain:
 
-- [../../backend-design/model-design.md](../../backend-design/model-design.md)
-- [../../backend-design/rule-mapping.md](../../backend-design/rule-mapping.md)
-- [../../product/business-rules.md](../../product/business-rules.md)
+- [../../../runs/current/artifacts/backend-design/model-design.md](../../../runs/current/artifacts/backend-design/model-design.md)
+- [../../../runs/current/artifacts/backend-design/rule-mapping.md](../../../runs/current/artifacts/backend-design/rule-mapping.md)
+- [../../../runs/current/artifacts/product/business-rules.md](../../../runs/current/artifacts/product/business-rules.md)
 
 Then use the starter rule docs as examples rather than as domain truth.
 

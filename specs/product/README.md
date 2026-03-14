@@ -19,6 +19,7 @@ Template files:
 - `research-notes.md`
 - `brief.md`
 - `resource-inventory.md`
+- `resource-behavior-matrix.md`
 - `user-stories.md`
 - `workflows.md`
 - `domain-glossary.md`

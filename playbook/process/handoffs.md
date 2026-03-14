@@ -15,6 +15,7 @@ Complete only when:
   or partial input
 - `runs/current/artifacts/product/research-notes.md` exists
 - `runs/current/artifacts/product/resource-inventory.md` exists
+- `runs/current/artifacts/product/resource-behavior-matrix.md` exists
 - resources are named
 - user stories exist
 - workflows are defined
@@ -42,6 +43,7 @@ Gate status must be one of:
 Complete only when:
 
 - all required contracts are written
+- resource classification is explicit
 - runtime dependencies are explicit
 - naming is fixed
 - generated vs custom boundaries are explicit

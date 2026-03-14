@@ -88,6 +88,7 @@ Use the template sources below when producing the run-owned artifacts under
 - [../../specs/product/research-notes.md](../../specs/product/research-notes.md)
 - [../../specs/product/brief.md](../../specs/product/brief.md)
 - [../../specs/product/resource-inventory.md](../../specs/product/resource-inventory.md)
+- [../../specs/product/resource-behavior-matrix.md](../../specs/product/resource-behavior-matrix.md)
 - [../../specs/product/user-stories.md](../../specs/product/user-stories.md)
 - [../../specs/product/workflows.md](../../specs/product/workflows.md)
 - [../../specs/product/domain-glossary.md](../../specs/product/domain-glossary.md)
@@ -113,6 +114,7 @@ Later acceptance-phase reference:
 - `runs/current/artifacts/product/research-notes.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
+- `runs/current/artifacts/product/resource-behavior-matrix.md`
 - `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/workflows.md`
 - `runs/current/artifacts/product/domain-glossary.md`
@@ -129,6 +131,7 @@ Later acceptance-phase reference:
 - `runs/current/artifacts/product/research-notes.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
+- `runs/current/artifacts/product/resource-behavior-matrix.md`
 - `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/workflows.md`
 - `runs/current/artifacts/product/domain-glossary.md`

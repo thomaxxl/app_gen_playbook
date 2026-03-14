@@ -12,11 +12,48 @@ last_updated_by: playbook
 
 This file is a generic template. The Architect MUST create the run-owned
 version at `../../runs/current/artifacts/architecture/domain-adaptation.md`
-when the app materially differs from the starter trio.
+when the lane is `rename-only` or `non-starter`.
 
-The real artifact MUST define:
+## Lane selection
 
-- actual domain resources
-- retained starter assumptions
-- replaced starter assumptions
-- consequences for templates and tests
+The real artifact MUST begin by selecting exactly one lane:
+
+- `rename-only`
+- `non-starter`
+
+This artifact MUST NOT be omitted for either of those lanes.
+
+## Actual domain resources
+
+The real artifact MUST define the real domain resources.
+
+## Structural fit versus starter trio
+
+The real artifact MUST explain whether the current run:
+
+- preserves the starter structural shape under new names
+- exceeds starter assumptions through extra resources, relationship shape, or
+  workflow complexity
+
+## Starter assumptions retained
+
+The real artifact MUST list retained starter assumptions.
+
+## Starter assumptions replaced
+
+The real artifact MUST list replaced starter assumptions.
+
+## Required substitutions
+
+The real artifact MUST define consequences for:
+
+- templates
+- tests
+- resource wrappers
+- `admin.yaml`
+- custom routes or dashboards
+
+## Runtime validation obligations
+
+The real artifact MUST list any provisional assumptions that later roles MUST
+validate against the running app.
