@@ -10,17 +10,14 @@ import type { ReactNode } from "react";
 import type { DataProvider } from "react-admin";
 
 import {
-  createDataProviderSync,
+  buildAdminResourceMap,
   loadAdminYamlFromUrl,
   normalizeAdminYaml,
-} from "safrs-jsonapi-client";
-import type {
-  DataProvider as SafrsDataProvider,
-  Schema,
-} from "safrs-jsonapi-client";
+} from "./adminSchema";
+import type { RawAdminYaml, Schema } from "./adminSchema";
 
 import { createSearchEnabledDataProvider } from "./createSearchEnabledDataProvider";
-import type { RawAdminYaml } from "./resourceMetadata";
+import { createSafrsJsonApiDataProvider } from "./createSafrsJsonApiDataProvider";
 import {
   buildUploadFieldMap,
   createUploadAwareDataProvider,
@@ -71,62 +68,6 @@ export function useRawAdminYaml(): RawAdminYaml {
   return context.rawYaml;
 }
 
-function isSearchEnabled(value: unknown): boolean {
-  return value === true || value === "true";
-}
-
-function toSchemaResourceKey(endpoint: string | undefined): string {
-  const normalized = String(endpoint ?? "")
-    .trim()
-    .replace(/^https?:\/\/[^/]+/i, "")
-    .replace(/^\/+/, "");
-
-  if (normalized.startsWith("api/")) {
-    return normalized.slice(4);
-  }
-
-  return normalized;
-}
-
-export function adaptAdminYamlForClient(
-  rawYaml: RawAdminYaml,
-): Record<string, unknown> {
-  const resources = Object.fromEntries(
-    Object.entries(rawYaml.resources ?? {}).map(([resourceName, resource]) => [
-      toSchemaResourceKey(resource.endpoint),
-      {
-        endpoint: toSchemaResourceKey(resource.endpoint),
-        type: resourceName,
-        user_key: resource.user_key,
-        search_cols: Object.entries(resource.attributes ?? {})
-          .filter(([, attribute]) => isSearchEnabled(attribute.search))
-          .map(([name]) => ({ name })),
-        attributes: Object.entries(resource.attributes ?? {}).map(
-          ([name, attribute]) => ({
-            name,
-            type: attribute.type,
-            search: isSearchEnabled(attribute.search),
-            required: attribute.required,
-            hide_edit: attribute.readonly === true || attribute.edit === false,
-          }),
-        ),
-        tab_groups: Object.entries(resource.tab_groups ?? {}).map(
-          ([groupName, group]) => ({
-            name: groupName,
-            label: group.label,
-            relationships: [...(group.relationships ?? [])],
-          }),
-        ),
-      },
-    ]),
-  );
-
-  return {
-    ...rawYaml,
-    resources,
-  };
-}
-
 export async function loadAdminBootstrap(config: AdminAppConfig): Promise<{
   dataProvider: DataProvider;
   rawYaml: RawAdminYaml;
@@ -135,16 +76,16 @@ export async function loadAdminBootstrap(config: AdminAppConfig): Promise<{
   let rawYaml: RawAdminYaml | undefined;
 
   try {
-    rawYaml = (await loadAdminYamlFromUrl(
+    rawYaml = await loadAdminYamlFromUrl(
       config.adminYamlUrl,
       fetch,
-    )) as RawAdminYaml;
-    const clientYaml = adaptAdminYamlForClient(rawYaml);
-    const schema = normalizeAdminYaml(clientYaml) as Schema;
-    const baseProvider = createDataProviderSync({
+    );
+    const schema = normalizeAdminYaml(rawYaml) as Schema;
+    const baseProvider = createSafrsJsonApiDataProvider({
       apiRoot: config.apiRoot,
-      schema,
-    }) as unknown as SafrsDataProvider;
+      fetch,
+      resourceMap: buildAdminResourceMap(schema, rawYaml),
+    });
     const searchEnabledProvider = createSearchEnabledDataProvider({
       apiRoot: config.apiRoot,
       baseProvider,
@@ -178,13 +119,12 @@ export async function loadAdminBootstrap(config: AdminAppConfig): Promise<{
 
 Notes:
 
-- The playbook `admin.yaml` authoring shape and the current
-  `safrs-jsonapi-client` normalizer input shape are not identical.
-- `adaptAdminYamlForClient(...)` is therefore part of the required runtime
-  contract, not a project-specific optional workaround.
-- The adapter MUST preserve `tab_groups` because the runtime uses raw
-  relationship groups as authoritative UI input when normalized relationship
-  metadata is incomplete.
+- `normalizeAdminYaml(...)` is part of the required local shared-runtime
+  contract. It converts playbook `admin.yaml` authoring input into the
+  normalized resource/search metadata consumed by the runtime.
+- The runtime MUST preserve raw `tab_groups` alongside the normalized schema
+  because relationship-group ordering still comes from author-authored
+  `admin.yaml`.
 - The generated frontend test suite MUST include one direct integration test
   that calls `loadAdminBootstrap(...)`, then proves a representative scalar
   field survives through `dataProvider.getList(...)`.
@@ -194,3 +134,6 @@ Notes:
 - The shipped upload wrapper is expected to derive its mapping from raw
   `admin.yaml` upload field declarations; do not leave upload support as an
   undocumented manual integration step.
+- Keep React-Admin's `DataProvider` as the only external runtime interface
+  boundary. The schema loader, normalizer, and SAFRS JSON:API adapter stay
+  local under `src/shared-runtime/admin/`.

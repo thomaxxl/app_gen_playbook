@@ -9,7 +9,12 @@ See also:
 ```tsx
 import { useMemo } from "react";
 
-import type { Schema, SchemaAttribute, SearchCol } from "safrs-jsonapi-client";
+import type {
+  RawAdminYaml,
+  Schema,
+  SchemaAttribute,
+  SearchCol,
+} from "./adminSchema";
 
 import { useAdminSchema, useRawAdminYaml } from "./schemaContext";
 
@@ -55,10 +60,7 @@ interface RawResource {
   tab_groups?: Record<string, RawTabGroup>;
   user_key?: string;
 }
-
-export interface RawAdminYaml {
-  resources?: Record<string, RawResource>;
-}
+export type { RawAdminYaml } from "./adminSchema";
 
 export interface ResourceAttributeMeta extends SchemaAttribute {
   accept?: string;
