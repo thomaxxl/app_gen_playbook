@@ -59,6 +59,8 @@ frontend package template before treating the playbook baseline as current.
 - the related-record dialog shows `EDIT` and `VIEW`
 - generated show pages implement relationship tabs unless the run-owned UX
   artifacts explicitly disable or replace them
+- absence of related-item tabs or related-record popups is a failure unless a
+  run-owned UX artifact explicitly documents the exception
 - generated create/edit forms use responsive width heuristics instead of
   rendering all inputs full-width by default
 

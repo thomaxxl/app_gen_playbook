@@ -18,6 +18,10 @@ Relationship tabs and related-record popups are the default generated
 frontend behavior. A generated app MUST implement them unless the current run
 explicitly records a different UX decision in its run-owned artifacts.
 
+The frontend implementation lane MUST treat this as a required baseline, not
+as optional polish. If generated list or show pages omit relationship views,
+the frontend is incomplete.
+
 The runtime MUST remain functional even when normalized relationship metadata
 is partial. It MUST combine:
 

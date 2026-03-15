@@ -112,6 +112,13 @@ authoritative package/source decision record for implementation. The Frontend
 agent MUST NOT leave `safrs-jsonapi-client` unresolved while proceeding with
 implementation.
 
+The Frontend agent MUST treat relationship tabs and related-record popups as
+baseline generated-UI behavior. Silence, omission, or a thinner CRUD shell is
+not an override.
+
+The Frontend agent MUST implement related-item views for generated resources
+unless the run-owned UX artifacts explicitly replace or disable them.
+
 ## Escalation targets
 
 - `../../runs/current/role-state/architect/inbox/` for broken route, naming,
