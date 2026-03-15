@@ -47,6 +47,11 @@ The summary SHOULD be taken from a final response line starting with
 The orchestrator MUST persist its machine-readable evidence under
 `runs/current/evidence/orchestrator/`.
 
+When the orchestrator starts Codex in the background and uses `-` to request a
+prompt from standard input, it MUST redirect the prompt file into the Codex
+process explicitly. It MUST NOT rely on inherited stdin after backgrounding the
+Codex subprocess.
+
 ## Session model
 
 The orchestrator MUST maintain one Codex session record per runtime role in:

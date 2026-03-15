@@ -456,9 +456,10 @@ run_codex_command() {
   local runtime_role="$1"
   local role_cwd="$2"
   local model="$3"
-  local result_file="$4"
-  local jsonl_file="$5"
-  shift 5
+  local prompt_file="$4"
+  local result_file="$5"
+  local jsonl_file="$6"
+  shift 6
   local cmd=("$@")
 
   (
@@ -467,7 +468,7 @@ run_codex_command() {
     if [[ -n "$model" ]]; then
       full_cmd+=(--model "$model")
     fi
-    "${full_cmd[@]}" > "$jsonl_file" 2>&1
+    "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
   ) &
   local codex_pid="$!"
 
@@ -502,7 +503,7 @@ run_codex_fresh() {
   for add_dir in "${add_dirs[@]}"; do
     cmd+=(--add-dir "$add_dir")
   done
-  run_codex_command "$runtime_role" "$role_cwd" "$model" "$result_file" "$jsonl_file" "${cmd[@]}" < "$prompt_file"
+  run_codex_command "$runtime_role" "$role_cwd" "$model" "$prompt_file" "$result_file" "$jsonl_file" "${cmd[@]}"
 }
 
 run_codex_resume() {
@@ -528,7 +529,29 @@ run_codex_resume() {
   for add_dir in "${add_dirs[@]}"; do
     cmd+=(--add-dir "$add_dir")
   done
-  run_codex_command "$runtime_role" "$role_cwd" "$model" "$result_file" "$jsonl_file" "${cmd[@]}" < "$prompt_file"
+  run_codex_command "$runtime_role" "$role_cwd" "$model" "$prompt_file" "$result_file" "$jsonl_file" "${cmd[@]}"
+}
+
+extract_codex_failure_detail() {
+  local jsonl_file="$1"
+  python3 - "$jsonl_file" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+if not path.exists():
+    print("missing codex event log")
+    raise SystemExit(0)
+
+lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+if not lines:
+    print("empty codex event log")
+    raise SystemExit(0)
+
+print(lines[-1])
+PY
 }
 
 pending_actionable_count() {
@@ -620,6 +643,8 @@ run_role_once() {
   fi
 
   if [[ "$run_error" -ne 0 ]]; then
+    local process_error
+    process_error="$(extract_codex_failure_detail "$jsonl_file")"
     python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
       --repo-root "$ROOT" \
       --role "$runtime_role" \
@@ -627,7 +652,7 @@ run_role_once() {
       --claimed-message "$(basename "$message_path")" >/dev/null
     fatal_exit \
       "codex failed for role $runtime_role" \
-      "Claimed work item: ${message_base}.md"$'\n'"Codex exited non-zero before a valid final response was recorded."
+      "Claimed work item: ${message_base}.md"$'\n'"Codex exited non-zero before a valid final response was recorded."$'\n'"Error: $process_error"
   fi
 
   if ! codex_error="$(assert_codex_success "$jsonl_file" "$result_file" 2>&1)"; then
