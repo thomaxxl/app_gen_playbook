@@ -1,3 +1,3 @@
 import { makeSchemaDrivenPages } from "../../shared-runtime/resourceRegistry";
 
-export const GalleryPages = makeSchemaDrivenPages("Gallery");
+export const ServicePages = makeSchemaDrivenPages("Service");

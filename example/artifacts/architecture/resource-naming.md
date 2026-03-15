@@ -4,22 +4,26 @@
 
 | Resource | Model class | SQL table | admin.yaml key | Intended relationship names | Provisional endpoint | Discovered endpoint | Discovered wire type | Validation status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `Gallery` | `Gallery` | `galleries` | `Gallery` | `ImageAssetList`, `ShareStatusList` | `/api/Gallery` | `/api/Gallery` | `Gallery` | validated in example app |
-| `ImageAsset` | `ImageAsset` | `image_assets` | `ImageAsset` | `Gallery`, `ShareStatus` | `/api/ImageAsset` | `/api/ImageAsset` | `ImageAsset` | validated in example app |
-| `ShareStatus` | `ShareStatus` | `share_statuses` | `ShareStatus` | `ImageAssetList` | `/api/ShareStatus` | `/api/ShareStatus` | `ShareStatus` | validated in example app |
+| `Service` | `Service` | `services` | `Service` | `items` | `/api/services` | `/api/services` | `Service` | validated in preserved example |
+| `ConfigurationItem` | `ConfigurationItem` | `configuration_items` | `ConfigurationItem` | `service`, `status` | `/api/configuration_items` | `/api/configuration_items` | `ConfigurationItem` | validated in preserved example |
+| `OperationalStatus` | `OperationalStatus` | `operational_statuses` | `OperationalStatus` | `items` | `/api/operational_statuses` | `/api/operational_statuses` | `OperationalStatus` | validated in preserved example |
 
 ## Relationship naming notes
 
-- `ImageAsset` references both `Gallery` and `ShareStatus` directly.
-- `Gallery` exposes a list relationship to `ImageAsset`.
-- `ShareStatus` exposes a list relationship to `ImageAsset` because status is a
-  separate managed reference resource.
+- `ConfigurationItem` references both `Service` and `OperationalStatus`
+  directly through scalar FK fields.
+- `Service` exposes a list relationship to `ConfigurationItem` through
+  `items`.
+- `OperationalStatus` exposes a list relationship to `ConfigurationItem`
+  through `items`.
 
 ## Runtime validation notes
 
-This preserved example has already been validated against the running app.
-Fresh runs MUST still perform their own route and wire-type validation.
+This preserved example has already been validated against the generated app
+shape. Fresh runs MUST still perform their own route and wire-type validation.
 
 ## Non-starter exceptions
 
-None. This example stays within a rename-only starter shape.
+The example is intentionally non-starter. Relationship metadata therefore
+depends on explicit `admin.yaml` and fallback inference rather than starter
+resource assumptions.

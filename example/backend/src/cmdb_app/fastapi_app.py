@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.requests import Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from logic_bank.util import ConstraintException
 from safrs.fastapi.api import SafrsFastAPI
 
@@ -18,9 +17,8 @@ from .db import (
     build_session_factory,
     session_scope,
 )
-from .models import CimageValidationError, EXPOSED_MODELS, ImageAsset
+from .models import CmdbValidationError, ConfigurationItem, EXPOSED_MODELS
 from .rules import activate_logic
-from .uploads import save_uploaded_image
 
 
 def jsonapi_error_response(status_code: int, detail: str) -> JSONResponse:
@@ -41,27 +39,24 @@ def jsonapi_error_response(status_code: int, detail: str) -> JSONResponse:
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    settings.uploads_dir.mkdir(parents=True, exist_ok=True)
     engine = build_engine(settings)
     session_factory = build_session_factory(engine)
     bind_safrs_db(session_factory)
     Base.metadata.create_all(engine)
     validate_admin_schema(settings)
-    attach_session_validators(session_factory, validate_required_image_references)
+    attach_session_validators(
+        session_factory,
+        validate_required_configuration_item_references,
+    )
     activate_logic(session_factory)
     with session_scope(session_factory) as session:
         seed_reference_data(session)
 
     app = FastAPI(
-        title="Cimage Sharing and Management SAFRS API",
+        title="CMDB Operations Console SAFRS API",
         docs_url=None,
         redoc_url=None,
         openapi_url="/jsonapi.json",
-    )
-    app.mount(
-        "/media/uploads",
-        StaticFiles(directory=settings.uploads_dir),
-        name="uploaded-images",
     )
 
     @app.middleware("http")
@@ -78,10 +73,10 @@ def create_app() -> FastAPI:
     ) -> JSONResponse:
         return jsonapi_error_response(400, str(exc))
 
-    @app.exception_handler(CimageValidationError)
-    async def handle_cimage_validation_error(
+    @app.exception_handler(CmdbValidationError)
+    async def handle_cmdb_validation_error(
         _request: Request,
-        exc: CimageValidationError,
+        exc: CmdbValidationError,
     ) -> JSONResponse:
         return jsonapi_error_response(400, str(exc))
 
@@ -117,18 +112,18 @@ def create_app() -> FastAPI:
     def admin_yaml() -> FileResponse:
         return FileResponse(settings.admin_yaml_path, media_type="text/yaml")
 
-    @app.post("/api/uploads/images", status_code=201)
-    async def upload_image(file: UploadFile = File(...)) -> dict[str, object]:
-        return await save_uploaded_image(file, settings.uploads_dir)
-
     return app
 
 
-def validate_required_image_references(session, _flush_context, _instances) -> None:
+def validate_required_configuration_item_references(
+    session,
+    _flush_context,
+    _instances,
+) -> None:
     for obj in list(session.new) + list(session.dirty):
-        if not isinstance(obj, ImageAsset):
+        if not isinstance(obj, ConfigurationItem):
             continue
-        if obj.gallery_id is None:
-            raise CimageValidationError("gallery_id is required")
+        if obj.service_id is None:
+            raise CmdbValidationError("service_id is required")
         if obj.status_id is None:
-            raise CimageValidationError("status_id is required")
+            raise CmdbValidationError("status_id is required")

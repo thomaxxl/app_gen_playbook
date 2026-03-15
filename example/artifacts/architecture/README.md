@@ -1,7 +1,7 @@
-# Preserved Architecture Example: Cimage
+# Preserved Architecture Example: CMDB Operations Console
 
 This directory contains a preserved filled architecture package for the
-example Cimage app.
+example CMDB app.
 
 It exists to show the expected shape of completed architecture artifacts.
 

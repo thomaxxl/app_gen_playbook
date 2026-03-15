@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("cimage sharing smoke flow works", async ({ page, request }) => {
+test("cmdb smoke flow works", async ({ page, request }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -28,25 +28,25 @@ test("cimage sharing smoke flow works", async ({ page, request }) => {
   const adminYamlResponse = await request.get("http://127.0.0.1:5173/ui/admin/admin.yaml");
   expect(adminYamlResponse.status()).toBe(200);
 
-  const imageResponsePromise = page.waitForResponse(
+  const itemResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes("/api/image_assets") && response.status() === 200,
+      response.url().includes("/api/configuration_items") && response.status() === 200,
   );
 
   await page.goto("/admin-app/#/Home");
-  await imageResponsePromise;
+  await itemResponsePromise;
 
   await expect(
     page.getByText(/failed to initialize the schema or data provider/i),
   ).toHaveCount(0);
   await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
-  await expect(page.getByText(/cimage sharing and management/i)).toBeVisible();
+  await expect(page.getByText(/cmdb operations console/i)).toBeVisible();
 
   await page.goto("/admin-app/#/Landing");
-  await expect(page.getByText(/landing error/i)).toHaveCount(0);
+  await expect(page.getByText(/dashboard unavailable/i)).toHaveCount(0);
 
-  await page.goto("/admin-app/#/Gallery");
-  await expect(page.getByText("SEA-SET")).toBeVisible();
+  await page.goto("/admin-app/#/Service");
+  await expect(page.getByText("COMMERCE")).toBeVisible();
 
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);

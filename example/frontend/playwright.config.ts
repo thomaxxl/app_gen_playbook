@@ -5,7 +5,7 @@ import { defineConfig } from "@playwright/test";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const playwrightDbPath = path.join("/tmp", `cimage-app-playwright-${process.pid}.sqlite`);
+const playwrightDbPath = path.join("/tmp", `cmdb-app-playwright-${process.pid}.sqlite`);
 
 export default defineConfig({
   testDir: "./tests",
@@ -26,7 +26,7 @@ export default defineConfig({
     env: {
       BACKEND_HOST: "127.0.0.1",
       BACKEND_PORT: "5656",
-      CIMAGE_APP_DB_PATH: playwrightDbPath,
+      CMDB_APP_DB_PATH: playwrightDbPath,
       FRONTEND_HOST: "127.0.0.1",
       FRONTEND_PORT: "5173",
       FRONTEND_MODE: "preview",

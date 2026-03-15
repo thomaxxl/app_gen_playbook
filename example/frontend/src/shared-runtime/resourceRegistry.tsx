@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { Box, Divider, Tab, Tabs, Typography } from "@mui/material";
 import {
   AutocompleteInput,
   BooleanField,
@@ -8,18 +10,20 @@ import {
   DateField,
   DateInput,
   Edit,
+  FunctionField,
   List,
+  Loading,
   NumberField,
   NumberInput,
-  ReferenceField,
   ReferenceInput,
+  ReferenceManyField,
   Resource,
   SearchInput,
   Show,
   SimpleForm,
-  SimpleShowLayout,
   TextField,
   TextInput,
+  useRecordContext,
 } from "react-admin";
 import type { Schema } from "safrs-jsonapi-client";
 
@@ -29,10 +33,23 @@ import {
   type RawAdminYaml,
   type ResourceAttributeMeta,
   type ResourceMeta,
+  type ResourceRelationshipMeta,
   useResourceMeta,
 } from "./admin/resourceMetadata";
+import {
+  getDefaultRelationshipTabIndex,
+  getRelatedRecordLabel,
+  RelatedRecordDialogLink,
+  SingleRelationshipTab,
+} from "./relationshipUi";
 
 const DEFAULT_PAGE_SIZE = 25;
+
+type DisplayMode = "create" | "edit" | "list" | "show";
+
+type DisplayItem =
+  | { kind: "attribute"; attribute: ResourceAttributeMeta; key: string; label: string }
+  | { kind: "relationship"; key: string; label: string; relationship: ResourceRelationshipMeta };
 
 export interface ResourcePages {
   name: string;
@@ -63,28 +80,52 @@ export function makeSchemaDrivenPages(resourceName: string): ResourcePages {
   };
 }
 
-function isHidden(
-  attribute: ResourceAttributeMeta,
-  mode: "list" | "show" | "create" | "edit",
+function isTruthyFlag(value: boolean | string | undefined): boolean {
+  return value === true || value === "true";
+}
+
+function isHiddenSetting(
+  hidden: boolean | string | undefined,
+  mode: DisplayMode,
 ): boolean {
-  const explicitVisibility =
+  if (isTruthyFlag(hidden)) {
+    return true;
+  }
+
+  return typeof hidden === "string" && hidden.toLowerCase() === mode;
+}
+
+function isAttributeHidden(attribute: ResourceAttributeMeta, mode: DisplayMode): boolean {
+  if (isHiddenSetting(attribute.hidden, mode)) {
+    return true;
+  }
+
+  const explicitVisibility = (
     mode === "list"
       ? attribute.list
       : mode === "show"
         ? attribute.show
         : mode === "create"
           ? attribute.create
-          : attribute.edit;
+          : attribute.edit
+  );
 
-  if (explicitVisibility === true) {
-    return false;
-  }
+  return explicitVisibility === false;
+}
 
-  if (explicitVisibility === false) {
+function isRelationshipHidden(
+  relationship: ResourceRelationshipMeta,
+  mode: "list" | "show",
+): boolean {
+  if (isHiddenSetting(relationship.hidden, mode)) {
     return true;
   }
 
-  if (attribute.hidden === true || attribute.hidden === "true") {
+  if (mode === "list" && relationship.hideList === true) {
+    return true;
+  }
+
+  if (mode === "show" && relationship.hideShow === true) {
     return true;
   }
 
@@ -93,10 +134,10 @@ function isHidden(
 
 function visibleAttributes(
   resourceMeta: ResourceMeta,
-  mode: "list" | "show" | "create" | "edit",
-) {
+  mode: DisplayMode,
+): ResourceAttributeMeta[] {
   return resourceMeta.attributes
-    .filter((attribute) => !isHidden(attribute, mode))
+    .filter((attribute) => !isAttributeHidden(attribute, mode))
     .map((attribute, index) => ({ attribute, index }))
     .sort((left, right) => {
       const leftOrder = left.attribute.order;
@@ -119,6 +160,44 @@ function visibleAttributes(
     .map(({ attribute }) => attribute);
 }
 
+function visibleDisplayItems(
+  resourceMeta: ResourceMeta,
+  mode: "list" | "show",
+): DisplayItem[] {
+  const items: DisplayItem[] = [];
+  const emittedRelationships = new Set<string>();
+
+  for (const attribute of visibleAttributes(resourceMeta, mode)) {
+    if (
+      attribute.relationship
+      && attribute.relationship.direction === "toone"
+      && !isRelationshipHidden(attribute.relationship, mode)
+    ) {
+      if (emittedRelationships.has(attribute.relationship.name)) {
+        continue;
+      }
+
+      emittedRelationships.add(attribute.relationship.name);
+      items.push({
+        kind: "relationship",
+        key: `relationship:${attribute.relationship.name}`,
+        label: attribute.relationship.label,
+        relationship: attribute.relationship,
+      });
+      continue;
+    }
+
+    items.push({
+      kind: "attribute",
+      attribute,
+      key: `attribute:${attribute.name}`,
+      label: attribute.label,
+    });
+  }
+
+  return items;
+}
+
 function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
   const labels = resourceMeta.searchColumns.map((column) => column.label);
   if (labels.length === 0) {
@@ -133,50 +212,126 @@ function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
   return `Search ${labels.slice(0, 3).join(", ")}`;
 }
 
-function renderField(
-  attribute: ResourceAttributeMeta,
-  schema: ReturnType<typeof useAdminSchema>,
-  rawYaml: RawAdminYaml,
+function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
+  const fieldName = attribute.name.toLowerCase();
+
+  if (attribute.fullWidth || attribute.formSpan === 12) {
+    return 12;
+  }
+
+  if (attribute.formSpan != null) {
+    return attribute.formSpan;
+  }
+
+  if (attribute.widget === "textarea") {
+    return 12;
+  }
+
+  if (
+    attribute.isPrimaryKey
+    || attribute.kind === "boolean"
+    || attribute.kind === "number"
+    || fieldName.endsWith("_id")
+    || fieldName.endsWith("id")
+    || fieldName.endsWith("_code")
+    || fieldName.endsWith("code")
+    || fieldName.includes("count")
+    || fieldName.includes("total")
+    || fieldName.includes("score")
+    || fieldName.includes("value")
+    || fieldName.includes("limit")
+  ) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getTextareaRows(attribute: ResourceAttributeMeta): number {
+  return attribute.rows ?? 4;
+}
+
+function formatScalarValue(value: unknown, kind: ResourceAttributeMeta["kind"]): string {
+  if (value === undefined || value === null || value === "") {
+    return "-";
+  }
+
+  if (kind === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  return String(value);
+}
+
+function renderListField(
+  item: DisplayItem,
+  schema: Schema,
 ) {
-  if (attribute.kind === "reference" && attribute.reference) {
-    const targetMeta = buildResourceMeta(schema, rawYaml, attribute.reference);
+  if (item.kind === "relationship") {
     return (
-      <ReferenceField
-        key={attribute.name}
-        label={attribute.label}
-        reference={attribute.reference}
-        source={attribute.name}
-      >
-        <TextField source={targetMeta.userKey ?? "id"} />
-      </ReferenceField>
+      <FunctionField
+        key={item.key}
+        label={item.label}
+        render={(record: Record<string, unknown>) => (
+          <RelatedRecordDialogLink
+            parentRecord={record}
+            relationship={item.relationship}
+          />
+        )}
+      />
     );
   }
 
+  const attribute = item.attribute;
+
   if (attribute.kind === "number") {
-    return <NumberField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <NumberField key={item.key} label={item.label} source={attribute.name} />;
   }
 
   if (attribute.kind === "boolean") {
-    return <BooleanField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <BooleanField key={item.key} label={item.label} source={attribute.name} />;
   }
 
   if (attribute.kind === "date") {
-    return <DateField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <DateField key={item.key} label={item.label} source={attribute.name} />;
   }
 
-  return <TextField key={attribute.name} label={attribute.label} source={attribute.name} />;
+  return <TextField key={item.key} label={item.label} source={attribute.name} />;
 }
 
 function renderInput(
   attribute: ResourceAttributeMeta,
-  schema: ReturnType<typeof useAdminSchema>,
+  schema: Schema,
   rawYaml: RawAdminYaml,
 ) {
   if (attribute.readonly) {
     return null;
   }
 
-  if (attribute.kind === "reference" && attribute.reference) {
+  const relationship = attribute.relationship;
+  if (relationship && relationship.direction === "toone" && relationship.fks[0] === attribute.name) {
+    const targetMeta = buildResourceMeta(schema, rawYaml, relationship.targetResource);
+    return (
+      <ReferenceInput
+        key={attribute.name}
+        label={relationship.label}
+        reference={relationship.targetResource}
+        source={attribute.name}
+      >
+        <AutocompleteInput
+          fullWidth
+          label={relationship.label}
+          optionText={targetMeta.userKey ?? "id"}
+        />
+      </ReferenceInput>
+    );
+  }
+
+  if (attribute.reference) {
     const targetMeta = buildResourceMeta(schema, rawYaml, attribute.reference);
     return (
       <ReferenceInput
@@ -185,7 +340,11 @@ function renderInput(
         reference={attribute.reference}
         source={attribute.name}
       >
-        <AutocompleteInput optionText={targetMeta.userKey ?? "id"} />
+        <AutocompleteInput
+          fullWidth
+          label={attribute.label}
+          optionText={targetMeta.userKey ?? "id"}
+        />
       </ReferenceInput>
     );
   }
@@ -209,46 +368,270 @@ function renderInput(
     return <DateInput {...commonProps} />;
   }
 
+  if (attribute.widget === "textarea") {
+    return <TextInput {...commonProps} multiline minRows={getTextareaRows(attribute)} />;
+  }
+
   return <TextInput {...commonProps} />;
+}
+
+function renderFormItem(
+  attribute: ResourceAttributeMeta,
+  schema: Schema,
+  rawYaml: RawAdminYaml,
+) {
+  const input = renderInput(attribute, schema, rawYaml);
+  if (!input) {
+    return null;
+  }
+
+  return (
+    <Box
+      key={`form:${attribute.name}`}
+      sx={{
+        gridColumn: {
+          xs: "1 / -1",
+          md: `span ${getFormColumnSpan(attribute)}`,
+        },
+      }}
+    >
+      {input}
+    </Box>
+  );
+}
+
+function OverviewGrid({
+  items,
+  resourceMeta,
+}: {
+  items: DisplayItem[];
+  resourceMeta: ResourceMeta;
+}) {
+  const schema = useAdminSchema();
+  const rawYaml = useRawAdminYaml();
+  const record = useRecordContext<Record<string, unknown>>();
+
+  if (!record) {
+    return <Loading />;
+  }
+
+  return (
+    <Box>
+      <Typography sx={{ mb: 4 }} variant="h4">
+        {resourceMeta.label}{" "}
+        <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+          #{String(record.id ?? "")}
+        </Box>
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            md: "repeat(4, minmax(0, 1fr))",
+          },
+        }}
+      >
+        {items.map((item) => {
+          let value = "-";
+
+          if (item.kind === "relationship") {
+            const targetMeta = buildResourceMeta(
+              schema,
+              rawYaml,
+              item.relationship.targetResource,
+            );
+            value = getRelatedRecordLabel(record, item.relationship, targetMeta);
+          } else {
+            value = formatScalarValue(record[item.attribute.name], item.attribute.kind);
+          }
+
+          return (
+            <Box key={item.key}>
+              <Typography
+                color="text.secondary"
+                sx={{ fontWeight: 700, mb: 0.5 }}
+                variant="body2"
+              >
+                {item.label}
+              </Typography>
+              <Typography variant="body1">{value}</Typography>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
+function buildRelationshipTarget(
+  relationship: ResourceRelationshipMeta,
+  delimiter: string,
+): string {
+  return relationship.fks.length === 1
+    ? relationship.fks[0]
+    : relationship.fks.join(relationship.compositeDelimiter ?? delimiter);
+}
+
+function isBackReferenceItem(
+  item: DisplayItem,
+  relationship: ResourceRelationshipMeta,
+  parentResource: string,
+): boolean {
+  if (item.kind === "attribute") {
+    return relationship.fks.includes(item.attribute.name);
+  }
+
+  return (
+    item.relationship.targetResource === parentResource
+    && item.relationship.fks.some((fk) => relationship.fks.includes(fk))
+  );
+}
+
+function ManyRelationshipTab({
+  parentResource,
+  relationship,
+}: {
+  parentResource: string;
+  relationship: ResourceRelationshipMeta;
+}) {
+  const schema = useAdminSchema();
+  const rawYaml = useRawAdminYaml();
+  const targetMeta = useMemo(
+    () => buildResourceMeta(schema, rawYaml, relationship.targetResource),
+    [rawYaml, relationship.targetResource, schema],
+  );
+  const items = useMemo(
+    () =>
+      visibleDisplayItems(targetMeta, "list")
+        .filter((item) => !isBackReferenceItem(item, relationship, parentResource))
+        .slice(0, targetMeta.maxListColumns),
+    [parentResource, relationship, targetMeta],
+  );
+  const target = buildRelationshipTarget(relationship, schema.delimiter);
+  const sortField = targetMeta.userKey ?? targetMeta.attributes[0]?.name ?? "id";
+
+  return (
+    <ReferenceManyField
+      perPage={DEFAULT_PAGE_SIZE}
+      reference={relationship.targetResource}
+      sort={{ field: sortField, order: "ASC" }}
+      target={target}
+    >
+      <Datagrid bulkActionButtons={false} rowClick="show">
+        {items.map((item) => renderListField(item, schema))}
+      </Datagrid>
+    </ReferenceManyField>
+  );
+}
+
+function TabPanel({
+  children,
+  index,
+  value,
+}: {
+  children: ReactNode;
+  index: number;
+  value: number;
+}) {
+  return (
+    <Box hidden={value !== index} sx={{ pt: 3 }}>
+      {value === index ? children : null}
+    </Box>
+  );
+}
+
+function ShowContent({
+  resource,
+}: {
+  resource: string;
+}) {
+  const resourceMeta = useResourceMeta(resource);
+  const overviewItems = useMemo(
+    () => visibleDisplayItems(resourceMeta, "show"),
+    [resourceMeta],
+  );
+  const relationships = useMemo(
+    () =>
+      resourceMeta.relationships.filter(
+        (relationship) => !isRelationshipHidden(relationship, "show"),
+      ),
+    [resourceMeta.relationships],
+  );
+  const preferredTabIndex = useMemo(
+    () => getDefaultRelationshipTabIndex(relationships, resource),
+    [relationships, resource],
+  );
+  const [tabIndex, setTabIndex] = useState(preferredTabIndex);
+
+  useEffect(() => {
+    setTabIndex(preferredTabIndex);
+  }, [preferredTabIndex, resource]);
+
+  return (
+    <Box>
+      <OverviewGrid items={overviewItems} resourceMeta={resourceMeta} />
+      {relationships.length > 0 ? (
+        <>
+          <Divider sx={{ my: 4 }} />
+          <Tabs
+            allowScrollButtonsMobile
+            onChange={(_event, nextIndex) => setTabIndex(nextIndex)}
+            scrollButtons="auto"
+            value={tabIndex}
+            variant="scrollable"
+          >
+            {relationships.map((relationship) => (
+              <Tab key={relationship.name} label={relationship.label} />
+            ))}
+          </Tabs>
+          {relationships.map((relationship, index) => (
+            <TabPanel index={index} key={relationship.name} value={tabIndex}>
+              {relationship.direction === "tomany" ? (
+                <ManyRelationshipTab
+                  parentResource={resource}
+                  relationship={relationship}
+                />
+              ) : (
+                <SingleRelationshipTab relationship={relationship} />
+              )}
+            </TabPanel>
+          ))}
+        </>
+      ) : null}
+    </Box>
+  );
 }
 
 function SchemaDrivenList({ resource }: { resource: string }) {
   const schema = useAdminSchema();
-  const rawYaml = useRawAdminYaml();
   const resourceMeta = useResourceMeta(resource);
-  const attributes = visibleAttributes(resourceMeta, "list");
-  const filters =
-    resourceMeta.searchColumns.length > 0
-      ? [
-          <SearchInput
-            alwaysOn
-            key="q"
-            placeholder={buildSearchPlaceholder(resourceMeta)}
-            source="q"
-          />,
-        ]
-      : undefined;
+  const displayItems = visibleDisplayItems(resourceMeta, "list");
+  const filters = resourceMeta.searchColumns.length > 0
+    ? [
+        <SearchInput
+          alwaysOn
+          key="q"
+          placeholder={buildSearchPlaceholder(resourceMeta)}
+          source="q"
+        />,
+      ]
+    : undefined;
 
   return (
     <List filters={filters} perPage={DEFAULT_PAGE_SIZE}>
       <Datagrid rowClick="show">
-        {attributes.map((attribute) => renderField(attribute, schema, rawYaml))}
+        {displayItems.map((item) => renderListField(item, schema))}
       </Datagrid>
     </List>
   );
 }
 
 function SchemaDrivenShow({ resource }: { resource: string }) {
-  const schema = useAdminSchema();
-  const rawYaml = useRawAdminYaml();
-  const resourceMeta = useResourceMeta(resource);
-  const attributes = visibleAttributes(resourceMeta, "show");
-
   return (
     <Show>
-      <SimpleShowLayout>
-        {attributes.map((attribute) => renderField(attribute, schema, rawYaml))}
-      </SimpleShowLayout>
+      <ShowContent resource={resource} />
     </Show>
   );
 }
@@ -264,7 +647,18 @@ function SchemaDrivenEdit({ resource }: { resource: string }) {
   return (
     <Edit>
       <SimpleForm>
-        {attributes.map((attribute) => renderInput(attribute, schema, rawYaml))}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              md: "repeat(12, minmax(0, 1fr))",
+            },
+          }}
+        >
+          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+        </Box>
       </SimpleForm>
     </Edit>
   );
@@ -281,7 +675,18 @@ function SchemaDrivenCreate({ resource }: { resource: string }) {
   return (
     <Create>
       <SimpleForm>
-        {attributes.map((attribute) => renderInput(attribute, schema, rawYaml))}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              md: "repeat(12, minmax(0, 1fr))",
+            },
+          }}
+        >
+          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+        </Box>
       </SimpleForm>
     </Create>
   );

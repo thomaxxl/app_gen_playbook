@@ -1,7 +1,7 @@
 resources:
-  Gallery:
-    endpoint: /api/galleries
-    label: Galleries
+  Service:
+    endpoint: /api/services
+    label: Services
     user_key: code
     menu_order: 10
     attributes:
@@ -11,7 +11,7 @@ resources:
         hidden: true
       code:
         type: text
-        label: Gallery Code
+        label: Service Code
         required: true
         search: true
         order: 10
@@ -39,27 +39,27 @@ resources:
         show: true
         create: true
         edit: true
-      image_count:
+      ci_count:
         type: number
-        label: Images
+        label: Configuration Items
         readonly: true
         order: 40
         list: true
         show: true
         create: false
         edit: false
-      public_image_count:
+      operational_ci_count:
         type: number
-        label: Public Images
+        label: Operational Items
         readonly: true
         order: 50
         list: true
         show: true
         create: false
         edit: false
-      total_size_mb:
+      total_risk_score:
         type: number
-        label: Total Size (MB)
+        label: Total Risk Score
         readonly: true
         order: 60
         list: true
@@ -68,23 +68,23 @@ resources:
         edit: false
     tab_groups:
       related:
-        label: Gallery Images
+        label: Service Configuration Items
         relationships:
-          - images
+          - items
 
-  ImageAsset:
-    endpoint: /api/image_assets
-    label: Images
-    user_key: title
+  ConfigurationItem:
+    endpoint: /api/configuration_items
+    label: Configuration Items
+    user_key: hostname
     menu_order: 20
     attributes:
       id:
         type: number
         readonly: true
         hidden: true
-      title:
+      name:
         type: text
-        label: Title
+        label: Display Name
         required: true
         search: true
         order: 10
@@ -92,9 +92,9 @@ resources:
         show: true
         create: true
         edit: true
-      filename:
+      ci_class:
         type: text
-        label: Filename
+        label: CI Class
         required: true
         search: true
         order: 20
@@ -102,84 +102,95 @@ resources:
         show: true
         create: true
         edit: true
-      preview_url:
+      environment:
         type: text
-        label: Preview URL
+        label: Environment
         required: true
+        search: true
         order: 30
-        list: false
+        list: true
         show: true
         create: true
         edit: true
-      uploaded_at:
-        type: datetime
-        label: Uploaded At
+      hostname:
+        type: text
+        label: Hostname
         required: true
+        search: true
         order: 40
         list: true
         show: true
         create: true
         edit: true
-      published_at:
-        type: datetime
-        label: Published At
+      ip_address:
+        type: text
+        label: IP Address
+        required: true
         order: 50
         list: true
         show: true
         create: true
         edit: true
-      file_size_mb:
-        type: number
-        label: File Size (MB)
-        required: true
+      last_verified_at:
+        type: datetime
+        label: Last Verified At
         order: 60
         list: true
         show: true
         create: true
         edit: true
-      gallery_id:
-        type: reference
-        label: Gallery
-        reference: Gallery
+      risk_score:
+        type: number
+        label: Risk Score
         required: true
         order: 70
         list: true
         show: true
         create: true
         edit: true
-      status_id:
+      service_id:
         type: reference
-        label: Share Status
-        reference: ShareStatus
+        label: Service
+        reference: Service
         required: true
         order: 80
         list: true
         show: true
         create: true
         edit: true
-      share_status_code:
+      status_id:
+        type: reference
+        label: Operational Status
+        reference: OperationalStatus
+        required: true
+        order: 90
+        list: true
+        show: true
+        create: true
+        edit: true
+      status_code:
         type: text
         label: Status Code
         readonly: true
-        order: 90
+        order: 100
         list: false
         show: true
         create: false
         edit: false
-      is_public:
+      is_operational:
         type: boolean
-        label: Public
+        label: Operational
         readonly: true
-        order: 100
+        order: 110
         list: true
         show: true
         create: false
         edit: false
-      public_value:
+      operational_value:
         type: number
-        label: Public Value
+        label: Operational Value
         readonly: true
-        order: 110
+        order: 120
         list: false
         show: true
         create: false
@@ -188,12 +199,12 @@ resources:
       related:
         label: Related Records
         relationships:
-          - gallery
+          - service
           - status
 
-  ShareStatus:
-    endpoint: /api/share_statuses
-    label: Share Statuses
+  OperationalStatus:
+    endpoint: /api/operational_statuses
+    label: Operational Statuses
     user_key: label
     menu_order: 30
     attributes:
@@ -221,18 +232,18 @@ resources:
         show: true
         create: true
         edit: true
-      is_public:
+      is_operational:
         type: boolean
-        label: Public Release
+        label: Operational
         required: true
         order: 30
         list: true
         show: true
         create: true
         edit: true
-      public_value:
+      operational_value:
         type: number
-        label: Public Value
+        label: Operational Value
         required: true
         order: 40
         list: true
@@ -241,6 +252,6 @@ resources:
         edit: true
     tab_groups:
       related:
-        label: Related Images
+        label: Related Configuration Items
         relationships:
-          - images
+          - items

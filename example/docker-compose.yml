@@ -1,0 +1,15 @@
+services:
+  cmdb-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CMDB_APP_DB_PATH: /data/cmdb_app.sqlite
+    ports:
+      - "8000:80"
+    restart: unless-stopped
+    volumes:
+      - cmdb_app_data:/data
+
+volumes:
+  cmdb_app_data:

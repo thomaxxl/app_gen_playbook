@@ -33,7 +33,7 @@ vi.mock("../src/shared-runtime/admin/schemaContext", async () => {
 const appConfig = {
   adminYamlUrl: "/ui/admin/admin.yaml",
   apiRoot: "/api",
-  title: "Cimage Sharing and Management",
+  title: "CMDB Operations Console",
 };
 
 const bootstrapPayload = {
@@ -73,7 +73,7 @@ describe("SchemaDrivenAdminApp", () => {
         appConfig={appConfig}
         resourcePages={[
           {
-            name: "Gallery",
+            name: "Service",
             list: () => <div />,
             create: () => <div />,
             edit: () => <div />,

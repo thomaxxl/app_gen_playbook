@@ -7,9 +7,15 @@ describe("schemaContext admin.yaml adapter", () => {
   it("converts object-shaped resource attributes into the client schema format", () => {
     const adapted = adaptAdminYamlForClient({
       resources: {
-        Gallery: {
-          endpoint: "/api/galleries",
+        Service: {
+          endpoint: "/api/services",
           user_key: "code",
+          tab_groups: {
+            related: {
+              label: "Related Items",
+              relationships: ["items"],
+            },
+          },
           attributes: {
             code: {
               required: true,
@@ -33,17 +39,33 @@ describe("schemaContext admin.yaml adapter", () => {
           adapted as {
             resources: Record<string, { attributes: unknown[] }>;
           }
-        ).resources.galleries.attributes,
+        ).resources.services.attributes,
       ),
     ).toBe(true);
-    expect(schema.resourceByType.Gallery).toBe("galleries");
+    expect(schema.resourceByType.Service).toBe("services");
     expect(
-      schema.resources.galleries.attributeConfigs.map((attribute) => attribute.name),
+      schema.resources.services.attributeConfigs.map((attribute) => attribute.name),
     ).toEqual(["code", "name"]);
-    expect(schema.resources.galleries.searchCols).toEqual([
+    expect(schema.resources.services.searchCols).toEqual([
       { name: "code" },
       { name: "name" },
     ]);
-    expect(schema.resources.galleries.userKey).toBe("code");
+    expect(schema.resources.services.userKey).toBe("code");
+    expect(
+      (
+        adapted as {
+          resources: Record<
+            string,
+            { tab_groups: Array<{ label?: string; name: string; relationships: string[] }> }
+          >;
+        }
+      ).resources.services.tab_groups,
+    ).toEqual([
+      {
+        name: "related",
+        label: "Related Items",
+        relationships: ["items"],
+      },
+    ]);
   });
 });

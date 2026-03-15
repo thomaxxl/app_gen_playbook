@@ -98,7 +98,13 @@ export function adaptAdminYamlForClient(
             hide_edit: attribute.readonly === true || attribute.edit === false,
           }),
         ),
-        tab_groups: [],
+        tab_groups: Object.entries(resource.tab_groups ?? {}).map(
+          ([groupName, group]) => ({
+            name: groupName,
+            label: group.label,
+            relationships: [...(group.relationships ?? [])],
+          }),
+        ),
       },
     ]),
   );

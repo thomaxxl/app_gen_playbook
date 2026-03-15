@@ -4,17 +4,17 @@
 
 | Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `Gallery` | core CRUD | full CRUD | no | yes | dashboard consumes it | first-class | parent aggregate |
-| `ImageAsset` | core CRUD | full CRUD | no | yes | upload/dashboard behavior | first-class | workflow-heavy |
-| `ShareStatus` | reference or status | limited CRUD | no | yes | no | first-class | lookup and rule source |
+| `Service` | core CRUD | full CRUD | no | yes | dashboard consumes it | first-class | parent aggregate |
+| `ConfigurationItem` | core CRUD | full CRUD | no | yes | dashboard and relationship UI rely on it | first-class | workflow-heavy operational record |
+| `OperationalStatus` | reference or status | limited CRUD | no | yes | no | first-class | lookup and copied-field rule source |
 
 ## Singleton versus first-class decisions
 
-- `Gallery` remains first-class because users manage multiple collections.
-- `ShareStatus` remains a first-class reference resource because the app
-  exposes and validates status definitions rather than hardcoding them.
+- `Service` remains first-class because users manage multiple service rows.
+- `OperationalStatus` remains a first-class reference resource because the
+  app exposes and validates status definitions instead of hardcoding them.
 
 ## Deferred or excluded resources
 
-- no separate `User` or `Organization` resource in the preserved example
+- no separate `User` or `Team` resource in the preserved example
 - no dashboard-only aggregate resource is modeled as a standalone API resource

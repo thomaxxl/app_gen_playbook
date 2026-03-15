@@ -1,0 +1,29 @@
+# Python
+.venv/
+venv/
+backend/.deps/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+frontend/*.tsbuildinfo
+frontend/.vite/
+
+# Local runtime data
+backend/data/*.sqlite
+backend/data/*.sqlite3
+backend/data/*.db
+backend/data/uploads/
+backend/data/media/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

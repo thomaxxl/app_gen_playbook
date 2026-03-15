@@ -1,25 +1,30 @@
 # Decision Log
 
-## 2026-03-14 - Keep a rename-only lane
+## 2026-03-15 - Treat CMDB as a non-starter domain
 
-- Decision: treat the example as `rename-only` rather than `non-starter`
-- Alternatives considered: force a broader non-starter architecture package
-- Reason: the resource structure still fits the starter trio shape closely
-- Downstream consequences: starter-based templates stay usable after systematic
-  renaming
+- Decision: use the non-starter adaptation lane rather than rename-only
+- Alternatives considered: force the starter trio shape onto the domain
+- Reason: `Service`, `ConfigurationItem`, and `OperationalStatus` are not
+  rename-only substitutions of the starter example
+- Downstream consequences: explicit resource classification and relationship
+  inference matter more than starter-name replacement
 
-## 2026-03-14 - Keep `Gallery` as first-class CRUD
+## 2026-03-15 - Keep `OperationalStatus` as a first-class managed resource
 
-- Decision: `Gallery` remains a real managed resource
-- Alternatives considered: singleton gallery settings
-- Reason: the product supports multiple user-managed collections
-- Downstream consequences: CRUD pages, rules, and navigation include `Gallery`
+- Decision: `OperationalStatus` remains a real managed reference resource
+- Alternatives considered: hardcode operational posture rules into the
+  application layer
+- Reason: copied fields and validation rules are defined from managed status
+  rows
+- Downstream consequences: CRUD, relationship tabs, and copied-field rules all
+  depend on the status resource being visible and editable
 
-## 2026-03-14 - Make uploads a feature-gated capability
+## 2026-03-15 - Use relationship tabs as baseline generated UI
 
-- Decision: uploads remain an optional feature pack rather than a core contract
-- Alternatives considered: make file upload behavior part of every generated
-  app
-- Reason: many admin apps do not need file storage
-- Downstream consequences: apps only load upload templates and contracts when
-  enabled by the capability profile
+- Decision: relationship tabs and related-record popups are part of the
+  baseline UI for this example
+- Alternatives considered: show only scalar FK fields
+- Reason: operational admins need related-item visibility without leaving the
+  current record
+- Downstream consequences: shared-runtime relationship synthesis and dialog
+  rendering are required for the example to be considered valid

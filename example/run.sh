@@ -10,6 +10,12 @@ BACKEND_PORT="${BACKEND_PORT:-5656}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 FRONTEND_MODE="${FRONTEND_MODE:-preview}"
+REMOTE="${REMOTE:-}"
+
+if [[ -n "$REMOTE" ]]; then
+  BACKEND_HOST="0.0.0.0"
+  FRONTEND_HOST="0.0.0.0"
+fi
 
 DISPLAY_BACKEND_HOST="$BACKEND_HOST"
 DISPLAY_FRONTEND_HOST="$FRONTEND_HOST"
@@ -34,29 +40,29 @@ export VITE_BACKEND_ORIGIN="${VITE_BACKEND_ORIGIN:-http://${PROXY_BACKEND_HOST}:
 backend_pid=""
 frontend_pid=""
 
-activate_backend_venv() {
-  local candidate
-  for candidate in ".venv" "venv"; do
-    if [[ -f "$candidate/bin/activate" ]]; then
-      . "$candidate/bin/activate"
-      return 0
-    fi
-  done
-  return 1
-}
+require_installed_dependencies() {
+  local missing=()
 
-wait_for_first_exit() {
-  while true; do
-    if ! kill -0 "$backend_pid" 2>/dev/null; then
-      wait "$backend_pid"
-      return $?
-    fi
-    if ! kill -0 "$frontend_pid" 2>/dev/null; then
-      wait "$frontend_pid"
-      return $?
-    fi
-    sleep 1
-  done
+  if [[ ! -d "$BACKEND_DIR/.deps" ]] || [[ ! -d "$BACKEND_DIR/.deps/fastapi" ]] || [[ ! -d "$BACKEND_DIR/.deps/safrs" ]]; then
+    missing+=("backend Python dependencies in backend/.deps")
+  fi
+
+  if [[ ! -d "$FRONTEND_DIR/node_modules" ]] || [[ ! -d "$FRONTEND_DIR/node_modules/vite" ]]; then
+    missing+=("frontend npm dependencies in frontend/node_modules")
+  fi
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  {
+    echo "Dependencies are not installed."
+    for item in "${missing[@]}"; do
+      echo "- Missing $item"
+    done
+    echo "Run ./install.sh from $PROJECT_DIR before starting ./run.sh."
+  } >&2
+  exit 1
 }
 
 cleanup() {
@@ -75,6 +81,22 @@ cleanup() {
   done
 }
 
+wait_for_first_exit() {
+  while true; do
+    if [[ -n "$backend_pid" ]] && ! kill -0 "$backend_pid" 2>/dev/null; then
+      wait "$backend_pid"
+      return $?
+    fi
+
+    if [[ -n "$frontend_pid" ]] && ! kill -0 "$frontend_pid" 2>/dev/null; then
+      wait "$frontend_pid"
+      return $?
+    fi
+
+    sleep 1
+  done
+}
+
 handle_signal() {
   cleanup
   exit 130
@@ -83,11 +105,15 @@ handle_signal() {
 trap handle_signal INT TERM
 trap 'status=$?; cleanup; exit "$status"' EXIT
 
+require_installed_dependencies
+
 (
   cd "$BACKEND_DIR"
-  activate_backend_venv || true
-  export C2DB_ADMIN_HOST="$BACKEND_HOST"
-  export C2DB_ADMIN_PORT="$BACKEND_PORT"
+  if [[ -f .venv/bin/activate ]]; then
+    . .venv/bin/activate
+  fi
+  export CMDB_APP_HOST="$BACKEND_HOST"
+  export CMDB_APP_PORT="$BACKEND_PORT"
   exec python3 run.py
 ) &
 backend_pid=$!
@@ -113,6 +139,16 @@ done
 ) &
 frontend_pid=$!
 
+for _ in {1..10}; do
+  if ! kill -0 "$frontend_pid" 2>/dev/null; then
+    wait "$frontend_pid"
+    exit_code=$?
+    echo "Frontend failed to start with status $exit_code." >&2
+    exit "$exit_code"
+  fi
+  sleep 0.1
+done
+
 echo "Backend pid: $backend_pid"
 echo "Frontend pid: $frontend_pid"
 echo "Frontend mode: $FRONTEND_MODE"
@@ -121,6 +157,10 @@ echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Hom
 echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Landing"
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
+if [[ -n "$REMOTE" ]]; then
+  echo "REMOTE mode is enabled. Backend and frontend are listening on 0.0.0.0."
+  echo "Open the site from another machine by replacing 127.0.0.1 with this machine's network IP."
+fi
 
 wait_for_first_exit
 exit_code=$?

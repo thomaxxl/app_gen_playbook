@@ -1,7 +1,6 @@
-# Preserved Example: Cimage Sharing and Management App
+# Preserved Example: CMDB Operations Console
 
-This directory preserves a generated SAFRS + FastAPI + React-Admin app for
-image sharing and management under the `Cimage` product name.
+This directory preserves a generated SAFRS + FastAPI + React-Admin CMDB app.
 
 It is the current runnable example referenced by the playbook.
 
@@ -11,33 +10,40 @@ It also contains a preserved filled architecture example package under:
 
 ## Scope
 
+- `.gitignore`: standalone-repo ignore policy for the generated app
 - `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS API
 - `frontend/`: Vite + React-Admin admin app
-- `reference/admin.yaml`: frontend contract for `Gallery`, `ImageAsset`, and `ShareStatus`
+- `reference/admin.yaml`: frontend contract for `Service`,
+  `ConfigurationItem`, and `OperationalStatus`
+- `BUSINESS_RULES.md`: generated-app snapshot of the approved CMDB rules
+- `install.sh`: dependency bootstrap helper
 - `run.sh`: local launcher for backend + frontend
-- `REMARKS.md`: playbook issues observed during generation
+- `Dockerfile`: same-origin container build
+- `docker-compose.yml`: local container orchestration entrypoint
+- `entrypoint.sh` and `nginx.conf`: packaged same-origin runtime files
 - `artifacts/architecture/`: preserved filled architecture artifacts for this
   example domain
 
 ## Domain Model
 
-- `Gallery`: image collection with derived `image_count`, `public_image_count`,
-  and `total_size_mb`
-- `ImageAsset`: managed upload with gallery/status references plus copied
-  visibility fields; create/edit now support file upload
-- `ShareStatus`: release-state definitions such as draft, team-only, and public
+- `Service`: top-level managed service with derived CI counts and risk totals
+- `ConfigurationItem`: operational asset with `service` and `status`
+  relationships
+- `OperationalStatus`: managed reference table controlling copied operational
+  posture fields
 
 Implemented business rules:
 
-- `Gallery.image_count` is a derived count of related images
-- `Gallery.public_image_count` is a derived sum of public image values
-- `Gallery.total_size_mb` is a derived sum of file sizes
-- `ImageAsset.share_status_code`, `ImageAsset.is_public`, and
-  `ImageAsset.public_value` are copied from `ShareStatus`
-- Public images require `published_at`
-- `gallery_id`, `status_id`, and positive `file_size_mb` are enforced
-- Uploaded files are accepted via `POST /api/uploads/images` and served from
-  `/media/uploads/...`
+- `Service.ci_count` is the derived count of related configuration items
+- `Service.operational_ci_count` is the derived sum of related
+  `ConfigurationItem.operational_value`
+- `Service.total_risk_score` is the derived sum of related
+  `ConfigurationItem.risk_score`
+- `ConfigurationItem.status_code`, `ConfigurationItem.is_operational`, and
+  `ConfigurationItem.operational_value` are copied from `OperationalStatus`
+- production configuration items require `last_verified_at`
+- `ConfigurationItem.risk_score` must stay between `0` and `100`
+- `service_id` and `status_id` are required on create and update
 
 ## Backend
 
@@ -46,7 +52,7 @@ Recommended install on this host:
 ```bash
 cd backend
 python3 -m pip install --upgrade --target .deps -r requirements.txt
-python3 -m pip install --upgrade --target .deps --no-deps logicbank==1.30.1
+python3 -m pip install --upgrade --target .deps --no-deps logicbank
 PYTHONPATH="$PWD/.deps:$PWD/src" python3 run.py
 ```
 
@@ -61,7 +67,7 @@ Verification:
 ```bash
 cd backend
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH="$PWD/.deps:$PWD/src" python3 -m pytest -q tests/test_api_contract_fallback.py tests/test_bootstrap.py tests/test_rules.py
-CIMAGE_APP_ENABLE_TESTCLIENT=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH="$PWD/.deps:$PWD/src" python3 -m pytest -q tests/test_api_contract.py tests/test_rules.py
+CMDB_APP_ENABLE_TESTCLIENT=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH="$PWD/.deps:$PWD/src" python3 -m pytest -q tests/test_api_contract.py tests/test_rules.py
 ```
 
 ## Frontend
@@ -101,15 +107,5 @@ matches packaged route behavior.
 left sidebar with a home icon. `/admin-app/#/Landing` remains the custom
 no-layout dashboard route.
 
-## Verified In This Run
-
-- Backend passed:
-  `tests/test_api_contract_fallback.py`,
-  `tests/test_bootstrap.py`,
-  `tests/test_rules.py`,
-  `tests/test_api_contract.py`
-- Frontend passed:
-  `npm run check`,
-  `npm run test`,
-  `npm run build`
-- `npm run test:e2e` was not run
+Use `REMOTE=1 bash ./run.sh` to bind both backend and frontend to `0.0.0.0`
+for review from another machine on the same network.

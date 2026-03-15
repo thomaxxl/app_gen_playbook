@@ -9,13 +9,19 @@ import {
 
 const rawYaml = {
   resources: {
-    Gallery: {
-      endpoint: "/api/galleries",
-      label: "Galleries",
+    Service: {
+      endpoint: "/api/services",
+      label: "Services",
       user_key: "code",
+      tab_groups: {
+        related: {
+          label: "Service Configuration Items",
+          relationships: ["items"],
+        },
+      },
       attributes: {
         code: {
-          label: "Gallery Code",
+          label: "Service Code",
           required: true,
           search: true,
           type: "text",
@@ -27,10 +33,47 @@ const rawYaml = {
         },
       },
     },
-    ShareStatus: {
-      endpoint: "/api/share_statuses",
-      label: "Share Statuses",
+    ConfigurationItem: {
+      endpoint: "/api/configuration_items",
+      label: "Configuration Items",
+      user_key: "hostname",
+      tab_groups: {
+        related: {
+          label: "Related Records",
+          relationships: ["service", "status"],
+        },
+      },
+      attributes: {
+        hostname: {
+          label: "Hostname",
+          required: true,
+          search: true,
+          type: "text",
+        },
+        service_id: {
+          label: "Service",
+          reference: "Service",
+          required: true,
+          type: "reference",
+        },
+        status_id: {
+          label: "Operational Status",
+          reference: "OperationalStatus",
+          required: true,
+          type: "reference",
+        },
+      },
+    },
+    OperationalStatus: {
+      endpoint: "/api/operational_statuses",
+      label: "Operational Statuses",
       user_key: "label",
+      tab_groups: {
+        related: {
+          label: "Related Configuration Items",
+          relationships: ["items"],
+        },
+      },
       attributes: {
         code: {
           label: "Code",
@@ -53,10 +96,10 @@ describe("resourceMetadata", () => {
   it("resolves metadata by resource type when the schema is keyed by collection path", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    const resourceMeta = buildResourceMeta(schema, rawYaml, "Gallery");
+    const resourceMeta = buildResourceMeta(schema, rawYaml, "Service");
 
-    expect(resourceMeta.name).toBe("Gallery");
-    expect(resourceMeta.endpoint).toBe("/api/galleries");
+    expect(resourceMeta.name).toBe("Service");
+    expect(resourceMeta.endpoint).toBe("/api/services");
     expect(resourceMeta.userKey).toBe("code");
     expect(resourceMeta.attributes.map((attribute) => attribute.name)).toEqual([
       "code",
@@ -67,22 +110,44 @@ describe("resourceMetadata", () => {
   it("resolves search columns by resource type", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    expect(resolveSearchColumns(schema, rawYaml, "Gallery")).toEqual([
+    expect(resolveSearchColumns(schema, rawYaml, "Service")).toEqual([
       { name: "code" },
       { name: "name" },
     ]);
   });
 
-  it("resolves multi-word resources through resourceByType", () => {
+  it("synthesizes toone relationships from foreign keys and tab groups", () => {
     const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
 
-    const resourceMeta = buildResourceMeta(schema, rawYaml, "ShareStatus");
+    const itemMeta = buildResourceMeta(schema, rawYaml, "ConfigurationItem");
 
-    expect(resourceMeta.name).toBe("ShareStatus");
-    expect(resourceMeta.endpoint).toBe("/api/share_statuses");
-    expect(resolveSearchColumns(schema, rawYaml, "ShareStatus")).toEqual([
-      { name: "code" },
-      { name: "label" },
-    ]);
+    expect(itemMeta.relationshipByName.service.targetResource).toBe("Service");
+    expect(itemMeta.relationshipByName.service.direction).toBe("toone");
+    expect(itemMeta.relationshipByName.service.fks).toEqual(["service_id"]);
+    expect(itemMeta.relationshipByName.status.targetResource).toBe("OperationalStatus");
+    expect(itemMeta.relationshipByName.status.direction).toBe("toone");
+    expect(
+      itemMeta.attributes.find((attribute) => attribute.name === "service_id")?.relationship?.name,
+    ).toBe("service");
+    expect(
+      itemMeta.attributes.find((attribute) => attribute.name === "status_id")?.relationship?.name,
+    ).toBe("status");
+  });
+
+  it("infers tomany relationships from tab groups and reverse foreign keys", () => {
+    const schema = normalizeAdminYaml(adaptAdminYamlForClient(rawYaml));
+
+    const serviceMeta = buildResourceMeta(schema, rawYaml, "Service");
+    const statusMeta = buildResourceMeta(schema, rawYaml, "OperationalStatus");
+
+    expect(serviceMeta.relationshipByName.items.direction).toBe("tomany");
+    expect(serviceMeta.relationshipByName.items.targetResource).toBe("ConfigurationItem");
+    expect(serviceMeta.relationshipByName.items.fks).toEqual(["service_id"]);
+    expect(serviceMeta.relationships[0]?.label).toBe("Service Configuration Items");
+
+    expect(statusMeta.relationshipByName.items.direction).toBe("tomany");
+    expect(statusMeta.relationshipByName.items.targetResource).toBe("ConfigurationItem");
+    expect(statusMeta.relationshipByName.items.fks).toEqual(["status_id"]);
+    expect(statusMeta.relationships[0]?.label).toBe("Related Configuration Items");
   });
 });

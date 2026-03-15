@@ -40,11 +40,11 @@ def build_session_factory(engine: Engine):
 
 
 def attach_session_validators(session_factory, validator) -> None:
-    if getattr(session_factory, "_cimage_app_validator_attached", False):
+    if getattr(session_factory, "_cmdb_app_validator_attached", False):
         return
 
     event.listen(session_factory.session_factory, "before_flush", validator)
-    setattr(session_factory, "_cimage_app_validator_attached", True)
+    setattr(session_factory, "_cmdb_app_validator_attached", True)
 
 
 def bind_safrs_db(session_factory) -> None:

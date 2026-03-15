@@ -5,83 +5,91 @@ from datetime import datetime
 import yaml
 
 from .config import Settings
-from .models import Gallery, ImageAsset, ShareStatus
+from .models import ConfigurationItem, OperationalStatus, Service
 
 REQUIRED_RESOURCES = {
-    "Gallery": "/api/galleries",
-    "ImageAsset": "/api/image_assets",
-    "ShareStatus": "/api/share_statuses",
+    "Service": "/api/services",
+    "ConfigurationItem": "/api/configuration_items",
+    "OperationalStatus": "/api/operational_statuses",
 }
 
 REQUIRED_USER_KEYS = {
-    "Gallery": "code",
-    "ImageAsset": "title",
-    "ShareStatus": "label",
+    "Service": "code",
+    "ConfigurationItem": "hostname",
+    "OperationalStatus": "label",
 }
 
 REQUIRED_LABELS = {
-    "Gallery": "Galleries",
-    "ImageAsset": "Images",
-    "ShareStatus": "Share Statuses",
+    "Service": "Services",
+    "ConfigurationItem": "Configuration Items",
+    "OperationalStatus": "Operational Statuses",
 }
 
 REQUIRED_FIELDS = {
-    "Gallery": {
+    "Service": {
         "id",
         "code",
         "name",
         "owner_name",
-        "image_count",
-        "public_image_count",
-        "total_size_mb",
+        "ci_count",
+        "operational_ci_count",
+        "total_risk_score",
     },
-    "ImageAsset": {
+    "ConfigurationItem": {
         "id",
-        "title",
-        "filename",
-        "preview_url",
-        "uploaded_at",
-        "published_at",
-        "file_size_mb",
-        "gallery_id",
+        "name",
+        "ci_class",
+        "environment",
+        "hostname",
+        "ip_address",
+        "last_verified_at",
+        "risk_score",
+        "service_id",
         "status_id",
-        "share_status_code",
-        "is_public",
-        "public_value",
+        "status_code",
+        "is_operational",
+        "operational_value",
     },
-    "ShareStatus": {"id", "code", "label", "is_public", "public_value"},
+    "OperationalStatus": {
+        "id",
+        "code",
+        "label",
+        "is_operational",
+        "operational_value",
+    },
 }
 
 REQUIRED_TRUE_FIELDS = {
-    "Gallery": {"code", "name", "owner_name"},
-    "ImageAsset": {
-        "title",
-        "filename",
-        "preview_url",
-        "uploaded_at",
-        "file_size_mb",
-        "gallery_id",
+    "Service": {"code", "name", "owner_name"},
+    "ConfigurationItem": {
+        "name",
+        "ci_class",
+        "environment",
+        "hostname",
+        "ip_address",
+        "risk_score",
+        "service_id",
         "status_id",
     },
-    "ShareStatus": {"code", "label", "is_public", "public_value"},
+    "OperationalStatus": {"code", "label", "is_operational", "operational_value"},
 }
 
 REQUIRED_REFERENCE_TARGETS = {
-    "ImageAsset": {
-        "gallery_id": "Gallery",
-        "status_id": "ShareStatus",
+    "ConfigurationItem": {
+        "service_id": "Service",
+        "status_id": "OperationalStatus",
     },
 }
 
 RULE_MANAGED_READONLY_FIELDS = {
-    "Gallery": {"image_count", "public_image_count", "total_size_mb"},
-    "ImageAsset": {"share_status_code", "is_public", "public_value"},
+    "Service": {"ci_count", "operational_ci_count", "total_risk_score"},
+    "ConfigurationItem": {"status_code", "is_operational", "operational_value"},
 }
 
 EXPECTED_RELATIONSHIP_NAMES = {
-    "Gallery": {"images"},
-    "ImageAsset": {"gallery", "status"},
-    "ShareStatus": {"images"},
+    "Service": {"items"},
+    "ConfigurationItem": {"service", "status"},
+    "OperationalStatus": {"items"},
 }
 
 SEARCHABLE_TYPES = {"text"}
@@ -177,61 +185,88 @@ def validate_admin_schema(settings: Settings) -> dict:
 
 
 def seed_reference_data(session) -> None:
-    if session.query(ShareStatus).count():
+    if session.query(OperationalStatus).count():
         return
 
-    draft = ShareStatus(code="draft", label="Draft", is_public=False, public_value=0)
-    team = ShareStatus(code="team", label="Team Only", is_public=False, public_value=0)
-    public = ShareStatus(code="public", label="Public", is_public=True, public_value=1)
-    session.add_all([draft, team, public])
+    healthy = OperationalStatus(
+        code="healthy",
+        label="Healthy",
+        is_operational=True,
+        operational_value=1,
+    )
+    maintenance = OperationalStatus(
+        code="maintenance",
+        label="Maintenance",
+        is_operational=False,
+        operational_value=0,
+    )
+    retired = OperationalStatus(
+        code="retired",
+        label="Retired",
+        is_operational=False,
+        operational_value=0,
+    )
+    session.add_all([healthy, maintenance, retired])
     session.flush()
 
-    seattle = Gallery(code="SEA-SET", name="Seattle Set", owner_name="Mina Cole")
-    studio = Gallery(code="STUDIO", name="Studio Archive", owner_name="Ravi Hale")
-    session.add_all([seattle, studio])
+    commerce = Service(
+        code="COMMERCE",
+        name="Commerce Platform",
+        owner_name="Ava Patel",
+    )
+    workplace = Service(
+        code="WORKPLACE",
+        name="Workplace Systems",
+        owner_name="Nico Flores",
+    )
+    session.add_all([commerce, workplace])
     session.flush()
 
     session.add_all(
         [
-            ImageAsset(
-                title="Harbor Dawn",
-                filename="harbor-dawn.jpg",
-                preview_url="https://cdn.cimage.test/previews/harbor-dawn.jpg",
-                uploaded_at=datetime(2026, 3, 13, 9, 15, 0),
-                published_at=datetime(2026, 3, 13, 9, 30, 0),
-                file_size_mb=6.5,
-                gallery_id=seattle.id,
-                status_id=public.id,
+            ConfigurationItem(
+                name="API Gateway",
+                ci_class="Application",
+                environment="production",
+                hostname="api-gw-prod-01",
+                ip_address="10.10.20.15",
+                last_verified_at=datetime(2026, 3, 14, 8, 30, 0),
+                risk_score=4.5,
+                service_id=commerce.id,
+                status_id=healthy.id,
             ),
-            ImageAsset(
-                title="Pier Notes",
-                filename="pier-notes.png",
-                preview_url="https://cdn.cimage.test/previews/pier-notes.png",
-                uploaded_at=datetime(2026, 3, 13, 9, 45, 0),
-                published_at=None,
-                file_size_mb=4.2,
-                gallery_id=seattle.id,
-                status_id=draft.id,
+            ConfigurationItem(
+                name="Payments Primary DB",
+                ci_class="Database",
+                environment="production",
+                hostname="payments-db-prod-01",
+                ip_address="10.10.30.12",
+                last_verified_at=datetime(2026, 3, 14, 7, 55, 0),
+                risk_score=8.0,
+                service_id=commerce.id,
+                status_id=maintenance.id,
             ),
-            ImageAsset(
-                title="Backdrop Study",
-                filename="backdrop-study.jpg",
-                preview_url="https://cdn.cimage.test/previews/backdrop-study.jpg",
-                uploaded_at=datetime(2026, 3, 13, 10, 5, 0),
-                published_at=None,
-                file_size_mb=8.0,
-                gallery_id=studio.id,
-                status_id=team.id,
+            ConfigurationItem(
+                name="HR Portal",
+                ci_class="Application",
+                environment="staging",
+                hostname="hr-portal-stg-01",
+                ip_address="10.20.10.21",
+                last_verified_at=None,
+                risk_score=2.5,
+                service_id=workplace.id,
+                status_id=healthy.id,
             ),
-            ImageAsset(
-                title="Launch Poster",
-                filename="launch-poster.jpg",
-                preview_url="https://cdn.cimage.test/previews/launch-poster.jpg",
-                uploaded_at=datetime(2026, 3, 13, 10, 20, 0),
-                published_at=datetime(2026, 3, 13, 11, 0, 0),
-                file_size_mb=12.3,
-                gallery_id=studio.id,
-                status_id=public.id,
+            ConfigurationItem(
+                name="People Batch Runner",
+                ci_class="Job Runner",
+                environment="development",
+                hostname="people-batch-dev-01",
+                ip_address="10.20.40.8",
+                last_verified_at=None,
+                risk_score=6.0,
+                service_id=workplace.id,
+                status_id=retired.id,
             ),
         ]
     )

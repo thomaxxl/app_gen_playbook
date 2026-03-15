@@ -2,55 +2,58 @@
 
 ## Purpose
 
-Cimage is a SAFRS/FastAPI admin app for image sharing and management.
+CMDB Operations Console is a SAFRS/FastAPI admin app for managing services,
+configuration items, and operational-status definitions.
 
 ## Chosen app framing
 
-The preserved example is framed as an internal admin app for managing
-galleries, uploaded image assets, and release states for sharing.
+The preserved example is framed as an internal operations/admin tool with
+derived rollups and relationship-heavy inspection flows.
 
 ## Main resources
 
-- `Gallery`
-- `ImageAsset`
-- `ShareStatus`
+- `Service`
+- `ConfigurationItem`
+- `OperationalStatus`
 
 ## House-style fit
 
-This example uses the `rename-only` lane. It keeps the starter trio's
-structural intent while renaming the resources to fit the domain.
+This example uses the non-starter lane. It keeps the playbook runtime and UX
+contracts but replaces the starter domain and naming entirely.
 
 ## Frontend shape
 
 - schema-driven React-Admin CRUD pages remain the default shell
 - `/admin-app/#/Home` is the required in-admin entry page
 - `/admin-app/#/Landing` is a custom no-layout dashboard route
+- relationship tabs and related-record popups are baseline generated behavior
 
 ## Backend shape
 
 - FastAPI + SAFRS + SQLite
-- bootstrap seeds galleries and statuses
-- upload handling is enabled for images
+- bootstrap seeds services, configuration items, and operational statuses
+- derived service rollups and copied status fields are LogicBank-managed
 
 ## Rules shape
 
-- LogicBank derives gallery counts and sizes
-- LogicBank copies sharing fields from `ShareStatus` to `ImageAsset`
-- LogicBank enforces publish-time and numeric constraints
+- LogicBank derives service counts and risk totals
+- LogicBank copies operational fields from `OperationalStatus` to
+  `ConfigurationItem`
+- LogicBank enforces production verification and risk-score constraints
 
 ## Singleton versus first-class resource decisions
 
-No singleton/settings resource is used in this example. `Gallery` remains a
-first-class CRUD resource because it is user-visible and referenced by many
-images.
+No singleton/settings resource is used in this example. `Service` and
+`OperationalStatus` remain first-class resources because the app exposes and
+manages both directly.
 
 ## Custom pages
 
 - `Home.tsx` for the required in-admin entry page
-- `Landing.tsx` for dashboard-style image management summary
+- `Landing.tsx` for dashboard-style CMDB summary
 
 ## Out-of-scope architectural decisions
 
-- no external object storage
-- no multi-tenant site model
-- no public end-user frontend
+- no external CMDB sync
+- no multi-tenant ownership model
+- no public-facing site

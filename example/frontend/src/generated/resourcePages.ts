@@ -1,10 +1,10 @@
 import type { ResourcePages } from "../shared-runtime/resourceRegistry";
-import { GalleryPages } from "./resources/Gallery";
-import { ImageAssetPages } from "./resources/ImageAsset";
-import { ShareStatusPages } from "./resources/ShareStatus";
+import { ConfigurationItemPages } from "./resources/ConfigurationItem";
+import { OperationalStatusPages } from "./resources/OperationalStatus";
+import { ServicePages } from "./resources/Service";
 
 export const resourcePages: ResourcePages[] = [
-  GalleryPages,
-  ImageAssetPages,
-  ShareStatusPages,
+  ServicePages,
+  ConfigurationItemPages,
+  OperationalStatusPages,
 ];
