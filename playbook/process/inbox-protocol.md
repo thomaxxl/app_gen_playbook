@@ -70,6 +70,12 @@ Any non-`INPUT.md` inbox message should include:
 - `blocking issues`
 - `notes`
 
+Standard orchestrator-created message topics:
+
+- `recovery`
+- `handoff-correction`
+- `stall-intervention`
+
 ## Gate status values
 
 Use one of:
@@ -120,6 +126,9 @@ A handoff file with:
 - or `gate status: pass with assumptions`
 
 is the formal signal that the next phase may start.
+
+That signal is valid only when the canonical prerequisite artifacts required by
+the receiver actually exist and are not still `status: stub`.
 
 ## Completion rule
 

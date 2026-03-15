@@ -19,6 +19,9 @@ The orchestrator MUST:
 - stop and surface a clear reason when the run becomes non-progressing
 - keep the CEO role dormant unless a stall candidate is detected or the
   operator explicitly targets the CEO role
+- validate handoff inputs before dispatching the receiver
+- surface canonical output filenames to the active role at prompt time when
+  the current phase or task bundle implies them
 
 ## Logging
 
@@ -53,6 +56,10 @@ The raw stdout and stderr stream from each `codex exec` invocation MUST be
 captured in the matching per-turn JSONL file under:
 
 - `runs/current/evidence/orchestrator/jsonl/*.events.jsonl`
+
+Recovery actions SHOULD be recorded in:
+
+- `runs/current/evidence/orchestrator/recovery-log.md`
 
 The repository SHOULD provide a simple operator monitor that can tail all
 current and newly-created per-turn JSONL files concurrently.
@@ -223,6 +230,39 @@ The recovery pass MUST:
   earlier phase-0 through phase-4 canonical artifact set is complete
 - prefer recovery notes in the owning role inbox over silent automatic edits
 
+Recovery queue synthesis is a required orchestrator responsibility. When
+completion still fails and no inflight work can legally advance the run, the
+orchestrator MUST turn canonical blockers into owner-specific recovery notes
+instead of waiting passively for the queue to refill.
+
+Those recovery notes MUST:
+
+- identify the exact canonical files to create or repair
+- use canonical filenames, not semantically similar alternates
+- request downstream handoffs when the repaired artifact should reopen the next
+  gate
+
+## Handoff validation
+
+Before dispatching a claimed inbox item, the orchestrator MUST validate the
+handoff inputs.
+
+At minimum that validation MUST check:
+
+- every referenced required read exists unless the message explicitly marks it
+  as the missing output to be created by the receiver
+- referenced run-owned prerequisite artifacts are not still `status: stub`
+- task-bundle prerequisite artifacts exist and are not still `status: stub`
+- a handoff with `gate status: pass` or `pass with assumptions` does not
+  advance past missing canonical prerequisites
+
+If the handoff is invalid, the orchestrator MUST:
+
+- reject the receiver dispatch
+- create a correction note back to the sender when the sender is a normal role
+- record the rejection in `runs/current/remarks.md` and
+  `runs/current/evidence/orchestrator/recovery-log.md`
+
 ## Stall detection
 
 The orchestrator MUST detect a stalled run.
@@ -249,6 +289,19 @@ The CEO intervention path MUST:
 - either restore forward progress directly or emit the handoffs needed to
   restore progress
 - avoid becoming a normal always-on review role
+
+## Active-but-idle detection
+
+The orchestrator MUST detect "alive but not progressing" states, not only
+fully empty-queue stalls.
+
+If actionable inbox or inflight work still exists, but no recent
+`agent-start`, `agent-finish`, or worker heartbeat has occurred within the
+configured idle threshold, the orchestrator MUST:
+
+- append a diagnosis to `runs/current/remarks.md`
+- emit a visible operator log line
+- terminate non-zero instead of sleeping indefinitely
 
 The Product Manager is the default owner of run-level stall triage. The
 Product Manager MUST decide whether the run should be re-queued, corrected, or

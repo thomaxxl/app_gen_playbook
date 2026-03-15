@@ -65,3 +65,5 @@ readiness note in:
   `admin.yaml endpoint` to live-route to sample-record trace
 - the app can be explained without caveats
 - follow-up inbox notes are sent if more work is required
+- Product Manager acceptance is not started while blocked integration or drift
+  findings remain open in the Architect lane

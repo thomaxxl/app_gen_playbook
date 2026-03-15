@@ -13,6 +13,9 @@ completion note in:
 
 - `runs/current/role-state/product_manager/inbox/`
 
+This phase MUST NOT begin while Architect still has blocked integration or
+drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
+
 ## Activities
 
 - verify that the accepted app still matches the sparse-input interpretation

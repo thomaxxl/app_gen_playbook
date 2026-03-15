@@ -129,3 +129,7 @@ change users, scope, workflows, or required custom pages as product behavior.
 Process every inbox file, update owned architecture artifacts, emit needed
 handoffs, update `context.md`, then move processed inbox files into
 `processed/`.
+
+After successful Gate C, the Architect MUST emit Product Manager acceptance
+unless an implementation correction handoff is required instead. Acceptance
+MUST NOT race ahead of blocked integration or drift findings.

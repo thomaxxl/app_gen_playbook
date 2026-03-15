@@ -42,6 +42,9 @@ Gate status must be one of:
 - `pass with assumptions`
 - `blocked`
 
+If the handoff uses `pass` or `pass with assumptions`, the canonical artifact
+set listed above MUST already exist and MUST already be out of `status: stub`.
+
 ## Architect -> Frontend / Backend
 
 Complete only when:
@@ -230,6 +233,7 @@ Complete only when:
   `specs/contracts/backend/`, `specs/contracts/rules/`, and when packaging is
   in scope, `specs/contracts/deployment/`
 - follow-up findings are either fixed or explicitly handed back
+- no blocked Architect integration or drift handoff remains open
 
 Inbox target:
 

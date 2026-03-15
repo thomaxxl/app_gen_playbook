@@ -8,6 +8,9 @@ from pathlib import Path
 from orchestrator_common import (
     DISPLAY_TO_ROLE_FILE,
     RUNTIME_TO_DISPLAY,
+    canonical_artifacts_for_role_phases,
+    parse_simple_yaml,
+    phase_name_from_phase_doc,
     relpath,
     resolve_repo_root,
     owned_prefixes,
@@ -132,6 +135,43 @@ def build_read_paths(
     return dedupe_paths(read_paths)
 
 
+def build_canonical_outputs(
+    repo_root: Path,
+    runtime_role: str,
+    read_paths: list[str],
+    sections: dict[str, list[str] | str],
+) -> list[str]:
+    outputs: list[str] = []
+    phase_names: list[str] = []
+
+    for read_path in read_paths:
+        if not read_path.startswith("playbook/task-bundles/") or not read_path.endswith(".yaml"):
+            continue
+        bundle_path = repo_root / read_path
+        if not bundle_path.exists():
+            continue
+        bundle = parse_simple_yaml(bundle_path)
+        required_phase = bundle.get("required_phase", [])
+        if isinstance(required_phase, str):
+            required_phase = [required_phase]
+        for phase_doc in required_phase:
+            if not isinstance(phase_doc, str):
+                continue
+            phase_name = phase_name_from_phase_doc(phase_doc)
+            if phase_name:
+                phase_names.append(phase_name)
+
+    outputs.extend(canonical_artifacts_for_role_phases(repo_root, runtime_role, phase_names))
+
+    for value in sections.get("requested outputs", []):
+        if not isinstance(value, str):
+            continue
+        path_match = re.findall(r"(runs/current/artifacts/[A-Za-z0-9_./-]+\.md|app/[A-Za-z0-9_./-]+)", value)
+        outputs.extend(path_match)
+
+    return dedupe_paths(outputs)
+
+
 def emit_full_prompt(
     repo_root: Path,
     display_role: str,
@@ -140,6 +180,7 @@ def emit_full_prompt(
     message_path: Path,
     sections: dict[str, list[str] | str],
     read_paths: list[str],
+    canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} agent for app_gen_playbook.\n")
     print("Process exactly one inbox message:\n")
@@ -151,6 +192,11 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in allowed_write_paths(runtime_role):
         print(f"- {path}")
+
+    if canonical_outputs:
+        print("\nCanonical outputs for this turn:\n")
+        for path in canonical_outputs:
+            print(f"- {path}")
 
     print(
         "\nForbidden behavior:\n"
@@ -193,6 +239,7 @@ def emit_short_prompt(
     message_path: Path,
     sections: dict[str, list[str] | str],
     read_paths: list[str],
+    canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} runtime worker for app_gen_playbook.")
     print("Process exactly one inbox item in this turn.")
@@ -208,6 +255,11 @@ def emit_short_prompt(
     for path in allowed_write_paths(runtime_role):
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if canonical_outputs:
+        print("Canonical outputs:")
+        for path in canonical_outputs:
+            print(f"- {absolutize(repo_root, path)}")
+        print("")
     print("Hard rules:")
     print("- Read only the listed files plus directly referenced files required to complete this inbox item.")
     print("- Do not process any other inbox item.")
@@ -245,6 +297,7 @@ def main() -> int:
     message_text = message_path.read_text(encoding="utf-8")
     sections = parse_message_sections(message_text)
     read_paths = build_read_paths(repo_root, args.runtime_role, role_file, message_path, sections)
+    canonical_outputs = build_canonical_outputs(repo_root, args.runtime_role, read_paths, sections)
 
     if args.mode == "short":
         emit_short_prompt(
@@ -254,6 +307,7 @@ def main() -> int:
             message_path,
             sections,
             read_paths,
+            canonical_outputs,
         )
     else:
         emit_full_prompt(
@@ -264,6 +318,7 @@ def main() -> int:
             message_path,
             sections,
             read_paths,
+            canonical_outputs,
         )
 
     return 0

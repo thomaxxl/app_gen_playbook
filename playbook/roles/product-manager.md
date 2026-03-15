@@ -144,3 +144,10 @@ notes, update `context.md`, then move processed inbox files into `processed/`.
 If CEO later hands a stalled-run decision back into the Product lane, the
 Product Manager MUST treat that handoff like any other actionable inbox item
 and update the owned product artifacts accordingly.
+
+If Product Manager receives a stalled-run or handoff-correction follow-up, the
+turn MUST end in one of these outcomes:
+
+- owned artifact repair
+- explicit reset recommendation
+- explicit downstream re-queue note

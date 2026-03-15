@@ -278,6 +278,94 @@ def iter_required_artifact_templates(repo_root: Path) -> Iterable[tuple[str, Pat
                 yield artifact_dir, template_path
 
 
+def parse_simple_yaml(path: Path) -> dict[str, object]:
+    payload: dict[str, object] = {}
+    current_key: str | None = None
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        key_match = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$", line)
+        if key_match and not line.startswith("  "):
+            current_key = key_match.group(1)
+            value = key_match.group(2).strip()
+            if value:
+                payload[current_key] = value
+                current_key = None
+            else:
+                payload[current_key] = []
+            continue
+
+        list_match = re.match(r"^\s*-\s+(.*)$", line)
+        if list_match and current_key:
+            current_value = payload.setdefault(current_key, [])
+            if isinstance(current_value, list):
+                current_value.append(list_match.group(1).strip())
+            continue
+
+    return payload
+
+
+def phase_name_from_phase_doc(path_value: str) -> str | None:
+    name = Path(path_value).name
+    if not name.startswith("phase-") or not name.endswith(".md"):
+        return None
+    return name[:-3]
+
+
+def canonical_artifacts_for_role_phases(
+    repo_root: Path,
+    runtime_role: str,
+    phases: Iterable[str],
+) -> list[str]:
+    wanted_phases = {phase for phase in phases if phase}
+    results: list[str] = []
+    if not wanted_phases:
+        return results
+
+    for artifact_dir, template_path in iter_required_artifact_templates(repo_root):
+        metadata = parse_metadata_block(template_path)
+        owner = str(metadata.get("owner", "")).strip()
+        phase = str(metadata.get("phase", "")).strip()
+        if owner != runtime_role or phase not in wanted_phases:
+            continue
+        results.append(f"runs/current/artifacts/{artifact_dir}/{template_path.name}")
+
+    return sorted(results)
+
+
+def template_for_run_artifact(repo_root: Path, run_path: Path) -> Path | None:
+    try:
+        relative = relpath(run_path, repo_root)
+    except ValueError:
+        return None
+
+    parts = relative.split("/")
+    if len(parts) != 5 or parts[:3] != ["runs", "current", "artifacts"]:
+        return None
+
+    artifact_dir = parts[3]
+    template_dir = RUN_ARTIFACT_TEMPLATE_DIRS.get(artifact_dir)
+    if not template_dir:
+        return None
+
+    template_path = repo_root / template_dir / parts[4]
+    if template_path.exists():
+        return template_path
+    return None
+
+
+def owner_for_run_artifact(repo_root: Path, run_path: Path) -> str | None:
+    template_path = template_for_run_artifact(repo_root, run_path)
+    if template_path is None:
+        return None
+    owner = str(parse_metadata_block(template_path).get("owner", "")).strip()
+    return owner or None
+
+
 def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 

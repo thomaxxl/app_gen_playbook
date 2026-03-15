@@ -166,3 +166,8 @@ Process every inbox file, update owned `runs/current/artifacts/ux/`, frontend
 artifacts, or
 implementation, issue handoff notes as needed, update `context.md`, then move
 the processed inbox files into `processed/`.
+
+After canonical UX completion or frontend implementation readiness, the
+Frontend agent MUST emit the Architect review or implementation-readiness
+handoff required by the next gate. It MUST NOT leave the queue drained while
+the next owner has not been notified.

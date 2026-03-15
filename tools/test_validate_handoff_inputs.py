@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from validate_handoff_inputs import validate_message, write_correction_note
+
+
+def write_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_recovery_note_allows_missing_declared_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/ux/iconography.md",
+                "\n".join(
+                    [
+                        "owner: frontend",
+                        "phase: phase-3-ux-and-interaction-design",
+                        "status: stub",
+                        "",
+                        "# Iconography",
+                        "",
+                    ]
+                ),
+            )
+            write_file(repo_root / "runs/current/remarks.md", "# remarks\n")
+            write_file(
+                repo_root / "playbook/task-bundles/ux-design.yaml",
+                "\n".join(
+                    [
+                        "name: ux-design",
+                        "role: frontend",
+                    ]
+                ),
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/recovery.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: orchestrator",
+                        "to: frontend",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/remarks.md",
+                        "- playbook/task-bundles/ux-design.yaml",
+                        "- specs/ux/iconography.md",
+                        "- runs/current/artifacts/ux/iconography.md",
+                        "",
+                        "## Requested Outputs",
+                        "- create runs/current/artifacts/ux/iconography.md",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Blocking Issues",
+                        "- missing: runs/current/artifacts/ux/iconography.md",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
+    def test_invalid_handoff_generates_sender_correction_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(repo_root / "runs/current/artifacts/product/brief.md", "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n")
+            write_file(repo_root / "runs/current/remarks.md", "# remarks\n")
+            write_file(
+                repo_root / "playbook/task-bundles/frontend-implementation.yaml",
+                "\n".join(
+                    [
+                        "name: frontend-implementation",
+                        "role: frontend",
+                        "required_artifacts:",
+                        "  - runs/current/artifacts/product/brief.md",
+                        "  - runs/current/artifacts/ux/navigation.md",
+                    ]
+                ),
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: frontend",
+                        "",
+                        "## Required Reads",
+                        "- playbook/task-bundles/frontend-implementation.yaml",
+                        "- runs/current/artifacts/product/brief.md",
+                        "",
+                        "## Gate Status",
+                        "- pass",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+            self.assertFalse(report["valid"])
+            note_path = write_correction_note(repo_root, "architect", "frontend", message_path, report)
+            self.assertTrue(note_path.exists())
+            note_text = note_path.read_text(encoding="utf-8")
+            self.assertIn("repair the missing or incomplete prerequisites", note_text)
+            self.assertIn("runs/current/artifacts/ux/navigation.md", note_text)
+
+
+if __name__ == "__main__":
+    unittest.main()

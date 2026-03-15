@@ -1,6 +1,8 @@
 owner: frontend
 phase: phase-3-ux-and-interaction-design
 status: stub
+aliases:
+  - custom-view-contract.md
 depends_on:
   - ../product/custom-pages.md
   - ../product/workflows.md

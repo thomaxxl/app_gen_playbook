@@ -36,6 +36,8 @@ A feature is done only when all of these are true:
 - no core-agent inflight items remain
 - the dormant CEO lane is empty unless a stall intervention is still actively
   being resolved
+- no blocked Architect integration or drift handoff remains open while
+  acceptance is being treated as complete
 
 If packaging was explicitly in scope:
 

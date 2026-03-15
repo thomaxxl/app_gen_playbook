@@ -106,6 +106,7 @@ RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 
 POLL_SECONDS="${POLL_SECONDS:-1}"
 LEASE_SECONDS="${LEASE_SECONDS:-600}"
+IDLE_THRESHOLD_SECONDS="${IDLE_THRESHOLD_SECONDS:-300}"
 FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 LONG_MODEL="${LONG_MODEL:-}"
@@ -128,6 +129,21 @@ append_run_remark() {
     printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
     printf '%s\n' "$body"
   } >> "$remarks_file"
+}
+
+append_recovery_log() {
+  local title="$1"
+  local body="$2"
+  local recovery_file="$EVIDENCE_ROOT/recovery-log.md"
+  mkdir -p "$(dirname "$recovery_file")"
+  if [[ ! -f "$recovery_file" ]]; then
+    printf '# Recovery Log\n\n' > "$recovery_file"
+  fi
+
+  {
+    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
+    printf '%s\n' "$body"
+  } >> "$recovery_file"
 }
 
 emit_ceo_stall_note() {
@@ -179,6 +195,18 @@ log() {
   line="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"
   mkdir -p "$(dirname "$LOG_FILE")"
   printf '%s\n' "$line" | tee -a "$LOG_FILE" >&2
+}
+
+architect_blocked_integration_pending() {
+  local architect_root="$STATE_ROOT/architect"
+  local path
+  for path in "$architect_root"/inbox/*.md "$architect_root"/inflight/*.md; do
+    [[ -f "$path" ]] || continue
+    if grep -qi "blocked" "$path" && grep -Eqi "(integration|drift)" "$path"; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 set_run_status() {
@@ -239,6 +267,9 @@ attempt_ceo_intervention() {
 
   if [[ -z "$ceo_pending" ]]; then
     emit_ceo_stall_note "$reason" "$completion_detail"
+    append_recovery_log \
+      "CEO Stall Intervention Queued" \
+      "Reason:\n- $reason\n\nCompletion detail:\n$completion_detail"
   fi
 
   log "stall-ceo-intervention reason=$reason"
@@ -417,6 +448,12 @@ check_completion() {
   python3 "$ROOT/tools/check_completion.py" --repo-root "$ROOT"
 }
 
+check_orchestrator_liveness() {
+  python3 "$ROOT/tools/check_orchestrator_liveness.py" \
+    --repo-root "$ROOT" \
+    --idle-threshold-seconds "$IDLE_THRESHOLD_SECONDS"
+}
+
 recover_run_queue() {
   python3 "$ROOT/tools/recover_run_queue.py" \
     --repo-root "$ROOT" \
@@ -433,6 +470,9 @@ run_recovery_pass() {
   while IFS= read -r line; do
     [[ -n "$line" ]] || continue
     log "recovery-queued note=$line"
+    append_recovery_log \
+      "Recovery Note Emitted" \
+      "The orchestrator synthesized recovery work:\n- $line"
   done <<< "$output"
 
   return 0
@@ -621,6 +661,42 @@ pending_actionable_count() {
   find "$STATE_ROOT" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | wc -l | tr -d ' '
 }
 
+extract_json_string_field() {
+  local json_file="$1"
+  local field_name="$2"
+  python3 - "$json_file" "$field_name" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+value = payload.get(sys.argv[2], "")
+if isinstance(value, str):
+    print(value)
+else:
+    print("")
+PY
+}
+
+format_handoff_validation_blockers() {
+  local json_file="$1"
+  python3 - "$json_file" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+blockers = payload.get("blockers", [])
+for blocker in blockers:
+    if isinstance(blocker, dict):
+        print(f"- {blocker.get('message', '')}")
+PY
+}
+
 claim_message() {
   local runtime_role="$1"
   local role_dir="$STATE_ROOT/$runtime_role"
@@ -668,10 +744,33 @@ run_role_once() {
   jsonl_file="$EVIDENCE_ROOT/jsonl/${turn_key}.events.jsonl"
   snapshot_file="$EVIDENCE_ROOT/${turn_key}.snapshot.json"
   validation_file="$EVIDENCE_ROOT/${turn_key}.validation.md"
+  local handoff_validation_json="$EVIDENCE_ROOT/${turn_key}.handoff-validation.json"
 
   local model resume_id role_summary codex_error
   model="$(role_model "$runtime_role")"
   resume_id="$(session_get "$runtime_role")"
+
+  if ! python3 "$ROOT/tools/validate_handoff_inputs.py" \
+    --repo-root "$ROOT" \
+    --runtime-role "$runtime_role" \
+    --message "$message_path" \
+    --json "$handoff_validation_json" \
+    --emit-correction-note >/dev/null 2>&1; then
+    local correction_note blocker_summary processed_path
+    correction_note="$(extract_json_string_field "$handoff_validation_json" correction_note)"
+    blocker_summary="$(format_handoff_validation_blockers "$handoff_validation_json")"
+    processed_path="$role_dir/processed/$(basename "$message_path")"
+    mkdir -p "$role_dir/processed"
+    mv "$message_path" "$processed_path"
+    log "handoff-invalid role=$runtime_role message=$(basename "$processed_path") correction_note=${correction_note:-none}"
+    append_recovery_log \
+      "Invalid Handoff Rejected" \
+      "Receiver:\n- $runtime_role\n\nClaimed message:\n- $(basename "$processed_path")\n\nBlockers:\n$blocker_summary\n\nCorrection note:\n- ${correction_note:-none}"
+    append_run_remark \
+      "Invalid Handoff Rejected" \
+      "Receiver: \`$runtime_role\`\n\nClaimed message:\n- $(basename "$processed_path")\n\nBlockers:\n$blocker_summary\n\nCorrection note:\n- ${correction_note:-none}"
+    return 0
+  fi
 
   log "agent-start role=$runtime_role model=$(display_model "$model") message=$(basename "$message_path") session=${resume_id:-new}"
 
@@ -888,7 +987,7 @@ PY
 
 main_loop() {
   local parallel_started=0
-  local did_work completion_detail priority_role stall_key
+  local did_work completion_detail priority_role stall_key liveness_output
   priority_role="$TARGET_ROLE"
 
   while true; do
@@ -912,8 +1011,12 @@ main_loop() {
       priority_role=""
     fi
 
-    if run_role_once "product_manager"; then
-      did_work=1
+    if architect_blocked_integration_pending; then
+      log "product-manager-skipped reason=architect-blocked-integration"
+    else
+      if run_role_once "product_manager"; then
+        did_work=1
+      fi
     fi
 
     if run_role_once "architect"; then
@@ -966,6 +1069,14 @@ main_loop() {
         stall_exit \
           "no actionable inbox or inflight work remains while the completion gate still fails" \
           "$completion_detail"
+      fi
+      if ! liveness_output="$(check_orchestrator_liveness 2>&1)"; then
+        append_recovery_log \
+          "Active But Idle Failure" \
+          "The orchestrator remained alive but stopped making visible progress while actionable work still existed.\n\nLiveness detail:\n$liveness_output"
+        fatal_exit \
+          "orchestrator active-but-idle while actionable work remains" \
+          "The orchestrator remained alive but exceeded the idle threshold while actionable work still existed."$'\n'"Liveness detail:"$'\n'"$liveness_output"
       fi
       sleep "$POLL_SECONDS"
     fi
