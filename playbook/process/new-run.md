@@ -34,14 +34,16 @@ Required steps:
    `../../runs/current/artifacts/devops/` from the starter stub set
 12. if packaging or runtime normalization is expected for the run, ensure
     `../../runs/current/role-state/devops/` exists
-13. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
+13. ensure the dormant `../../runs/current/role-state/ceo/` lane exists for
+    stalled-run intervention, but do not seed it with active work
+14. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
-14. create local gitignored `../../app/` and seed the role-owned subtree roots:
+15. create local gitignored `../../app/` and seed the role-owned subtree roots:
     - `../../app/frontend/`
     - `../../app/backend/`
     - `../../app/rules/`
     - `../../app/reference/`
-15. seed local `../../app/` with the required generated-app root files from
+16. seed local `../../app/` with the required generated-app root files from
     `../../templates/app/project/` and `../../templates/app/deployment/`,
     including at least:
     - `.gitignore`
@@ -51,11 +53,11 @@ Required steps:
     - `BUSINESS_RULES.md` when available
     - `Dockerfile`
     - `docker-compose.yml`
-16. materialize app dependency manifests from the template sources plus the
+17. materialize app dependency manifests from the template sources plus the
     run-owned `runtime-bom.md` before any install step
-17. treat local `../../app/` as implementation workspace, not as the
+18. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
-18. when the Product business-rules catalog becomes available, seed local
+19. when the Product business-rules catalog becomes available, seed local
     `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
 
 Rules:

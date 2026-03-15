@@ -26,6 +26,10 @@ details that need more precision than the global summary.
 - DevOps owns package-management policy, runtime or toolchain packaging, and
   deployment packaging. DevOps MUST NOT silently change application semantics,
   API behavior, UX behavior, or business-rule enforcement.
+- CEO is a dormant exception role. It MUST run only for orchestrator-declared
+  stall intervention or an explicit operator request.
+- During normal execution, CEO MUST NOT be treated as an additional default
+  participant in the phase pipeline.
 
 ## Artifact discipline
 
@@ -44,6 +48,8 @@ Ownership map:
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
 - `runs/current/artifacts/devops/` -> DevOps
+- `CEO` -> no steady-state ownership; stall-only override across run-owned
+  artifacts and local `app/`
 - `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
 - `specs/contracts/backend/` -> Backend technical contracts
 - `specs/contracts/rules/` -> Backend technical contracts
@@ -61,6 +67,15 @@ Ownership map:
 - `app/.gitignore`, `app/Dockerfile`, `app/docker-compose.yml`,
   `app/nginx.conf`, `app/entrypoint.sh`, `app/install.sh`, `app/run.sh` ->
   DevOps
+
+Exception rule:
+
+- during an orchestrator-declared stall, CEO MAY temporarily assume any
+  run-owned artifact or local `app/` responsibility required to restore
+  progress
+- CEO MUST return control to the normal owner as soon as the stall is cleared
+- CEO MUST NOT use this exception to edit playbook source unless the task
+  explicitly became playbook maintenance
 
 ## Artifact metadata
 

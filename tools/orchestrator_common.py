@@ -15,6 +15,7 @@ DISPLAY_TO_RUNTIME = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "ceo": "ceo",
     "deployment": "deployment",
     "devops": "deployment",
 }
@@ -24,6 +25,7 @@ DISPLAY_TO_ROLE_FILE = {
     "architect": "playbook/roles/architect.md",
     "frontend": "playbook/roles/frontend.md",
     "backend": "playbook/roles/backend.md",
+    "ceo": "playbook/roles/ceo.md",
     "deployment": "playbook/roles/devops.md",
     "devops": "playbook/roles/devops.md",
 }
@@ -33,6 +35,7 @@ RUNTIME_TO_DISPLAY = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "ceo": "ceo",
     "deployment": "deployment",
 }
 
@@ -91,6 +94,13 @@ ROLE_OWNED_PREFIXES = {
         "app/entrypoint.sh",
         "app/install.sh",
         "app/run.sh",
+    ),
+    "ceo": (
+        "runs/current/artifacts/",
+        "runs/current/role-state/",
+        "runs/current/remarks.md",
+        "runs/current/evidence/contract-samples.md",
+        "app/",
     ),
 }
 

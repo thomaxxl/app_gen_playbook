@@ -34,6 +34,8 @@ A feature is done only when all of these are true:
   `admin.yaml endpoint` to live-route to sample-record trace
 - all core-agent inboxes are empty
 - no core-agent inflight items remain
+- the dormant CEO lane is empty unless a stall intervention is still actively
+  being resolved
 
 If packaging was explicitly in scope:
 

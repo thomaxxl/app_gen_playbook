@@ -37,3 +37,7 @@ phase_7_product_acceptance:
 deployment:
   summary: playbook/summaries/phases/phase-6.summary.md
   devops: playbook/task-bundles/deployment.yaml
+
+stall_intervention:
+  summary: playbook/summaries/process-core.md
+  ceo: playbook/task-bundles/ceo-stall-intervention.yaml

@@ -129,3 +129,5 @@ The app effort is complete only when:
 - every required artifact exists
 - no required artifact remains `status: stub`
 - all core-agent inboxes are empty
+- the dormant CEO lane is empty unless a stalled-run intervention is still
+  actively being resolved

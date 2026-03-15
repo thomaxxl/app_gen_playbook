@@ -76,7 +76,7 @@ esac
 
 if [[ -n "$TARGET_ROLE" ]]; then
   case "$TARGET_ROLE" in
-    product_manager|architect|frontend|backend|deployment) ;;
+    product_manager|architect|frontend|backend|deployment|ceo) ;;
     *)
       echo "error: unsupported runtime role: $TARGET_ROLE" >&2
       exit 2
@@ -113,6 +113,7 @@ LONG_MODEL="${LONG_MODEL:-}"
 frontend_pid=""
 backend_pid=""
 ACTIVE_CHANGE_ID=""
+LAST_STALL_SIGNATURE=""
 
 append_run_remark() {
   local title="$1"
@@ -129,27 +130,31 @@ append_run_remark() {
   } >> "$remarks_file"
 }
 
-emit_pm_stall_note() {
+emit_ceo_stall_note() {
   local reason="$1"
   local detail="$2"
   local stamp
   stamp="$(date -u +%Y%m%d-%H%M%S)"
-  local note_path="$STATE_ROOT/product_manager/inbox/${stamp}-from-orchestrator-to-product_manager-run-stall.md"
-  mkdir -p "$STATE_ROOT/product_manager/inbox"
+  local note_path="$STATE_ROOT/ceo/inbox/${stamp}-from-orchestrator-to-ceo-stall-intervention.md"
+  mkdir -p "$STATE_ROOT/ceo/inbox"
   cat > "$note_path" <<EOF
 from: orchestrator
-to: product_manager
-topic: run-stall
-purpose: triage the stalled run and decide whether work must be re-queued or the run must be reset
+to: ceo
+topic: stall-intervention
+purpose: inspect the stalled run, determine whether it is truly blocked, and restore forward progress when possible
 change_id: ${ACTIVE_CHANGE_ID}
 
 ## Required Reads
 - runs/current/remarks.md
+- runs/current/orchestrator/run-status.json
 - runs/current/evidence/orchestrator/logs/orchestrator.log
+- playbook/task-bundles/ceo-stall-intervention.yaml
+- playbook/roles/ceo.md
 
 ## Requested Outputs
-- updated PM assessment of the stall in runs/current/remarks.md
+- updated stalled-run assessment in runs/current/remarks.md
 - any required recovery or re-queue handoff notes
+- direct artifact or app repairs only if the normal owners cannot move the run forward quickly enough
 
 ## Dependencies
 - none
@@ -163,6 +168,9 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Notes
 - orchestrator detail: $detail
 - this inbox note was created automatically because the run became non-progressing
+- the CEO role MAY assume any run-owned artifact or app responsibility needed
+  to restore progress, but MUST return control to the normal owners as soon as
+  the stall is cleared
 EOF
 }
 
@@ -212,12 +220,29 @@ Observed condition:
 - the run was still incomplete
 
 Expected next owner:
-- Product Manager must triage the stalled run, decide whether work must be
-  re-queued, and determine whether the run should continue or be reset
+- CEO must triage the stalled run, decide whether work must be re-queued,
+  corrected in place, or reset
 EOF
   )
-  emit_pm_stall_note "$reason" "$completion_detail"
   fatal_exit "run stalled" "$body"
+}
+
+stall_signature() {
+  printf '%s\n%s\n' "$1" "$2"
+}
+
+attempt_ceo_intervention() {
+  local reason="$1"
+  local completion_detail="$2"
+  local ceo_pending
+  ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
+
+  if [[ -z "$ceo_pending" ]]; then
+    emit_ceo_stall_note "$reason" "$completion_detail"
+  fi
+
+  log "stall-ceo-intervention reason=$reason"
+  run_role_once "ceo"
 }
 
 role_model() {
@@ -227,6 +252,7 @@ role_model() {
     frontend) printf '%s\n' "$LONG_MODEL" ;;
     backend) printf '%s\n' "$LONG_MODEL" ;;
     deployment) printf '%s\n' "$MAIN_MODEL" ;;
+    ceo) printf '%s\n' "$MAIN_MODEL" ;;
     *) printf '%s\n' "$FAST_MODEL" ;;
   esac
 }
@@ -246,6 +272,7 @@ display_role_for_runtime() {
     frontend) printf '%s\n' "frontend" ;;
     backend) printf '%s\n' "backend" ;;
     deployment) printf '%s\n' "deployment" ;;
+    ceo) printf '%s\n' "ceo" ;;
     *) printf '%s\n' "$1" ;;
   esac
 }
@@ -257,6 +284,7 @@ role_file_for_runtime() {
     frontend) printf '%s\n' "playbook/roles/frontend.md" ;;
     backend) printf '%s\n' "playbook/roles/backend.md" ;;
     deployment) printf '%s\n' "playbook/roles/devops.md" ;;
+    ceo) printf '%s\n' "playbook/roles/ceo.md" ;;
     *) return 1 ;;
   esac
 }
@@ -293,6 +321,13 @@ role_add_dirs() {
       printf '%s\n' \
         "$RUN_ROOT/artifacts/devops" \
         "$STATE_ROOT" \
+        "$ROOT/app"
+      ;;
+    ceo)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts" \
+        "$STATE_ROOT" \
+        "$RUN_ROOT" \
         "$ROOT/app"
       ;;
   esac
@@ -853,7 +888,7 @@ PY
 
 main_loop() {
   local parallel_started=0
-  local did_work completion_detail priority_role
+  local did_work completion_detail priority_role stall_key
   priority_role="$TARGET_ROLE"
 
   while true; do
@@ -907,10 +942,26 @@ main_loop() {
       backend_pid="$(ensure_worker_running backend "$backend_pid" product_manager architect frontend)"
     fi
 
+    if [[ "$did_work" -eq 1 ]]; then
+      LAST_STALL_SIGNATURE=""
+    fi
+
     if [[ "$did_work" -eq 0 ]]; then
       if [[ "$(pending_actionable_count)" -eq 0 ]]; then
         if run_recovery_pass; then
+          LAST_STALL_SIGNATURE=""
           continue
+        fi
+        stall_key="$(stall_signature \
+          "no actionable inbox or inflight work remains while the completion gate still fails" \
+          "$completion_detail")"
+        if [[ "$LAST_STALL_SIGNATURE" != "$stall_key" ]]; then
+          if attempt_ceo_intervention \
+            "no actionable inbox or inflight work remains while the completion gate still fails" \
+            "$completion_detail"; then
+            LAST_STALL_SIGNATURE="$stall_key"
+            continue
+          fi
         fi
         stall_exit \
           "no actionable inbox or inflight work remains while the completion gate still fails" \

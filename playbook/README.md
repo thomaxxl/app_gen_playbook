@@ -30,6 +30,8 @@ Path rule:
   approved business-rules catalog
 - accepted artifacts MAY later be copied into local `../app/docs/`
 - local generated-app implementation output lives under gitignored `../app/`
+- a dormant CEO recovery role MAY intervene only when the orchestrator detects
+  a stalled run
 
 Capability rule:
 

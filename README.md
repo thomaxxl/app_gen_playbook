@@ -73,6 +73,8 @@ For a new run:
 
 3. The orchestrator creates local `runs/current/`, seeds the Product Manager
    inbox, and advances the run through the defined roles.
+   If the run appears stalled, the orchestrator may invoke the dormant CEO
+   recovery role to inspect progress and restore forward motion.
 4. The generated app is built locally under `app/`.
 5. A preserved runnable reference remains available under `example/`.
 

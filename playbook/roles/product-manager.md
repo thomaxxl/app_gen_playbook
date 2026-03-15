@@ -13,7 +13,6 @@ incomplete briefs into explicit product artifacts.
 
 - product framing
 - sparse-input interpretation
-- run-level stall triage when the orchestrator reports a non-progressing run
 - resource inventory and CRUD expectations
 - user stories and workflows
 - human-readable business-rule intent
@@ -142,10 +141,6 @@ The Product Manager MUST:
 Process every inbox file, update owned product artifacts, write needed handoff
 notes, update `context.md`, then move processed inbox files into `processed/`.
 
-If the orchestrator reports a stalled run through `runs/current/remarks.md` or
-an orchestrator-created Product Manager inbox note, the Product Manager MUST:
-
-- confirm whether the run is missing actionable handoffs or missing owned
-  artifacts
-- decide whether the run should be re-queued, corrected in place, or reset
-- record that decision in `runs/current/remarks.md`
+If CEO later hands a stalled-run decision back into the Product lane, the
+Product Manager MUST treat that handoff like any other actionable inbox item
+and update the owned product artifacts accordingly.

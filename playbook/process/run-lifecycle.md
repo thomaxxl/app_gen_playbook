@@ -164,3 +164,6 @@ When a run is complete:
 - local `../../app/docs/` MAY contain promoted accepted copies of those artifacts
 - `../../runs/current/evidence/` SHOULD contain verification summaries
 - all core-agent inboxes under `../../runs/current/role-state/` MUST be empty
+- the dormant `ceo` lane SHOULD normally remain empty and MAY contain work
+  only when the orchestrator detected a stall or the operator explicitly
+  invoked CEO recovery

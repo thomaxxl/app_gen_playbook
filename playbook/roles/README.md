@@ -17,6 +17,7 @@ Role files:
 - [architect.md](architect.md)
 - [frontend.md](frontend.md)
 - [backend.md](backend.md)
+- [ceo.md](ceo.md)
 - [devops.md](devops.md)
 - [deployment.md](deployment.md)
 - [shared-responsibilities.md](shared-responsibilities.md)
@@ -27,12 +28,15 @@ Role summaries:
 - [../summaries/roles/architect.summary.md](../summaries/roles/architect.summary.md)
 - [../summaries/roles/frontend.summary.md](../summaries/roles/frontend.summary.md)
 - [../summaries/roles/backend.summary.md](../summaries/roles/backend.summary.md)
+- [../summaries/roles/ceo.summary.md](../summaries/roles/ceo.summary.md)
 - [../summaries/roles/devops.summary.md](../summaries/roles/devops.summary.md)
 
 Role naming rule:
 
 - `devops.md` is the canonical optional packaging role
 - `deployment.md` is a compatibility alias only
+- `ceo.md` is a dormant exception role for orchestrator-declared stall
+  intervention only
 
 All role execution MUST follow the capability-gating rules in:
 
@@ -43,6 +47,7 @@ All role execution MUST follow the capability-gating rules in:
 - [../process/read-sets/architect-core.md](../process/read-sets/architect-core.md)
 - [../process/read-sets/frontend-core.md](../process/read-sets/frontend-core.md)
 - [../process/read-sets/backend-core.md](../process/read-sets/backend-core.md)
+- [../process/read-sets/ceo-core.md](../process/read-sets/ceo-core.md)
 - [../process/read-sets/devops-core.md](../process/read-sets/devops-core.md)
 
 Each role MUST read the current run's:

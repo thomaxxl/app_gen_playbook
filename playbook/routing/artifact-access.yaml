@@ -42,6 +42,15 @@ backend:
     - runs/current/artifacts/ux/**
     - runs/current/artifacts/devops/**
 
+ceo:
+  write:
+    - runs/current/artifacts/**
+    - runs/current/role-state/**
+    - runs/current/remarks.md
+    - runs/current/evidence/contract-samples.md
+    - app/**
+  read_only: []
+
 devops:
   write:
     - runs/current/artifacts/devops/**

@@ -20,6 +20,9 @@ These instructions apply to the `app_gen_playbook` repository.
 - Do not silently edit another role's artifact area. Emit a handoff instead.
 - Do not bypass `runs/current/` inbox traces just because execution is
   orchestrated or single-operator.
+- The `ceo` role is a stall-only exception role. Do not load or invoke it
+  unless the orchestrator has identified a stall candidate or the operator
+  explicitly targets that role.
 
 ## Capability And Loading Rules
 

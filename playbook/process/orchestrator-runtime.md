@@ -17,6 +17,8 @@ The orchestrator MUST:
 - use Codex session resume only as a speed and continuity layer
 - log visible start and finish lines for every agent turn
 - stop and surface a clear reason when the run becomes non-progressing
+- keep the CEO role dormant unless a stall candidate is detected or the
+  operator explicitly targets the CEO role
 
 ## Logging
 
@@ -235,8 +237,18 @@ A run is stalled when all of the following are true:
 When a stall is detected, the orchestrator MUST:
 
 - append a human-readable diagnosis to `runs/current/remarks.md`
-- create a Product Manager inbox note describing the stall
-- exit non-zero instead of sleeping forever
+- create a CEO inbox note describing the stall
+- invoke the CEO role once before deciding the run is irrecoverable
+- terminate non-zero only if the CEO intervention does not restore forward
+  progress
+
+The CEO intervention path MUST:
+
+- start by checking whether the run is actually blocked or merely slow
+- load broad context only because the orchestrator explicitly declared a stall
+- either restore forward progress directly or emit the handoffs needed to
+  restore progress
+- avoid becoming a normal always-on review role
 
 The Product Manager is the default owner of run-level stall triage. The
 Product Manager MUST decide whether the run should be re-queued, corrected, or

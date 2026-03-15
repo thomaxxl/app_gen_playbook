@@ -44,6 +44,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [summaries/roles/architect.summary.md](summaries/roles/architect.summary.md)
 - [summaries/roles/frontend.summary.md](summaries/roles/frontend.summary.md)
 - [summaries/roles/backend.summary.md](summaries/roles/backend.summary.md)
+- [summaries/roles/ceo.summary.md](summaries/roles/ceo.summary.md)
 - [summaries/roles/devops.summary.md](summaries/roles/devops.summary.md)
 
 ## Routing manifests
@@ -65,6 +66,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [task-bundles/integration-review.yaml](task-bundles/integration-review.yaml)
 - [task-bundles/acceptance-review.yaml](task-bundles/acceptance-review.yaml)
 - [task-bundles/deployment.yaml](task-bundles/deployment.yaml)
+- [task-bundles/ceo-stall-intervention.yaml](task-bundles/ceo-stall-intervention.yaml)
 - [task-bundles/change-intake.yaml](task-bundles/change-intake.yaml)
 - [task-bundles/change-impact-analysis.yaml](task-bundles/change-impact-analysis.yaml)
 - [task-bundles/change-frontend-delta.yaml](task-bundles/change-frontend-delta.yaml)

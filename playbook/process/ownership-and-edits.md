@@ -10,6 +10,8 @@ Ownership map:
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
 - `runs/current/artifacts/devops/` -> DevOps
+- `CEO` -> no steady-state artifact ownership; stall-only emergency override
+  across run-owned artifacts and local `app/`
 - `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
 - `specs/contracts/backend/` -> Backend technical contracts
 - `specs/contracts/rules/` -> Backend technical contracts
@@ -23,6 +25,16 @@ Rules:
 - only the owning role may directly edit files in its artifact area
 - non-owning roles must request changes through inbox handoff unless
   ownership is explicitly delegated
+- exception: during an orchestrator-declared stall intervention, the CEO MAY
+  temporarily edit any file under `runs/current/artifacts/`, any role lane
+  under `runs/current/role-state/`, `runs/current/remarks.md`, and any local
+  `app/` subtree needed to restore progress
+- the CEO emergency override MUST NOT be used during normal phase execution
+- the CEO emergency override MUST NOT edit playbook source, `specs/`, or
+  `templates/` unless the task is explicitly playbook maintenance
+- after a successful stall intervention, the CEO SHOULD hand ownership back to
+  the normal role through inbox notes or direct completion of the blocked
+  artifact
 - exception: a receiving or gate-owning review role MAY perform a metadata-only
   edit in another role's artifact file when setting review state such as
   `approved`, `blocked`, `superseded`, `unresolved`, or `last_updated_by`

@@ -13,6 +13,7 @@ RUNTIME_ROLE_DIRS = (
     "architect",
     "frontend",
     "backend",
+    "ceo",
     "deployment",
 )
 
@@ -30,6 +31,7 @@ ROLE_LOCAL_AGENTS_RULES = {
     "architect": "resolve contract drift through architecture artifacts and inbox handoffs before implementation proceeds",
     "frontend": "treat relationship tabs and related-record popups as baseline behavior unless run-owned UX artifacts explicitly override them",
     "backend": "treat backend route discovery and admin.yaml reconciliation as mandatory before claiming frontend stability",
+    "ceo": "stay dormant unless the run appears stalled, then inspect the full run state and restore progress without weakening the normal ownership model",
     "deployment": "do not change application semantics while implementing packaging or runtime normalization",
 }
 

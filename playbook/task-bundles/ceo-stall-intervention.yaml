@@ -1,0 +1,20 @@
+name: ceo-stall-intervention
+role: ceo
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/ceo.summary.md
+  - playbook/process/read-sets/ceo-core.md
+required_artifacts:
+  - runs/current/remarks.md
+  - runs/current/artifacts/architecture/capability-profile.md
+  - runs/current/artifacts/architecture/load-plan.md
+reference_only:
+  - runs/current/orchestrator/run-status.json
+  - runs/current/evidence/orchestrator/logs/orchestrator.log
+writable_targets:
+  - runs/current/artifacts/**
+  - runs/current/role-state/**
+  - runs/current/remarks.md
+  - runs/current/evidence/contract-samples.md
+  - app/**

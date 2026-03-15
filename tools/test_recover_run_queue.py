@@ -70,7 +70,7 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_template(repo_root / "specs/architecture/integration-review.md", "architect", "phase-6-integration-review")
             write_template(repo_root / "specs/product/acceptance-review.md", "product_manager", "phase-7-product-acceptance")
 
-            for role in ("product_manager", "architect", "frontend", "backend", "deployment"):
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
             targets = select_recovery_targets(repo_root)
@@ -89,7 +89,7 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_template(repo_root / "specs/product/brief.md", "product_manager", "phase-1-product-definition")
             write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
             write_template(repo_root / "specs/architecture/integration-review.md", "architect", "phase-6-integration-review")
-            for role in ("product_manager", "architect", "frontend", "backend", "deployment"):
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
             write_run_artifact(repo_root / "runs/current/artifacts/product/brief.md")
@@ -107,7 +107,7 @@ class RecoverRunQueueTests(unittest.TestCase):
             (repo_root / ".git").mkdir()
             write_template(repo_root / "specs/product/acceptance-review.md", "product_manager", "phase-7-product-acceptance")
             write_template(repo_root / "specs/architecture/integration-review.md", "architect", "phase-6-integration-review")
-            for role in ("product_manager", "architect", "frontend", "backend", "deployment"):
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
             write_run_artifact(repo_root / "runs/current/artifacts/architecture/integration-review.md")
@@ -127,7 +127,7 @@ class RecoverRunQueueTests(unittest.TestCase):
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
             write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
-            for role in ("product_manager", "architect", "frontend", "backend", "deployment"):
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
             targets = select_recovery_targets(repo_root)

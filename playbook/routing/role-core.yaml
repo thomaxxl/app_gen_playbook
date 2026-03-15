@@ -75,6 +75,25 @@ backend:
     - runs/current/artifacts/devops/**
     - app/frontend/**
 
+ceo:
+  always_load:
+    - playbook/summaries/global-core.md
+    - playbook/summaries/process-core.md
+    - playbook/summaries/roles/ceo.summary.md
+    - playbook/roles/shared-responsibilities.md
+    - playbook/process/read-sets/ceo-core.md
+  writable:
+    - runs/current/artifacts/**
+    - runs/current/role-state/**
+    - runs/current/remarks.md
+    - runs/current/evidence/contract-samples.md
+    - app/**
+  cannot_write:
+    - playbook/**
+    - specs/**
+    - templates/**
+    - example/**
+
 devops:
   always_load:
     - playbook/summaries/global-core.md
