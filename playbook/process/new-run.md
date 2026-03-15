@@ -36,7 +36,11 @@ Required steps:
     `../../runs/current/role-state/devops/` exists
 13. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
-14. create local gitignored `../../app/`
+14. create local gitignored `../../app/` and seed the role-owned subtree roots:
+    - `../../app/frontend/`
+    - `../../app/backend/`
+    - `../../app/rules/`
+    - `../../app/reference/`
 15. seed local `../../app/` with the required generated-app root files from
     `../../templates/app/project/` and `../../templates/app/deployment/`,
     including at least:

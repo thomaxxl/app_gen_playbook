@@ -30,6 +30,10 @@ phase_6_integration_review:
   summary: playbook/summaries/phases/phase-6.summary.md
   architect: playbook/task-bundles/integration-review.yaml
 
+phase_7_product_acceptance:
+  summary: playbook/summaries/phases/phase-7.summary.md
+  product_manager: playbook/task-bundles/acceptance-review.yaml
+
 deployment:
   summary: playbook/summaries/phases/phase-6.summary.md
   devops: playbook/task-bundles/deployment.yaml

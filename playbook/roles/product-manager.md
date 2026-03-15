@@ -54,6 +54,10 @@ The runtime directory contains:
 - [../task-bundles/phase-1-product-definition.yaml](../task-bundles/phase-1-product-definition.yaml)
 - [../../specs/product/README.md](../../specs/product/README.md)
 
+### Load for phase 7
+
+- [../task-bundles/acceptance-review.yaml](../task-bundles/acceptance-review.yaml)
+
 ### Load when artifact exists
 
 - [../../runs/current/artifacts/product/acceptance-review.md](../../runs/current/artifacts/product/acceptance-review.md)

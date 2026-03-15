@@ -25,6 +25,10 @@ These templates MUST be treated as structured artifact skeletons, not as
 one-line prompts. The Frontend role MUST preserve their section structure when
 creating the run-owned copies under `../../runs/current/artifacts/ux/`.
 
+`iconography.md` is a required run-owned UX artifact for generated apps. It
+MUST be created even when the run keeps the default icon wrapper or default
+MUI icon family.
+
 The run-owned UX artifacts produced from these templates MUST capture:
 
 - entry-page strategy, primary CTA hierarchy, and proof/reassurance structure

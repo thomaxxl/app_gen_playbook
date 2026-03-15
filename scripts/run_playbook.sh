@@ -392,13 +392,15 @@ run_recovery_pass() {
   local output
   output="$(recover_run_queue 2>/dev/null || true)"
   if [[ -z "$output" ]]; then
-    return 0
+    return 1
   fi
 
   while IFS= read -r line; do
     [[ -n "$line" ]] || continue
     log "recovery-queued note=$line"
   done <<< "$output"
+
+  return 0
 }
 
 validate_role_turn() {
@@ -862,9 +864,11 @@ main_loop() {
       break
     fi
 
-    run_recovery_pass
-
     did_work=0
+
+    if run_recovery_pass; then
+      did_work=1
+    fi
 
     if [[ -n "$priority_role" ]]; then
       if run_role_once "$priority_role"; then
@@ -905,6 +909,9 @@ main_loop() {
 
     if [[ "$did_work" -eq 0 ]]; then
       if [[ "$(pending_actionable_count)" -eq 0 ]]; then
+        if run_recovery_pass; then
+          continue
+        fi
         stall_exit \
           "no actionable inbox or inflight work remains while the completion gate still fails" \
           "$completion_detail"

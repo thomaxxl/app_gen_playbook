@@ -151,6 +151,9 @@ instead of scattering unrelated input-level validators.
 - `runs/current/artifacts/ux/` artifacts for Phase 3
 - `runs/current/artifacts/ux/landing-strategy.md` as the source of truth for
   the entry-page CTA hierarchy and proof structure
+- `runs/current/artifacts/ux/iconography.md` as the required record of the
+  visible icon-system choice and icon mapping, even when the default wrapper
+  behavior is retained
 - handoff notes to `../../runs/current/role-state/architect/inbox/` when contracts break
 - coordination notes to `../../runs/current/role-state/backend/inbox/` when backend support is missing
 - readiness or completion notes to `../../runs/current/role-state/architect/inbox/` for integration review

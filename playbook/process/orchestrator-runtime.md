@@ -134,6 +134,11 @@ before the Codex turn starts.
 The role turn is complete only when the claimed item leaves `inflight/` and is
 archived to `processed/`.
 
+If the orchestrator synthesizes a recovery inbox note for a missing canonical
+artifact, that queued note MUST count as useful progress for the current
+control cycle. The orchestrator MUST NOT declare a stall in the same cycle
+that it successfully re-queued recovery work.
+
 ## Writable-root rule
 
 When the orchestrator starts Codex from a role-local runtime directory under
@@ -150,6 +155,17 @@ At minimum, the orchestrator MUST grant:
 The orchestrator MUST NOT assume that starting Codex inside
 `runs/current/role-state/<role>/` automatically grants write access to sibling
 artifact or inbox paths.
+
+The local generated-app workspace MUST also contain the role-owned subtree
+roots before implementation starts. At minimum, a new run MUST seed:
+
+- `app/frontend/`
+- `app/backend/`
+- `app/rules/`
+- `app/reference/`
+
+The orchestrator MUST NOT rely on `--add-dir` for a non-existent path and then
+expect the role to create that path later.
 
 ## Phase-aware scheduling
 

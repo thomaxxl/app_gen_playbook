@@ -9,6 +9,7 @@ from pathlib import Path
 from orchestrator_common import (
     DISPLAY_TO_RUNTIME,
     CORE_DISPLAY_ROLES,
+    RUN_ARTIFACT_TEMPLATE_DIRS,
     iter_required_artifact_templates,
     parse_metadata_block,
     resolve_repo_root,
@@ -61,6 +62,39 @@ ROLE_PURPOSE = {
     "deployment": (
         "restore progress by completing missing optional devops artifacts when "
         "the deployment lane is active"
+    ),
+}
+
+PHASE_REQUIRED_READS = {
+    "phase-1-product-definition": (
+        "playbook/task-bundles/phase-1-product-definition.yaml",
+        "playbook/process/phases/phase-1-product-definition.md",
+        "specs/product/README.md",
+    ),
+    "phase-2-architecture-contract": (
+        "playbook/task-bundles/phase-2-architecture-contract.yaml",
+        "playbook/process/phases/phase-2-architecture-contract.md",
+        "specs/architecture/README.md",
+    ),
+    "phase-3-ux-and-interaction-design": (
+        "playbook/task-bundles/ux-design.yaml",
+        "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+        "specs/ux/README.md",
+    ),
+    "phase-4-backend-design-and-rules-mapping": (
+        "playbook/task-bundles/backend-design.yaml",
+        "playbook/process/phases/phase-4-backend-design-and-rules-mapping.md",
+        "specs/backend-design/README.md",
+    ),
+    "phase-6-integration-review": (
+        "playbook/task-bundles/integration-review.yaml",
+        "playbook/process/phases/phase-6-integration-review.md",
+        "specs/architecture/integration-review.md",
+    ),
+    "phase-7-product-acceptance": (
+        "playbook/task-bundles/acceptance-review.yaml",
+        "playbook/process/phases/phase-7-product-acceptance.md",
+        "specs/product/acceptance-review.md",
     ),
 }
 
@@ -137,6 +171,22 @@ def collect_artifact_needs(repo_root: Path) -> list[ArtifactNeed]:
     return needs
 
 
+def template_path_for_need(repo_root: Path, need: ArtifactNeed) -> Path | None:
+    parts = need.path.relative_to(repo_root).parts
+    if len(parts) < 5:
+        return None
+
+    artifact_dir = parts[3]
+    template_dir = RUN_ARTIFACT_TEMPLATE_DIRS.get(artifact_dir)
+    if not template_dir:
+        return None
+
+    template_path = repo_root / template_dir / need.path.name
+    if template_path.exists():
+        return template_path
+    return None
+
+
 def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNeed], role: str) -> bool:
     if phase in EARLY_PHASES:
         return True
@@ -183,6 +233,24 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
 
 def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], change_id: str) -> str:
     phase_labels = sorted({need.phase for need in needs}, key=lambda phase: PHASE_ORDER.get(phase, 99))
+    required_reads: list[str] = ["runs/current/remarks.md"]
+
+    for phase in phase_labels:
+        required_reads.extend(PHASE_REQUIRED_READS.get(phase, ()))
+
+    for need in needs:
+        template_path = template_path_for_need(repo_root, need)
+        if template_path is not None:
+            required_reads.append(template_path.relative_to(repo_root).as_posix())
+        required_reads.append(need.path.relative_to(repo_root).as_posix())
+
+    seen_reads: set[str] = set()
+    ordered_reads: list[str] = []
+    for item in required_reads:
+        if item not in seen_reads:
+            seen_reads.add(item)
+            ordered_reads.append(item)
+
     lines: list[str] = [
         "from: orchestrator",
         f"to: {ROLE_LABELS[role]}",
@@ -191,11 +259,10 @@ def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], 
         f"change_id: {change_id}",
         "",
         "## Required Reads",
-        "- runs/current/remarks.md",
     ]
 
-    for need in needs:
-        lines.append(f"- {need.path.relative_to(repo_root).as_posix()}")
+    for item in ordered_reads:
+        lines.append(f"- {item}")
 
     lines.extend(
         [

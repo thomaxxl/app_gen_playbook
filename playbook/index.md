@@ -63,6 +63,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [task-bundles/backend-design.yaml](task-bundles/backend-design.yaml)
 - [task-bundles/backend-implementation.yaml](task-bundles/backend-implementation.yaml)
 - [task-bundles/integration-review.yaml](task-bundles/integration-review.yaml)
+- [task-bundles/acceptance-review.yaml](task-bundles/acceptance-review.yaml)
 - [task-bundles/deployment.yaml](task-bundles/deployment.yaml)
 - [task-bundles/change-intake.yaml](task-bundles/change-intake.yaml)
 - [task-bundles/change-impact-analysis.yaml](task-bundles/change-impact-analysis.yaml)

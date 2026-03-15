@@ -95,7 +95,15 @@ def reset_current_run(repo_root: Path) -> Path:
     if app_done.exists():
         app_done.unlink()
 
-    (repo_root / "app").mkdir(exist_ok=True)
+    app_root = repo_root / "app"
+    app_root.mkdir(exist_ok=True)
+    for relative in (
+        "frontend",
+        "backend",
+        "rules",
+        "reference",
+    ):
+        (app_root / relative).mkdir(parents=True, exist_ok=True)
 
     return current_dir
 

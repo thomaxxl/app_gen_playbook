@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from recover_run_queue import select_recovery_targets
+from recover_run_queue import select_recovery_targets, write_recovery_notes
 
 
 def write_template(path: Path, owner: str, phase: str) -> None:
@@ -121,6 +121,25 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("product_manager", targets)
             product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
             self.assertEqual(product_paths, {"runs/current/artifacts/product/acceptance-review.md"})
+
+    def test_recovery_note_includes_phase_bundle_and_template_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
+            for role in ("product_manager", "architect", "frontend", "backend", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            targets = select_recovery_targets(repo_root)
+            created = write_recovery_notes(repo_root, targets, "test-change")
+            self.assertEqual(len(created), 1)
+
+            note = created[0].read_text(encoding="utf-8")
+            self.assertIn("playbook/task-bundles/ux-design.yaml", note)
+            self.assertIn("playbook/process/phases/phase-3-ux-and-interaction-design.md", note)
+            self.assertIn("specs/ux/README.md", note)
+            self.assertIn("specs/ux/iconography.md", note)
+            self.assertIn("runs/current/artifacts/ux/iconography.md", note)
 
 
 if __name__ == "__main__":
