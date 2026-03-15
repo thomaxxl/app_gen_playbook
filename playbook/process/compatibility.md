@@ -49,6 +49,11 @@ Generated scripts such as `app/run.sh` SHOULD be runnable as:
 
 and MUST NOT rely only on preserved executable bits.
 
+When a generated app needs network review from another machine, `app/run.sh`
+MUST support a simple environment toggle such as `REMOTE=1` that binds both
+backend and frontend listeners to `0.0.0.0` without requiring the operator to
+edit the script.
+
 The generated launcher MUST remain compatible with the stock macOS Bash `3.2`
 environment unless the run explicitly raises the shell baseline and documents
 that decision in `runs/current/artifacts/architecture/runtime-bom.md`.

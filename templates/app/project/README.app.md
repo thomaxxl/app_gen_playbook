@@ -93,7 +93,13 @@ BACKEND_HOST=127.0.0.1 BACKEND_PORT=5656 ./run.sh
 FRONTEND_HOST=0.0.0.0 FRONTEND_PORT=5173 ./run.sh
 FRONTEND_MODE=dev ./run.sh
 VITE_BACKEND_ORIGIN=http://127.0.0.1:9000 ./run.sh
+REMOTE=1 ./run.sh
 ```
+
+If `REMOTE=1` is set, `run.sh` binds both the backend and frontend to
+`0.0.0.0` so you can review the site from another machine on the same
+network. Open the app using this machine's network IP instead of
+`127.0.0.1`.
 ````
 
 Notes:

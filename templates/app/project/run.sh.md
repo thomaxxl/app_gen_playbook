@@ -29,6 +29,12 @@ BACKEND_PORT="${BACKEND_PORT:-5656}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 FRONTEND_MODE="${FRONTEND_MODE:-preview}"
+REMOTE="${REMOTE:-}"
+
+if [[ -n "$REMOTE" ]]; then
+  BACKEND_HOST="0.0.0.0"
+  FRONTEND_HOST="0.0.0.0"
+fi
 
 DISPLAY_BACKEND_HOST="$BACKEND_HOST"
 DISPLAY_FRONTEND_HOST="$FRONTEND_HOST"
@@ -171,6 +177,10 @@ echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Hom
 echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Landing"
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
+if [[ -n "$REMOTE" ]]; then
+  echo "REMOTE mode is enabled. Backend and frontend are listening on 0.0.0.0."
+  echo "Open the site from another machine by replacing 127.0.0.1 with this machine's network IP."
+fi
 
 wait_for_first_exit
 exit_code=$?
@@ -198,6 +208,8 @@ Notes:
 - The default frontend mode is `preview` so `/admin-app/` behaves like the
   packaged app during combined-run validation. Use `FRONTEND_MODE=dev` only
   when explicit dev-server behavior is needed.
+- If `REMOTE` is set, `run.sh` MUST bind both backend and frontend to
+  `0.0.0.0` so the app can be reviewed from another machine on the network.
 - The launcher MUST remain compatible with the stock macOS Bash `3.2`
   environment. Do not use `wait -n` or other Bash-5-only supervision
   features unless the playbook first raises the shell baseline explicitly.
