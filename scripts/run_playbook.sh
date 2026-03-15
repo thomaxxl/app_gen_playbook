@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 EXPECTED_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WORKSPACE_ROOT="$(cd "$ROOT/.." && pwd)"
 if [[ "$ROOT" != "$EXPECTED_ROOT" ]]; then
   echo "error: run_playbook.sh must live under the playbook repo scripts/ directory: $SCRIPT_DIR" >&2
   exit 2
@@ -103,6 +104,11 @@ SESSIONS_JSON="$EVIDENCE_ROOT/sessions.json"
 LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
+RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$WORKSPACE_ROOT/run_dashboard}"
+RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
+RUN_DASHBOARD_INIT="$RUN_DASHBOARD_ROOT/scripts/init_db.sh"
+RUN_DASHBOARD_SYNC="$RUN_DASHBOARD_ROOT/scripts/sync_once.sh"
+RUN_DASHBOARD_WATCH="$RUN_DASHBOARD_ROOT/scripts/watch_current_run.sh"
 
 POLL_SECONDS="${POLL_SECONDS:-1}"
 LEASE_SECONDS="${LEASE_SECONDS:-600}"
@@ -113,6 +119,7 @@ LONG_MODEL="${LONG_MODEL:-}"
 
 frontend_pid=""
 backend_pid=""
+dashboard_pid=""
 ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
 
@@ -210,6 +217,59 @@ log() {
   line="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"
   mkdir -p "$(dirname "$LOG_FILE")"
   printf '%s\n' "$line" | tee -a "$LOG_FILE" >&2
+}
+
+stop_dashboard_sidecar() {
+  if [[ -n "$dashboard_pid" ]] && kill -0 "$dashboard_pid" 2>/dev/null; then
+    kill "$dashboard_pid" 2>/dev/null || true
+    wait "$dashboard_pid" 2>/dev/null || true
+  fi
+  dashboard_pid=""
+}
+
+cleanup_background_processes() {
+  stop_dashboard_sidecar
+  if [[ -n "$frontend_pid" ]] && kill -0 "$frontend_pid" 2>/dev/null; then
+    kill "$frontend_pid" 2>/dev/null || true
+    wait "$frontend_pid" 2>/dev/null || true
+  fi
+  if [[ -n "$backend_pid" ]] && kill -0 "$backend_pid" 2>/dev/null; then
+    kill "$backend_pid" 2>/dev/null || true
+    wait "$backend_pid" 2>/dev/null || true
+  fi
+}
+
+trap cleanup_background_processes EXIT INT TERM
+
+start_dashboard_sidecar() {
+  if [[ "$RUN_DASHBOARD_ENABLED" != "1" ]]; then
+    log "dashboard-disabled"
+    return 0
+  fi
+
+  if [[ ! -f "$RUN_DASHBOARD_INIT" || ! -f "$RUN_DASHBOARD_SYNC" || ! -f "$RUN_DASHBOARD_WATCH" ]]; then
+    log "dashboard-unavailable root=$RUN_DASHBOARD_ROOT"
+    return 0
+  fi
+
+  local dashboard_log="$EVIDENCE_ROOT/logs/run_dashboard.log"
+  mkdir -p "$(dirname "$dashboard_log")"
+
+  if ! PLAYBOOK_ROOT="$ROOT" bash "$RUN_DASHBOARD_INIT" >>"$dashboard_log" 2>&1; then
+    log "dashboard-init-failed log=$dashboard_log"
+    return 0
+  fi
+  log "dashboard-init-complete root=$RUN_DASHBOARD_ROOT"
+
+  if ! PLAYBOOK_ROOT="$ROOT" bash "$RUN_DASHBOARD_SYNC" >>"$dashboard_log" 2>&1; then
+    log "dashboard-sync-failed log=$dashboard_log"
+  else
+    log "dashboard-sync-complete"
+  fi
+
+  PLAYBOOK_ROOT="$ROOT" bash "$RUN_DASHBOARD_WATCH" >>"$dashboard_log" 2>&1 &
+  dashboard_pid="$!"
+  log "dashboard-watch-start pid=$dashboard_pid log=$dashboard_log"
 }
 
 architect_blocked_integration_pending() {
@@ -1118,4 +1178,5 @@ else
   seed_change_run
 fi
 
+start_dashboard_sidecar
 main_loop
