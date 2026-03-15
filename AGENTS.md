@@ -2,9 +2,6 @@
 
 These instructions apply to the `app_gen_playbook` repository.
 
-This file is for agents, not for human onboarding. Human-oriented overview and
-repository navigation belong in [README.md](README.md).
-
 ## Agent Baseline
 
 - Use `playbook/index.md` as the primary routing entrypoint.
