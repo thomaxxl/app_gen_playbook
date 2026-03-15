@@ -997,7 +997,7 @@ PY
   set_run_status "active"
 
   if ! check_completion >/dev/null 2>&1; then
-    run_recovery_pass
+    run_recovery_pass || true
   fi
 }
 
