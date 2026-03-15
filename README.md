@@ -116,6 +116,41 @@ For interrupted-run continuation:
 ./scripts/run_playbook.sh --resume
 ```
 
+## Roles
+
+The normal runtime roles are:
+
+- `product_manager`
+  Owns intake, scope framing, user-facing requirements, business-rule intent,
+  and the final acceptance lane.
+- `architect`
+  Owns the cross-cutting architecture contract, naming/classification
+  decisions, capability gating, and integration review.
+- `frontend`
+  Combines UX/UI and frontend implementation responsibilities, including UX
+  artifacts, navigation, generated React-admin behavior, and frontend tests.
+- `backend`
+  Owns backend-design artifacts, SAFRS model/API implementation, rule
+  enforcement, and backend verification.
+- `devops`
+  Optional packaging/runtime lane for install/run packaging, Docker files,
+  delivery environment checks, and deployment-oriented verification.
+- `ceo`
+  Dormant stall-recovery role. It does not participate in normal phased work;
+  it activates only when the orchestrator detects a stalled run or when an
+  operator explicitly targets it.
+
+The usual flow is:
+
+1. `product_manager`
+2. `architect`
+3. `frontend` and `backend` in parallel once Phase 5 is open
+4. `architect` integration review
+5. `product_manager` acceptance
+
+`devops` joins when packaging/runtime work is in scope. `ceo` is a recovery
+exception, not a standard phase participant.
+
 ## Key Files To Read Next
 
 For human orientation:
