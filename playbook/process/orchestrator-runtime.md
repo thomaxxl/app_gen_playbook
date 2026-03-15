@@ -211,6 +211,16 @@ After Phase 5:
 - Frontend and Backend workers MUST process only their own oldest actionable
   inbox item per turn
 
+The orchestrator MUST NOT start a long-lived background worker through command
+substitution or any other construct that runs the starter in a subshell and
+captures its stdout. In Bash, that pattern can cause the shell to wait on the
+background worker before the substitution completes, which blocks the main
+control lane. If the main control lane is blocked, normal liveness checks and
+CEO stall intervention cannot run.
+
+The orchestrator MUST capture worker PIDs through a non-subshell path, such as
+an explicit shared variable set by the worker-start helper.
+
 Phase 5 readiness MUST be computed from run-owned artifact status, not guessed
 from inbox activity.
 

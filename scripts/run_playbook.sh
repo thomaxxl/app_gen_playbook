@@ -121,6 +121,7 @@ backend_pid=""
 dashboard_pid=""
 ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
+ENSURE_WORKER_PID_RESULT=""
 
 role_state_dir() {
   case "$1" in
@@ -967,7 +968,7 @@ ensure_worker_running() {
   local ignore_roles=("$@")
 
   if [[ -n "$current_pid" ]] && kill -0 "$current_pid" 2>/dev/null; then
-    printf '%s\n' "$current_pid"
+    ENSURE_WORKER_PID_RESULT="$current_pid"
     return 0
   fi
 
@@ -982,7 +983,7 @@ ensure_worker_running() {
   worker_loop "$runtime_role" "${ignore_roles[@]}" &
   local new_pid="$!"
   log "worker-start role=$runtime_role pid=$new_pid"
-  printf '%s\n' "$new_pid"
+  ENSURE_WORKER_PID_RESULT="$new_pid"
 }
 
 seed_new_run() {
@@ -1114,14 +1115,18 @@ main_loop() {
 
     if [[ "$parallel_started" -eq 0 ]] && phase5_ready >/dev/null 2>&1; then
       log "phase-5-ready starting parallel frontend/backend workers"
-      frontend_pid="$(ensure_worker_running frontend "" product_manager architect backend)"
-      backend_pid="$(ensure_worker_running backend "" product_manager architect frontend)"
+      ensure_worker_running frontend "" product_manager architect backend
+      frontend_pid="$ENSURE_WORKER_PID_RESULT"
+      ensure_worker_running backend "" product_manager architect frontend
+      backend_pid="$ENSURE_WORKER_PID_RESULT"
       parallel_started=1
     fi
 
     if [[ "$parallel_started" -eq 1 ]]; then
-      frontend_pid="$(ensure_worker_running frontend "$frontend_pid" product_manager architect backend)"
-      backend_pid="$(ensure_worker_running backend "$backend_pid" product_manager architect frontend)"
+      ensure_worker_running frontend "$frontend_pid" product_manager architect backend
+      frontend_pid="$ENSURE_WORKER_PID_RESULT"
+      ensure_worker_running backend "$backend_pid" product_manager architect frontend
+      backend_pid="$ENSURE_WORKER_PID_RESULT"
     fi
 
     if [[ "$did_work" -eq 1 ]]; then
