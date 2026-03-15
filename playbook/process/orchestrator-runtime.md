@@ -55,6 +55,11 @@ captured in the matching per-turn JSONL file under:
 The repository SHOULD provide a simple operator monitor that can tail all
 current and newly-created per-turn JSONL files concurrently.
 
+Repository snapshotting and diff validation MUST treat repo-local symlink
+entries by their lexical path inside the repository. The validator MUST NOT
+dereference a repo-local symlink target before computing repo-relative paths,
+because local virtualenv or tool-shim entries may resolve outside the repo.
+
 When the orchestrator starts Codex in the background and uses `-` to request a
 prompt from standard input, it MUST redirect the prompt file into the Codex
 process explicitly. It MUST NOT rely on inherited stdin after backgrounding the

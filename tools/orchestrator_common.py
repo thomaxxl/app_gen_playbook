@@ -137,7 +137,13 @@ def resolve_repo_root(path: str | Path) -> Path:
 
 
 def relpath(path: Path, repo_root: Path) -> str:
-    return path.resolve().relative_to(repo_root).as_posix()
+    repo_root_abs = Path(os.path.abspath(repo_root))
+    path_abs = Path(os.path.abspath(path))
+
+    if os.path.commonpath((str(repo_root_abs), str(path_abs))) != str(repo_root_abs):
+        raise ValueError(f"{path_abs!s} is not in the subpath of {repo_root_abs!s}")
+
+    return path_abs.relative_to(repo_root_abs).as_posix()
 
 
 def write_json(path: Path, payload: object) -> None:
