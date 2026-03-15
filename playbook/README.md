@@ -17,6 +17,9 @@ Path rule:
 - `../specs/product/`, `../specs/architecture/`, `../specs/ux/`, and
   `../specs/backend-design/` contain generic artifact templates
 - run-owned artifacts MUST be written under `../runs/current/artifacts/`
+- the tracked neutral starter lives under `../runs/template/`
+- local `../runs/current/` MUST be created from `../runs/template/` for each
+  new full run and MUST NOT be treated as committed playbook source
 - optional DevOps run-owned artifacts live under
   `../runs/current/artifacts/devops/` only when packaging is in scope
 - `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
@@ -48,7 +51,8 @@ Segmentation rule:
   - `../specs/contracts/`
   - `../specs/features/`
   - `../templates/`
-  - `../runs/current/`
+  - tracked `../runs/template/`
+  - local `../runs/current/`
   - local ignored `../app/`
 - a change that increases cross-layer reading or mixes optional material back
   into core layers MUST include an explicit documented justification

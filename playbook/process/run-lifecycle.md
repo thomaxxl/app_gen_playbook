@@ -20,11 +20,12 @@ Static source lives in:
 
 The active run uses:
 
-- `../../runs/current/input.md`
-- `../../runs/current/remarks.md`
-- `../../runs/current/artifacts/`
-- `../../runs/current/role-state/`
-- `../../runs/current/evidence/`
+- tracked neutral starter `../../runs/template/`
+- local `../../runs/current/input.md`
+- local `../../runs/current/remarks.md`
+- local `../../runs/current/artifacts/`
+- local `../../runs/current/role-state/`
+- local `../../runs/current/evidence/`
 - local ignored `../../app/`
 
 Brief rule:
@@ -56,7 +57,8 @@ The playbook distinguishes three different states:
   A preserved runnable example app. Ordinary app generation MUST NOT overwrite
   it unless the task explicitly refreshes the preserved example.
 - `../../runs/current/`
-  The canonical run-state area for a new full run.
+  A local run-state area created from `../../runs/template/` for a new full
+  run.
 - `../../app/`
   A local ignored generated application working tree for the active or most
   recent run.
@@ -79,29 +81,33 @@ To start a new run:
 1. preserve or archive the current run if needed
 2. preserve historical app-specific artifacts under `../../example/` or
    another archive if they must remain available
-3. update `../../runs/current/input.md` with the new brief
-4. reset or archive stale run-local notes under:
+3. recreate local `../../runs/current/` from the tracked neutral starter under
+   `../../runs/template/`
+4. update local `../../runs/current/input.md` with the new brief
+5. reset or archive stale run-local notes under:
    - `../../runs/current/remarks.md`
    - `../../runs/current/artifacts/`
    - `../../runs/current/evidence/`
-5. clear active inbox items under `../../runs/current/role-state/`
-6. seed or update run-owned artifacts under `../../runs/current/artifacts/`
+6. clear active inbox items under `../../runs/current/role-state/`
+7. seed or update run-owned artifacts under `../../runs/current/artifacts/`
    from the generic template sources in:
    - `../../specs/product/`
    - `../../specs/architecture/`
    - `../../specs/ux/`
    - `../../specs/backend-design/`
-7. seed or update the capability-gating artifacts:
+8. seed or update the capability-gating artifacts:
    - `../../runs/current/artifacts/architecture/capability-profile.md`
    - `../../runs/current/artifacts/architecture/load-plan.md`
-8. seed the Product Manager inbox by copying:
+9. seed the Product Manager inbox by copying:
    - `../../runs/current/input.md`
    to:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
-9. create local gitignored `../../app/`
-10. seed local `../../app/` from the relevant `../../templates/app/` files
+10. create local gitignored `../../app/`
+11. seed local `../../app/` from the relevant `../../templates/app/` files
     needed for the generated-app baseline, including `Dockerfile` and
     `docker-compose.yml`
+12. materialize concrete dependency manifests in `../../app/` from the
+    template sources plus the run-owned `runtime-bom.md` before install
 
 This procedure applies to a new full run. It does not apply to an app-only
 maintenance pass that intentionally preserves `../../runs/current/`.
@@ -116,6 +122,7 @@ When a run is complete:
 - local `../../app/Dockerfile` MUST exist
 - local `../../app/docker-compose.yml` MUST exist
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
+- `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned

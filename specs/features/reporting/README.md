@@ -4,6 +4,9 @@
 owner: architect
 scope: optional-feature
 feature: reporting
+maturity: placeholder
+segmentation_model: placeholder-only
+allowed_in_generated_apps: false
 load_when:
   - capability-profile.reporting == enabled
 depends_on:

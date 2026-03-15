@@ -33,51 +33,11 @@ Runtime state lives in:
 - `processed/`
   Archive of completed inbox messages.
 
-## Must read first
+## Tier 1 startup reads
 
-- [../README.md](../README.md)
-- [shared-responsibilities.md](shared-responsibilities.md)
-- [../../README.md](../../README.md)
-- [../../playbook/README.md](../../playbook/README.md)
-- [../process/README.md](../process/README.md)
-- [../process/inbox-protocol.md](../process/inbox-protocol.md)
-- [../process/compatibility.md](../process/compatibility.md)
-- [../process/capability-loading.md](../process/capability-loading.md)
-- [../process/phases/phase-4-backend-design-and-rules-mapping.md](../process/phases/phase-4-backend-design-and-rules-mapping.md)
-- [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
-- [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
-- [../../runs/current/artifacts/product/resource-inventory.md](../../runs/current/artifacts/product/resource-inventory.md)
-- [../../runs/current/artifacts/product/resource-behavior-matrix.md](../../runs/current/artifacts/product/resource-behavior-matrix.md)
-- [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
-- [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
-- [../../runs/current/artifacts/product/business-rules.md](../../runs/current/artifacts/product/business-rules.md)
-- [../../runs/current/artifacts/product/sample-data.md](../../runs/current/artifacts/product/sample-data.md)
-- [../../runs/current/artifacts/product/domain-glossary.md](../../runs/current/artifacts/product/domain-glossary.md)
-- [../../runs/current/artifacts/product/acceptance-criteria.md](../../runs/current/artifacts/product/acceptance-criteria.md)
-- [../../runs/current/artifacts/product/assumptions-and-open-questions.md](../../runs/current/artifacts/product/assumptions-and-open-questions.md)
-- [../../runs/current/artifacts/architecture/overview.md](../../runs/current/artifacts/architecture/overview.md)
-- [../../runs/current/artifacts/architecture/integration-boundary.md](../../runs/current/artifacts/architecture/integration-boundary.md)
-- [../../runs/current/artifacts/architecture/resource-naming.md](../../runs/current/artifacts/architecture/resource-naming.md)
-- [../../runs/current/artifacts/architecture/resource-classification.md](../../runs/current/artifacts/architecture/resource-classification.md)
-- [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
-- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
-- [../../runs/current/artifacts/backend-design/model-design.md](../../runs/current/artifacts/backend-design/model-design.md)
-- [../../runs/current/artifacts/backend-design/relationship-map.md](../../runs/current/artifacts/backend-design/relationship-map.md)
-- [../../runs/current/artifacts/backend-design/rule-mapping.md](../../runs/current/artifacts/backend-design/rule-mapping.md)
-- [../../runs/current/artifacts/backend-design/bootstrap-strategy.md](../../runs/current/artifacts/backend-design/bootstrap-strategy.md)
-- [../../runs/current/artifacts/backend-design/resource-exposure-policy.md](../../runs/current/artifacts/backend-design/resource-exposure-policy.md)
-- [../../runs/current/artifacts/backend-design/query-behavior.md](../../runs/current/artifacts/backend-design/query-behavior.md)
-- [../../runs/current/artifacts/backend-design/test-plan.md](../../runs/current/artifacts/backend-design/test-plan.md)
-- [../../specs/contracts/backend/README.md](../../specs/contracts/backend/README.md)
-- [../../specs/contracts/backend/route-discovery.md](../../specs/contracts/backend/route-discovery.md)
-- [../../specs/contracts/rules/README.md](../../specs/contracts/rules/README.md)
-- [../../specs/contracts/backend/validation.md](../../specs/contracts/backend/validation.md)
-- [../../specs/contracts/backend/verification-fallbacks.md](../../specs/contracts/backend/verification-fallbacks.md)
+Use the small stable startup manifest:
 
-The Backend agent MUST also read:
-
-- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
-- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+- [../process/read-sets/backend-core.md](../process/read-sets/backend-core.md)
 
 Before loading any optional feature pack or any on-demand contract file beyond
 the core set above, the Backend agent MUST read those two gating artifacts and
@@ -86,6 +46,29 @@ treat them as authoritative.
 After the core reads above, the Backend agent MUST load only the enabled
 feature packs assigned to the backend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
+
+## Tier 2 task-driven reads
+
+After Tier 1, the Backend agent MUST load only the run-owned artifacts needed
+for the current task and permitted by the load plan.
+
+Typical task-driven reads:
+
+- product/backend semantics:
+  `product/resource-inventory.md`, `product/resource-behavior-matrix.md`,
+  `product/workflows.md`, `product/business-rules.md`,
+  `product/sample-data.md`, `product/domain-glossary.md`
+- architecture and packaging dependencies:
+  `architecture/resource-naming.md`, `architecture/resource-classification.md`,
+  `architecture/generated-vs-custom.md`, `architecture/runtime-bom.md`
+- backend-design implementation artifacts:
+  `backend-design/model-design.md`, `backend-design/relationship-map.md`,
+  `backend-design/rule-mapping.md`, `backend-design/bootstrap-strategy.md`,
+  `backend-design/resource-exposure-policy.md`, `backend-design/query-behavior.md`,
+  `backend-design/test-plan.md`
+
+The Backend agent MUST NOT load the entire run-owned artifact tree by
+default.
 
 If the current run lane is `rename-only` or `non-starter`, the Backend agent
 MUST also read:

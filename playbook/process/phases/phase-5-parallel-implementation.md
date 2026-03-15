@@ -34,6 +34,10 @@ record:
 - local socket / localhost verification constraints
 - any required dependency deviations from the house defaults
 
+Before any install step begins, the implementation agents MUST materialize
+concrete dependency manifests in `app/` from the template lane plus the
+run-owned `runtime-bom.md`.
+
 If the current run lane is `rename-only` or `non-starter`, the Backend
 implementation lane MUST also complete a starter-template replacement sweep
 before treating any starter backend template as implementation-ready.
@@ -71,6 +75,8 @@ business-rule behavior, or route meaning.
 - run `npm run test`
 - implement and run `npm run test:e2e`
 - run `npm run build`
+- ensure the generated `app/frontend/package.json` contains no unresolved
+  placeholder dependency tokens before install
 
 ## Backend responsibilities
 
@@ -83,6 +89,7 @@ business-rule behavior, or route meaning.
 - implement rules and validation
 - implement the run-owned bootstrap and sample-data plan
 - implement tests
+- ensure generated dependency manifests are concrete before install
 - implement the preferred HTTP/ASGI verification path
 - keep the fallback verification harness available when the preferred path is
   broken

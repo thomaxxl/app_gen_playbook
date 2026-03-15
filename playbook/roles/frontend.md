@@ -37,52 +37,11 @@ Runtime state lives in:
 - `processed/`
   Archive of completed inbox messages.
 
-## Must read first
+## Tier 1 startup reads
 
-- [../README.md](../README.md)
-- [shared-responsibilities.md](shared-responsibilities.md)
-- [../../README.md](../../README.md)
-- [../../playbook/README.md](../../playbook/README.md)
-- [../process/README.md](../process/README.md)
-- [../process/inbox-protocol.md](../process/inbox-protocol.md)
-- [../process/compatibility.md](../process/compatibility.md)
-- [../process/capability-loading.md](../process/capability-loading.md)
-- [../process/phases/phase-3-ux-and-interaction-design.md](../process/phases/phase-3-ux-and-interaction-design.md)
-- [../process/phases/phase-5-parallel-implementation.md](../process/phases/phase-5-parallel-implementation.md)
-- [../process/frontend-nonstarter-checklist.md](../process/frontend-nonstarter-checklist.md)
-- [../../runs/current/artifacts/product/brief.md](../../runs/current/artifacts/product/brief.md)
-- [../../runs/current/artifacts/product/resource-inventory.md](../../runs/current/artifacts/product/resource-inventory.md)
-- [../../runs/current/artifacts/product/resource-behavior-matrix.md](../../runs/current/artifacts/product/resource-behavior-matrix.md)
-- [../../runs/current/artifacts/product/workflows.md](../../runs/current/artifacts/product/workflows.md)
-- [../../runs/current/artifacts/product/user-stories.md](../../runs/current/artifacts/product/user-stories.md)
-- [../../runs/current/artifacts/product/business-rules.md](../../runs/current/artifacts/product/business-rules.md)
-- [../../runs/current/artifacts/product/custom-pages.md](../../runs/current/artifacts/product/custom-pages.md)
-- [../../runs/current/artifacts/product/acceptance-criteria.md](../../runs/current/artifacts/product/acceptance-criteria.md)
-- [../../runs/current/artifacts/product/sample-data.md](../../runs/current/artifacts/product/sample-data.md)
-- [../../runs/current/artifacts/product/assumptions-and-open-questions.md](../../runs/current/artifacts/product/assumptions-and-open-questions.md)
-- [../../runs/current/artifacts/architecture/overview.md](../../runs/current/artifacts/architecture/overview.md)
-- [../../runs/current/artifacts/architecture/integration-boundary.md](../../runs/current/artifacts/architecture/integration-boundary.md)
-- [../../runs/current/artifacts/architecture/resource-classification.md](../../runs/current/artifacts/architecture/resource-classification.md)
-- [../../runs/current/artifacts/architecture/resource-naming.md](../../runs/current/artifacts/architecture/resource-naming.md)
-- [../../runs/current/artifacts/architecture/route-and-entry-model.md](../../runs/current/artifacts/architecture/route-and-entry-model.md)
-- [../../runs/current/artifacts/architecture/generated-vs-custom.md](../../runs/current/artifacts/architecture/generated-vs-custom.md)
-- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
-- [../../runs/current/artifacts/ux/navigation.md](../../runs/current/artifacts/ux/navigation.md)
-- [../../runs/current/artifacts/ux/landing-strategy.md](../../runs/current/artifacts/ux/landing-strategy.md)
-- [../../runs/current/artifacts/ux/screen-inventory.md](../../runs/current/artifacts/ux/screen-inventory.md)
-- [../../runs/current/artifacts/ux/field-visibility-matrix.md](../../runs/current/artifacts/ux/field-visibility-matrix.md)
-- [../../runs/current/artifacts/ux/custom-view-specs.md](../../runs/current/artifacts/ux/custom-view-specs.md)
-- [../../runs/current/artifacts/ux/state-handling.md](../../runs/current/artifacts/ux/state-handling.md)
-- [../../specs/contracts/frontend/README.md](../../specs/contracts/frontend/README.md)
-- [../../specs/contracts/frontend/relationship-ui.md](../../specs/contracts/frontend/relationship-ui.md)
-- [../../specs/contracts/frontend/ui-principles.md](../../specs/contracts/frontend/ui-principles.md)
-- [../../specs/contracts/frontend/accessibility.md](../../specs/contracts/frontend/accessibility.md)
-- [../../specs/contracts/frontend/validation.md](../../specs/contracts/frontend/validation.md)
+Use the small stable startup manifest:
 
-The Frontend agent MUST also read:
-
-- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
-- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+- [../process/read-sets/frontend-core.md](../process/read-sets/frontend-core.md)
 
 Before loading any optional feature pack or any on-demand contract file beyond
 the core set above, the Frontend agent MUST read those two gating artifacts
@@ -98,6 +57,29 @@ as core implementation contract, not as optional polish material.
 After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
+
+## Tier 2 task-driven reads
+
+After Tier 1, the Frontend agent MUST load only the run-owned artifacts needed
+for the current task and permitted by the load plan.
+
+Typical task-driven reads:
+
+- product flow intent:
+  `product/resource-inventory.md`, `product/resource-behavior-matrix.md`,
+  `product/workflows.md`, `product/business-rules.md`,
+  `product/sample-data.md`, `product/custom-pages.md`
+- architecture wiring:
+  `architecture/resource-naming.md`, `architecture/resource-classification.md`,
+  `architecture/generated-vs-custom.md`, `architecture/route-and-entry-model.md`,
+  `architecture/runtime-bom.md`
+- UX implementation:
+  `ux/navigation.md`, `ux/landing-strategy.md`, `ux/screen-inventory.md`,
+  `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
+  `ux/state-handling.md`
+
+The Frontend agent MUST NOT load the entire run-owned artifact tree by
+default.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/ux/`.

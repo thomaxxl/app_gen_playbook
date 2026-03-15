@@ -8,7 +8,8 @@ Rules:
 - Backend run output MUST be written under
   `../../runs/current/artifacts/backend-design/`.
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
-  NOT replace run-owned backend-design artifacts.
+  NOT replace run-owned backend-design artifacts or the maintained runtime
+  baseline.
 
 Template files:
 

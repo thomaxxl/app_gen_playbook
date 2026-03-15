@@ -62,12 +62,16 @@ npm install \
   <REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>
 ```
 
-The token `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` MUST be replaced
-with a real verified release asset before the generated app is considered
-complete.
+The token `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` MAY appear in the
+template lane only.
+
+It MUST be replaced with a real verified release asset before the generated
+app is considered complete.
 
 That concrete release asset decision MUST be recorded in
-`../../architecture/runtime-bom.md` before Phase 5 implementation begins.
+`../../architecture/runtime-bom.md` before Phase 5 implementation begins, and
+the generated `app/frontend/package.json` MUST be materialized from that
+decision before `npm install`.
 
 Optional charts/graphs:
 

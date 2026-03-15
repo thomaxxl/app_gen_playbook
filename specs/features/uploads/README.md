@@ -4,6 +4,9 @@
 owner: architect
 scope: optional-feature
 feature: uploads
+maturity: supported
+segmentation_model: feature-gated-with-no-op-extension-points
+allowed_in_generated_apps: true
 load_when:
   - runs/current/artifacts/architecture/capability-profile.md marks uploads as enabled
 depends_on:

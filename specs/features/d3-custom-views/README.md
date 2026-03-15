@@ -4,6 +4,9 @@
 owner: frontend
 scope: optional-feature
 feature: d3-custom-views
+maturity: placeholder
+segmentation_model: placeholder-only
+allowed_in_generated_apps: false
 load_when:
   - capability-profile.d3-custom-views == enabled
 depends_on:

@@ -65,6 +65,8 @@ frontend package template before treating the playbook baseline as current.
 ## UX/UI validation
 
 - `Home` renders with a visible title and basic purpose text
+- `Home` visibly reflects the starter pattern declared in
+  `landing-strategy.md`
 - the entry page visible in the app matches the route declared in
   `navigation.md`
 - the entry page exposes the primary CTA declared in `landing-strategy.md`
@@ -75,6 +77,8 @@ frontend package template before treating the playbook baseline as current.
 - the entry page loading or partial-data state is understandable when summary
   data is delayed or partially unavailable
 - if the primary CTA is unavailable, the reason is visible
+- `Home` remains coherent when summary counts or recent-item sections are
+  empty
 - every custom page defines loading, empty, and error states
 - every empty state includes a visible next step or explanation
 - form pages show grouped structure when the run-owned UX artifacts require it

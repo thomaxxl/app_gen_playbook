@@ -60,6 +60,29 @@ This requirement applies even when the optional DevOps role is inactive. The
 presence of these two root files is part of the generated-app baseline, not an
 optional packaging upgrade.
 
+## Packaging lanes
+
+Baseline packaging is always required.
+
+It includes:
+
+- runnable dependency manifests
+- root `Dockerfile`
+- root `docker-compose.yml`
+- enough packaging instructions to run the app locally
+
+Advanced packaging belongs to the optional DevOps role when active.
+
+It includes:
+
+- nginx hardening
+- multi-stage optimization
+- runtime normalization fixes
+- packaging-specific verification matrices
+
+DevOps activation controls ownership of advanced packaging. It MUST NOT be
+interpreted as removing baseline packaging obligations.
+
 The generated app SHOULD also contain:
 
 - `.gitignore`

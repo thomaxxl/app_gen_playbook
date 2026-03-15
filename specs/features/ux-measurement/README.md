@@ -4,6 +4,9 @@
 owner: architect
 scope: optional-feature
 feature: ux-measurement
+maturity: experimental
+segmentation_model: fully-isolated
+allowed_in_generated_apps: true
 load_when:
   - runs/current/artifacts/architecture/capability-profile.md marks ux-measurement as enabled
 depends_on:

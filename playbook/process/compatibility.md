@@ -1,19 +1,14 @@
 # Compatibility Matrix
 
-This file defines the baseline local runtime expectations for the playbook.
+See also:
 
-## Python
+- [runtime-baseline.md](runtime-baseline.md)
 
-- baseline: Python `3.12`
-- requirement level: required for the standard backend profile
+This file defines the local compatibility rules that apply on top of the
+playbook's maintained runtime baseline.
 
-## Node
-
-- baseline: Node `24+`
-- requirement level: required for the standard frontend profile
-
-The current validated frontend stack uses Vite `6.2.2` with Node `24+`.
-Do not assume an arbitrary system `node` binary is compatible.
+Do not recover baseline versions from `example/`. The maintained baseline must
+come from `runtime-baseline.md` and the run-owned `runtime-bom.md`.
 
 ## Virtual environments
 
@@ -85,9 +80,9 @@ deviation and the chosen workaround before continuing.
 - LogicBank: temporarily install from a local checkout only when explicitly
   requested through `LOCAL_LOGICBANK_PATH`
 
-The playbook does not infer a universal SAFRS version pin. Each generated app
-must record the validated published `safrs==...` version it actually uses once
-that version is selected and verified.
+The playbook baseline does not recover a SAFRS pin from `example/`. Each
+generated app must record the validated published `safrs==...` version it
+actually uses in the run-owned `runtime-bom.md`.
 
 The local LogicBank checkout override is temporary. Switch back to the normal
 published pip package when the next LogicBank release with the required fix is

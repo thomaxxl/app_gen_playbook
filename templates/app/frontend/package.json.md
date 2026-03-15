@@ -71,10 +71,13 @@ immediate `npm audit fix --force`, treat that as a stale playbook baseline and
 repin the template dependency set instead of documenting `audit fix` as normal
 generated-app setup.
 
-`<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is an intentional unresolved
-token. A generated app is incomplete until it is replaced with a real verified
-release asset URL recorded in
-`../../../runs/current/artifacts/architecture/runtime-bom.md`.
+`<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is allowed only in the
+template source. The generated `app/frontend/package.json` MUST replace it
+with the real verified release asset URL recorded in
+`../../../runs/current/artifacts/architecture/runtime-bom.md` before install.
 
-See `../../../playbook/process/compatibility.md` for the declared local runtime
-baseline.
+See:
+
+- `../../../playbook/process/runtime-baseline.md`
+- `../../../playbook/process/dependency-materialization.md`
+- `../../../playbook/process/compatibility.md`

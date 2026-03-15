@@ -46,6 +46,12 @@ The landing strategy MUST declare one of these modes:
 - `Home + no-layout Landing`
 - `CustomDashboard replaces starter Home content`
 
+The landing strategy MUST also declare one starter pattern for `Home.tsx`:
+
+- `hub`
+- `dashboard`
+- `landing`
+
 If the run uses `Landing.tsx` or `CustomDashboard.tsx` as part of the real
 entry experience, `Home.tsx` MUST still exist and MUST provide a visible path
 into that approved entry flow.
@@ -58,6 +64,9 @@ landing strategy explicitly marks the entry behavior as starter-compatible.
 If the run requires richer proof surfaces, workflow shortcuts, role-specific
 CTA behavior, or more than a trivial summary strip, the Frontend agent MUST
 replace or extend the starter `Home.tsx`.
+
+The starter pattern selected in `landing-strategy.md` MUST have direct visible
+effect on the generated `Home.tsx`.
 
 ## Stable smoke-test hooks
 

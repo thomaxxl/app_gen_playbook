@@ -22,19 +22,16 @@ Rules:
   - load condition
   - owning roles
   - dependent core contracts
+  - maturity level
+  - segmentation model
 
-Maturity rule:
+The canonical feature catalog is:
 
-- `uploads/` is the current fully documented implementation feature pack
-- `ux-measurement/` is a documented optional UX review and validation pack,
-  but it does not imply prebuilt starter instrumentation templates
-- `d3-custom-views/`, `reporting/`, and `background-jobs/` are placeholder
-  packs only
-- placeholder packs MUST remain `disabled` or `undecided` in the capability
-  profile unless the current run explicitly expands them into real
-  run-specific feature work
-- agents MUST NOT treat placeholder pack names as proof that the feature is
-  already fully specified
+- [catalog.md](catalog.md)
+
+Placeholder packs MUST remain `disabled` or `undecided` in the capability
+profile unless the current run explicitly expands them into real run-specific
+feature work.
 
 Segmentation rule:
 
@@ -43,6 +40,10 @@ Segmentation rule:
 - it MAY coexist with baseline no-op extension points in core templates
 - agents MUST rely on the feature-pack docs to determine whether a feature is
   fully isolated or merely activation-gated
+
+See also:
+
+- `../../playbook/process/segmentation-model.md`
 
 Available packs:
 

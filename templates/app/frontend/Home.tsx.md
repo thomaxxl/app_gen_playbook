@@ -26,6 +26,7 @@ import SectionBlock from "./SectionBlock";
 import SummaryCard from "./SummaryCard";
 
 export default function Home() {
+  const starterPattern: "hub" | "dashboard" | "landing" = "hub";
   const primaryRoute = resourcePages[0]?.name
     ? `/${resourcePages[0].name}`
     : null;
@@ -37,6 +38,11 @@ export default function Home() {
       title: resource.name,
       to: `/${resource.name}`,
     }));
+  const workflowSteps = [
+    "Open the primary resource.",
+    "Follow readable relationship labels into related records.",
+    "Use show-page tabs to move through the surrounding data context.",
+  ];
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
@@ -109,16 +115,35 @@ export default function Home() {
       </SectionBlock>
 
       <SectionBlock
-        description="Keep this section aligned with the run-owned landing strategy."
-        title="What you can do here"
+        description={
+          starterPattern === "dashboard"
+            ? "Summarize the main workflow and the current system state."
+            : "Keep this section aligned with the run-owned landing strategy."
+        }
+        title={starterPattern === "landing" ? "How it works" : "What you can do here"}
       >
-        <SummaryCard title="How to use it">
-          <Typography color="text.secondary" variant="body2">
-            Use the sidebar and quick-action surfaces to browse resources,
-            follow the primary workflow, and move into related records through
-            readable relationship labels and tabs.
-          </Typography>
-        </SummaryCard>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <SummaryCard title="How to use it">
+              <Typography color="text.secondary" variant="body2">
+                Use the sidebar and quick-action surfaces to browse resources,
+                follow the primary workflow, and move into related records through
+                readable relationship labels and tabs.
+              </Typography>
+            </SummaryCard>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <SummaryCard title="Workflow at a glance">
+              <Box component="ol" sx={{ color: "text.secondary", m: 0, pl: 2 }}>
+                {workflowSteps.map((step) => (
+                  <Typography component="li" key={step} variant="body2">
+                    {step}
+                  </Typography>
+                ))}
+              </Box>
+            </SummaryCard>
+          </Grid>
+        </Grid>
       </SectionBlock>
     </Box>
   );
@@ -132,6 +157,9 @@ Notes:
 - Replace or extend that CTA when `navigation.md` defines a better primary
   route and `landing-strategy.md` defines a richer primary action.
 - `Home.tsx` MUST implement the run-owned `landing-strategy.md`.
+- `starterPattern` is a starter placeholder. The generated app SHOULD replace
+  it with the concrete `landing-strategy.md` choice (`hub`, `dashboard`, or
+  `landing`) instead of leaving the template at the default forever.
 - `Home.tsx` MAY remain a simple navigation hub or MAY host the main dashboard
   content directly, depending on `landing-strategy.md` and
   `custom-view-specs.md`.

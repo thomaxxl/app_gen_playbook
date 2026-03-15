@@ -40,6 +40,8 @@ The real artifact MUST also state:
 - whether `Home.tsx` remains the actual entry surface or acts as a handoff
   shell into another approved entry page
 - whether the chosen mode remains starter-compatible
+- which starter pattern is used for `Home.tsx` (`hub`, `dashboard`, or
+  `landing`)
 
 ## Primary audience and intent
 
@@ -75,6 +77,20 @@ The real artifact MUST include a table with at least these columns:
 
 The real artifact MUST define the ordered section sequence for the chosen
 entry page.
+
+## Starter page model
+
+The real artifact SHOULD also define, when starter-compatible:
+
+- primary CTA
+- secondary CTA set
+- proof-card set
+- workflow-summary block
+- optional spotlight block
+- optional recent-items block
+
+That structure SHOULD map directly to the generated starter `Home.tsx` rather
+than requiring ad hoc rewriting.
 
 ## CTA hierarchy
 
@@ -134,3 +150,5 @@ The real artifact MUST include concrete checks for:
 - the above-the-fold area includes at least one confidence-building summary or
   proof cue
 - the mobile layout preserves the purpose statement and primary CTA
+- the entry page remains coherent when summary counts or recent-item data are
+  empty

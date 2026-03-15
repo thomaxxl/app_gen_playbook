@@ -6,7 +6,7 @@ Runtime state does not live here.
 
 Runtime state lives under:
 
-- [../../runs/current/role-state/README.md](../../runs/current/role-state/README.md)
+- local `../../runs/current/role-state/`
 
 Role files:
 
@@ -26,6 +26,9 @@ Role naming rule:
 All role execution MUST follow the capability-gating rules in:
 
 - [../process/capability-loading.md](../process/capability-loading.md)
+- [../process/read-sets/frontend-core.md](../process/read-sets/frontend-core.md)
+- [../process/read-sets/backend-core.md](../process/read-sets/backend-core.md)
+- [../process/read-sets/devops-core.md](../process/read-sets/devops-core.md)
 
 Each role MUST read the current run's:
 
@@ -33,3 +36,9 @@ Each role MUST read the current run's:
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
 before loading optional feature packs or feature templates.
+
+Role startup rule:
+
+- role files SHOULD keep Tier 1 startup reads small and stable
+- run-owned artifacts beyond the startup set SHOULD be loaded only when the
+  current task, owned area, or load plan requires them

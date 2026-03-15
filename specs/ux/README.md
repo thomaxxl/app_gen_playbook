@@ -7,7 +7,7 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Frontend run output MUST be written under `../../runs/current/artifacts/ux/`.
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
-  NOT replace run-owned UX artifacts.
+  NOT replace run-owned UX artifacts or the maintained frontend baseline.
 
 Template files:
 

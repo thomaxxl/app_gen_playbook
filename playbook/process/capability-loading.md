@@ -119,3 +119,8 @@ that is still considered compliant segmentation as long as:
 
 Only a feature pack that explicitly promises full isolation MAY be treated as
 having zero core-runtime footprint.
+
+See also:
+
+- [segmentation-model.md](segmentation-model.md)
+- `../../specs/features/catalog.md`

@@ -8,7 +8,7 @@ Rules:
 - Product Manager run output MUST be written under
   `../../runs/current/artifacts/product/`.
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
-  NOT replace run-owned product artifacts.
+  NOT replace run-owned product artifacts or become a hidden baseline source.
 - For a fresh run, `../../example/` and local `../../app/` MUST NOT be used
   as product inputs unless the task explicitly requests comparison or
   maintenance.

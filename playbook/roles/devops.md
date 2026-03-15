@@ -43,6 +43,10 @@ This role SHOULD activate when any of these are true:
 
 This role SHOULD remain inactive when none of those conditions apply.
 
+Baseline packaging remains required even when this role is inactive. See:
+
+- `../process/packaging-lanes.md`
+
 ## Runtime files
 
 Runtime state lives in:
@@ -57,23 +61,13 @@ Runtime state lives in:
 - `processed/`
   Archive of completed inbox messages.
 
-## Must read first
+## Tier 1 startup reads
 
-- [../README.md](../README.md)
-- [shared-responsibilities.md](shared-responsibilities.md)
-- [../../README.md](../../README.md)
-- [../../playbook/README.md](../../playbook/README.md)
-- [../process/README.md](../process/README.md)
-- [../process/inbox-protocol.md](../process/inbox-protocol.md)
-- [../process/capability-loading.md](../process/capability-loading.md)
-- [../../specs/contracts/deployment/README.md](../../specs/contracts/deployment/README.md)
-- [../../specs/contracts/deployment/package-management.md](../../specs/contracts/deployment/package-management.md)
-- [../../runs/current/artifacts/architecture/runtime-bom.md](../../runs/current/artifacts/architecture/runtime-bom.md)
-- [../../runs/current/artifacts/architecture/route-and-entry-model.md](../../runs/current/artifacts/architecture/route-and-entry-model.md)
-- [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
-- [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+Use the small stable startup manifest:
 
-## On-demand reads
+- [../process/read-sets/devops-core.md](../process/read-sets/devops-core.md)
+
+## Tier 2 task-driven reads
 
 Load these only when packaging touches them:
 
@@ -90,6 +84,10 @@ After the core reads above, the DevOps role MUST load only the deployment or
 packaging-related feature packs enabled by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, copied, or used as
 packaging input.
+
+The DevOps role owns advanced packaging work. It MUST NOT treat baseline
+generated-app packaging files such as `Dockerfile` and `docker-compose.yml` as
+optional merely because DevOps activation is absent.
 
 ## Produces
 

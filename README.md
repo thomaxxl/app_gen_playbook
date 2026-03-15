@@ -22,7 +22,7 @@ This directory is now organized around the following top-level areas:
   Copy-and-adapt core templates plus feature-gated template packs that mirror
   the generated `app/` shape.
 - `runs/`
-  Mutable execution state for the active run.
+  Tracked neutral run template plus the local active run workspace.
 - `example/`
   A cleaned preserved example generated from this playbook.
 - `app/`
@@ -54,6 +54,7 @@ segmentation:
 - keep optional capability packs under `specs/features/`
 - keep literal code templates under `templates/`
 - keep mutable run state under `runs/current/`
+  while keeping the tracked neutral starter under `runs/template/`
 - keep generated implementation output under the local ignored `app/`
 
 Agents MUST NOT collapse these layers together or broaden role reading
@@ -75,9 +76,10 @@ Use these files to understand the repository layout and the current run state:
 For a fresh run, agents MUST start from:
 
 1. [playbook/README.md](playbook/README.md)
-2. [runs/current/README.md](runs/current/README.md)
+2. [runs/README.md](runs/README.md)
 3. the current role definition under `playbook/roles/`
-4. the run-owned artifacts and owned specs required by that role
+4. local `runs/current/` after it has been created from `runs/template/`
+5. the run-owned artifacts and owned specs required by that role
 
 For a fresh run, agents MUST NOT use `example/` or `app/` as product or
 architecture inputs unless the task explicitly requests:
@@ -104,17 +106,21 @@ manual artifact work and non-starter template substitution.
 
 The active run root is:
 
-- [runs/current/README.md](runs/current/README.md)
+- local `runs/current/`
+
+The tracked neutral starter is:
+
+- [runs/template/README.md](runs/template/README.md)
 
 The canonical run brief copy is:
 
-- [runs/current/input.md](runs/current/input.md)
+- local `runs/current/input.md`
 
-Run-local remarks and verification state live under:
+Run-local remarks and verification state live under the local active run at:
 
-- [runs/current/remarks.md](runs/current/remarks.md)
-- [runs/current/artifacts/README.md](runs/current/artifacts/README.md)
-- [runs/current/evidence/README.md](runs/current/evidence/README.md)
+- local `runs/current/remarks.md`
+- local `runs/current/artifacts/`
+- local `runs/current/evidence/`
 
 Artifact location rule:
 
@@ -125,6 +131,8 @@ Artifact location rule:
   business-rules catalog
 - accepted artifacts MAY later be copied into local `app/docs/`
 - `example/` is a preserved runnable example app generated from this playbook
+- `example/` is proof that the playbook can generate a runnable app; it is
+  not a normative source for runtime, dependency, or packaging decisions
 - an explicit app-only maintenance pass MAY update local `app/` while leaving
   `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`
 
@@ -148,3 +156,5 @@ Capability-loading rule:
 - disabled or undecided feature packs MUST NOT be loaded or copied into `app/`
 - capability segmentation is a loading/copy/activation rule first; it does not
   imply zero dormant runtime footprint unless the relevant feature pack says so
+- feature-pack maturity, owner roles, and allowed activation status are
+  cataloged in `specs/features/catalog.md`
