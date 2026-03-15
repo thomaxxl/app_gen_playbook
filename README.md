@@ -25,6 +25,8 @@ on this file for execution rules.
 - `templates/`
   The literal copy-and-adapt file templates used to materialize a generated
   application.
+- `scripts/`
+  Operator entrypoints such as the playbook runner and local cleanup helpers.
 - `tools/`
   Helper scripts used by the orchestrator and by maintainers.
 - `runs/`
@@ -35,8 +37,11 @@ on this file for execution rules.
   A preserved runnable example app generated from this playbook.
 - `app/`
   The local ignored generated-app working tree for the active run.
-- `run_playbook.sh`
+- `scripts/run_playbook.sh`
   The top-level orchestrator entrypoint for a new run.
+- `scripts/clean.sh`
+  Cleans local `runs/current/` and `app/` without touching tracked starter or
+  example content.
 
 ## Repository Model
 
@@ -60,7 +65,7 @@ For a new run:
 2. Start the orchestrator:
 
 ```bash
-./run_playbook.sh path/to/input.md
+./scripts/run_playbook.sh path/to/input.md
 ```
 
 3. The orchestrator creates local `runs/current/`, seeds the Product Manager
@@ -74,13 +79,13 @@ per-role mutable state under `runs/current/role-state/`.
 For authoritative iteration on an existing app:
 
 ```bash
-./run_playbook.sh --mode iterate path/to/change_request.md
+./scripts/run_playbook.sh --mode iterate path/to/change_request.md
 ```
 
 For interrupted-run continuation:
 
 ```bash
-./run_playbook.sh --resume
+./scripts/run_playbook.sh --resume
 ```
 
 ## Key Files To Read Next

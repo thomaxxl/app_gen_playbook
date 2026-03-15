@@ -1,6 +1,6 @@
 # Orchestrator Runtime
 
-This file defines the expected runtime behavior of `run_playbook.sh`.
+This file defines the expected runtime behavior of `scripts/run_playbook.sh`.
 
 ## Purpose
 

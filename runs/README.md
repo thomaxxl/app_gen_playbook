@@ -19,16 +19,16 @@ Rules:
 The default orchestrated path is:
 
 ```bash
-./run_playbook.sh path/to/input.md
+./scripts/run_playbook.sh path/to/input.md
 ```
 
 Other supported paths:
 
 ```bash
-./run_playbook.sh --mode iterate path/to/change_request.md
-./run_playbook.sh --mode hotfix path/to/hotfix.md
-./run_playbook.sh --resume
-./run_playbook.sh --resume --role backend
+./scripts/run_playbook.sh --mode iterate path/to/change_request.md
+./scripts/run_playbook.sh --mode hotfix path/to/hotfix.md
+./scripts/run_playbook.sh --resume
+./scripts/run_playbook.sh --resume --role backend
 ```
 
 That runner resets local `runs/current/` from `template/` before seeding the

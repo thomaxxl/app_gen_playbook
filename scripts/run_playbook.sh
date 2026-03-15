@@ -3,8 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
-if [[ "$ROOT" != "$SCRIPT_DIR" ]]; then
-  echo "error: run_playbook.sh must run from the playbook repo root: $SCRIPT_DIR" >&2
+EXPECTED_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ "$ROOT" != "$EXPECTED_ROOT" ]]; then
+  echo "error: run_playbook.sh must live under the playbook repo scripts/ directory: $SCRIPT_DIR" >&2
   exit 2
 fi
 
