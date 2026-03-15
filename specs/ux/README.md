@@ -13,6 +13,7 @@ Rules:
 
 Template files:
 
+- `iconography.md`
 - `landing-strategy.md`
 - `navigation.md`
 - `screen-inventory.md`
@@ -27,6 +28,7 @@ creating the run-owned copies under `../../runs/current/artifacts/ux/`.
 The run-owned UX artifacts produced from these templates MUST capture:
 
 - entry-page strategy, primary CTA hierarchy, and proof/reassurance structure
+- icon-system choices when iconography is a visible UX decision
 - navigation and page hierarchy
 - page-shell and header decisions
 - form grouping and field-level content guidance

@@ -22,11 +22,23 @@ The default orchestrated path is:
 ./run_playbook.sh path/to/input.md
 ```
 
+Other supported paths:
+
+```bash
+./run_playbook.sh --mode iterate path/to/change_request.md
+./run_playbook.sh --mode hotfix path/to/hotfix.md
+./run_playbook.sh --resume
+./run_playbook.sh --resume --role backend
+```
+
 That runner resets local `runs/current/` from `template/` before seeding the
-next real brief.
+next real brief when the mode is `new`.
 
 During execution, the orchestrator also maintains:
 
 - local `runs/current/evidence/orchestrator/sessions.json`
 - local `runs/current/evidence/orchestrator/logs/orchestrator.log`
 - local role-specific `AGENTS.md` files under `runs/current/role-state/`
+- local `runs/current/role-state/*/inflight/`
+- local `runs/current/orchestrator/run-status.json`
+- local `runs/current/orchestrator/workers/*.json`

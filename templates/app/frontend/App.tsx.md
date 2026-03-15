@@ -9,10 +9,10 @@ See also:
 Keep the app root thin, but make resource wiring explicit.
 
 ```tsx
-import HomeIcon from "@mui/icons-material/Home";
 import { CustomRoutes, Resource } from "react-admin";
 import { Navigate, Route } from "react-router-dom";
 
+import AppIcon from "./AppIcon";
 import Home from "./Home";
 import { appConfig } from "./config";
 import { resourcePages } from "./generated/resourcePages";
@@ -26,7 +26,7 @@ export default function App() {
     >
       <>
         <Resource
-          icon={HomeIcon}
+          icon={(props) => <AppIcon name="home" {...props} />}
           list={Home}
           name="Home"
           options={{ label: "Home" }}

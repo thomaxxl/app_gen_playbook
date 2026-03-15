@@ -58,6 +58,11 @@ After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
 
+This applies in particular to:
+
+- `font-awesome-icons`
+- `d3-custom-views`
+
 ## Writable targets
 
 - `../../runs/current/artifacts/ux/**`
@@ -90,7 +95,7 @@ Typical task-driven reads:
   `architecture/runtime-bom.md`
 - UX implementation:
   `ux/navigation.md`, `ux/landing-strategy.md`, `ux/screen-inventory.md`,
-  `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
+  `ux/iconography.md`, `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
   `ux/state-handling.md`
 
 The Frontend agent MUST NOT load the entire run-owned artifact tree by

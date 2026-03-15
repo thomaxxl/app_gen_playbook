@@ -30,6 +30,11 @@ Menu labels, page titles, and CTA labels MUST stay aligned with:
 - `../../runs/current/artifacts/ux/navigation.md`
 - `../../runs/current/artifacts/ux/screen-inventory.md`
 
+If the run enables a non-default icon system, visible app-facing icons MUST
+also stay aligned with:
+
+- `../../runs/current/artifacts/ux/iconography.md`
+
 ## Action hierarchy
 
 Each major section SHOULD expose one primary CTA by default.
@@ -114,6 +119,21 @@ metadata is available.
 
 The frontend MUST reuse the shared relationship helpers instead of inventing a
 second relationship display pattern.
+
+## Iconography consistency
+
+The UI MUST avoid mixing icon families inside the same repeated visible
+surface by default.
+
+Examples of repeated visible surfaces:
+
+- the sidebar
+- quick-action cards
+- proof-strip or summary-card rows
+- page-header CTA groups
+
+If a run permits a transitional mix, that exception MUST be recorded in
+`../../runs/current/artifacts/ux/iconography.md`.
 
 ## Frontend validation mirrors
 

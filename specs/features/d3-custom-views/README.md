@@ -4,17 +4,20 @@
 owner: frontend
 scope: optional-feature
 feature: d3-custom-views
-maturity: placeholder
-segmentation_model: placeholder-only
-allowed_in_generated_apps: false
+maturity: supported
+segmentation_model: feature-gated-focused-components
+allowed_in_generated_apps: true
 load_when:
   - capability-profile.d3-custom-views == enabled
 depends_on:
   - ../../contracts/frontend/README.md
 ```
 
-This pack is a placeholder for D3-driven custom pages, charts, and rich
-visual summaries.
+This pack governs D3-driven custom pages, charts, SVG diagrams, and other
+bespoke visual summaries.
 
-It is not yet a fully specified feature pack. It MUST remain unloaded unless
-the current run explicitly expands it and the capability profile enables it.
+Required pack files:
+
+- [activation.md](activation.md)
+- [frontend.md](frontend.md)
+- [validation.md](validation.md)

@@ -42,8 +42,9 @@ def role_agents_content(runtime_role: str) -> str:
         "These instructions apply to this runtime role directory.\n\n"
         f"- You are the {display_role} runtime worker.\n"
         "- Process exactly one inbox message per noninteractive Codex run.\n"
+        "- Claimed work is moved into `inflight/` before you start.\n"
         "- Update `context.md` before finishing the inbox item.\n"
-        "- Move the processed inbox item into `processed/`.\n"
+        "- Move the completed inflight item into `processed/`.\n"
         "- Create downstream inbox files when handoff is required.\n"
         "- Do not silently edit another role's owned artifact area or app subtree.\n"
         f"- {role_rule}.\n"
@@ -63,6 +64,7 @@ def reset_current_run(repo_root: Path) -> Path:
     for runtime_role in RUNTIME_ROLE_DIRS:
         runtime_dir = role_state_dir / runtime_role
         (runtime_dir / "inbox").mkdir(parents=True, exist_ok=True)
+        (runtime_dir / "inflight").mkdir(parents=True, exist_ok=True)
         (runtime_dir / "processed").mkdir(parents=True, exist_ok=True)
         (runtime_dir / "AGENTS.md").write_text(
             role_agents_content(runtime_role),
@@ -81,6 +83,10 @@ def reset_current_run(repo_root: Path) -> Path:
     (orchestrator_dir / "jsonl").mkdir(parents=True, exist_ok=True)
     (orchestrator_dir / "final").mkdir(parents=True, exist_ok=True)
     (orchestrator_dir / "logs").mkdir(parents=True, exist_ok=True)
+
+    runtime_state_dir = current_dir / "orchestrator"
+    (runtime_state_dir / "workers").mkdir(parents=True, exist_ok=True)
+    (runtime_state_dir / "sessions").mkdir(parents=True, exist_ok=True)
 
     remarks_path = current_dir / "remarks.md"
     remarks_path.write_text("# Run Remarks\n\nNeutral at run start.\n", encoding="utf-8")

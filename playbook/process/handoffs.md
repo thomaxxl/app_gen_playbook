@@ -7,6 +7,10 @@ See:
 
 - `inbox-protocol.md`
 
+Iteration and resumed work MUST still use the same inbox mechanism. When a
+handoff belongs to a change run, it SHOULD carry `change_id`, `task_id`, and
+other delta-scoping fields defined by `inbox-protocol.md`.
+
 ## Product Manager -> Architect
 
 Complete only when:

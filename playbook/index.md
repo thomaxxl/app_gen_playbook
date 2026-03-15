@@ -64,6 +64,11 @@ Use this file as the discovery entrypoint for the playbook library.
 - [task-bundles/backend-implementation.yaml](task-bundles/backend-implementation.yaml)
 - [task-bundles/integration-review.yaml](task-bundles/integration-review.yaml)
 - [task-bundles/deployment.yaml](task-bundles/deployment.yaml)
+- [task-bundles/change-intake.yaml](task-bundles/change-intake.yaml)
+- [task-bundles/change-impact-analysis.yaml](task-bundles/change-impact-analysis.yaml)
+- [task-bundles/change-frontend-delta.yaml](task-bundles/change-frontend-delta.yaml)
+- [task-bundles/change-backend-delta.yaml](task-bundles/change-backend-delta.yaml)
+- [task-bundles/change-acceptance.yaml](task-bundles/change-acceptance.yaml)
 
 ## Loader rules
 
@@ -71,6 +76,8 @@ Use this file as the discovery entrypoint for the playbook library.
 - [process/loader-examples.md](process/loader-examples.md)
 - [process/context-budgets.md](process/context-budgets.md)
 - [process/orchestrator-runtime.md](process/orchestrator-runtime.md)
+- [process/run-modes.md](process/run-modes.md)
+- [process/interrupted-runs.md](process/interrupted-runs.md)
 
 ## Feature catalog
 

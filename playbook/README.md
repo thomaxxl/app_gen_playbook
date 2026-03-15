@@ -9,6 +9,7 @@ It is the canonical home for:
 - role definitions
 - execution and handoff rules
 - orchestrator runtime rules
+- run-mode and recovery rules
 - phase flow
 - done criteria
 - compatibility notes

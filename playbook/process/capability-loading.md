@@ -71,6 +71,7 @@ profile explicitly enables them.
 This negative rule applies equally to UX/UI-oriented packs such as:
 
 - uploads
+- font-awesome-icons
 - ux-measurement
 - d3-custom-views
 - reporting

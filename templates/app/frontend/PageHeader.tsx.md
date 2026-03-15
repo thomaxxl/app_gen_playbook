@@ -8,13 +8,14 @@ See also:
 Use this file for the shared page-header pattern.
 
 ```tsx
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
+
+import AppIcon from "./AppIcon";
 
 type PageHeaderProps = {
   title: string;
@@ -38,7 +39,7 @@ export default function PageHeader({
           <Button
             component={RouterLink}
             size="small"
-            startIcon={<ArrowBackIcon />}
+            startIcon={<AppIcon name="arrow-back" />}
             to={backTo}
           >
             {backLabel}

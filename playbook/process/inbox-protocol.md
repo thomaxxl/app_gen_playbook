@@ -6,8 +6,10 @@ This file defines the actionable message model for agent handoffs.
 
 - Every agent directory contains an `inbox/`.
 - Every agent directory also contains a `processed/` archive.
+- Every agent directory SHOULD also contain an `inflight/` directory.
 - Every markdown file in that inbox is actionable work.
 - Inbox files are the active queue.
+- Inflight files are claimed work currently being processed.
 - Processed items are moved into `processed/` for traceability.
 - Each noninteractive Codex role invocation MUST process at most one inbox
   item.
@@ -56,6 +58,14 @@ Any non-`INPUT.md` inbox message should include:
 - `dependencies`
 - `gate status`
 - `implementation evidence`
+- `change_id` (optional)
+- `change_type` (optional)
+- `affected_artifacts` (optional)
+- `affected_app_paths` (optional)
+- `compatibility_impact` (optional)
+- `migration_required` (optional)
+- `regression_scope` (optional)
+- `task_id` (optional)
 - `supersedes` (optional)
 - `blocking issues`
 - `notes`
@@ -86,11 +96,21 @@ The receiving agent must:
 
 1. read `role.md`
 2. read its `context.md` if present
-3. process the oldest actionable inbox message for the current turn
+3. claim the oldest actionable inbox message into `inflight/` for the current turn
 4. update owned artifacts
 5. update `context.md`
 6. send onward messages if needed
-7. move the processed inbox messages into `processed/`
+7. move the completed inflight message into `processed/`
+
+## Atomic completion rule
+
+From the playbook perspective, a role is not finished with a message until:
+
+1. owned artifacts are updated
+2. `context.md` is updated
+3. downstream handoffs are written if needed
+4. required evidence is written
+5. the claimed item leaves `inflight/` and appears in `processed/`
 
 ## Gate signal
 

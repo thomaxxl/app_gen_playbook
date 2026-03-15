@@ -1,0 +1,17 @@
+name: change-intake
+role: product_manager
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/product-manager.summary.md
+  - playbook/process/read-sets/product-manager-iteration.md
+required_phase:
+  - playbook/process/phases/phase-I1-change-intake-and-triage.md
+  - playbook/process/phases/phase-I2-product-and-scope-delta.md
+required_artifacts:
+  - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/business-rules.md
+writable_targets:
+  - runs/current/artifacts/product/**
+  - runs/current/role-state/product_manager/**
+  - app/BUSINESS_RULES.md

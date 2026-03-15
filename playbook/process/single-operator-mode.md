@@ -17,6 +17,7 @@ same artifact and inbox discipline as a multi-agent run.
 - maintain separate `context.md` files per role directory
 - preserve filename timestamps and ordering
 - record any deviation taken only because the run was single-operator
+- preserve `inflight/` traces when recovering interrupted work
 
 ## Historical-preserving app-only path
 

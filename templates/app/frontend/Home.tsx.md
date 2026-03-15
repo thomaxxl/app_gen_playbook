@@ -9,7 +9,6 @@ Use this file for the standard React-admin `Home` page that appears in the
 left sidebar.
 
 ```tsx
-import LaunchIcon from "@mui/icons-material/Launch";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
@@ -17,6 +16,7 @@ import Typography from "@mui/material/Typography";
 import { Title } from "react-admin";
 import { Link } from "react-router-dom";
 
+import AppIcon from "./AppIcon";
 import { appConfig } from "./config";
 import EmptyState from "./EmptyState";
 import PageHero from "./PageHero";
@@ -54,7 +54,7 @@ export default function Home() {
             <Button
               component={Link}
               data-testid="entry-primary-cta"
-              startIcon={<LaunchIcon />}
+              startIcon={<AppIcon name="launch" />}
               to={primaryRoute}
               variant="contained"
             >

@@ -16,6 +16,7 @@ Use this as the neutral starter for the run-owned capability profile.
 | Feature | Status | Rationale | Owning roles |
 | --- | --- | --- | --- |
 | uploads | undecided | replace | architect, backend, frontend, devops |
+| font-awesome-icons | disabled | replace | architect, frontend |
 | ux-measurement | disabled | replace | architect, frontend, product_manager |
 | d3-custom-views | disabled | replace | architect, frontend |
 | reporting | disabled | replace | architect, backend, frontend, devops |

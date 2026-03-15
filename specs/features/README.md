@@ -52,6 +52,7 @@ See also:
 
 Available packs:
 
+- [font-awesome-icons/README.md](font-awesome-icons/README.md)
 - [uploads/README.md](uploads/README.md)
 - [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)

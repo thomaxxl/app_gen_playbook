@@ -167,6 +167,9 @@ def should_ignore_path(path: Path, repo_root: Path) -> bool:
     if relative.startswith("runs/current/evidence/orchestrator/"):
         return True
 
+    if relative.startswith("runs/current/orchestrator/"):
+        return True
+
     if any(part in EXCLUDED_DIR_NAMES for part in parts[:-1]):
         return True
 

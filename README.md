@@ -71,6 +71,18 @@ For a new run:
 The orchestrator keeps per-role evidence under `runs/current/evidence/` and
 per-role mutable state under `runs/current/role-state/`.
 
+For authoritative iteration on an existing app:
+
+```bash
+./run_playbook.sh --mode iterate path/to/change_request.md
+```
+
+For interrupted-run continuation:
+
+```bash
+./run_playbook.sh --resume
+```
+
 ## Key Files To Read Next
 
 For human orientation:

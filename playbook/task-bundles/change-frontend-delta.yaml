@@ -1,0 +1,17 @@
+name: change-frontend-delta
+role: frontend
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/frontend.summary.md
+  - playbook/process/read-sets/frontend-iteration.md
+required_phase:
+  - playbook/process/phases/phase-I4-design-delta.md
+  - playbook/process/phases/phase-I5-implementation-delta.md
+required_artifacts:
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/architecture/route-and-entry-model.md
+writable_targets:
+  - runs/current/artifacts/ux/**
+  - runs/current/role-state/frontend/**
+  - app/frontend/**

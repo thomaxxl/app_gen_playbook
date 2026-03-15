@@ -27,9 +27,12 @@ Allowed `status` values:
 
 - `stub`
 - `draft`
+- `in-progress`
 - `ready-for-handoff`
 - `approved`
 - `blocked`
+- `interrupted`
+- `needs-recovery`
 - `superseded`
 
 Rules:
@@ -56,6 +59,15 @@ Rules:
   success, the artifact SHOULD reference supporting files under `evidence/`
 - a handoff with `gate status: pass` or `pass with assumptions` should only
   reference artifacts marked `ready-for-handoff` or `approved`
+
+Optional iteration metadata fields:
+
+- `change_id`
+- `baseline_ref`
+- `compatibility`
+- `supersedes`
+- `implemented_in`
+- `verification_refs`
 
 ## Approval example
 

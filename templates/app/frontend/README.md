@@ -30,47 +30,48 @@ Suggested copy order:
 7. `theme.ts.md`
 8. `vite-env.d.ts.md`
 9. `main.tsx.md`
-10. `PageHero.tsx.md`
-11. `PageHeader.tsx.md`
-12. `EmptyState.tsx.md`
-13. `ErrorState.tsx.md`
-14. `FormSection.tsx.md`
-15. `SectionBlock.tsx.md`
-16. `QuickActionCard.tsx.md`
-17. `SummaryCard.tsx.md`
-18. `SchemaDrivenAdminApp.tsx.md`
-19. `shared-runtime/admin/schemaContext.tsx.md`
-20. `shared-runtime/admin/resourceMetadata.ts.md`
-21. `shared-runtime/relationshipUi.tsx.md`
-22. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
-23. `shared-runtime/resourceRegistry.tsx.md`
-24. `generated/resources/Collection.tsx.md`
-25. `generated/resources/Item.tsx.md`
-26. `generated/resources/Status.tsx.md`
-27. `resourcePages.ts.md`
-28. `App.tsx.md`
-29. `Home.tsx.md`
-30. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
-31. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
-32. `D3Visualization.tsx.md` if the app needs charts or figures
-33. `shared-runtime/files/README.md`
-34. `shared-runtime/files/uploadAwareDataProvider.ts.md`
-35. `shared-runtime/files/fileValueAdapters.ts.md`
-36. `shared-runtime/files/fileFieldHelpers.ts.md`
-37. `fs-promises.ts.md`
-38. `vite.config.ts.md`
-39. `vitest.config.ts.md`
-40. `playwright.config.ts.md`
-41. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
-42. `tests/schemaContext.test.ts.md`
-43. `tests/dataProvider.integration.test.ts.md`
-44. `tests/resourceMetadata.test.ts.md`
-45. `tests/createSearchEnabledDataProvider.test.ts.md`
-46. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
-47. `tests/vite.config.test.ts.md`
-48. `tests/smoke.e2e.spec.ts.md`
-49. `../project/run.sh.md`
-50. `../project/README.app.md`
+10. `AppIcon.tsx.md`
+11. `PageHero.tsx.md`
+12. `PageHeader.tsx.md`
+13. `EmptyState.tsx.md`
+14. `ErrorState.tsx.md`
+15. `FormSection.tsx.md`
+16. `SectionBlock.tsx.md`
+17. `QuickActionCard.tsx.md`
+18. `SummaryCard.tsx.md`
+19. `SchemaDrivenAdminApp.tsx.md`
+20. `shared-runtime/admin/schemaContext.tsx.md`
+21. `shared-runtime/admin/resourceMetadata.ts.md`
+22. `shared-runtime/relationshipUi.tsx.md`
+23. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
+24. `shared-runtime/resourceRegistry.tsx.md`
+25. `generated/resources/Collection.tsx.md`
+26. `generated/resources/Item.tsx.md`
+27. `generated/resources/Status.tsx.md`
+28. `resourcePages.ts.md`
+29. `App.tsx.md`
+30. `Home.tsx.md`
+31. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
+32. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
+33. `D3Visualization.tsx.md` if the app needs charts or figures
+34. `shared-runtime/files/README.md`
+35. `shared-runtime/files/uploadAwareDataProvider.ts.md`
+36. `shared-runtime/files/fileValueAdapters.ts.md`
+37. `shared-runtime/files/fileFieldHelpers.ts.md`
+38. `fs-promises.ts.md`
+39. `vite.config.ts.md`
+40. `vitest.config.ts.md`
+41. `playwright.config.ts.md`
+42. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+43. `tests/schemaContext.test.ts.md`
+44. `tests/dataProvider.integration.test.ts.md`
+45. `tests/resourceMetadata.test.ts.md`
+46. `tests/createSearchEnabledDataProvider.test.ts.md`
+47. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+48. `tests/vite.config.test.ts.md`
+49. `tests/smoke.e2e.spec.ts.md`
+50. `../project/run.sh.md`
+51. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -95,9 +96,12 @@ Notes:
   sidebar-visible in-admin landing page.
 - `theme.ts.md`, `PageHero.tsx.md`, `PageHeader.tsx.md`, `EmptyState.tsx.md`,
   `ErrorState.tsx.md`, `FormSection.tsx.md`, `SectionBlock.tsx.md`,
-  `QuickActionCard.tsx.md`, and `SummaryCard.tsx.md` define the starter UI
-  shell. Generated pages SHOULD reuse them unless the run-owned UX artifacts
-  explicitly require a different shell.
+  `QuickActionCard.tsx.md`, `SummaryCard.tsx.md`, and `AppIcon.tsx.md` define
+  the starter UI shell. Generated pages SHOULD reuse them unless the
+  run-owned UX artifacts explicitly require a different shell.
+- `AppIcon.tsx.md` is the visible icon wrapper swap point. When
+  `font-awesome-icons` is enabled, the Frontend role SHOULD adapt that wrapper
+  instead of hard-coding a second icon-family path in each page template.
 - `Home.tsx.md` is now the primary entry-page scaffold. It MUST implement the
   run-owned `landing-strategy.md` artifact rather than remaining a thin
   placeholder.

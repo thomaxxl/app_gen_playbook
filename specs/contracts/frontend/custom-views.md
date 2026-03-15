@@ -54,17 +54,11 @@ At minimum:
 
 ## D3 pattern
 
-The frontend SHOULD use D3 only in focused visualization components.
+If `d3-custom-views` is enabled, the frontend MUST follow that feature pack.
 
-Recommended split:
+The always-on baseline rule remains:
 
-- page component:
-  fetches and prepares data
-- visualization component:
-  renders the SVG or graph
-
-The implementation MUST NOT mix generic resource runtime logic and D3 drawing
-code in the same file.
+- page-level runtime logic and D3 drawing logic MUST remain separate
 
 ## Required UI states for custom views
 

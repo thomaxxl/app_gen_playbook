@@ -175,7 +175,7 @@ def emit_full_prompt(
         "1. update owned artifacts\n"
         "2. update the role context.md\n"
         "3. create any required downstream inbox files\n"
-        "4. move the processed inbox item into processed/\n"
+        "4. move the claimed inflight work item into processed/\n"
         "5. start the final response with `Summary: ...`\n"
         "6. then summarize what changed and what remains open\n"
     )
@@ -214,7 +214,7 @@ def emit_short_prompt(
     print("- Do not edit another role's artifact area or app subtree.")
     print("- If contract drift exists, write a handoff into the Architect inbox instead of silently patching around it.")
     print("- Update your role context.md.")
-    print("- Move the processed inbox file into processed/.")
+    print("- Move the claimed inflight work item into processed/.")
     print("- Start the final response with `Summary: ...` on a single line.")
     print("")
 

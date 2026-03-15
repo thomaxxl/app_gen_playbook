@@ -64,6 +64,10 @@ The real artifact MUST define:
 - primary CTA route target
 - optional secondary CTA label and route target
 - proof or summary cues shown above the fold
+- whether the hero or proof surfaces use visible icons and, if so, how those
+  icons map to `iconography.md`
+- whether a D3-based summary visualization appears above the fold or later in
+  the page
 - whether the first viewport includes summary cards, a workflow panel, or
   both
 

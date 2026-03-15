@@ -31,6 +31,15 @@ Optional but standard for custom figures:
 
 - `d3@7.9.0`
 
+Optional app-facing icon system:
+
+- `@fortawesome/react-fontawesome@3.2.0`
+- `@fortawesome/fontawesome-svg-core@7.2.0`
+- `@fortawesome/free-solid-svg-icons@7.2.0`
+- optional:
+  - `@fortawesome/free-regular-svg-icons@7.2.0`
+  - `@fortawesome/free-brands-svg-icons@7.2.0`
+
 Required dev dependencies:
 
 - `vite@6.2.2`
@@ -77,6 +86,15 @@ Optional charts/graphs:
 
 ```bash
 npm install d3@7.9.0
+```
+
+Optional app-facing Font Awesome icon system:
+
+```bash
+npm install \
+  @fortawesome/react-fontawesome@3.2.0 \
+  @fortawesome/fontawesome-svg-core@7.2.0 \
+  @fortawesome/free-solid-svg-icons@7.2.0
 ```
 
 Dev:
@@ -142,5 +160,8 @@ npm install -D \
   requests.
 - `d3` is optional at install time, but it is the standard choice for custom
   charts, trees, and SVG figures when those are required.
+- Font Awesome is optional at install time. It MUST be added only when the
+  `font-awesome-icons` feature pack is enabled and the run-owned
+  `iconography.md` artifact selects it as the visible app-facing icon system.
 - See `../../playbook/process/compatibility.md` for the overall local runtime
   profile.

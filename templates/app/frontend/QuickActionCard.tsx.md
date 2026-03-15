@@ -9,7 +9,6 @@ Use this file for short entry-page action surfaces that clarify what the user
 can do next.
 
 ```tsx
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -18,6 +17,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
+
+import AppIcon from "./AppIcon";
 
 type QuickActionCardProps = {
   title: string;
@@ -52,7 +53,7 @@ export default function QuickActionCard({
           underline="hover"
         >
           {actionLabel}
-          <ArrowForwardIcon fontSize="inherit" />
+          <AppIcon fontSize="inherit" name="arrow-forward" />
         </Link>
       </CardActions>
     </Card>

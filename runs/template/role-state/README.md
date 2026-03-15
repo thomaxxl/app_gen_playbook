@@ -1,7 +1,7 @@
 # Role State Template Root
 
-Use local `runs/current/role-state/` for active inbox, processed, and
-per-role context files.
+Use local `runs/current/role-state/` for active inbox, inflight, processed,
+and per-role context files.
 
 The tracked template remains intentionally empty except for this starter note.
 
@@ -17,6 +17,7 @@ Each local runtime directory MUST contain:
 
 - `AGENTS.md`
 - `inbox/`
+- `inflight/`
 - `processed/`
 
 `context.md` is created by the role agent on first execution.

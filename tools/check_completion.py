@@ -71,20 +71,34 @@ def main() -> int:
     for display_role in CORE_DISPLAY_ROLES:
         runtime_role = DISPLAY_TO_RUNTIME[display_role]
         inbox_dir = repo_root / "runs" / "current" / "role-state" / runtime_role / "inbox"
+        inflight_dir = repo_root / "runs" / "current" / "role-state" / runtime_role / "inflight"
         if inbox_dir.exists():
             pending = sorted(path.name for path in inbox_dir.glob("*.md"))
             if pending:
                 blockers.append(
                     f"core inbox not empty for {runtime_role}: {', '.join(pending)}"
                 )
+        if inflight_dir.exists():
+            pending = sorted(path.name for path in inflight_dir.glob("*.md"))
+            if pending:
+                blockers.append(
+                    f"core inflight not empty for {runtime_role}: {', '.join(pending)}"
+                )
 
     if is_optional_devops_active(repo_root):
         deployment_inbox = repo_root / "runs" / "current" / "role-state" / "deployment" / "inbox"
+        deployment_inflight = repo_root / "runs" / "current" / "role-state" / "deployment" / "inflight"
         if deployment_inbox.exists():
             pending = sorted(path.name for path in deployment_inbox.glob("*.md"))
             if pending:
                 blockers.append(
                     f"optional deployment inbox not empty: {', '.join(pending)}"
+                )
+        if deployment_inflight.exists():
+            pending = sorted(path.name for path in deployment_inflight.glob("*.md"))
+            if pending:
+                blockers.append(
+                    f"optional deployment inflight not empty: {', '.join(pending)}"
                 )
 
         verification_file = (

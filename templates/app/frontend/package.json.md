@@ -54,6 +54,15 @@ or YAML parsing.
 
 Add `d3@7.9.0` when the app includes charts or graph views.
 
+Add the Font Awesome package set only when the `font-awesome-icons` feature
+pack is enabled for the run:
+
+```json
+"@fortawesome/react-fontawesome": "3.2.0",
+"@fortawesome/fontawesome-svg-core": "7.2.0",
+"@fortawesome/free-solid-svg-icons": "7.2.0"
+```
+
 The `engines.node` field is intentional. The starter frontend assumes a Node
 24 runtime with the pinned Vite `6.2.2` toolchain. If a project documents a
 deliberate compatibility deviation, update this field and the pinned frontend

@@ -20,6 +20,8 @@ A feature is done only when all of these are true:
 - docs and templates match the implementation
 - product acceptance has passed
 - no required artifact remains `status: stub`
+- no required artifact remains `status: in-progress`
+- no required artifact remains `status: interrupted`
 - generated application output lives under local gitignored `app/`, not mixed
   into the
   playbook contract directories
@@ -31,6 +33,7 @@ A feature is done only when all of these are true:
   `runs/current/evidence/contract-samples.md` exists and records at least one
   `admin.yaml endpoint` to live-route to sample-record trace
 - all core-agent inboxes are empty
+- no core-agent inflight items remain
 
 If packaging was explicitly in scope:
 
@@ -43,6 +46,9 @@ documented.
 
 If browser-level verification required execution outside the default sandbox,
 that execution path and justification must also be documented.
+
+If the run was resumed after interruption, the recovery outcome MUST be
+recorded in run evidence or `runs/current/remarks.md`.
 
 If Playwright or its browser runtime was missing, the operator must install it
 before the final smoke run instead of skipping that gate.

@@ -43,6 +43,10 @@ The real artifact MUST define:
 - what chart text fallback or no-chart fallback is required, when charts exist
 - what mobile fallback or responsive simplification the view requires
 - whether the shared starter page shell is sufficient or must be replaced
+- whether the view uses a non-default icon system and, if so, how that maps to
+  `iconography.md`
+- whether the view uses D3 and, if so, what decision-critical summary must
+  accompany it
 
 If the app needs a landing page that joins several resources and resolves
 multiple references to the same target type, use

@@ -63,6 +63,10 @@ frontend package template before treating the playbook baseline as current.
   run-owned UX artifact explicitly documents the exception
 - generated create/edit forms use responsive width heuristics instead of
   rendering all inputs full-width by default
+- if `font-awesome-icons` is enabled, visible app-facing icons follow
+  `runs/current/artifacts/ux/iconography.md`
+- if `d3-custom-views` is enabled, the affected custom page proves a text
+  fallback or summary and a narrow-width behavior note
 
 ## UX/UI validation
 

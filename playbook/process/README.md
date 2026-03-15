@@ -45,7 +45,11 @@ Agents SHOULD use this path instead:
 - [context-budgets.md](context-budgets.md)
 - [capability-loading.md](capability-loading.md)
 - [artifact-metadata.md](artifact-metadata.md)
+- [run-modes.md](run-modes.md)
+- [change-classification.md](change-classification.md)
 - [run-lifecycle.md](run-lifecycle.md)
+- [interrupted-runs.md](interrupted-runs.md)
+- [checkpoints.md](checkpoints.md)
 - [orchestrator-runtime.md](orchestrator-runtime.md)
 - [playbook-execution-outputs.md](playbook-execution-outputs.md)
 - [ownership-and-edits.md](ownership-and-edits.md)
@@ -60,6 +64,14 @@ Agents SHOULD use this path instead:
 - [phases/phase-5-parallel-implementation.md](phases/phase-5-parallel-implementation.md)
 - [phases/phase-6-integration-review.md](phases/phase-6-integration-review.md)
 - [phases/phase-7-product-acceptance.md](phases/phase-7-product-acceptance.md)
+- [phases/phase-I0-baseline-alignment.md](phases/phase-I0-baseline-alignment.md)
+- [phases/phase-I1-change-intake-and-triage.md](phases/phase-I1-change-intake-and-triage.md)
+- [phases/phase-I2-product-and-scope-delta.md](phases/phase-I2-product-and-scope-delta.md)
+- [phases/phase-I3-architecture-and-contract-delta.md](phases/phase-I3-architecture-and-contract-delta.md)
+- [phases/phase-I4-design-delta.md](phases/phase-I4-design-delta.md)
+- [phases/phase-I5-implementation-delta.md](phases/phase-I5-implementation-delta.md)
+- [phases/phase-I6-integration-and-regression-review.md](phases/phase-I6-integration-and-regression-review.md)
+- [phases/phase-I7-change-acceptance.md](phases/phase-I7-change-acceptance.md)
 
 ## Task-routing support
 

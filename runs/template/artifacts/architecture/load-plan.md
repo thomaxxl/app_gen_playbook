@@ -32,6 +32,11 @@ Use this as the neutral starter for the run-owned role load plan.
 - `specs/ux/`
 - enabled frontend feature packs only
 
+Typical examples:
+
+- `specs/features/font-awesome-icons/` only when enabled
+- `specs/features/d3-custom-views/` only when enabled
+
 ### backend
 
 - `specs/contracts/backend/`

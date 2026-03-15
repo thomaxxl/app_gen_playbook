@@ -21,6 +21,8 @@ Maturity rule:
 
 - `uploads/` is the only feature-template pack that is currently documented as
   implementation-ready
+- `font-awesome-icons/` and `d3-custom-views/` are documented optional
+  frontend packs and MUST remain feature-gated
 - `ux-measurement/` is a documented feature-template entrypoint, but it does
   not ship starter code snippets by default
 - the other feature-template packs remain placeholders and MUST stay disabled
@@ -35,6 +37,7 @@ Segmentation rule:
 
 Available packs:
 
+- [font-awesome-icons/README.md](font-awesome-icons/README.md)
 - [uploads/README.md](uploads/README.md)
 - [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)

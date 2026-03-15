@@ -62,6 +62,16 @@ When a page shows compact metrics or overview information, the starter UI
 SHOULD use the shared `SummaryCard` pattern or an equivalent documented
 structure.
 
+## Icon sizing and alignment
+
+Visible app-facing icons SHOULD:
+
+- align cleanly with surrounding text baselines
+- stay visually consistent across page headers, quick-action cards, summary
+  cards, and CTA rows
+- avoid using multiple icon families inside the same repeated surface unless a
+  documented transitional exception exists
+
 ## State components
 
 The starter UI SHOULD use shared state components for:

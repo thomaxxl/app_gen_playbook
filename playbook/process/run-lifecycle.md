@@ -26,6 +26,7 @@ The active run uses:
 - local `../../runs/current/artifacts/`
 - local `../../runs/current/role-state/`
 - local `../../runs/current/evidence/`
+- local `../../runs/current/orchestrator/`
 - local ignored `../../app/`
 
 Brief rule:
@@ -62,6 +63,22 @@ The playbook distinguishes three different states:
 - `../../app/`
   A local ignored generated application working tree for the active or most
   recent run.
+
+## Run modes
+
+The active run MUST operate in one of these modes:
+
+- `new-full-run`
+- `iterative-change-run`
+- `app-only-hotfix`
+
+See:
+
+- `run-modes.md`
+- `change-classification.md`
+
+`iterative-change-run` is the default lane for authoritative changes to an
+existing app.
 
 If the task is a new full run, `../../runs/current/` MUST become the
 authoritative run record for that app and MUST be updated accordingly.
@@ -111,6 +128,19 @@ To start a new run:
 
 This procedure applies to a new full run. It does not apply to an app-only
 maintenance pass that intentionally preserves `../../runs/current/`.
+
+## Interrupted work
+
+Interrupted work MUST remain visible through:
+
+- `../../runs/current/role-state/<role>/inflight/`
+- `../../runs/current/orchestrator/run-status.json`
+- `../../runs/current/orchestrator/workers/*.json`
+
+See:
+
+- `interrupted-runs.md`
+- `checkpoints.md`
 
 ## Completion
 

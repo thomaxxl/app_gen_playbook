@@ -58,6 +58,10 @@ The agent MAY load these files on demand:
   only when uploads are enabled for the run and frontend work is in scope
 - [../../features/ux-measurement/README.md](../../features/ux-measurement/README.md)
   only when UX measurement is enabled for the run and frontend work is in scope
+- [../../features/font-awesome-icons/README.md](../../features/font-awesome-icons/README.md)
+  only when `font-awesome-icons` is enabled for the run
+- [../../features/d3-custom-views/README.md](../../features/d3-custom-views/README.md)
+  only when `d3-custom-views` is enabled for the run
 
 Optional feature packs live under `../../features/` and MUST be loaded only
 when enabled by the run capability profile. Disabled or undecided feature

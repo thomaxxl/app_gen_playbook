@@ -6,8 +6,11 @@ This file defines the expected runtime behavior of `run_playbook.sh`.
 
 The orchestrator MUST:
 
-- create a fresh local `runs/current/` from `runs/template/`
-- seed the Product Manager inbox from the supplied brief
+- support `new-full-run`, `iterative-change-run`, `app-only-hotfix`, and
+  `--resume`
+- create a fresh local `runs/current/` from `runs/template/` for a new full
+  run
+- seed the Product Manager inbox from the supplied brief or change request
 - process exactly one inbox message per Codex role invocation
 - keep durable run state in artifacts, inbox traces, and role-local
   `context.md`
@@ -54,7 +57,7 @@ The role-local durable source of truth remains:
 
 - owned files under `runs/current/artifacts/**`
 - `runs/current/role-state/<role>/context.md`
-- inbox and processed message traces
+- inbox, inflight, and processed message traces
 
 Codex session history MUST NOT be treated as authoritative run state.
 
@@ -94,6 +97,20 @@ Those role-local instructions MUST remain small and stable. They MUST define:
 The role-local `AGENTS.md` is a stable persona layer. It MUST NOT replace the
 real run state stored in artifacts or `context.md`.
 
+## Claimed work
+
+Each role runtime directory MUST include:
+
+- `inbox/`
+- `inflight/`
+- `processed/`
+
+The orchestrator MUST move a claimed work item from `inbox/` to `inflight/`
+before the Codex turn starts.
+
+The role turn is complete only when the claimed item leaves `inflight/` and is
+archived to `processed/`.
+
 ## Writable-root rule
 
 When the orchestrator starts Codex from a role-local runtime directory under
@@ -132,6 +149,17 @@ After Phase 5:
 Phase 5 readiness MUST be computed from run-owned artifact status, not guessed
 from inbox activity.
 
+## Resume behavior
+
+When `--resume` is used, the orchestrator MUST:
+
+- avoid resetting `runs/current/`
+- inspect existing worker state and inflight items
+- prefer continuing inflight work over claiming a new inbox item
+- resume a stored Codex session only when the inflight state is still
+  consistent
+- rebuild from repo state when session continuity is missing or unsafe
+
 ## Stall detection
 
 The orchestrator MUST detect a stalled run.
@@ -139,7 +167,8 @@ The orchestrator MUST detect a stalled run.
 A run is stalled when all of the following are true:
 
 - the completion checker still fails
-- no actionable inbox items remain under `runs/current/role-state/*/inbox`
+- no actionable inbox or inflight items remain under
+  `runs/current/role-state/*/`
 - no role turn completed useful work in the current control cycle
 
 When a stall is detected, the orchestrator MUST:
@@ -178,7 +207,7 @@ Prompts SHOULD tell Codex:
 - which files are required reads
 - which writes are allowed
 - that `context.md` must be updated
-- that the inbox item must be moved to `processed/`
+- that the claimed inflight item must be moved to `processed/`
 - that the final response must begin with `Summary:`
 
 The orchestrator SHOULD NOT inline large blocks of playbook text on every
