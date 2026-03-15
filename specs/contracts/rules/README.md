@@ -36,8 +36,8 @@ Then use the starter rule docs as examples rather than as domain truth.
 
 The agent MUST also consult:
 
-- `../../runs/current/artifacts/architecture/capability-profile.md`
-- `../../runs/current/artifacts/architecture/load-plan.md`
+- `../../../runs/current/artifacts/architecture/capability-profile.md`
+- `../../../runs/current/artifacts/architecture/load-plan.md`
 
 The agent MAY load these files on demand:
 
@@ -57,7 +57,7 @@ default backend context budget.
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local rule file as the source of truth unless the required pattern is
-also shipped under `../../templates/`.
+also shipped under `../../../templates/`.
 
 Human-readable business-rule intent is owned by:
 

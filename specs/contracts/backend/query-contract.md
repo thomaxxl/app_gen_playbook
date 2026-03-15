@@ -101,7 +101,7 @@ strategy.
 If product artifacts expect search/filter behavior beyond starter text search,
 the Backend role MUST define the exact supported behavior in:
 
-- `../../runs/current/artifacts/backend-design/query-behavior.md`
+- `../../../runs/current/artifacts/backend-design/query-behavior.md`
 
 before implementation starts.
 

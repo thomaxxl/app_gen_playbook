@@ -29,7 +29,7 @@ Logic/rules dependency:
 Runtime/package freeze ownership:
 
 - The Architect MUST freeze the intended backend package set in
-  `../../runs/current/artifacts/architecture/runtime-bom.md` before
+  `../../../runs/current/artifacts/architecture/runtime-bom.md` before
   implementation starts, or explicitly delegate a change proposal to Backend
   during Phase 4.
 - The Backend role MAY propose a dependency deviation during Phase 4, but the
@@ -77,7 +77,7 @@ fi
   - the local path or local artifact source
   - the expected removal condition
   in:
-  - `../../runs/current/artifacts/architecture/runtime-bom.md`
+  - `../../../runs/current/artifacts/architecture/runtime-bom.md`
   - the relevant role `context.md`
   - and any handoff note that depends on the override
 - `python-multipart` is REQUIRED when the app exposes FastAPI multipart upload
@@ -86,5 +86,5 @@ fi
 - Expect SQLAlchemy deprecation warnings under the current LogicBank stack.
 - Delete/cascade behavior involving rule-managed child relationships must be
   tested explicitly; do not assume default passive-delete behavior is safe.
-- See `../../playbook/process/compatibility.md` for the overall local runtime
+- See `../../../playbook/process/compatibility.md` for the overall local runtime
   profile.

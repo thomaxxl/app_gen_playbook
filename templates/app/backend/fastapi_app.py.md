@@ -15,7 +15,9 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.requests import Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from logic_bank.util import ConstraintException
 from safrs.fastapi.api import SafrsFastAPI
 
 from .bootstrap import seed_reference_data, validate_admin_schema
@@ -29,6 +31,22 @@ from .db import (
 )
 from .models import EXPOSED_MODELS
 from .rules import activate_logic
+
+
+def jsonapi_error_response(status_code: int, detail: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "jsonapi": {"version": "1.0"},
+            "errors": [
+                {
+                    "status": str(status_code),
+                    "title": "ValidationError",
+                    "detail": detail,
+                }
+            ],
+        },
+    )
 
 
 def create_app() -> FastAPI:
@@ -55,6 +73,13 @@ def create_app() -> FastAPI:
             return await call_next(request)
         finally:
             session_factory.remove()
+
+    @app.exception_handler(ConstraintException)
+    async def handle_constraint_exception(
+        _request: Request,
+        exc: ConstraintException,
+    ) -> JSONResponse:
+        return jsonapi_error_response(400, str(exc))
 
     api = SafrsFastAPI(app, prefix=settings.api_prefix)
     app.state.safrs_api = api
@@ -92,6 +117,8 @@ Notes:
 - Keep `/jsonapi.json` canonical for FastAPI SAFRS.
 - Serve `admin.yaml` from the backend so the frontend can stay same-origin.
 - Put the root redirect on `/docs`, not a JSON metadata response.
+- Convert LogicBank `ConstraintException` failures into JSON:API `400`
+  responses so rule errors stay transport-stable.
 - Activate LogicBank against the real app session factory before seed/bootstrap.
 - Perform `admin.yaml` validation and idempotent seed/bootstrap before exposing
   SAFRS routes.
