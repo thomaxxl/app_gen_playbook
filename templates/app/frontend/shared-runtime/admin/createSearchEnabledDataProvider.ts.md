@@ -6,25 +6,52 @@ See also:
 - [../../../../../specs/contracts/frontend/admin-yaml-contract.md](../../../../../specs/contracts/frontend/admin-yaml-contract.md)
 
 ```tsx
-import {
-  buildListQuery,
-  createHttpClient,
-  getTotal,
-  normalizeDocument,
-  queryToSearchParams,
-  synthesizeCompositeKeys,
-} from "safrs-jsonapi-client";
-import type {
-  CreateHttpClientOptions,
-  DataProvider,
-  JsonApiDocument,
-  LoggerLike,
-  Schema,
-  SearchCol,
-} from "safrs-jsonapi-client";
+import type { DataProvider } from "react-admin";
 
 import type { RawAdminYaml } from "./resourceMetadata";
 import { resolveResourceEndpoint, resolveSearchColumns } from "./resourceMetadata";
+
+type Schema = Parameters<typeof resolveSearchColumns>[0];
+type SearchCol = ReturnType<typeof resolveSearchColumns>[number];
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+type LoggerLike = Pick<Console, "error" | "warn">;
+
+interface JsonApiResourceObject {
+  id?: string | number;
+  attributes?: Record<string, unknown>;
+}
+
+interface JsonApiDocument {
+  data?: JsonApiResourceObject | JsonApiResourceObject[] | null;
+  meta?: Record<string, unknown> & {
+    pagination?: Record<string, unknown>;
+  };
+}
+
+interface ListParams {
+  filter?: Record<string, unknown>;
+  meta?: {
+    include?: string | string[];
+  };
+  pagination?: {
+    page?: number;
+    perPage?: number;
+  };
+  sort?: {
+    field?: string;
+    order?: string;
+  };
+}
+
+function queryToSearchParams(query: Record<string, string | number | boolean>): URLSearchParams {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(query)) {
+    params.set(key, String(value));
+  }
+
+  return params;
+}
 
 function appendQuery(url: string, query: Record<string, string | number | boolean>): string {
   const queryString = queryToSearchParams(query).toString();
@@ -61,6 +88,55 @@ function resolveEndpointUrl(apiRoot: string, endpoint: string): string {
 
 function resolveSchemaResourceKey(schema: Schema, resource: string): string {
   return schema.resources[resource] ? resource : (schema.resourceByType[resource] ?? resource);
+}
+
+function buildListQuery(
+  _resource: string,
+  params: ListParams = {},
+): Record<string, string | number | boolean> {
+  const query: Record<string, string | number | boolean> = {};
+  const pagination = params.pagination ?? {};
+  const sort = params.sort ?? {};
+  const filter = { ...(params.filter ?? {}) };
+  const rawJsonApiFilter = filter.__jsonapi;
+
+  delete filter.__jsonapi;
+
+  if (typeof pagination.page === "number") {
+    query["page[number]"] = pagination.page;
+  }
+
+  if (typeof pagination.perPage === "number") {
+    query["page[size]"] = pagination.perPage;
+  }
+
+  if (typeof sort.field === "string" && sort.field.trim()) {
+    const prefix = String(sort.order).toUpperCase() === "DESC" ? "-" : "";
+    query.sort = `${prefix}${sort.field.trim()}`;
+  }
+
+  const include = params.meta?.include;
+  if (Array.isArray(include) && include.length > 0) {
+    query.include = include.join(",");
+  } else if (typeof include === "string" && include.trim()) {
+    query.include = include.trim();
+  }
+
+  if (rawJsonApiFilter && typeof rawJsonApiFilter === "object") {
+    query.filter = JSON.stringify(rawJsonApiFilter);
+  }
+
+  for (const [name, value] of Object.entries(filter)) {
+    if (name === "q" || value === undefined || value === null || value === "") {
+      continue;
+    }
+
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      query[`filter[${name}]`] = value;
+    }
+  }
+
+  return query;
 }
 
 function applySearchTemplate(template: string | undefined, search: string): string {
@@ -172,6 +248,89 @@ function omitSearchFilter(filter: Record<string, unknown> | undefined): Record<s
   return Object.keys(rest).length > 0 ? rest : undefined;
 }
 
+function normalizeResourceObject(resourceObject: JsonApiResourceObject | null | undefined): Record<string, unknown> | null {
+  if (!resourceObject || resourceObject.id === undefined || resourceObject.id === null) {
+    return null;
+  }
+
+  return {
+    id: resourceObject.id,
+    ...(resourceObject.attributes ?? {}),
+  };
+}
+
+function normalizeDocument(document: JsonApiDocument): { records: Array<Record<string, unknown>> } {
+  const primaryData = Array.isArray(document.data)
+    ? document.data
+    : document.data
+      ? [document.data]
+      : [];
+
+  return {
+    records: primaryData
+      .map((item) => normalizeResourceObject(item))
+      .filter((item): item is Record<string, unknown> => Boolean(item)),
+  };
+}
+
+function synthesizeCompositeKeys(record: Record<string, unknown>): Record<string, unknown> {
+  return record;
+}
+
+function getTotal(document: JsonApiDocument, fallback: number): number {
+  const candidates = [
+    document.meta?.count,
+    document.meta?.total,
+    document.meta?.pagination?.total,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+      return candidate;
+    }
+  }
+
+  return fallback;
+}
+
+function errorForResponse(response: Response, payload: unknown): Error & {
+  payload?: unknown;
+  status?: number;
+} {
+  const error = new Error(response.statusText || `Request failed with status ${response.status}`);
+  error.status = response.status;
+  error.payload = payload;
+  return error;
+}
+
+async function parseResponseBody(response: Response): Promise<JsonApiDocument> {
+  const text = await response.text();
+  return text ? JSON.parse(text) as JsonApiDocument : { data: [] };
+}
+
+async function requestJson(
+  fetchImpl: FetchLike,
+  url: string,
+  logger: LoggerLike,
+): Promise<{ json: JsonApiDocument }> {
+  const response = await fetchImpl(url, {
+    headers: {
+      Accept: "application/vnd.api+json",
+    },
+  });
+  const json = await parseResponseBody(response);
+
+  if (!response.ok) {
+    logger.error?.("Search-enabled JSON:API request failed", {
+      status: response.status,
+      url,
+    });
+    throw errorForResponse(response, json);
+  }
+
+  return { json };
+}
+
 export function createSearchEnabledDataProvider({
   apiRoot,
   baseProvider,
@@ -182,7 +341,7 @@ export function createSearchEnabledDataProvider({
 }: {
   apiRoot: string;
   baseProvider: DataProvider;
-  fetch?: CreateHttpClientOptions["fetch"];
+  fetch?: FetchLike;
   logger?: LoggerLike;
   rawYaml: RawAdminYaml;
   schema: Schema;
@@ -190,16 +349,12 @@ export function createSearchEnabledDataProvider({
   const resolvedFetch = fetchImpl
     ? (input: RequestInfo | URL, init?: RequestInit) => fetchImpl(input, init)
     : globalThis.fetch.bind(globalThis);
-  const http = createHttpClient({
-    fetch: resolvedFetch,
-    logger,
-  });
   const normalizedApiRoot = `${trimTrailingSlashes(apiRoot)}/`;
 
   return {
     ...baseProvider,
 
-    async getList(resource, params = {}) {
+    async getList(resource, params: ListParams = {}) {
       const schemaResourceKey = resolveSchemaResourceKey(schema, resource);
       const searchValue = params.filter?.q;
       if (typeof searchValue !== "string" || !searchValue.trim()) {
@@ -225,12 +380,6 @@ export function createSearchEnabledDataProvider({
           ...params,
           filter: omitSearchFilter(params.filter),
         },
-        schema,
-        {
-          defaultPerPage: params.pagination?.perPage,
-          delimiter: schema.delimiter,
-          logger,
-        },
       );
 
       query.filter = mergeSearchWithExistingFilters(
@@ -240,21 +389,13 @@ export function createSearchEnabledDataProvider({
 
       const resourceEndpoint = resolveResourceEndpoint(schema, rawYaml, resource);
       const url = appendQuery(resolveEndpointUrl(normalizedApiRoot, resourceEndpoint), query);
-      const { json } = await http.requestJson<JsonApiDocument>(url);
+      const { json } = await requestJson(resolvedFetch, url, logger);
 
-      const normalized = normalizeDocument(json, {
-        delimiter: schema.delimiter,
-        includeTomany: false,
-        logger,
-        resourceEndpoint: schemaResourceKey,
-        schema,
-      });
+      const normalized = normalizeDocument(json);
 
       return {
-        data: normalized.records.map((record) =>
-          synthesizeCompositeKeys(record, schemaResourceKey, schema, schema.delimiter),
-        ),
-        total: getTotal(json, { keys: ["count", "total"] }),
+        data: normalized.records.map((record) => synthesizeCompositeKeys(record)),
+        total: getTotal(json, normalized.records.length),
       };
     },
 
@@ -310,3 +451,9 @@ Notes:
 - Resource-type names such as `Collection` must be translated to schema
   resource keys such as `collections` before calling the base provider or the
   low-level normalizer.
+- This template intentionally avoids `safrs-jsonapi-client`; keep SAFRS
+  JSON:API search helpers in run-owned frontend code on the baseline
+  React-Admin stack recorded in `runtime-bom.md`.
+- If the primary SAFRS adapter already owns search/filter merging for the run,
+  fold this wrapper into that local adapter instead of reintroducing an
+  external package dependency.

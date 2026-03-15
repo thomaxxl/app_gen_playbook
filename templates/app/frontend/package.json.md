@@ -5,7 +5,8 @@ See also:
 - [../../../specs/contracts/frontend/dependencies.md](../../../specs/contracts/frontend/dependencies.md)
 
 Use a pinned dependency set. Do not rely on transitive dependencies for routing
-or YAML parsing.
+or YAML parsing, and keep the SAFRS JSON:API adapter in run-owned app code
+rather than an external package.
 
 ```json
 {
@@ -34,7 +35,6 @@ or YAML parsing.
     "react-admin": "5.8.0",
     "react-dom": "19.1.0",
     "react-router-dom": "6.30.3",
-    "safrs-jsonapi-client": "<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>",
     "yaml": "2.8.1"
   },
   "devDependencies": {
@@ -104,22 +104,20 @@ The authoritative starter baseline remains this template plus
 generated app that drifts from that baseline MUST be treated as maintenance
 debt until the playbook is deliberately repinned.
 
-The `safrs-jsonapi-client` entry MUST remain an immutable tarball URL or a
-published registry release. For this playbook, prefer a GitHub release asset
-URL from `thomaxxl/safrs-jsonapi-client`. Do not switch it to a git dependency
-or a raw `codeload` source archive in generated apps. If the selected artifact
-is missing the built outputs referenced by its own package metadata, replace it
-with a validated release asset before continuing.
+The starter baseline intentionally excludes external SAFRS-specific
+admin-client packages. Keep the generated `app/frontend/package.json` on the
+baseline React-Admin stack and implement SAFRS JSON:API behavior as run-owned
+app code under `src/shared-runtime/admin/`, following the source model recorded
+in `../../../runs/current/artifacts/architecture/runtime-bom.md`.
+
+Do not add `safrs-jsonapi-client`, `safrs-react-admin`, or
+`rav3-jsonapi-client` to generated apps unless a later runtime BOM explicitly
+approves a new source model and records the exact package pins.
 
 If the first `npm install` on a newly generated app still requires an
 immediate `npm audit fix --force`, treat that as a stale playbook baseline and
 repin the template dependency set instead of documenting `audit fix` as normal
 generated-app setup.
-
-`<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` is allowed only in the
-template source. The generated `app/frontend/package.json` MUST replace it
-with the real verified release asset URL recorded in
-`../../../runs/current/artifacts/architecture/runtime-bom.md` before install.
 
 See:
 

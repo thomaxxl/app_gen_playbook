@@ -35,7 +35,6 @@ Required runtime dependencies:
 - `@emotion/react@11.14.0`
 - `@emotion/styled@11.14.1`
 - `yaml@2.8.1`
-- `safrs-jsonapi-client@<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>`
 
 Optional but standard for custom figures:
 
@@ -102,20 +101,18 @@ npm install \
   @mui/icons-material@7.0.1 \
   @emotion/react@11.14.0 \
   @emotion/styled@11.14.1 \
-  yaml@2.8.1 \
-  <REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>
+  yaml@2.8.1
 ```
 
-The token `<REPLACE_WITH_VERIFIED_GITHUB_RELEASE_TGZ_URL>` MAY appear in the
-template lane only.
+The SAFRS JSON:API adapter is intentionally not part of the starter dependency
+install. Implement it as run-owned frontend code under
+`src/shared-runtime/admin/`, and keep that source model aligned with
+`runs/current/artifacts/architecture/runtime-bom.md`.
 
-It MUST be replaced with a real verified release asset before the generated
-app is considered complete.
-
-That concrete release asset decision MUST be recorded in
-`../../architecture/runtime-bom.md` before Phase 5 implementation begins, and
-the generated `app/frontend/package.json` MUST be materialized from that
-decision before `npm install`.
+Do not add `safrs-jsonapi-client`, `safrs-react-admin`, or
+`rav3-jsonapi-client` to the generated app unless a later runtime BOM
+explicitly approves a new package source and records the exact pins before
+install.
 
 Optional charts/graphs:
 
@@ -183,21 +180,13 @@ npm install -D \
   - `react-router-dom@6.30.3`
   - `vitest@2.1.9`
   - `@playwright/test@1.58.2`
-- `safrs-jsonapi-client` MUST be pinned through an immutable tarball URL or a
-  published registry release. For this playbook, the preferred source is a
-  GitHub release asset from `thomaxxl/safrs-jsonapi-client`. The frontend MUST
-  NOT use a git dependency or raw GitHub source archive for this package in
-  the generated app.
-- If the selected `safrs-jsonapi-client` artifact references built outputs
-  such as `dist/` that are missing from the installed artifact, the agent MUST
-  stop using that artifact and replace it with a validated tarball or
-  published release before continuing.
-- Before freezing the generated app dependency, the agent MUST verify that:
-  - the referenced GitHub release exists
-  - the referenced `.tgz` asset exists
-  - the asset version and the package filename agree
-- the selected artifact MUST also be written into the run-owned
-  `runtime-bom.md` so later roles do not have to rediscover it
+- The starter baseline intentionally excludes external SAFRS-specific
+  admin-client packages. Implement the SAFRS JSON:API adapter as run-owned
+  frontend code under `src/shared-runtime/admin/`.
+- Do not add `safrs-jsonapi-client`, `safrs-react-admin`, or
+  `rav3-jsonapi-client` to the generated app unless a later
+  `runtime-bom.md` explicitly approves a new package source and records the
+  exact pins.
 - A generated app MUST NOT require an immediate `npm audit fix --force` after
   the initial install just to reach the expected starter baseline. If an audit
   fix changes direct dependency versions, the playbook dependency baseline MUST
