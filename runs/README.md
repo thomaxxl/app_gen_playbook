@@ -15,3 +15,12 @@ Rules:
   prior project
 - `template/` SHOULD contain the neutral starter gating files needed to create
   `current/` without guesswork
+
+The default orchestrated path is:
+
+```bash
+./run_playbook.sh path/to/input.md
+```
+
+That runner resets local `runs/current/` from `template/` before seeding the
+next real brief.

@@ -13,6 +13,10 @@ compatibility alias only. New documentation and discussion MUST use
 
 This directory is now organized around the following top-level areas:
 
+- `run_playbook.sh`
+  Top-level sequential orchestrator for a new playbook run.
+- `AGENTS.md`
+  Small stable repo-wide execution rules for orchestrated role runs.
 - `playbook/`
   Static role, process, phase, and compatibility instructions.
 - `specs/`
@@ -21,6 +25,9 @@ This directory is now organized around the following top-level areas:
 - `templates/`
   Copy-and-adapt core templates plus feature-gated template packs that mirror
   the generated `app/` shape.
+- `tools/`
+  Helper scripts used by the orchestrator for run reset, prompt building,
+  diff validation, and completion checks.
 - `runs/`
   Tracked neutral run template plus the local active run workspace.
 - `example/`
@@ -64,13 +71,26 @@ requirements without an explicit documented reason.
 
 Use these files to understand the repository layout and the current run state:
 
-1. [playbook/index.md](playbook/index.md)
-2. [playbook/README.md](playbook/README.md)
-3. [runs/README.md](runs/README.md)
-4. [specs/README.md](specs/README.md)
-5. [templates/README.md](templates/README.md)
-6. [example/README.md](example/README.md)
-7. [templates/app/project/README.app.md](templates/app/project/README.app.md)
+1. [run_playbook.sh](run_playbook.sh)
+2. [playbook/index.md](playbook/index.md)
+3. [playbook/README.md](playbook/README.md)
+4. [runs/README.md](runs/README.md)
+5. [specs/README.md](specs/README.md)
+6. [templates/README.md](templates/README.md)
+7. [example/README.md](example/README.md)
+8. [templates/app/project/README.app.md](templates/app/project/README.app.md)
+
+## Orchestrated run entrypoint
+
+Use the repository runner for a new serial inbox-driven run:
+
+```bash
+./run_playbook.sh path/to/input.md
+```
+
+This seeds `runs/current/`, creates the Product Manager `INPUT.md`, and then
+processes one inbox message per role per pass until the formal completion
+checker passes or a role invocation fails.
 
 ## Fresh-run agent reading rule
 
