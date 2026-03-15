@@ -23,6 +23,9 @@ Maturity rule:
   implementation-ready
 - `font-awesome-icons/` and `d3-custom-views/` are documented optional
   frontend packs and MUST remain feature-gated
+- `motion-animations/`, `react-virtuoso/`, `dnd-kit/`, `react-flow/`,
+  `lexical-editor/`, and `embla-carousel/` are experimental optional frontend
+  packs and MUST remain fully isolated and feature-gated
 - `ux-measurement/` is a documented feature-template entrypoint, but it does
   not ship starter code snippets by default
 - the other feature-template packs remain placeholders and MUST stay disabled
@@ -38,6 +41,12 @@ Segmentation rule:
 Available packs:
 
 - [font-awesome-icons/README.md](font-awesome-icons/README.md)
+- [motion-animations/README.md](motion-animations/README.md)
+- [react-virtuoso/README.md](react-virtuoso/README.md)
+- [dnd-kit/README.md](dnd-kit/README.md)
+- [react-flow/README.md](react-flow/README.md)
+- [lexical-editor/README.md](lexical-editor/README.md)
+- [embla-carousel/README.md](embla-carousel/README.md)
 - [uploads/README.md](uploads/README.md)
 - [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)

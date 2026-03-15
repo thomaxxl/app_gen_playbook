@@ -53,6 +53,12 @@ See also:
 Available packs:
 
 - [font-awesome-icons/README.md](font-awesome-icons/README.md)
+- [motion-animations/README.md](motion-animations/README.md)
+- [react-virtuoso/README.md](react-virtuoso/README.md)
+- [dnd-kit/README.md](dnd-kit/README.md)
+- [react-flow/README.md](react-flow/README.md)
+- [lexical-editor/README.md](lexical-editor/README.md)
+- [embla-carousel/README.md](embla-carousel/README.md)
 - [uploads/README.md](uploads/README.md)
 - [ux-measurement/README.md](ux-measurement/README.md)
 - [d3-custom-views/README.md](d3-custom-views/README.md)

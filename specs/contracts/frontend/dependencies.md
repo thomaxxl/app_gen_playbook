@@ -12,6 +12,16 @@ The currently validated starter stack for this playbook is the Node
 an older Node major line. If the frontend toolchain is repinned again, that
 change MUST be recorded as a deliberate compatibility decision.
 
+The authoritative starter baseline is:
+
+- this file
+- `../../templates/app/frontend/package.json.md`
+- the run-owned `runtime-bom.md`
+
+Tracked examples or generated apps that drift from that baseline MUST be
+treated as maintenance debt until the baseline is deliberately repinned and the
+template plus runtime BOM process are updated together.
+
 ## Package scope
 
 Required runtime dependencies:
@@ -39,6 +49,31 @@ Optional app-facing icon system:
 - optional:
   - `@fortawesome/free-regular-svg-icons@7.2.0`
   - `@fortawesome/free-brands-svg-icons@7.2.0`
+
+## Optional capability packages
+
+These packages MUST remain capability-gated and MUST NOT be added to the
+starter baseline unless the matching feature pack is enabled for the run.
+
+- `motion@12.36.0`
+- `react-virtuoso@4.18.3`
+- `@dnd-kit/react@0.3.2`
+- `@dnd-kit/helpers@0.3.2`
+- `@xyflow/react@12.10.1`
+- `lexical@0.41.0`
+- `@lexical/react@0.41.0`
+- `@lexical/rich-text@0.41.0`
+- `@lexical/history@0.41.0`
+- `@lexical/link@0.41.0`
+- `@lexical/list@0.41.0`
+- `@lexical/utils@0.41.0`
+- optional only when a run explicitly enables the extra profile:
+  - `@lexical/html@0.41.0`
+  - `@lexical/markdown@0.41.0`
+  - `@lexical/table@0.41.0`
+- `embla-carousel-react@8.6.0`
+- optional only when autoplay is explicitly enabled:
+  - `embla-carousel-autoplay@8.6.0`
 
 Required dev dependencies:
 
@@ -95,6 +130,29 @@ npm install \
   @fortawesome/react-fontawesome@3.2.0 \
   @fortawesome/fontawesome-svg-core@7.2.0 \
   @fortawesome/free-solid-svg-icons@7.2.0
+```
+
+Optional capability packages:
+
+```bash
+npm install motion@12.36.0
+npm install react-virtuoso@4.18.3
+npm install @dnd-kit/react@0.3.2 @dnd-kit/helpers@0.3.2
+npm install @xyflow/react@12.10.1
+npm install embla-carousel-react@8.6.0
+```
+
+Lexical base profile:
+
+```bash
+npm install \
+  lexical@0.41.0 \
+  @lexical/react@0.41.0 \
+  @lexical/rich-text@0.41.0 \
+  @lexical/history@0.41.0 \
+  @lexical/link@0.41.0 \
+  @lexical/list@0.41.0 \
+  @lexical/utils@0.41.0
 ```
 
 Dev:
@@ -163,5 +221,21 @@ npm install -D \
 - Font Awesome is optional at install time. It MUST be added only when the
   `font-awesome-icons` feature pack is enabled and the run-owned
   `iconography.md` artifact selects it as the visible app-facing icon system.
+- Motion is optional at install time. When enabled, the frontend MUST use
+  `motion/react` imports and MUST keep reduced-motion behavior explicit.
+- New drag/drop work MUST prefer `@dnd-kit/react` plus `@dnd-kit/helpers`.
+  Legacy `@dnd-kit/core`-family packages MUST NOT become the preferred new-app
+  path without an explicit runtime-BOM exception.
+- React Flow is optional at install time and MUST use `@xyflow/react`.
+  Feature-owned code MUST import `@xyflow/react/dist/style.css` explicitly.
+- Lexical is optional at install time and MUST remain capability-gated because
+  it changes storage and content semantics. All Lexical packages in a run MUST
+  stay on the exact same version line.
+- Embla Carousel is optional at install time and SHOULD remain exceptional.
+  `embla-carousel-autoplay` MUST NOT be added unless autoplay is explicitly
+  enabled in the run-owned UX artifacts.
+- Optional frontend capability packages MUST remain fully isolated from the
+  starter runtime unless the matching feature pack is enabled and the runtime
+  BOM records the chosen package pins.
 - See `../../playbook/process/compatibility.md` for the overall local runtime
   profile.

@@ -63,10 +63,46 @@ pack is enabled for the run:
 "@fortawesome/free-solid-svg-icons": "7.2.0"
 ```
 
+Optional advanced frontend packages MUST remain capability-gated. They MUST
+NOT be added to the generated `package.json` unless the matching feature pack
+is enabled and the run-owned `runtime-bom.md` records the exact pins.
+
+Approved optional package pins:
+
+```json
+"motion": "12.36.0",
+"react-virtuoso": "4.18.3",
+"@dnd-kit/react": "0.3.2",
+"@dnd-kit/helpers": "0.3.2",
+"@xyflow/react": "12.10.1",
+"lexical": "0.41.0",
+"@lexical/react": "0.41.0",
+"@lexical/rich-text": "0.41.0",
+"@lexical/history": "0.41.0",
+"@lexical/link": "0.41.0",
+"@lexical/list": "0.41.0",
+"@lexical/utils": "0.41.0",
+"embla-carousel-react": "8.6.0"
+```
+
+Optional only when the feature-owned profile enables them:
+
+```json
+"@lexical/html": "0.41.0",
+"@lexical/markdown": "0.41.0",
+"@lexical/table": "0.41.0",
+"embla-carousel-autoplay": "8.6.0"
+```
+
 The `engines.node` field is intentional. The starter frontend assumes a Node
 24 runtime with the pinned Vite `6.2.2` toolchain. If a project documents a
 deliberate compatibility deviation, update this field and the pinned frontend
 toolchain together instead of mixing incompatible versions ad hoc.
+
+The authoritative starter baseline remains this template plus
+`../../../specs/contracts/frontend/dependencies.md`. A tracked example app or
+generated app that drifts from that baseline MUST be treated as maintenance
+debt until the playbook is deliberately repinned.
 
 The `safrs-jsonapi-client` entry MUST remain an immutable tarball URL or a
 published registry release. For this playbook, prefer a GitHub release asset

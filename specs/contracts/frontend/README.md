@@ -36,6 +36,9 @@ The agent MUST also consult:
 
 The agent MAY load these files on demand:
 
+- [advanced-optional-packages.md](advanced-optional-packages.md)
+  when evaluating optional frontend package families, package pinning policy,
+  or advanced capability combinations
 - [theme-and-layout.md](theme-and-layout.md)
   when changing the starter page shell, theme, spacing, card density, or other
   non-default layout behavior
@@ -60,6 +63,18 @@ The agent MAY load these files on demand:
   only when UX measurement is enabled for the run and frontend work is in scope
 - [../../features/font-awesome-icons/README.md](../../features/font-awesome-icons/README.md)
   only when `font-awesome-icons` is enabled for the run
+- [../../features/motion-animations/README.md](../../features/motion-animations/README.md)
+  only when `motion-animations` is enabled for the run
+- [../../features/react-virtuoso/README.md](../../features/react-virtuoso/README.md)
+  only when `react-virtuoso` is enabled for the run
+- [../../features/dnd-kit/README.md](../../features/dnd-kit/README.md)
+  only when `dnd-kit` is enabled for the run
+- [../../features/react-flow/README.md](../../features/react-flow/README.md)
+  only when `react-flow` is enabled for the run
+- [../../features/lexical-editor/README.md](../../features/lexical-editor/README.md)
+  only when `lexical-editor` is enabled for the run
+- [../../features/embla-carousel/README.md](../../features/embla-carousel/README.md)
+  only when `embla-carousel` is enabled for the run
 - [../../features/d3-custom-views/README.md](../../features/d3-custom-views/README.md)
   only when `d3-custom-views` is enabled for the run
 

@@ -35,6 +35,12 @@ Use this as the neutral starter for the run-owned role load plan.
 Typical examples:
 
 - `specs/features/font-awesome-icons/` only when enabled
+- `specs/features/motion-animations/` only when enabled
+- `specs/features/react-virtuoso/` only when enabled
+- `specs/features/dnd-kit/` only when enabled
+- `specs/features/react-flow/` only when enabled
+- `specs/features/lexical-editor/` only when enabled
+- `specs/features/embla-carousel/` only when enabled
 - `specs/features/d3-custom-views/` only when enabled
 
 ### backend

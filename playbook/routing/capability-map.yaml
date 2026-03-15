@@ -25,7 +25,7 @@ ux-measurement:
     - templates/features/ux-measurement/
 
 d3-custom-views:
-  maturity: placeholder
+  maturity: supported
   summary: playbook/summaries/features/d3-custom-views.summary.md
   roles:
     - architect
@@ -34,6 +34,90 @@ d3-custom-views:
     - specs/features/d3-custom-views/
   templates:
     - templates/features/d3-custom-views/
+
+font-awesome-icons:
+  maturity: supported
+  summary: playbook/summaries/features/font-awesome-icons.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/font-awesome-icons/
+  templates:
+    - templates/features/font-awesome-icons/
+
+motion-animations:
+  maturity: experimental
+  summary: playbook/summaries/features/motion-animations.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/motion-animations/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/motion-animations/
+
+react-virtuoso:
+  maturity: experimental
+  summary: playbook/summaries/features/react-virtuoso.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/react-virtuoso/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/react-virtuoso/
+
+dnd-kit:
+  maturity: experimental
+  summary: playbook/summaries/features/dnd-kit.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/dnd-kit/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/dnd-kit/
+
+react-flow:
+  maturity: experimental
+  summary: playbook/summaries/features/react-flow.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/react-flow/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/react-flow/
+
+lexical-editor:
+  maturity: experimental
+  summary: playbook/summaries/features/lexical-editor.summary.md
+  roles:
+    - architect
+    - frontend
+    - backend
+  contracts:
+    - specs/features/lexical-editor/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/lexical-editor/
+
+embla-carousel:
+  maturity: experimental
+  summary: playbook/summaries/features/embla-carousel.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/embla-carousel/
+    - specs/contracts/frontend/advanced-optional-packages.md
+  templates:
+    - templates/features/embla-carousel/
 
 reporting:
   maturity: placeholder

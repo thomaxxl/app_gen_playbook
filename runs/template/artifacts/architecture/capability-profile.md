@@ -17,6 +17,12 @@ Use this as the neutral starter for the run-owned capability profile.
 | --- | --- | --- | --- |
 | uploads | undecided | replace | architect, backend, frontend, devops |
 | font-awesome-icons | disabled | replace | architect, frontend |
+| motion-animations | disabled | replace | architect, frontend |
+| react-virtuoso | disabled | replace | architect, frontend |
+| dnd-kit | disabled | replace | architect, frontend |
+| react-flow | disabled | replace | architect, frontend |
+| lexical-editor | disabled | replace | architect, frontend, backend |
+| embla-carousel | disabled | replace | architect, frontend |
 | ux-measurement | disabled | replace | architect, frontend, product_manager |
 | d3-custom-views | disabled | replace | architect, frontend |
 | reporting | disabled | replace | architect, backend, frontend, devops |
