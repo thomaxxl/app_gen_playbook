@@ -88,8 +88,7 @@ run_role_once() {
   (
     cd "$ROOT"
     codex exec \
-      --sandbox workspace-write \
-      --ask-for-approval never \
+      --full-auto \
       --json \
       --output-last-message "$result_file" \
       - < "$prompt_file" \
