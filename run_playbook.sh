@@ -39,6 +39,94 @@ LONG_MODEL="${LONG_MODEL:-}"
 frontend_pid=""
 backend_pid=""
 
+append_run_remark() {
+  local title="$1"
+  local body="$2"
+  local remarks_file="$RUN_ROOT/remarks.md"
+  mkdir -p "$(dirname "$remarks_file")"
+  if [[ ! -f "$remarks_file" ]]; then
+    printf '# Run Remarks\n\n' > "$remarks_file"
+  fi
+
+  {
+    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
+    printf '%s\n' "$body"
+  } >> "$remarks_file"
+}
+
+emit_pm_stall_note() {
+  local reason="$1"
+  local detail="$2"
+  local stamp
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  local note_path="$STATE_ROOT/product_manager/inbox/${stamp}-from-orchestrator-to-product_manager-run-stall.md"
+  mkdir -p "$STATE_ROOT/product_manager/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: product_manager
+topic: run-stall
+purpose: triage the stalled run and decide whether work must be re-queued or the run must be reset
+
+## Required Reads
+- runs/current/remarks.md
+- runs/current/evidence/orchestrator/logs/orchestrator.log
+
+## Requested Outputs
+- updated PM assessment of the stall in runs/current/remarks.md
+- any required recovery or re-queue handoff notes
+
+## Dependencies
+- none
+
+## Gate Status
+- blocked
+
+## Blocking Issues
+- $reason
+
+## Notes
+- orchestrator detail: $detail
+- this inbox note was created automatically because the run became non-progressing
+EOF
+}
+
+fatal_exit() {
+  local title="$1"
+  local body="$2"
+  log "fatal: $title"
+  append_run_remark "$title" "$body"
+  echo "error: $title" >&2
+  echo "$body" >&2
+  exit 1
+}
+
+stall_exit() {
+  local reason="$1"
+  local completion_detail="$2"
+  local body
+  body=$(
+    cat <<EOF
+The run stalled and was terminated automatically.
+
+Reason:
+- $reason
+
+Completion checker detail:
+$completion_detail
+
+Observed condition:
+- no actionable inbox items remained under runs/current/role-state/*/inbox
+- the run was still incomplete
+
+Expected next owner:
+- Product Manager must triage the stalled run, decide whether work must be
+  re-queued, and determine whether the run should continue or be reset
+EOF
+  )
+  emit_pm_stall_note "$reason" "$completion_detail"
+  fatal_exit "run stalled" "$body"
+}
+
 log() {
   local line
   line="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"
@@ -84,6 +172,43 @@ role_file_for_runtime() {
     backend) printf '%s\n' "playbook/roles/backend.md" ;;
     deployment) printf '%s\n' "playbook/roles/devops.md" ;;
     *) return 1 ;;
+  esac
+}
+
+role_add_dirs() {
+  case "$1" in
+    product_manager)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts/product" \
+        "$STATE_ROOT" \
+        "$ROOT/app"
+      ;;
+    architect)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts/architecture" \
+        "$STATE_ROOT" \
+        "$ROOT/app"
+      ;;
+    frontend)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts/ux" \
+        "$STATE_ROOT" \
+        "$ROOT/app/frontend"
+      ;;
+    backend)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts/backend-design" \
+        "$STATE_ROOT" \
+        "$ROOT/app/backend" \
+        "$ROOT/app/rules" \
+        "$ROOT/app/reference"
+      ;;
+    deployment)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts/devops" \
+        "$STATE_ROOT" \
+        "$ROOT/app"
+      ;;
   esac
 }
 
@@ -177,6 +302,10 @@ check_completion() {
   python3 "$ROOT/tools/check_completion.py" --repo-root "$ROOT"
 }
 
+pending_inbox_count() {
+  find "$STATE_ROOT" -path '*/inbox/*.md' -type f | wc -l | tr -d ' '
+}
+
 validate_role_turn() {
   local runtime_role="$1"
   local snapshot_file="$2"
@@ -200,21 +329,28 @@ validate_role_turn() {
 }
 
 run_codex_fresh() {
-  local role_cwd="$1"
-  local model="$2"
-  local prompt_file="$3"
-  local result_file="$4"
-  local jsonl_file="$5"
+  local runtime_role="$1"
+  local role_cwd="$2"
+  local model="$3"
+  local prompt_file="$4"
+  local result_file="$5"
+  local jsonl_file="$6"
+  local add_dirs=()
+  mapfile -t add_dirs < <(role_add_dirs "$runtime_role")
 
   (
-    cd "$role_cwd"
+    cd "$ROOT"
     local cmd=(
       codex exec
       --full-auto
       --json
+      --cd "$role_cwd"
       --output-last-message "$result_file"
       -
     )
+    for add_dir in "${add_dirs[@]}"; do
+      cmd+=(--add-dir "$add_dir")
+    done
     if [[ -n "$model" ]]; then
       cmd+=(--model "$model")
     fi
@@ -223,23 +359,30 @@ run_codex_fresh() {
 }
 
 run_codex_resume() {
-  local role_cwd="$1"
-  local model="$2"
-  local resume_id="$3"
-  local prompt_file="$4"
-  local result_file="$5"
-  local jsonl_file="$6"
+  local runtime_role="$1"
+  local role_cwd="$2"
+  local model="$3"
+  local resume_id="$4"
+  local prompt_file="$5"
+  local result_file="$6"
+  local jsonl_file="$7"
+  local add_dirs=()
+  mapfile -t add_dirs < <(role_add_dirs "$runtime_role")
 
   (
-    cd "$role_cwd"
+    cd "$ROOT"
     local cmd=(
       codex exec resume
       --full-auto
       --json
+      --cd "$role_cwd"
       --output-last-message "$result_file"
       "$resume_id"
       -
     )
+    for add_dir in "${add_dirs[@]}"; do
+      cmd+=(--add-dir "$add_dir")
+    done
     if [[ -n "$model" ]]; then
       cmd+=(--model "$model")
     fi
@@ -332,32 +475,34 @@ run_role_once() {
   build_prompt "$runtime_role" "$display_role" "$role_file" "$message_path" "$prompt_file"
 
   if [[ -n "$resume_id" ]]; then
-    if ! run_codex_resume "$role_dir" "$model" "$resume_id" "$prompt_file" "$result_file" "$jsonl_file"; then
+    if ! run_codex_resume "$runtime_role" "$role_dir" "$model" "$resume_id" "$prompt_file" "$result_file" "$jsonl_file"; then
       log "agent-resume-failed role=$runtime_role session=$resume_id; retrying fresh"
       session_remove "$runtime_role"
-      run_codex_fresh "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"
+      run_codex_fresh "$runtime_role" "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"
     fi
   else
-    run_codex_fresh "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"
+    run_codex_fresh "$runtime_role" "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"
   fi
 
   if ! codex_error="$(assert_codex_success "$jsonl_file" "$result_file" 2>&1)"; then
-    log "agent-failed role=$runtime_role message=${message_base}.md error=$codex_error"
-    echo "error: codex failed for role $runtime_role: $codex_error" >&2
-    exit 1
+    fatal_exit \
+      "codex failed for role $runtime_role" \
+      "Inbox item: ${message_base}.md"$'\n'"Error: $codex_error"
   fi
 
   session_record "$runtime_role" "$jsonl_file" "$role_dir" "$(display_model "$model")"
   validate_role_turn "$runtime_role" "$snapshot_file" "$validation_file" "${ignore_roles[@]}"
 
   if [[ -f "$message_path" ]]; then
-    echo "error: role $runtime_role left inbox message in place: $message_path" >&2
-    exit 1
+    fatal_exit \
+      "role $runtime_role left inbox message in place" \
+      "Expected the role to archive the processed inbox item, but it still exists:"$'\n'"- $message_path"
   fi
 
   if [[ ! -f "$role_dir/context.md" ]]; then
-    echo "error: role $runtime_role did not create or update context.md" >&2
-    exit 1
+    fatal_exit \
+      "role $runtime_role did not update context.md" \
+      "Expected context file is missing:"$'\n'"- $role_dir/context.md"
   fi
 
   role_summary="$(extract_summary "$result_file")"
@@ -399,8 +544,9 @@ ensure_worker_running() {
 
   if [[ -n "$current_pid" ]]; then
     if ! wait "$current_pid"; then
-      echo "error: background worker failed for role $runtime_role" >&2
-      exit 1
+      fatal_exit \
+        "background worker failed for role $runtime_role" \
+        "The background worker process for $runtime_role exited non-zero."
     fi
   fi
 
@@ -426,9 +572,10 @@ seed_run() {
 main_loop() {
   local parallel_started=0
   local did_work
+  local completion_detail
 
   while true; do
-    if check_completion >/dev/null 2>&1; then
+    if completion_detail="$(check_completion 2>&1)"; then
       touch "$RUN_ROOT/APP_DONE"
       log "playbook run complete"
       break
@@ -467,6 +614,11 @@ main_loop() {
     fi
 
     if [[ "$did_work" -eq 0 ]]; then
+      if [[ "$(pending_inbox_count)" -eq 0 ]]; then
+        stall_exit \
+          "no actionable inbox items remain while the completion gate still fails" \
+          "$completion_detail"
+      fi
       sleep "$POLL_SECONDS"
     fi
   done

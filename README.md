@@ -100,6 +100,8 @@ The orchestrator now also:
   entry gate passes
 - uses your local Codex CLI default model unless you explicitly set
   `FAST_MODEL`, `MAIN_MODEL`, or `LONG_MODEL`
+- exits with a recorded stall diagnosis instead of sleeping forever when the
+  run has no actionable inbox work left but still fails completion
 
 ## Fresh-run agent reading rule
 

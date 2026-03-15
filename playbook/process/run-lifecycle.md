@@ -124,7 +124,7 @@ When a run is complete:
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
-  not belong in the app tree
+  not belong in the app tree, including orchestrator-detected stall diagnoses
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned
   product, architecture, UX, backend-design, and optional DevOps artifacts
 - `../../runs/current/artifacts/architecture/capability-profile.md` SHOULD

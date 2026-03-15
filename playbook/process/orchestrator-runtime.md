@@ -13,6 +13,7 @@ The orchestrator MUST:
   `context.md`
 - use Codex session resume only as a speed and continuity layer
 - log visible start and finish lines for every agent turn
+- stop and surface a clear reason when the run becomes non-progressing
 
 ## Logging
 
@@ -93,6 +94,23 @@ Those role-local instructions MUST remain small and stable. They MUST define:
 The role-local `AGENTS.md` is a stable persona layer. It MUST NOT replace the
 real run state stored in artifacts or `context.md`.
 
+## Writable-root rule
+
+When the orchestrator starts Codex from a role-local runtime directory under
+`runs/current/role-state/<role>/`, it MUST also grant writable access to the
+role's owned sibling artifact and `app/` lanes.
+
+At minimum, the orchestrator MUST grant:
+
+- the role-local runtime directory
+- the role-owned artifact directory under `runs/current/artifacts/`
+- the role-owned `app/` subtree or root-owned app files
+- the shared `runs/current/role-state/` tree for inbox handoffs
+
+The orchestrator MUST NOT assume that starting Codex inside
+`runs/current/role-state/<role>/` automatically grants write access to sibling
+artifact or inbox paths.
+
 ## Phase-aware scheduling
 
 The orchestrator MUST remain serial until the Phase 5 entry gate passes.
@@ -113,6 +131,26 @@ After Phase 5:
 
 Phase 5 readiness MUST be computed from run-owned artifact status, not guessed
 from inbox activity.
+
+## Stall detection
+
+The orchestrator MUST detect a stalled run.
+
+A run is stalled when all of the following are true:
+
+- the completion checker still fails
+- no actionable inbox items remain under `runs/current/role-state/*/inbox`
+- no role turn completed useful work in the current control cycle
+
+When a stall is detected, the orchestrator MUST:
+
+- append a human-readable diagnosis to `runs/current/remarks.md`
+- create a Product Manager inbox note describing the stall
+- exit non-zero instead of sleeping forever
+
+The Product Manager is the default owner of run-level stall triage. The
+Product Manager MUST decide whether the run should be re-queued, corrected, or
+reset.
 
 ## Parallel-write rule
 
