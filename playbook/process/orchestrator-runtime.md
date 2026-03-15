@@ -250,6 +250,9 @@ handoffs instead of waiting for the queue to drain permanently.
 
 The recovery pass MUST:
 
+- remain dormant while the initial Product Manager intake item
+  `runs/current/role-state/product_manager/{inbox,inflight}/INPUT.md` still
+  exists
 - use the exact canonical artifact filenames required by completion, not
   semantically similar alternates
 - requeue only into a role whose inbox and inflight lanes are currently empty

@@ -84,6 +84,19 @@ def write_app_baseline(repo_root: Path) -> None:
 
 
 class RecoverRunQueueTests(unittest.TestCase):
+    def test_does_not_recover_while_initial_input_is_pending(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_template(repo_root / "specs/product/brief.md", "product_manager", "phase-1-product-definition")
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_file(repo_root / "runs/current/role-state/product_manager/inbox/INPUT.md", "# brief\n")
+
+            targets = select_recovery_targets(repo_root)
+            self.assertEqual(targets, {})
+
     def test_requeues_early_phase_missing_artifacts_by_owner(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

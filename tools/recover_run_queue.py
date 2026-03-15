@@ -264,6 +264,14 @@ def role_pending(repo_root: Path, role: str) -> bool:
     return False
 
 
+def initial_input_pending(repo_root: Path) -> bool:
+    for role_root in all_role_state_dirs(repo_root, "product_manager"):
+        for subdir in ("inbox", "inflight"):
+            if (role_root / subdir / "INPUT.md").exists():
+                return True
+    return False
+
+
 def frontend_backend_quiescent(repo_root: Path) -> bool:
     return not role_pending(repo_root, "frontend") and not role_pending(repo_root, "backend")
 
@@ -399,6 +407,9 @@ def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNe
 
 
 def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
+    if initial_input_pending(repo_root):
+        return {}
+
     needs = collect_artifact_needs(repo_root)
     app_needs = collect_app_implementation_needs(repo_root)
     needs.extend(app_needs)
