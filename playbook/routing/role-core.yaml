@@ -28,6 +28,7 @@ architect:
   writable:
     - runs/current/artifacts/architecture/**
     - runs/current/role-state/architect/**
+    - app/README.md
   cannot_write:
     - runs/current/artifacts/product/**
     - runs/current/artifacts/ux/**
@@ -66,6 +67,7 @@ backend:
     - runs/current/role-state/backend/**
     - app/backend/**
     - app/rules/**
+    - app/reference/admin.yaml
   cannot_write:
     - runs/current/artifacts/product/**
     - runs/current/artifacts/architecture/**
@@ -83,10 +85,13 @@ devops:
   writable:
     - runs/current/artifacts/devops/**
     - runs/current/role-state/devops/**
+    - app/.gitignore
     - app/Dockerfile
     - app/docker-compose.yml
     - app/nginx.conf
     - app/entrypoint.sh
+    - app/install.sh
+    - app/run.sh
   cannot_write:
     - runs/current/artifacts/product/**
     - runs/current/artifacts/architecture/**

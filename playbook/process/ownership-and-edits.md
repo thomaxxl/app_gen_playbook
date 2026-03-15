@@ -29,6 +29,17 @@ Rules:
 - a metadata-only approval edit MUST NOT change the artifact body content
 - implementation work for a generated app MUST stay inside local gitignored
   `app/`
+- `app/` subtree ownership is explicit:
+  - `app/BUSINESS_RULES.md` -> Product Manager
+  - `app/README.md` -> Architect
+  - `app/frontend/**` -> Frontend
+  - `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml` -> Backend
+  - `app/.gitignore`, `app/Dockerfile`, `app/docker-compose.yml`,
+    `app/nginx.conf`, `app/entrypoint.sh`, `app/install.sh`, `app/run.sh` ->
+    DevOps
+- during parallel frontend/backend implementation, no role MAY treat a shared
+  `app/` file as implicitly co-owned; ownership MUST remain single-role or be
+  handed back to Architect for mediation
 - `app/BUSINESS_RULES.md` is a generated-app snapshot of the run-owned
   Product artifact, not a second source of truth
 - implementation work MUST NOT patch the playbook contract files while

@@ -71,10 +71,13 @@ Use the small stable startup manifest:
 
 - `../../runs/current/artifacts/devops/**`
 - `../../runs/current/role-state/devops/**`
+- `../../app/.gitignore`
 - `../../app/Dockerfile`
 - `../../app/docker-compose.yml`
 - `../../app/nginx.conf`
 - `../../app/entrypoint.sh`
+- `../../app/install.sh`
+- `../../app/run.sh`
 
 ## Forbidden writes
 

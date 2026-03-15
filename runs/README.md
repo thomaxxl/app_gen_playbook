@@ -24,3 +24,9 @@ The default orchestrated path is:
 
 That runner resets local `runs/current/` from `template/` before seeding the
 next real brief.
+
+During execution, the orchestrator also maintains:
+
+- local `runs/current/evidence/orchestrator/sessions.json`
+- local `runs/current/evidence/orchestrator/logs/orchestrator.log`
+- local role-specific `AGENTS.md` files under `runs/current/role-state/`

@@ -54,6 +54,13 @@ Ownership map:
   enabled in the run capability profile
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` -> generic playbook template source
+- `app/BUSINESS_RULES.md` -> Product Manager
+- `app/README.md` -> Architect
+- `app/frontend/**` -> Frontend
+- `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml` -> Backend
+- `app/.gitignore`, `app/Dockerfile`, `app/docker-compose.yml`,
+  `app/nginx.conf`, `app/entrypoint.sh`, `app/install.sh`, `app/run.sh` ->
+  DevOps
 
 ## Artifact metadata
 
@@ -78,6 +85,7 @@ Allowed `status` values:
 
 - Treat every `.md` file in `inbox/` as actionable input.
 - Process inbox items oldest-first by filename timestamp.
+- Process at most one inbox item per noninteractive Codex invocation.
 - Move processed inbox files into `processed/` after the work is complete.
 - If work is blocked, send a blocking note to the next responsible agent
   instead of leaving stale instructions in the inbox.

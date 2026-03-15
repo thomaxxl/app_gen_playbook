@@ -6,9 +6,11 @@ import re
 from pathlib import Path
 
 from orchestrator_common import (
-    ARTIFACT_AREA_BY_ROLE,
+    DISPLAY_TO_ROLE_FILE,
+    RUNTIME_TO_DISPLAY,
     relpath,
     resolve_repo_root,
+    owned_prefixes,
 )
 
 
@@ -83,69 +85,42 @@ def dedupe_paths(paths: list[str]) -> list[str]:
 
 
 def allowed_write_paths(runtime_role: str) -> list[str]:
-    role_dir = f"runs/current/role-state/{runtime_role}/"
-    writes = [
-        f"runs/current/artifacts/{ARTIFACT_AREA_BY_ROLE[runtime_role]}/**",
-        f"{role_dir}context.md",
-        f"{role_dir}processed/**",
-        "runs/current/evidence/**",
-        "runs/current/role-state/*/inbox/*.md",
-    ]
-
-    if runtime_role == "product_manager":
-        writes.append("app/BUSINESS_RULES.md")
-    elif runtime_role == "frontend":
-        writes.extend(
-            [
-                "app/frontend/**",
-                "app/reference/admin.yaml",
-                "app/README.md",
-            ]
-        )
-    elif runtime_role == "backend":
-        writes.extend(
-            [
-                "app/backend/**",
-                "app/reference/admin.yaml",
-            ]
-        )
-    elif runtime_role == "deployment":
-        writes.extend(
-            [
-                "app/Dockerfile",
-                "app/docker-compose.yml",
-                "app/nginx.conf",
-                "app/entrypoint.sh",
-                "app/install.sh",
-                "app/run.sh",
-                "app/README.md",
-            ]
-        )
-
-    return writes
+    writes = list(owned_prefixes(runtime_role))
+    writes.extend(
+        [
+            "runs/current/evidence/**",
+            "runs/current/role-state/*/inbox/*.md",
+        ]
+    )
+    return dedupe_paths(writes)
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--repo-root", required=True)
-    parser.add_argument("--display-role", required=True)
-    parser.add_argument("--runtime-role", required=True)
-    parser.add_argument("--role-file", required=True)
-    parser.add_argument("--message", required=True)
-    args = parser.parse_args()
+def repo_relative_or_absolute(path: Path, repo_root: Path) -> str:
+    try:
+        return relpath(path, repo_root)
+    except ValueError:
+        return str(path.resolve())
 
-    repo_root = resolve_repo_root(args.repo_root)
-    message_path = Path(args.message).resolve()
-    role_file = Path(args.role_file)
-    message_text = message_path.read_text(encoding="utf-8")
-    sections = parse_message_sections(message_text)
 
+def absolutize(repo_root: Path, path_value: str) -> str:
+    if path_value.startswith("/"):
+        return path_value
+    return str((repo_root / path_value).resolve())
+
+
+def build_read_paths(
+    repo_root: Path,
+    runtime_role: str,
+    role_file: Path,
+    message_path: Path,
+    sections: dict[str, list[str] | str],
+) -> list[str]:
     read_paths = list(CORE_READS)
     read_paths.append(role_file.as_posix())
     read_paths.append("runs/current/artifacts/architecture/capability-profile.md")
     read_paths.append("runs/current/artifacts/architecture/load-plan.md")
 
-    role_context = repo_root / "runs" / "current" / "role-state" / args.runtime_role / "context.md"
+    role_context = repo_root / "runs" / "current" / "role-state" / runtime_role / "context.md"
     if role_context.exists():
         read_paths.append(relpath(role_context, repo_root))
 
@@ -153,18 +128,28 @@ def main() -> int:
         if isinstance(item, str):
             read_paths.append(item)
 
-    read_paths.append(relpath(message_path, repo_root))
-    read_paths = dedupe_paths(read_paths)
+    read_paths.append(repo_relative_or_absolute(message_path, repo_root))
+    return dedupe_paths(read_paths)
 
-    print(f"You are the {args.display_role} agent for app_gen_playbook.\n")
+
+def emit_full_prompt(
+    repo_root: Path,
+    display_role: str,
+    runtime_role: str,
+    message_text: str,
+    message_path: Path,
+    sections: dict[str, list[str] | str],
+    read_paths: list[str],
+) -> None:
+    print(f"You are the {display_role} agent for app_gen_playbook.\n")
     print("Process exactly one inbox message:\n")
-    print(f"- {relpath(message_path, repo_root)}\n")
+    print(f"- {repo_relative_or_absolute(message_path, repo_root)}\n")
     print("Read only these files before acting:\n")
     for path in read_paths:
         print(f"- {path}")
 
     print("\nAllowed writes:\n")
-    for path in allowed_write_paths(args.runtime_role):
+    for path in allowed_write_paths(runtime_role):
         print(f"- {path}")
 
     print(
@@ -191,13 +176,95 @@ def main() -> int:
         "2. update the role context.md\n"
         "3. create any required downstream inbox files\n"
         "4. move the processed inbox item into processed/\n"
-        "5. summarize what changed and what remains open\n"
+        "5. start the final response with `Summary: ...`\n"
+        "6. then summarize what changed and what remains open\n"
     )
 
     print("Inbox message content:\n")
     print("```md")
     print(message_text.rstrip())
     print("```")
+
+
+def emit_short_prompt(
+    repo_root: Path,
+    display_role: str,
+    runtime_role: str,
+    message_path: Path,
+    sections: dict[str, list[str] | str],
+    read_paths: list[str],
+) -> None:
+    print(f"You are the {display_role} runtime worker for app_gen_playbook.")
+    print("Process exactly one inbox item in this turn.")
+    print("")
+    print(f"Inbox message: {absolutize(repo_root, repo_relative_or_absolute(message_path, repo_root))}")
+    print(f"Gate status: {sections.get('gate status', 'unspecified')}")
+    print("")
+    print("Required reads:")
+    for path in read_paths:
+        print(f"- {absolutize(repo_root, path)}")
+    print("")
+    print("Allowed writes:")
+    for path in allowed_write_paths(runtime_role):
+        print(f"- {absolutize(repo_root, path)}")
+    print("")
+    print("Hard rules:")
+    print("- Read only the listed files plus directly referenced files required to complete this inbox item.")
+    print("- Do not process any other inbox item.")
+    print("- Do not edit another role's artifact area or app subtree.")
+    print("- If contract drift exists, write a handoff into the Architect inbox instead of silently patching around it.")
+    print("- Update your role context.md.")
+    print("- Move the processed inbox file into processed/.")
+    print("- Start the final response with `Summary: ...` on a single line.")
+    print("")
+
+    for title in ("requested outputs", "dependencies", "blocking issues", "notes"):
+        values = sections.get(title, [])
+        if not values:
+            continue
+        print(f"{title.title()}:")
+        for value in values:
+            print(f"- {value}")
+        print("")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-root", required=True)
+    parser.add_argument("--runtime-role", required=True)
+    parser.add_argument("--message", required=True)
+    parser.add_argument("--display-role")
+    parser.add_argument("--role-file")
+    parser.add_argument("--mode", choices=("full", "short"), default="full")
+    args = parser.parse_args()
+
+    repo_root = resolve_repo_root(args.repo_root)
+    message_path = Path(args.message).resolve()
+    display_role = args.display_role or RUNTIME_TO_DISPLAY[args.runtime_role]
+    role_file = Path(args.role_file or DISPLAY_TO_ROLE_FILE[display_role])
+    message_text = message_path.read_text(encoding="utf-8")
+    sections = parse_message_sections(message_text)
+    read_paths = build_read_paths(repo_root, args.runtime_role, role_file, message_path, sections)
+
+    if args.mode == "short":
+        emit_short_prompt(
+            repo_root,
+            display_role,
+            args.runtime_role,
+            message_path,
+            sections,
+            read_paths,
+        )
+    else:
+        emit_full_prompt(
+            repo_root,
+            display_role,
+            args.runtime_role,
+            message_text,
+            message_path,
+            sections,
+            read_paths,
+        )
 
     return 0
 

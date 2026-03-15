@@ -46,6 +46,7 @@ Agents SHOULD use this path instead:
 - [capability-loading.md](capability-loading.md)
 - [artifact-metadata.md](artifact-metadata.md)
 - [run-lifecycle.md](run-lifecycle.md)
+- [orchestrator-runtime.md](orchestrator-runtime.md)
 - [playbook-execution-outputs.md](playbook-execution-outputs.md)
 - [ownership-and-edits.md](ownership-and-edits.md)
 

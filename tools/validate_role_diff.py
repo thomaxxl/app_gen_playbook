@@ -4,68 +4,34 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from orchestrator_common import read_json, relpath, resolve_repo_root, snapshot_repo_files, write_json
+from orchestrator_common import (
+    owned_prefixes,
+    read_json,
+    relpath,
+    resolve_repo_root,
+    snapshot_repo_files,
+    write_json,
+)
 
 
 def allowed_prefixes(runtime_role: str) -> list[str]:
-    role_dir = f"runs/current/role-state/{runtime_role}/"
-    prefixes = [
-        f"runs/current/evidence/",
-        f"runs/current/role-state/{runtime_role}/",
-        "runs/current/role-state/",
-    ]
+    return ["runs/current/evidence/"] + list(owned_prefixes(runtime_role))
 
-    if runtime_role == "product_manager":
-        prefixes.extend(
-            [
-                "runs/current/artifacts/product/",
-                "app/BUSINESS_RULES.md",
-            ]
-        )
-    elif runtime_role == "architect":
-        prefixes.extend(["runs/current/artifacts/architecture/"])
-    elif runtime_role == "frontend":
-        prefixes.extend(
-            [
-                "runs/current/artifacts/ux/",
-                "app/frontend/",
-                "app/reference/admin.yaml",
-                "app/README.md",
-            ]
-        )
-    elif runtime_role == "backend":
-        prefixes.extend(
-            [
-                "runs/current/artifacts/backend-design/",
-                "app/backend/",
-                "app/reference/admin.yaml",
-            ]
-        )
-    elif runtime_role == "deployment":
-        prefixes.extend(
-            [
-                "runs/current/artifacts/devops/",
-                "app/Dockerfile",
-                "app/docker-compose.yml",
-                "app/nginx.conf",
-                "app/entrypoint.sh",
-                "app/install.sh",
-                "app/run.sh",
-                "app/README.md",
-            ]
-        )
 
+def ignored_prefixes(ignore_runtime_roles: list[str]) -> list[str]:
+    prefixes: list[str] = []
+    for runtime_role in ignore_runtime_roles:
+        prefixes.extend(list(owned_prefixes(runtime_role)))
     return prefixes
 
 
-def is_allowed_change(runtime_role: str, relative_path: str) -> bool:
+def is_allowed_change(runtime_role: str, relative_path: str, ignore_runtime_roles: list[str]) -> bool:
     if relative_path.startswith("runs/current/role-state/") and relative_path.endswith(".md"):
         if "/inbox/" in relative_path:
             return True
-    return any(
-        relative_path == prefix.rstrip("/") or relative_path.startswith(prefix)
-        for prefix in allowed_prefixes(runtime_role)
-    )
+
+    valid_prefixes = allowed_prefixes(runtime_role) + ignored_prefixes(ignore_runtime_roles)
+    return any(relative_path == prefix.rstrip("/") or relative_path.startswith(prefix) for prefix in valid_prefixes)
 
 
 def snapshot_command(repo_root: Path, output_path: Path) -> int:
@@ -80,6 +46,7 @@ def validate_command(
     runtime_role: str,
     snapshot_path: Path,
     evidence_out: Path | None,
+    ignore_runtime_roles: list[str],
 ) -> int:
     before = read_json(snapshot_path)
     if not isinstance(before, dict):
@@ -94,12 +61,13 @@ def validate_command(
         if before.get(path) != after.get(path):
             changed.append(path)
 
-    violations = [path for path in changed if not is_allowed_change(runtime_role, path)]
+    violations = [path for path in changed if not is_allowed_change(runtime_role, path, ignore_runtime_roles)]
     if evidence_out is not None:
         evidence_out.parent.mkdir(parents=True, exist_ok=True)
         evidence_lines = [
             f"runtime_role: {runtime_role}",
             f"changed_files: {len(changed)}",
+            f"ignored_runtime_roles: {', '.join(ignore_runtime_roles) if ignore_runtime_roles else '(none)'}",
             "",
             "## Changed files",
         ]
@@ -136,6 +104,7 @@ def main() -> int:
     validate_parser.add_argument("--runtime-role", required=True)
     validate_parser.add_argument("--snapshot", required=True)
     validate_parser.add_argument("--evidence-out")
+    validate_parser.add_argument("--ignore-runtime-role", action="append", default=[])
 
     args = parser.parse_args()
 
@@ -149,6 +118,7 @@ def main() -> int:
         args.runtime_role,
         Path(args.snapshot).resolve(),
         Path(args.evidence_out).resolve() if args.evidence_out else None,
+        list(args.ignore_runtime_role),
     )
 
 

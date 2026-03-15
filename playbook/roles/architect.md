@@ -60,6 +60,7 @@ used as design input.
 
 - `../../runs/current/artifacts/architecture/**`
 - `../../runs/current/role-state/architect/**`
+- `../../app/README.md`
 
 ## Forbidden writes
 

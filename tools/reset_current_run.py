@@ -5,7 +5,7 @@ import argparse
 import shutil
 from pathlib import Path
 
-from orchestrator_common import resolve_repo_root
+from orchestrator_common import RUNTIME_TO_DISPLAY, resolve_repo_root
 
 
 RUNTIME_ROLE_DIRS = (
@@ -25,6 +25,31 @@ ARTIFACT_DIRS = (
 )
 
 
+ROLE_LOCAL_AGENTS_RULES = {
+    "product_manager": "escalate missing product intent through the Product artifact set before handing off downstream",
+    "architect": "resolve contract drift through architecture artifacts and inbox handoffs before implementation proceeds",
+    "frontend": "treat relationship tabs and related-record popups as baseline behavior unless run-owned UX artifacts explicitly override them",
+    "backend": "treat backend route discovery and admin.yaml reconciliation as mandatory before claiming frontend stability",
+    "deployment": "do not change application semantics while implementing packaging or runtime normalization",
+}
+
+
+def role_agents_content(runtime_role: str) -> str:
+    display_role = RUNTIME_TO_DISPLAY[runtime_role]
+    role_rule = ROLE_LOCAL_AGENTS_RULES[runtime_role]
+    return (
+        "# AGENTS.md\n\n"
+        "These instructions apply to this runtime role directory.\n\n"
+        f"- You are the {display_role} runtime worker.\n"
+        "- Process exactly one inbox message per noninteractive Codex run.\n"
+        "- Update `context.md` before finishing the inbox item.\n"
+        "- Move the processed inbox item into `processed/`.\n"
+        "- Create downstream inbox files when handoff is required.\n"
+        "- Do not silently edit another role's owned artifact area or app subtree.\n"
+        f"- {role_rule}.\n"
+    )
+
+
 def reset_current_run(repo_root: Path) -> Path:
     template_dir = repo_root / "runs" / "template"
     current_dir = repo_root / "runs" / "current"
@@ -39,6 +64,10 @@ def reset_current_run(repo_root: Path) -> Path:
         runtime_dir = role_state_dir / runtime_role
         (runtime_dir / "inbox").mkdir(parents=True, exist_ok=True)
         (runtime_dir / "processed").mkdir(parents=True, exist_ok=True)
+        (runtime_dir / "AGENTS.md").write_text(
+            role_agents_content(runtime_role),
+            encoding="utf-8",
+        )
         context_file = runtime_dir / "context.md"
         if context_file.exists():
             context_file.unlink()
@@ -47,7 +76,11 @@ def reset_current_run(repo_root: Path) -> Path:
     for artifact_dir in ARTIFACT_DIRS:
         (artifacts_dir / artifact_dir).mkdir(parents=True, exist_ok=True)
 
-    (current_dir / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+    orchestrator_dir = current_dir / "evidence" / "orchestrator"
+    (orchestrator_dir / "prompts").mkdir(parents=True, exist_ok=True)
+    (orchestrator_dir / "jsonl").mkdir(parents=True, exist_ok=True)
+    (orchestrator_dir / "final").mkdir(parents=True, exist_ok=True)
+    (orchestrator_dir / "logs").mkdir(parents=True, exist_ok=True)
 
     remarks_path = current_dir / "remarks.md"
     remarks_path.write_text("# Run Remarks\n\nNeutral at run start.\n", encoding="utf-8")

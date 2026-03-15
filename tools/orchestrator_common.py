@@ -28,6 +28,14 @@ DISPLAY_TO_ROLE_FILE = {
     "devops": "playbook/roles/devops.md",
 }
 
+RUNTIME_TO_DISPLAY = {
+    "product_manager": "product-manager",
+    "architect": "architect",
+    "frontend": "frontend",
+    "backend": "backend",
+    "deployment": "deployment",
+}
+
 ARTIFACT_AREA_BY_ROLE = {
     "product_manager": "product",
     "architect": "architecture",
@@ -41,6 +49,49 @@ RUN_ARTIFACT_TEMPLATE_DIRS = {
     "architecture": "specs/architecture",
     "ux": "specs/ux",
     "backend-design": "specs/backend-design",
+}
+
+PHASE5_READY_PHASES = {
+    "phase-1-product-definition",
+    "phase-2-architecture-contract",
+    "phase-3-ux-and-interaction-design",
+    "phase-4-backend-design-and-rules-mapping",
+}
+
+ROLE_OWNED_PREFIXES = {
+    "product_manager": (
+        "runs/current/artifacts/product/",
+        "runs/current/role-state/product_manager/",
+        "app/BUSINESS_RULES.md",
+    ),
+    "architect": (
+        "runs/current/artifacts/architecture/",
+        "runs/current/role-state/architect/",
+        "app/README.md",
+    ),
+    "frontend": (
+        "runs/current/artifacts/ux/",
+        "runs/current/role-state/frontend/",
+        "app/frontend/",
+    ),
+    "backend": (
+        "runs/current/artifacts/backend-design/",
+        "runs/current/role-state/backend/",
+        "app/backend/",
+        "app/rules/",
+        "app/reference/admin.yaml",
+    ),
+    "deployment": (
+        "runs/current/artifacts/devops/",
+        "runs/current/role-state/deployment/",
+        "app/.gitignore",
+        "app/Dockerfile",
+        "app/docker-compose.yml",
+        "app/nginx.conf",
+        "app/entrypoint.sh",
+        "app/install.sh",
+        "app/run.sh",
+    ),
 }
 
 EXCLUDED_DIR_NAMES = {
@@ -210,3 +261,10 @@ def iter_required_artifact_templates(repo_root: Path) -> Iterable[tuple[str, Pat
 
 def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def owned_prefixes(runtime_role: str) -> tuple[str, ...]:
+    try:
+        return ROLE_OWNED_PREFIXES[runtime_role]
+    except KeyError as exc:
+        raise SystemExit(f"error: unknown runtime role: {runtime_role}") from exc

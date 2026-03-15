@@ -9,6 +9,8 @@ This file defines the actionable message model for agent handoffs.
 - Every markdown file in that inbox is actionable work.
 - Inbox files are the active queue.
 - Processed items are moved into `processed/` for traceability.
+- Each noninteractive Codex role invocation MUST process at most one inbox
+  item.
 
 The permanent record belongs in:
 
@@ -84,7 +86,7 @@ The receiving agent must:
 
 1. read `role.md`
 2. read its `context.md` if present
-3. process every inbox message
+3. process the oldest actionable inbox message for the current turn
 4. update owned artifacts
 5. update `context.md`
 6. send onward messages if needed

@@ -25,6 +25,19 @@ This phase starts only when all of these artifact sets are marked
 - `runs/current/artifacts/ux/`
 - `runs/current/artifacts/backend-design/`
 
+The orchestrator MUST treat that readiness gate as authoritative.
+
+Before that gate passes:
+
+- Product Manager and Architect MUST stay in the main serial control lane
+- Frontend and Backend MAY process pre-implementation work only serially
+
+After that gate passes:
+
+- Frontend and Backend SHOULD run in parallel background workers
+- Product Manager and Architect MUST remain in the main control lane
+- Architect remains the contract-drift arbiter
+
 Before feature work starts, the implementation agents must also check and
 record:
 
@@ -37,6 +50,11 @@ record:
 Before any install step begins, the implementation agents MUST materialize
 concrete dependency manifests in `app/` from the template lane plus the
 run-owned `runtime-bom.md`.
+
+During implementation, role-local `context.md`, owned artifacts, and inbox
+traces remain the durable source of truth. Codex session resume MAY be used to
+reduce startup and prompt rebuild cost, but it MUST NOT replace those durable
+records.
 
 If the current run lane is `rename-only` or `non-starter`, the Backend
 implementation lane MUST also complete a starter-template replacement sweep

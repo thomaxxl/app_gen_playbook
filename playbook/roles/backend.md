@@ -53,6 +53,7 @@ undecided feature packs MUST NOT be loaded, summarized, or copied.
 - `../../runs/current/role-state/backend/**`
 - `../../app/backend/**`
 - `../../app/rules/**`
+- `../../app/reference/admin.yaml`
 
 ## Forbidden writes
 

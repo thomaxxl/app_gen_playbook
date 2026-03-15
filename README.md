@@ -92,6 +92,13 @@ This seeds `runs/current/`, creates the Product Manager `INPUT.md`, and then
 processes one inbox message per role per pass until the formal completion
 checker passes or a role invocation fails.
 
+The orchestrator now also:
+
+- logs every role start and finish with a brief one-line summary
+- keeps one resume-capable Codex session per runtime role
+- switches to parallel Frontend and Backend workers only after the Phase 5
+  entry gate passes
+
 ## Fresh-run agent reading rule
 
 For a fresh run, agents MUST start from:

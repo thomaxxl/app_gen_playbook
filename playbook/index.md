@@ -70,6 +70,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [process/loading-protocol.md](process/loading-protocol.md)
 - [process/loader-examples.md](process/loader-examples.md)
 - [process/context-budgets.md](process/context-budgets.md)
+- [process/orchestrator-runtime.md](process/orchestrator-runtime.md)
 
 ## Feature catalog
 
