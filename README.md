@@ -45,6 +45,9 @@ on this file for execution rules.
 - `scripts/monitor.sh`
   Tails the raw per-turn Codex event streams under
   `runs/current/evidence/orchestrator/jsonl/`.
+- `scripts/status_report.sh`
+  Prints a high-level run status report using the current run state,
+  completion blockers, worker state, and recent orchestrator activity.
 
 ## Repository Model
 
@@ -90,6 +93,13 @@ active:
 
 That monitor prints all current and future `*.events.jsonl` streams with
 filename prefixes, including parallel role turns.
+
+If you want a high-level run status snapshot:
+
+```bash
+./scripts/status_report.sh
+./scripts/status_report.sh --format json
+```
 
 For authoritative iteration on an existing app:
 

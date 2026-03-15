@@ -42,3 +42,9 @@ During execution, the orchestrator also maintains:
 - local `runs/current/role-state/*/inflight/`
 - local `runs/current/orchestrator/run-status.json`
 - local `runs/current/orchestrator/workers/*.json`
+
+For an operator-facing summary of the active run, use:
+
+```bash
+./scripts/status_report.sh
+```
