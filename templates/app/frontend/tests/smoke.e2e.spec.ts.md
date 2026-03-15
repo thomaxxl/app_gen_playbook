@@ -70,7 +70,9 @@ test("starter app smoke flow works", async ({ page, request }) => {
   }
 
   await page.goto("/admin-app/#/Collection");
-  await expect(page.getByText("Spring Planning")).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Spring Planning" }).first(),
+  ).toBeVisible();
 
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
@@ -94,6 +96,9 @@ Notes:
   metadata, extend this smoke suite to prove at least one fallback-driven
   `tomany` relationship tab loads rows and at least one `toone` relationship
   opens the related-record dialog.
+- This file MUST prove that at least one representative seeded list-cell value
+  is visible after the real frontend data-provider path loads, not merely that
+  the page shell booted.
 - The sparse relationship scenario SHOULD use the same domain/resource names
   documented in the app's own run-owned architecture and UX artifacts rather
   than hardcoding the starter `Collection` example.

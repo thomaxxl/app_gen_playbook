@@ -69,6 +69,7 @@ Runtime state lives in:
 - [../../runs/current/artifacts/backend-design/query-behavior.md](../../runs/current/artifacts/backend-design/query-behavior.md)
 - [../../runs/current/artifacts/backend-design/test-plan.md](../../runs/current/artifacts/backend-design/test-plan.md)
 - [../../specs/contracts/backend/README.md](../../specs/contracts/backend/README.md)
+- [../../specs/contracts/backend/route-discovery.md](../../specs/contracts/backend/route-discovery.md)
 - [../../specs/contracts/rules/README.md](../../specs/contracts/rules/README.md)
 - [../../specs/contracts/backend/validation.md](../../specs/contracts/backend/validation.md)
 - [../../specs/contracts/backend/verification-fallbacks.md](../../specs/contracts/backend/verification-fallbacks.md)
@@ -126,6 +127,9 @@ agent MUST explicitly resolve and record:
 7. bootstrap minimum dataset
    - exact reference data and sample data required for backend and frontend
      verification
+8. route-discovery reconciliation
+   - how live collection paths will be discovered and reconciled against
+     `reference/admin.yaml` before frontend and delivery validation
 
 The Backend agent MUST map every approved rule ID from
 `../../runs/current/artifacts/product/business-rules.md` to:

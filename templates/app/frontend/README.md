@@ -63,13 +63,14 @@ Suggested copy order:
 40. `playwright.config.ts.md`
 41. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
 42. `tests/schemaContext.test.ts.md`
-43. `tests/resourceMetadata.test.ts.md`
-44. `tests/createSearchEnabledDataProvider.test.ts.md`
-45. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
-46. `tests/vite.config.test.ts.md`
-47. `tests/smoke.e2e.spec.ts.md`
-48. `../project/run.sh.md`
-49. `../project/README.app.md`
+43. `tests/dataProvider.integration.test.ts.md`
+44. `tests/resourceMetadata.test.ts.md`
+45. `tests/createSearchEnabledDataProvider.test.ts.md`
+46. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+47. `tests/vite.config.test.ts.md`
+48. `tests/smoke.e2e.spec.ts.md`
+49. `../project/run.sh.md`
+50. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -114,6 +115,9 @@ Notes:
 - `tests/resourceMetadata.test.ts.md` and `tests/schemaContext.test.ts.md`
   are part of the baseline relationship contract because sparse-schema apps
   must prove tab-group preservation and relationship fallback behavior.
+- `tests/dataProvider.integration.test.ts.md` is part of the baseline data
+  loading contract because the frontend MUST prove more than bootstrap: it
+  MUST show that the real provider path preserves row data.
 - For non-starter domains, `CustomDashboard.tsx.md` SHOULD be the default
   custom-page starting point. `Landing.tsx.md` remains the starter-domain
   example.

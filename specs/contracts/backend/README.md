@@ -23,6 +23,7 @@ The agent MUST load these files first:
 - [dependencies.md](dependencies.md)
 - [models-and-naming.md](models-and-naming.md)
 - [runtime-and-startup.md](runtime-and-startup.md)
+- [route-discovery.md](route-discovery.md)
 
 The agent MUST also consult:
 
@@ -35,9 +36,6 @@ The agent MAY load these files on demand:
   when defining seeding, empty-db behavior, or SQLite lifecycle
 - [api-contract.md](api-contract.md)
   when implementing SAFRS payloads or aligning frontend/backend assumptions
-- [route-discovery.md](route-discovery.md)
-  when reconciling provisional `admin.yaml endpoint` values with runtime
-  SAFRS collection paths and wire `type` values
 - [query-contract.md](query-contract.md)
   when implementing filtering, search, pagination, sort, or include behavior
 - [sessions-and-transactions.md](sessions-and-transactions.md)

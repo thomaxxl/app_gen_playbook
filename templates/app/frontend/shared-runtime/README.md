@@ -14,6 +14,11 @@ Required files:
 - `relationshipUi.tsx.md`
 - `resourceRegistry.tsx.md`
 
+The baseline frontend test lane MUST also include:
+
+- `../tests/schemaContext.test.ts.md`
+- `../tests/dataProvider.integration.test.ts.md`
+
 Optional upload-related files:
 
 - `files/uploadAwareDataProvider.ts.md`

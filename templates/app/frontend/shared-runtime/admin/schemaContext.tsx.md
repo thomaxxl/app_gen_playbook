@@ -185,6 +185,9 @@ Notes:
 - The adapter MUST preserve `tab_groups` because the runtime uses raw
   relationship groups as authoritative UI input when normalized relationship
   metadata is incomplete.
+- The generated frontend test suite MUST include one direct integration test
+  that calls `loadAdminBootstrap(...)`, then proves a representative scalar
+  field survives through `dataProvider.getList(...)`.
 - If the app supports upload-backed fields, wrap the returned provider with the
   `shared-runtime/files/uploadAwareDataProvider.ts` helper after the
   search-enabled provider is created.

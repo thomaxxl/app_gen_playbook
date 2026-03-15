@@ -12,8 +12,14 @@ This file defines the minimum backend validation checklist.
 
 ## Contract validation
 
+- route-discovery reconciliation derives live collection paths from
+  `app.routes`, `app.openapi()`, `/jsonapi.json`, or an equivalent approved
+  source after model exposure and before `reference/admin.yaml` is treated as
+  frozen
 - collection endpoints discovered from the running app and matched to
   `admin.yaml endpoint` values return JSON:API list data
+- at least one discovered collection endpoint returns a non-empty seeded list
+  payload rather than only an empty shell response
 - one discovered single-record endpoint returns JSON:API single-record data
 - one relationship endpoint returns JSON:API related data
 - collection route paths are validated after startup and match `admin.yaml
@@ -43,6 +49,8 @@ If the app supports uploaded files:
   required field/relationship declarations are missing
 - startup-time `admin.yaml` validation does not hardcode final collection
   paths before route exposure
+- `reference/admin.yaml` is not treated as frozen until the post-exposure
+  route-discovery reconciliation passes
 
 ## Rule validation
 

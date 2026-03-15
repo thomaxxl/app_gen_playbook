@@ -18,20 +18,24 @@ Required steps:
    - `../../runs/current/artifacts/`
    - `../../runs/current/evidence/`
    - `../../runs/current/role-state/`
-6. seed `../../runs/current/role-state/product_manager/inbox/INPUT.md` from
+6. ensure the evidence lane is ready to record at least:
+   - command logs
+   - backend/frontend/e2e verification notes
+   - `contract-samples.md` for the route-to-record trace
+7. seed `../../runs/current/role-state/product_manager/inbox/INPUT.md` from
    `../../runs/current/input.md`
-7. recreate `../../runs/current/artifacts/architecture/capability-profile.md`
+8. recreate `../../runs/current/artifacts/architecture/capability-profile.md`
    from the starter template shape
-8. recreate `../../runs/current/artifacts/architecture/load-plan.md`
+9. recreate `../../runs/current/artifacts/architecture/load-plan.md`
    from the starter template shape
-9. if packaging or runtime normalization is expected for the run, recreate
+10. if packaging or runtime normalization is expected for the run, recreate
    `../../runs/current/artifacts/devops/` from the starter stub set
-10. if packaging or runtime normalization is expected for the run, ensure
+11. if packaging or runtime normalization is expected for the run, ensure
     `../../runs/current/role-state/devops/` exists
-11. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
+12. leave `../../specs/contracts/`, `../../specs/features/`, and the generic
    template directories unchanged
-12. create local gitignored `../../app/`
-13. seed local `../../app/` with the required generated-app root files from
+13. create local gitignored `../../app/`
+14. seed local `../../app/` with the required generated-app root files from
     `../../templates/app/project/` and `../../templates/app/deployment/`,
     including at least:
     - `.gitignore`
@@ -41,9 +45,9 @@ Required steps:
     - `BUSINESS_RULES.md` when available
     - `Dockerfile`
     - `docker-compose.yml`
-14. treat local `../../app/` as implementation workspace, not as the
+15. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
-15. when the Product business-rules catalog becomes available, seed local
+16. when the Product business-rules catalog becomes available, seed local
     `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
 
 Rules:

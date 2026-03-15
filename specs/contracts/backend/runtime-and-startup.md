@@ -82,6 +82,22 @@ route exposure.
 Exact collection-route and wire-type validation MUST happen after startup in
 the backend integration tests against the running app.
 
+## Post-exposure route-discovery reconciliation
+
+After steps 10 through 13 complete, the backend MUST perform route-discovery
+reconciliation before `reference/admin.yaml` is treated as frozen input for
+frontend wiring, browser smoke, or delivery validation.
+
+That reconciliation MUST:
+
+- derive live collection paths from `app.openapi()`, `/jsonapi.json`, or both
+- compare those live paths with every `admin.yaml endpoint` value
+- fail the run or force an `admin.yaml` update if any exposed collection path
+  disagrees with the checked-in contract
+
+The backend MUST NOT treat a provisional `admin.yaml endpoint` value as final
+merely because the app boots.
+
 ## Canonical schema URL
 
 The canonical backend schema URL is:

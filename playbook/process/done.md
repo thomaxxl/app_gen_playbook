@@ -14,6 +14,9 @@ A feature is done only when all of these are true:
 - the mandatory Playwright smoke suite passes for the generated app
 - the final pre-delivery step was an actual Playwright smoke run against the
   app, not just a claim that the tests should pass
+- the app is proven to boot without bootstrap/runtime failure
+- at least one generated resource list is proven to render correct live data,
+  not only a shell, spinner, or empty scaffold
 - docs and templates match the implementation
 - product acceptance has passed
 - no required artifact remains `status: stub`
@@ -24,6 +27,9 @@ A feature is done only when all of these are true:
   matching gate-owner `context.md` entries
 - if a run claims backend, frontend, or Playwright success, supporting files
   exist under `evidence/`
+- if a run claims frontend/backend integration success,
+  `runs/current/evidence/contract-samples.md` exists and records at least one
+  `admin.yaml endpoint` to live-route to sample-record trace
 - all core-agent inboxes are empty
 
 If packaging was explicitly in scope:

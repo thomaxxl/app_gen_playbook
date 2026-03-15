@@ -77,6 +77,9 @@ business-rule behavior, or route meaning.
 - implement models and relationships
 - expose SAFRS resources
 - implement startup/bootstrap lifecycle
+- run route discovery after exposure and reconcile `reference/admin.yaml`
+  against the live collection paths before frontend bootstrap is treated as
+  stable
 - implement rules and validation
 - implement the run-owned bootstrap and sample-data plan
 - implement tests
@@ -108,6 +111,8 @@ business-rule behavior, or route meaning.
 
 - app runs end-to-end
 - schema-driven resources load
+- at least one generated list route renders real seeded data from the backend,
+  not only an initialized shell
 - generated list/show pages use the baseline relationship runtime rather than a
   simplified raw-id or plain `ReferenceField` fallback
 - custom pages work

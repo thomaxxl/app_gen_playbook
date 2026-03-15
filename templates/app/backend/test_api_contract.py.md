@@ -57,6 +57,25 @@ def endpoint_for(schema: dict, resource_key: str) -> str:
     return endpoint
 
 
+def discovered_collection_paths(client: TestClient) -> set[str]:
+    response = client.get("/jsonapi.json")
+    assert response.status_code == 200
+    spec = response.json()
+
+    discovered: set[str] = set()
+    for path, path_item in spec.get("paths", {}).items():
+        if not path.startswith("/api/"):
+            continue
+        if "{" in path:
+            continue
+        if "get" not in path_item:
+            continue
+        discovered.add(path)
+
+    assert discovered
+    return discovered
+
+
 def discovered_type_for_collection(client: TestClient, endpoint: str) -> str:
     response = client.get(f"{endpoint}?page[number]=1&page[size]=1")
     assert response.status_code == 200
@@ -82,6 +101,20 @@ def test_core_routes_exist(monkeypatch, tmp_path):
     ):
         response = client.get(path)
         assert response.status_code == 200, path
+
+
+def test_admin_yaml_endpoints_match_discovered_collection_routes(monkeypatch, tmp_path):
+    configure_test_env(monkeypatch, tmp_path)
+    client = TestClient(create_app())
+    schema = load_admin_schema(client)
+    live_paths = discovered_collection_paths(client)
+
+    for resource_key in schema["resources"]:
+        endpoint = endpoint_for(schema, resource_key)
+        assert endpoint in live_paths, (
+            f"admin.yaml endpoint mismatch for {resource_key}: "
+            f"{endpoint!r} is not one of the discovered collection paths {sorted(live_paths)!r}"
+        )
 
 
 def test_items_collection_returns_jsonapi_shape(monkeypatch, tmp_path):
@@ -231,6 +264,8 @@ def test_delete_item_via_api(monkeypatch, tmp_path):
 Notes:
 
 - This starter test file discovers SAFRS collection paths from `admin.yaml`.
+- It MUST also discover live collection routes from `/jsonapi.json` and fail
+  if `reference/admin.yaml` and the running backend disagree.
 - It also discovers mutation payload `type` values from live list responses
   instead of inferring them from SQL naming conventions.
 - A generated app MAY gate this preferred-path file behind an explicit

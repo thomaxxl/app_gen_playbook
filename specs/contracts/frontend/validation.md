@@ -41,6 +41,10 @@ frontend package template before treating the playbook baseline as current.
 
 - `/ui/admin/admin.yaml` loads successfully
 - `admin.yaml` load failure is visible
+- a direct frontend integration test loads `admin.yaml`, bootstraps the real
+  data-provider path, fetches one live or mocked collection payload through
+  that provider, and proves a representative scalar field survives into row
+  records
 - `runs/current/artifacts/ux/landing-strategy.md` exists and is not left as
   placeholder text
 - the app declares exactly one primary entry route across
@@ -94,6 +98,8 @@ The starter frontend MUST ship automated tests for:
 - render-time resource-registration failure with a visible fallback screen
 - grouped search-filter composition when `q` and other list filters are both
   present
+- the real `admin.yaml -> loadAdminBootstrap -> dataProvider.getList(...)`
+  path preserves at least one representative scalar field in returned records
 - Vite base-path and proxy configuration for `/admin-app/`, `/jsonapi.json`,
   and `/ui`
 
@@ -122,8 +128,8 @@ suite with at least this flow:
 12. if the app includes `Landing.tsx`, assert the landing page loads without
    the bootstrap-error or landing-error screen
 13. assert the key seeded collection request returns `200`
-14. navigate to at least one generated resource route and verify seeded records
-    render
+14. navigate to at least one generated resource route and verify a visible
+    seeded list-cell value renders from live backend data
 15. prove generated React-Admin resources are registered as direct `Admin`
     children by verifying the resource route resolves to a list page rather
     than a catch-all error route
@@ -146,6 +152,8 @@ environment instead of skipping it silently.
 ## CRUD validation
 
 - one list view works
+- one list view proves a real visible cell value from backend data, not only a
+  table shell or empty placeholder
 - one show view works
 - one create flow works
 - one edit flow works
