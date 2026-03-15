@@ -82,6 +82,11 @@ Codex session history MUST NOT be treated as authoritative run state.
 If a stored session cannot be resumed cleanly, the orchestrator MAY discard the
 stored session id for that role and start a fresh session.
 
+On the currently installed Codex CLI, `codex exec resume` MUST NOT be invoked
+with `--cd` or `--add-dir`. Fresh sessions MAY use those flags to establish
+the role-local workspace and writable roots, but resumed sessions MUST rely on
+the persisted session context instead.
+
 ## Model-selection rule
 
 The orchestrator SHOULD default to the local Codex CLI model/account default.
@@ -179,6 +184,11 @@ When `--resume` is used, the orchestrator MUST:
 - rebuild from repo state when session continuity is missing or unsafe
 - run a queue-recovery pass before continuing normal scheduling when
   completion still fails
+
+If a resume attempt fails and the orchestrator falls back to a fresh turn, it
+SHOULD preserve the failed resume JSONL stream before overwriting the normal
+per-turn evidence files. The operator MUST be able to inspect the actual
+resume failure instead of losing it to the fresh retry path.
 
 ## Canonical-artifact recovery
 

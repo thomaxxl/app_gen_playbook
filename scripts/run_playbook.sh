@@ -533,22 +533,29 @@ run_codex_resume() {
   local prompt_file="$5"
   local result_file="$6"
   local jsonl_file="$7"
-  local add_dirs=()
-  mapfile -t add_dirs < <(role_add_dirs "$runtime_role")
-
   local cmd=(
     codex exec resume
     --full-auto
     --json
-    --cd "$role_cwd"
     --output-last-message "$result_file"
     "$resume_id"
     -
   )
-  for add_dir in "${add_dirs[@]}"; do
-    cmd+=(--add-dir "$add_dir")
-  done
   run_codex_command "$runtime_role" "$role_cwd" "$model" "$prompt_file" "$result_file" "$jsonl_file" "${cmd[@]}"
+}
+
+preserve_resume_failure_artifacts() {
+  local jsonl_file="$1"
+  local result_file="$2"
+  local failed_jsonl="${jsonl_file%.events.jsonl}.resume-failed.events.jsonl"
+  local failed_result="${result_file%.result.md}.resume-failed.result.md"
+
+  if [[ -f "$jsonl_file" ]]; then
+    cp "$jsonl_file" "$failed_jsonl"
+  fi
+  if [[ -f "$result_file" ]]; then
+    cp "$result_file" "$failed_result"
+  fi
 }
 
 extract_codex_failure_detail() {
@@ -649,6 +656,7 @@ run_role_once() {
 
   if [[ -n "$resume_id" ]]; then
     if ! run_codex_resume "$runtime_role" "$role_dir" "$model" "$resume_id" "$prompt_file" "$result_file" "$jsonl_file"; then
+      preserve_resume_failure_artifacts "$jsonl_file" "$result_file"
       log "agent-resume-failed role=$runtime_role session=$resume_id; retrying fresh"
       session_remove "$runtime_role"
       if ! run_codex_fresh "$runtime_role" "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"; then
