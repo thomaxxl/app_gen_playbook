@@ -1,211 +1,115 @@
 # App Development Playbook
 
-This playbook is now also exposed at:
+`app_gen_playbook` is a repository for generating SAFRS-based admin
+applications through a structured multi-role workflow.
 
-- `../app_gen_playbook/`
+It is primarily intended for:
 
-Prefer the `app_gen_playbook/` name in new discussion and future external
-references.
+- maintainers of the playbook
+- operators running a new app-generation pass
+- reviewers trying to understand how generated apps are supposed to be built
+- new contributors who need a high-level map before reading the detailed
+  process and contract files
 
-If a local filesystem still exposes `one_shot_gen/`, treat it as a temporary
-compatibility alias only. New documentation and discussion MUST use
-`app_gen_playbook/`.
+If you are an automated agent, read [AGENTS.md](AGENTS.md) instead of relying
+on this file for execution rules.
 
-This directory is now organized around the following top-level areas:
+## What This Repository Contains
 
-- `run_playbook.sh`
-  Top-level sequential orchestrator for a new playbook run.
-- `AGENTS.md`
-  Small stable repo-wide execution rules for orchestrated role runs.
 - `playbook/`
-  Static role, process, phase, and compatibility instructions.
+  The process layer: roles, phases, read sets, routing manifests, and
+  orchestration rules.
 - `specs/`
-  Generic artifact templates, durable technical contracts, and optional
-  feature packs.
+  The durable contract layer: product, architecture, UX, backend-design, core
+  technical contracts, and optional feature packs.
 - `templates/`
-  Copy-and-adapt core templates plus feature-gated template packs that mirror
-  the generated `app/` shape.
+  The literal copy-and-adapt file templates used to materialize a generated
+  application.
 - `tools/`
-  Helper scripts used by the orchestrator for run reset, prompt building,
-  diff validation, and completion checks.
+  Helper scripts used by the orchestrator and by maintainers.
 - `runs/`
-  Tracked neutral run template plus the local active run workspace.
+  The run workspace model.
+  `runs/template/` is the tracked starter.
+  `runs/current/` is the local active run created from that starter.
 - `example/`
-  A cleaned preserved example generated from this playbook.
+  A preserved runnable example app generated from this playbook.
 - `app/`
-  A local ignored generated-application working tree created when a run starts.
-- this `README.md`
-  The top-level index.
+  The local ignored generated-app working tree for the active run.
+- `run_playbook.sh`
+  The top-level orchestrator entrypoint for a new run.
 
-Role note:
+## Repository Model
 
-- the canonical optional packaging role is now `playbook/roles/devops.md`
-- `playbook/roles/deployment.md` remains only as a compatibility alias
+This repository is intentionally segmented:
 
-## Version control rule
+- human/process instructions live under `playbook/`
+- technical contracts live under `specs/contracts/`
+- optional capability packs live under `specs/features/`
+- literal implementation snippets live under `templates/`
+- mutable run state lives under `runs/current/`
+- generated application output lives under local `app/`
 
-Changes to this playbook repository MUST be committed in git.
+That separation is part of the design. It keeps the playbook readable for
+humans and keeps agent context bounded during automated runs.
 
-Agents MUST NOT leave playbook edits uncommitted at the end of a playbook
-maintenance task unless the user explicitly asks for an uncommitted state.
+## Typical Workflow
 
-## Segmentation preservation rule
+For a new run:
 
-Playbook segmentation exists to avoid context overload during agent execution.
-
-When updating the playbook, agents MUST preserve and reinforce that
-segmentation:
-
-- keep static process instructions under `playbook/`
-- keep durable contracts under `specs/contracts/`
-- keep optional capability packs under `specs/features/`
-- keep literal code templates under `templates/`
-- keep mutable run state under `runs/current/`
-  while keeping the tracked neutral starter under `runs/template/`
-- keep generated implementation output under the local ignored `app/`
-
-Agents MUST NOT collapse these layers together or broaden role reading
-requirements without an explicit documented reason.
-
-## Operator orientation
-
-Use these files to understand the repository layout and the current run state:
-
-1. [run_playbook.sh](run_playbook.sh)
-2. [playbook/index.md](playbook/index.md)
-3. [playbook/README.md](playbook/README.md)
-4. [runs/README.md](runs/README.md)
-5. [specs/README.md](specs/README.md)
-6. [templates/README.md](templates/README.md)
-7. [example/README.md](example/README.md)
-8. [templates/app/project/README.app.md](templates/app/project/README.app.md)
-
-## Orchestrated run entrypoint
-
-Use the repository runner for a new serial inbox-driven run:
+1. Prepare a short input brief as markdown.
+2. Start the orchestrator:
 
 ```bash
 ./run_playbook.sh path/to/input.md
 ```
 
-This seeds `runs/current/`, creates the Product Manager `INPUT.md`, and then
-processes one inbox message per role per pass until the formal completion
-checker passes or a role invocation fails.
+3. The orchestrator creates local `runs/current/`, seeds the Product Manager
+   inbox, and advances the run through the defined roles.
+4. The generated app is built locally under `app/`.
+5. A preserved runnable reference remains available under `example/`.
 
-The orchestrator now also:
+The orchestrator keeps per-role evidence under `runs/current/evidence/` and
+per-role mutable state under `runs/current/role-state/`.
 
-- logs every role start and finish with a brief one-line summary
-- keeps one resume-capable Codex session per runtime role
-- switches to parallel Frontend and Backend workers only after the Phase 5
-  entry gate passes
-- uses your local Codex CLI default model unless you explicitly set
-  `FAST_MODEL`, `MAIN_MODEL`, or `LONG_MODEL`
-- exits with a recorded stall diagnosis instead of sleeping forever when the
-  run has no actionable inbox work left but still fails completion
+## Key Files To Read Next
 
-## Fresh-run agent reading rule
-
-For a fresh run, agents MUST start from:
+For human orientation:
 
 1. [playbook/index.md](playbook/index.md)
-2. [playbook/summaries/global-core.md](playbook/summaries/global-core.md)
-3. [playbook/summaries/process-core.md](playbook/summaries/process-core.md)
-4. the current role summary under `playbook/summaries/roles/`
-5. the current role Tier 1 read set under `playbook/process/read-sets/`
-6. the current task bundle under `playbook/task-bundles/`
-7. local `runs/current/` after it has been created from `runs/template/`
-8. the minimum run-owned artifacts and enabled feature packs required by that
-   task bundle
+2. [playbook/README.md](playbook/README.md)
+3. [runs/README.md](runs/README.md)
+4. [specs/README.md](specs/README.md)
+5. [templates/README.md](templates/README.md)
+6. [example/README.md](example/README.md)
 
-For a fresh run, agents MUST NOT use `example/` or `app/` as product or
-architecture inputs unless the task explicitly requests:
+For generated-app shape:
 
-- example comparison
-- app-only maintenance
-- playbook maintenance
+1. [templates/app/project/README.app.md](templates/app/project/README.app.md)
+2. [templates/app/project/install.sh.md](templates/app/project/install.sh.md)
+3. [templates/app/project/run.sh.md](templates/app/project/run.sh.md)
 
-## Complexity envelope
+## Important Conventions
 
-This playbook currently fits best when the target app stays within a modest
-admin-app shape:
-
-- a small number of core resources
-- one or a few reference resources
-- limited LogicBank rules
-- one or a few custom pages
-- SQLite bootstrap data
-
-It MAY be adapted to larger domains, but the operator SHOULD expect more
-manual artifact work and non-starter template substitution.
-
-## Run-local files
-
-The active run root is:
-
-- local `runs/current/`
-
-The tracked neutral starter is:
-
-- [runs/template/README.md](runs/template/README.md)
-
-The canonical run brief copy is:
-
-- local `runs/current/input.md`
-
-Run-local remarks and verification state live under the local active run at:
-
-- local `runs/current/remarks.md`
-- local `runs/current/artifacts/`
-- local `runs/current/evidence/`
-
-Artifact location rule:
-
+- `app/` is local and gitignored. It is created when a run starts.
+- `runs/current/` is local run state, not committed playbook source.
+- `example/` is a proof/reference app, not the source of truth for contracts.
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
-  `specs/backend-design/` are generic template sources
-- run-specific artifacts MUST be authored under `runs/current/artifacts/`
-- `app/BUSINESS_RULES.md` MUST contain the generated-app copy of the approved
-  business-rules catalog
-- accepted artifacts MAY later be copied into local `app/docs/`
-- `example/` is a preserved runnable example app generated from this playbook
-- `example/` is proof that the playbook can generate a runnable app; it is
-  not a normative source for runtime, dependency, or packaging decisions
-- an explicit app-only maintenance pass MAY update local `app/` while leaving
-  `runs/current/` unchanged; see `playbook/process/playbook-execution-outputs.md`
+  `specs/backend-design/` are template sources; run-specific artifacts belong
+  under `runs/current/artifacts/`.
+- Changes to the playbook repository itself are expected to be committed in
+  git.
 
-Generated-app working-tree rule:
+## Scope And Fit
 
-- `app/` MUST be gitignored
-- `app/` MUST be created locally when a run starts
-- `app/` MUST NOT be treated as committed playbook source
-- for a fresh run, the Product Manager SHOULD create local `app/` after intake
-  setup so later roles have a stable output root
-- the generated app itself MUST still include its own root `.gitignore`,
-  `Dockerfile`, and `docker-compose.yml` so it can be moved into its own repo
-  or packaged directly
+This playbook currently fits best when the target app is a modest SAFRS admin
+application with:
 
-Capability-loading rule:
+- a limited number of main resources
+- a React-admin frontend
+- a SAFRS backend
+- SQLite-first runtime assumptions
+- a manageable set of business rules and custom pages
 
-- optional capabilities MUST be controlled by
-  `runs/current/artifacts/architecture/capability-profile.md`
-- role-scoped reading and copy scope MUST be controlled by
-  `runs/current/artifacts/architecture/load-plan.md`
-- disabled or undecided feature packs MUST NOT be loaded or copied into `app/`
-- capability segmentation is a loading/copy/activation rule first; it does not
-  imply zero dormant runtime footprint unless the relevant feature pack says so
-- feature-pack maturity, owner roles, and allowed activation status are
-  cataloged in `specs/features/catalog.md`
-
-## Retrieval-first rule
-
-This repository is a retrieval library for agents, not a monolithic document
-set for preload.
-
-Agents MUST prefer:
-
-1. summary files
-2. read-set manifests
-3. task bundles
-4. the minimum run-owned artifacts needed for the current task
-5. enabled feature-pack contracts only
-
-Agents MUST NOT start by scanning whole directories "just in case".
+It can be adapted to larger or more complex domains, but that usually requires
+more artifact work, more explicit architectural decisions, and less reuse of
+the starter templates.
