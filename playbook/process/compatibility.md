@@ -43,6 +43,20 @@ environment path is unstable, the operator MAY:
 
 Any such workaround MUST be recorded as a compatibility deviation.
 
+For repeated local runs, the operator SHOULD keep the generated local
+`app/` workspace in place between sessions rather than recreating it
+unnecessarily. That local workspace is gitignored specifically so dependency
+trees such as `frontend/node_modules/` can be reused.
+
+The generated `app/install.sh` SHOULD skip `npm install` when
+`frontend/node_modules/` still matches the current lockfile and MUST still
+perform a full install automatically in a clean environment where
+`node_modules/` is absent.
+
+If frontend package extraction is slow on the target filesystem, the operator
+SHOULD point `NPM_CONFIG_CACHE` at a persistent local-disk path such as
+`$HOME/.npm` rather than an ephemeral or mounted workspace path.
+
 Generated scripts such as `app/run.sh` SHOULD be runnable as:
 
 - `bash ./run.sh`

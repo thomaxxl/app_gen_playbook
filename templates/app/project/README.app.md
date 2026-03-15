@@ -35,8 +35,15 @@ from the SAFRS app-development playbook.
 ```
 
 `install.sh` installs backend Python packages into `backend/.deps`, prefers a
-local LogicBank checkout when available, runs `npm install` in `frontend/`,
-and prepares the Playwright Chromium runtime used by the delivery smoke suite.
+local LogicBank checkout when available, reuses `frontend/node_modules` when
+they still match the lockfile, and prepares the Playwright Chromium runtime
+used by the delivery smoke suite.
+
+If frontend installs are slow in your environment, keep the generated `app/`
+directory local and persistent between sessions and, when needed, set
+`NPM_CONFIG_CACHE` to a stable local-disk cache path such as `$HOME/.npm`.
+In a clean environment, `install.sh` still performs a full install
+automatically when `node_modules` is absent.
 
 ## Backend
 

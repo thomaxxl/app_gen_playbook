@@ -45,6 +45,22 @@ Implemented business rules:
 - `ConfigurationItem.risk_score` must stay between `0` and `100`
 - `service_id` and `status_id` are required on create and update
 
+## Install
+
+```bash
+./install.sh
+```
+
+`install.sh` installs backend Python packages into `backend/.deps`, prefers a
+local LogicBank checkout when available, reuses `frontend/node_modules` when
+they still match the lockfile, and prepares the Playwright Chromium runtime
+used by the smoke suite.
+
+For faster repeated local runs, keep this example directory in place between
+sessions and, when needed, set `NPM_CONFIG_CACHE` to a stable local-disk path
+such as `$HOME/.npm`. In a clean environment, `install.sh` still performs a
+full install automatically when `node_modules` is absent.
+
 ## Backend
 
 Recommended install on this host:
@@ -74,7 +90,6 @@ CMDB_APP_ENABLE_TESTCLIENT=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH="$PWD/.
 
 ```bash
 cd frontend
-npm install
 npm run check
 npm run test
 npm run build
