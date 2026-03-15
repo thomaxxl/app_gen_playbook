@@ -1,6 +1,7 @@
 # Current Run
 
-This directory is the neutral active-run workspace.
+This directory is the active run workspace for the dating-profile operations
+app requested on 2026-03-14.
 
 It contains:
 
@@ -10,26 +11,15 @@ It contains:
 - [role-state/README.md](role-state/README.md)
 - [evidence/README.md](evidence/README.md)
 
-Brief rule:
-
-- `input.md` is the canonical stored brief for the run
-- `role-state/product_manager/inbox/INPUT.md` is the seeded actionable copy
-  for the Product Manager
-- if they differ, `input.md` MUST be treated as authoritative until the inbox
-  copy is refreshed
-
-The generated-app working tree for the active run is:
+The generated-app working tree for this run is:
 
 - local gitignored `../../app/`
 
 Rules:
 
-- `input.md` MUST be replaced with the next real brief before execution
-- `remarks.md` MUST stay run-local and neutral until the next run produces new
-  findings
-- the Product Manager or run initializer SHOULD create local `../../app/`
-  before implementation begins
+- `input.md` is the canonical stored brief
+- `role-state/product_manager/inbox/INPUT.md` is the seeded Product Manager
+  copy
 - `artifacts/` holds the run-owned product, architecture, UX, and
-  backend-design artifacts
-- `artifacts/devops/` is used only when the optional DevOps role is active
-- `evidence/` holds the run-owned verification summaries
+  backend-design packages
+- `evidence/` holds run-owned verification summaries

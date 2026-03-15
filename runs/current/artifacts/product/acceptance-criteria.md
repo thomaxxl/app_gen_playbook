@@ -1,23 +1,46 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: ready-for-handoff
+status: approved
 depends_on:
   - brief.md
 unresolved:
-  - packaged Docker acceptance is not in scope
-last_updated_by: product_manager
+  - none
+last_updated_by: architect
 
 # Acceptance Criteria
 
-1. CRUD acceptance: users can create, edit, list, show, and delete `Gate`,
-   `Flight`, and `FlightStatus` records.
-2. Workflow acceptance: WF-001 through WF-004 complete successfully with the
-   expected validation failures where applicable.
-3. Custom-page acceptance: `Home` and `Landing` routes render under the
-   approved route model.
-4. Business-rule acceptance: BR-001 through BR-008 are enforced with backend
-   coverage and frontend mirrors where specified.
-5. Search acceptance: gate and flight lists support text search on the fields
-   named in the resource inventory.
-6. Traceability: acceptance maps to US-001 through US-005, WF-001 through
-   WF-004, CP-001 through CP-002, and BR-001 through BR-008.
+## Workflow acceptance
+
+| ID | Criterion | Traceability |
+| --- | --- | --- |
+| `AC-001` | Users can create, edit, and delete `MatchPool` records from generated CRUD pages. | `US-001`, `WF-001`, `MatchPool` |
+| `AC-002` | Users can create and edit `MemberProfile` records with pool and status references from generated CRUD pages. | `US-002`, `WF-002`, `MemberProfile` |
+| `AC-003` | Users can reach the main workflow from `Home` without relying on sidebar discovery first. | `US-005`, `WF-003`, `HOME-001` |
+
+## CRUD acceptance
+
+| ID | Criterion | Traceability |
+| --- | --- | --- |
+| `AC-004` | `MatchPool`, `MemberProfile`, and `ProfileStatus` each support list, show, create, edit, and delete in the app. | `resource-behavior-matrix.md` |
+| `AC-005` | Reference fields display readable related labels instead of raw ids in generated views. | `WF-002`, `MemberProfile`, `ProfileStatus` |
+
+## Custom-page acceptance
+
+| ID | Criterion | Traceability |
+| --- | --- | --- |
+| `AC-006` | `Home` shows app purpose, proof cues, and a visible primary CTA. | `US-005`, `HOME-001` |
+
+## Business-rule acceptance
+
+| ID | Criterion | Traceability |
+| --- | --- | --- |
+| `AC-007` | Invalid ages and completion scores are rejected. | `BR-001`, `BR-003` |
+| `AC-008` | Missing `match_pool_id` or `status_id` rejects a profile save. | `BR-002` |
+| `AC-009` | Discoverable profiles without `approved_at` are rejected. | `BR-004` |
+| `AC-010` | Pool aggregates and copied status fields update automatically after create, update, delete, and reparent actions. | `BR-005`, `BR-006`, `BR-007`, `BR-008` |
+
+## Search acceptance
+
+| ID | Criterion | Traceability |
+| --- | --- | --- |
+| `AC-011` | Profile search supports name, city, and intent lookups through the generated list search entry. | `US-006`, `WF-002`, `MemberProfile` |

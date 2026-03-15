@@ -11,35 +11,29 @@ last_updated_by: frontend
 
 # Field Visibility Matrix
 
-| Resource | Field | Label | List | Show | Create | Edit | Readonly | Hidden | Display format | Searchable | Sortable | Reference-label behavior | Widget intent | Reason when non-default |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Gate | `id` | ID | no | no | no | no | yes | yes | raw | no | no | n/a | hidden | internal key |
-| Gate | `code` | Gate Code | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | identity field |
-| Gate | `terminal` | Terminal | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | searchable |
-| Gate | `zone` | Zone | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | searchable |
-| Gate | `scheduled_flights` | Scheduled Flights | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly text | BR-001 |
-| Gate | `active_flights` | Active Flights | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly text | BR-002 |
-| Gate | `total_delay_minutes` | Total Delay Minutes | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly text | BR-003 |
-| Flight | `id` | ID | no | no | no | no | yes | yes | raw | no | no | n/a | hidden | internal key |
-| Flight | `flight_number` | Flight Number | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | identity field |
-| Flight | `destination` | Destination | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | searchable |
-| Flight | `scheduled_departure_at` | Scheduled Departure | yes | yes | yes | yes | no | no | datetime | no | yes | n/a | datetime input | core schedule field |
-| Flight | `actual_departure_at` | Actual Departure | yes | yes | yes | yes | no | no | datetime | no | yes | n/a | datetime input | BR-008 mirror |
-| Flight | `delay_minutes` | Delay Minutes | yes | yes | yes | yes | no | no | number | no | yes | n/a | number input | BR-006 mirror |
-| Flight | `delay_reason` | Delay Reason | yes | yes | yes | yes | no | no | text | yes | no | n/a | multiline text | BR-007 mirror |
-| Flight | `gate_id` | Gate | yes | yes | yes | yes | no | no | relationship | no | yes | display gate code | reference input | required relation |
-| Flight | `status_id` | Flight Status | yes | yes | yes | yes | no | no | relationship | no | yes | display status label | reference input | required relation |
-| Flight | `flight_status_code` | Status Code | no | yes | no | no | yes | no | text | no | no | n/a | readonly text | BR-004 copy |
-| Flight | `is_active` | Active | yes | yes | no | no | yes | no | boolean chip | no | yes | n/a | readonly text | BR-004 copy |
-| Flight | `requires_attention` | Requires Attention | yes | yes | no | no | yes | no | boolean chip | no | yes | n/a | readonly text | BR-004 copy |
-| FlightStatus | `id` | ID | no | no | no | no | yes | yes | raw | no | no | n/a | hidden | internal key |
-| FlightStatus | `code` | Code | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | normalized status key |
-| FlightStatus | `label` | Label | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text input | visible status name |
-| FlightStatus | `is_active` | Active Status | yes | yes | yes | yes | no | no | boolean | no | yes | n/a | boolean input | rollup driver |
-| FlightStatus | `requires_attention` | Attention Status | yes | yes | yes | yes | no | no | boolean | no | yes | n/a | boolean input | BR-007 trigger |
-
-## Notes
-
-- Reference fields must render readable labels instead of raw IDs in list/show
-  views.
-- Rule-managed fields are readonly outside show/list display.
+| Resource | Field | Label | Section/group | Help text | Placeholder or prompt intent | Inline validation hint | Frontend mirror rule ID | List | Show | Create | Edit | Readonly | Hidden | Display format | Searchable | Sortable | Reference-label behavior | Widget intent | Form span | Rows | Content or microcopy notes | Reason when non-default |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `MatchPool` | `id` | ID | system | none | none | none | none | no | no | no | no | yes | yes | hidden | no | no | n/a | hidden | 3 | 1 | internal primary key | default hidden |
+| `MatchPool` | `code` | Pool Code | identity | short unique operational code | e.g. `SEA-SINGLES` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 4 | 1 | use code as main list identity | non-default label |
+| `MatchPool` | `name` | Name | identity | human-readable pool name | e.g. `Seattle Singles` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 8 | 1 | standard descriptive name | none |
+| `MatchPool` | `owner_name` | Owner | operations | person accountable for the pool | e.g. `Mina Cole` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 6 | 1 | helps users identify stewardship | none |
+| `MatchPool` | `profile_count` | Profiles | aggregates | derived count of profiles in pool | none | none | none | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly number | 3 | 1 | show as proof cue in list/show | derived aggregate |
+| `MatchPool` | `discoverable_profile_count` | Discoverable Profiles | aggregates | derived count of discoverable profiles | none | none | none | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly number | 3 | 1 | keep visible in lists | derived aggregate |
+| `MatchPool` | `total_completion_score` | Total Completion Score | aggregates | derived sum of profile completion scores | none | none | none | yes | yes | no | no | yes | no | number | no | yes | n/a | readonly number | 3 | 1 | operational readiness total | derived aggregate |
+| `MemberProfile` | `id` | ID | system | none | none | none | none | no | no | no | no | yes | yes | hidden | no | no | n/a | hidden | 3 | 1 | internal primary key | default hidden |
+| `MemberProfile` | `display_name` | Display Name | identity | member-facing display name | e.g. `Lena Ortiz` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 6 | 1 | primary record label | non-default label |
+| `MemberProfile` | `city` | City | basics | location label used in review and search | e.g. `Seattle` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 3 | 1 | keep compact in form layout | none |
+| `MemberProfile` | `age` | Age | basics | adult age in years | e.g. `29` | must be 18-99 | `BR-001` | yes | yes | yes | yes | no | no | number | no | yes | n/a | number | 3 | 1 | compact numeric field | mirrored range validation |
+| `MemberProfile` | `dating_intent` | Dating Intent | basics | short description of what the member wants | e.g. `Long-term dating` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 12 | 3 | use multiline input for clarity | wide text field |
+| `MemberProfile` | `completion_score` | Completion Score | review | profile readiness score | e.g. `82` | must be 1-100 | `BR-003` | yes | yes | yes | yes | no | no | number | no | yes | n/a | number | 3 | 1 | keep near status fields | mirrored numeric bound |
+| `MemberProfile` | `approved_at` | Approved At | review | required when status is discoverable | none | required for discoverable profiles | `BR-004` | yes | yes | yes | yes | no | no | datetime | no | yes | n/a | datetime | 6 | 1 | show clear review semantics | cross-field rule |
+| `MemberProfile` | `match_pool_id` | Match Pool | references | operational pool assignment | select a pool | required | `BR-002` | yes | yes | yes | yes | no | no | reference | no | yes | show `MatchPool.code` | reference autocomplete | 6 | 1 | label should resolve to pool code | required reference |
+| `MemberProfile` | `status_id` | Profile Status | references | discoverability state | select a status | required | `BR-002` | yes | yes | yes | yes | no | no | reference | no | yes | show `ProfileStatus.label` | reference autocomplete | 6 | 1 | label should resolve to status label | required reference |
+| `MemberProfile` | `status_code` | Status Code | derived | copied from selected status | none | none | none | no | yes | no | no | yes | no | text | no | yes | n/a | readonly text | 3 | 1 | visible only on show for debugging clarity | copied field |
+| `MemberProfile` | `is_discoverable` | Discoverable | derived | copied visibility boolean | none | none | none | yes | yes | no | no | yes | no | boolean | no | yes | n/a | readonly boolean | 3 | 1 | keep visible in list/show | copied field |
+| `MemberProfile` | `discoverable_value` | Discoverable Value | derived | numeric helper for aggregates | none | none | none | no | yes | no | no | yes | yes | hidden | no | no | n/a | hidden | 3 | 1 | internal helper field | hide because user-facing boolean already exists |
+| `ProfileStatus` | `id` | ID | system | none | none | none | none | no | no | no | no | yes | yes | hidden | no | no | n/a | hidden | 3 | 1 | internal primary key | default hidden |
+| `ProfileStatus` | `code` | Code | identity | stable internal status code | e.g. `discoverable` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 4 | 1 | compact code field | none |
+| `ProfileStatus` | `label` | Label | identity | user-facing status label | e.g. `Discoverable` | required | none | yes | yes | yes | yes | no | no | text | yes | yes | n/a | text | 8 | 1 | shown in references | none |
+| `ProfileStatus` | `is_discoverable` | Discoverable | semantics | whether the status allows site visibility | none | required | none | yes | yes | yes | yes | no | no | boolean | no | yes | n/a | boolean toggle | 4 | 1 | clear boolean label required | none |
+| `ProfileStatus` | `discoverable_value` | Discoverable Value | semantics | numeric helper used for pool aggregate sums | use `1` for discoverable and `0` otherwise | required | none | yes | yes | yes | yes | no | no | number | no | yes | n/a | number | 4 | 1 | keep explicit to support aggregate transparency | none |

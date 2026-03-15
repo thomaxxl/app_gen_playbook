@@ -4,41 +4,31 @@ status: ready-for-handoff
 depends_on:
   - overview.md
 unresolved:
-  - browser-level verification may remain unexecuted if dependencies cannot be installed
+  - none
 last_updated_by: architect
 
 # Test Obligations
 
-## Backend contract checks
+## Backend obligations
 
-- verify exposed routes and resource names
-- verify `admin.yaml` resource contract alignment
-- verify create/update validation for `Flight`
+- validate that `/docs`, `/jsonapi.json`, `/ui/admin/admin.yaml`, and exposed
+  resource endpoints exist
+- validate seed/bootstrap idempotency
+- validate derived copied fields and pool aggregates after create, update,
+  delete, and reparent
+- validate approval constraint rejection and required-reference rejection
 
-## Bootstrap checks
+## Frontend obligations
 
-- verify seed idempotency
-- verify gate delete cascades to flights
-- verify status delete is blocked when referenced
+- run `npm run check`
+- run `npm run test`
+- run `npm run build`
+- run Playwright smoke coverage for:
+  - `/admin-app/#/Home`
+  - primary resource route for `MemberProfile`
 
-## Rules mutation matrix
+## Runtime validation obligations
 
-- count rollup after create/delete
-- active-flight rollup after status change
-- delay rollup after delay update
-- attention rule enforcement
-- departed timestamp enforcement
-
-## Frontend checks
-
-- schema bootstrap smoke
-- resource metadata parsing
-- search-enabled data-provider behavior
-- Vite base-path contract
-- form-level validation mirror for flight rules
-
-## End-to-end checks
-
-- `/admin-app/#/Home` loads
-- `/admin-app/#/Landing` loads
-- core resource navigation succeeds without console or network failures
+- validate final discovered SAFRS endpoints and wire types
+- validate generated resource wrappers match the approved naming table
+- validate `Home` is the visible primary entry route

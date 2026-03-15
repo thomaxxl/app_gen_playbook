@@ -1,83 +1,110 @@
 owner: product_manager
 phase: phase-0-intake-and-framing
-status: ready-for-handoff
+status: approved
 depends_on:
-  - ../../input.md
+  - none
 unresolved:
-  - no airline or aircraft resource is modeled in v1
-last_updated_by: product_manager
+  - none
+last_updated_by: architect
 
-# Airport Input Interpretation
+# Input Interpretation
 
-## Input-derived facts
+## Original input
 
-- The user requested an airport management app.
-- The user requested that the playbook be used.
+- user brief: `follow the playbook, create an app for a dating site`
+- input level: Level A concept-only brief
 
 ## Candidate framings considered
 
-| Framing | Fit With Admin Style | Resource Count | Rule Complexity | Custom Page Need | Result |
-| --- | --- | --- | --- | --- | --- |
-| Passenger booking and ticketing | weak | high | high | high | rejected |
-| Air traffic control console | poor | high | very high | very high | rejected |
-| Airport asset and maintenance tracker | medium | medium | medium | medium | rejected for v1 |
-| Gate and departure operations control | strong | low | medium | low | chosen |
+| Framing ID | Framing | House-style fit | Complexity | Notes |
+| --- | --- | --- | --- | --- |
+| `F-01` | consumer-facing swipe and messaging product | poor | high | requires auth, real-time chat, ranking, and mobile-first interaction far beyond the starter admin shape |
+| `F-02` | match-review operations console | moderate | medium | plausible admin framing, but pairing workflows add extra transactional resources not required by the brief |
+| `F-03` | dating-profile operations app for pools, profiles, and publication status | strong | low | fits schema-driven CRUD with business rules, search, and a dashboard-style home page |
+| `F-04` | trust-and-safety moderation queue only | moderate | low | coherent but narrower than the user request and too focused on moderation-only work |
 
 ## Chosen framing
 
-The first version is a gate-operations admin app for airport duty managers.
-It tracks gates, outbound flights assigned to those gates, and controlled
-flight-status definitions used to drive operational rules and dashboard rollups.
+Chosen framing: `F-03`, a dating-profile operations admin app.
+
+The app manages:
+
+- `MatchPool` records that group profiles by market or launch cohort
+- `MemberProfile` records used by the dating site catalog
+- `ProfileStatus` definitions that control discoverability
 
 ## Why this framing was chosen
 
-- It fits the schema-driven admin style.
-- It works with a three-resource rename-only adaptation.
-- It supports a meaningful dashboard without requiring real-time systems.
-- It keeps rules testable with SQLite bootstrap data.
+- it is the smallest coherent admin-style interpretation of "dating site"
+- it keeps the domain obviously dating-related without inventing consumer-app
+  scope
+- it supports meaningful business rules with the existing starter trio shape
+- it fits the playbook's house style: schema-driven admin CRUD plus light
+  dashboard behavior
 
 ## Rejected framings
 
-- Passenger systems were rejected because they require broader domain scope,
-  identity handling, and customer-facing UX.
-- ATC tooling was rejected because it exceeds the playbook's complexity
-  envelope and would require real-time interaction.
-- Asset maintenance was rejected because it is coherent but less direct than
-  gate operations for the sparse "airport management" brief.
+- `F-01` rejected because it would force auth, messaging, recommendation
+  logic, and real-time UX that the sparse brief does not justify
+- `F-02` rejected because pair-review transactions add non-trivial join
+  resources and workflow states not needed for a first version
+- `F-04` rejected because moderation-only scope undershoots the generic
+  "dating site" request
 
 ## House-style fit assessment
 
-The chosen framing is resource-oriented, admin-heavy, rule-capable, and small
-enough to deliver with starter-style generated CRUD pages plus one dashboard.
+- app class: admin CRUD + business rules + Home dashboard
+- lane expectation: `rename-only`
+- custom-page expectation: `Home as dashboard`; no separate no-layout landing
+- capability expectation: uploads deferred for v1 to avoid expanding the run
+  beyond the approved house-style core
 
 ## First-version scope boundary
 
-Included in v1:
+In scope:
 
-- gate roster management
-- outbound flight tracking
-- delay attention handling
-- dashboard summaries for active and delayed flights
-- reference management for flight statuses
+- profile pools
+- member profiles
+- discoverability status management
+- searchable generated CRUD pages
+- rule-driven derived counts and copied status fields
+- Home dashboard with quick actions and operational summary cues
 
-Excluded from v1:
+Out of scope:
 
-- passenger manifests
-- baggage handling
-- airline contracting
-- runway scheduling
-- real-time arrivals feeds
-- crew rostering
+- consumer dating flows
+- messaging
+- subscription or billing
+- recommendation scoring engines
+- profile photo uploads
+- moderation case queues
 
 ## Domain-adaptation expectation
 
-This run is a `rename-only` adaptation of the starter trio pattern:
-parent resource, transactional child resource, and controlled status resource.
+- the run stays structurally close to the starter trio
+- naming, field vocabulary, and Home page copy are domain-adapted
+- the run still requires explicit rename sweep across backend, frontend,
+  rules, admin metadata, and tests
 
 ## Source separation
 
-- Input-derived: the domain is airport management.
-- Convention-derived: gates, flights, and controlled status codes are standard
-  operational concepts for an airport admin app.
-- Assumption-derived: v1 focuses on departure-side gate control rather than
-  the entire airport enterprise domain.
+### Input-derived facts
+
+- the app should be for a dating-site domain
+- the playbook should be followed
+
+### Research-derived conventions
+
+- dating platforms usually manage publishable member profiles rather than only
+  conversation logs in admin tools
+- publication status and discoverability are common operational controls
+- grouping profiles by market or cohort is a common admin simplification for
+  launch and moderation work
+
+### Scope assumptions forced by sparse input
+
+- the requested app is interpreted as an admin/operations app, not a consumer
+  product
+- one first-version profile record is enough; no profile pairing or chat
+  record is required
+- a text-first profile model is sufficient for v1

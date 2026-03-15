@@ -1,7 +1,8 @@
 # Environment Notes
 
-- Workspace date: 2026-03-14 UTC
-- Network access was restricted for dependency or release-asset verification
-- `app/` is gitignored local output and therefore does not appear in playbook
-  repo status
-- Playbook repo changes in this run are limited to `runs/current/`
+- repository root: `/mnt/host/SAFRS/app_gen_playbook`
+- date: `2026-03-14`
+- timezone: `Etc/UTC`
+- expected runtime baseline:
+  - Python `3.12`
+  - Node `24+`

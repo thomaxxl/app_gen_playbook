@@ -1,45 +1,66 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: ready-for-handoff
+status: approved
 depends_on:
   - workflows.md
   - business-rules.md
 unresolved:
   - none
-last_updated_by: product_manager
+last_updated_by: architect
 
 # Sample Data
 
 ## Reference records
 
-- `scheduled`: active, not attention-required
-- `boarding`: active, not attention-required
-- `delayed`: active, attention-required
-- `departed`: not active, not attention-required
+### ProfileStatus
 
-## Canonical happy-path records
+- `draft` / `Draft` / `is_discoverable=false` / `discoverable_value=0`
+- `review` / `In Review` / `is_discoverable=false` / `discoverable_value=0`
+- `discoverable` / `Discoverable` / `is_discoverable=true` /
+  `discoverable_value=1`
 
-- Gate `A1`, Terminal A, North Pier
-- Gate `B4`, Terminal B, Central Hall
-- Flight `SKY101` to Denver, boarding at Gate A1
-- Flight `JET330` to Chicago, scheduled at Gate B4
-- Flight `NVA880` to Seattle, departed from Gate B4 with actual departure time
+## Canonical happy-path scenarios
+
+- `MatchPool`:
+  - `SEA-SINGLES` / `Seattle Singles` / owner `Mina Cole`
+  - `ATX-NEW` / `Austin New Members` / owner `Ravi Hale`
+- `MemberProfile`:
+  - `Lena Ortiz`, Seattle, `29`, `Long-term dating`, score `82`,
+    pool `SEA-SINGLES`, status `discoverable`, approved timestamp present
+  - `Maya Chen`, Seattle, `31`, `Serious relationship`, score `74`,
+    pool `SEA-SINGLES`, status `draft`, no approval timestamp
+  - `Noah Patel`, Austin, `34`, `New connections`, score `67`,
+    pool `ATX-NEW`, status `review`, no approval timestamp
+  - `Avery Brooks`, Austin, `27`, `Long-term dating`, score `91`,
+    pool `ATX-NEW`, status `discoverable`, approved timestamp present
 
 ## Boundary conditions
 
-- delayed flight with positive delay minutes and reason
-- departed flight with actual departure timestamp
-- gate with multiple related flights
+- age `18`
+- age `99`
+- completion score `1`
+- completion score `100`
 
-## Invalid scenarios
+## Invalid or negative scenarios
 
-- flight with missing gate
-- flight with missing status
-- flight with negative delay minutes
-- attention-required flight without delay reason
-- departed flight without actual departure timestamp
+- age `17`
+- completion score `0`
+- discoverable profile without `approved_at`
+- missing `match_pool_id`
+- missing `status_id`
 
-## Search/reporting test records
+## Workflow-specific records
 
-- distinct destinations across multiple gates
-- at least one delayed flight so the dashboard attention count is non-zero
+- at least one discoverable and one non-discoverable profile per pool
+- enough records to prove pool aggregate changes on reparent and delete
+
+## Rule-specific records
+
+- a profile changed from `draft` to `discoverable`
+- a profile moved from `SEA-SINGLES` to `ATX-NEW`
+- a profile deleted from a pool after creation
+
+## Search test records
+
+- two profiles in the same city with different statuses
+- intent values that allow text search hits on `dating_intent`

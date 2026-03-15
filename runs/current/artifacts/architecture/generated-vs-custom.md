@@ -9,30 +9,36 @@ last_updated_by: architect
 
 # Generated Versus Custom Boundary
 
-## Thin generated app-local files
+## Source lanes used
 
-- `app/reference/admin.yaml`
-- resource wrapper files under `app/frontend/src/generated/resources/`
-- `app/frontend/src/generated/resourcePages.ts`
+- rename-only adaptation
+- core templates and preserved runnable example structure
+- optional feature packs: none enabled
 
-## Copied shared runtime files
+## File and path classification table
 
-- `app/frontend/src/shared-runtime/**`
-- `app/frontend/src/shims/fs-promises.ts`
-- baseline Vite/TypeScript config files
+| Path | Category | Source lane | Action | Why |
+| --- | --- | --- | --- | --- |
+| `app/backend/src/matchops_app/models.py` | intentionally custom file | rename-only | replace | domain model and field set differ from the preserved example |
+| `app/backend/src/matchops_app/bootstrap.py` | intentionally custom file | rename-only | replace | seed data and schema contract are domain-specific |
+| `app/backend/src/matchops_app/rules.py` | intentionally custom file | rename-only | replace | business-rule mapping is domain-specific |
+| `app/backend/src/matchops_app/fastapi_app.py` | copied shared-backend file | core | copy and adapt | keep house startup shape while renaming package and removing upload lane |
+| `app/reference/admin.yaml` | intentionally custom file | rename-only | replace | resource keys, labels, and fields are domain-specific |
+| `app/frontend/src/generated/resources/*.tsx` | thin generated file | rename-only | replace | wrapper set must match renamed resources |
+| `app/frontend/src/generated/resourcePages.ts` | thin generated file | rename-only | replace | registry must match actual resource wrappers |
+| `app/frontend/src/Home.tsx` | custom page | core | replace | Home must implement the dating-profile entry strategy |
+| `app/frontend/src/Landing.tsx` | intentionally custom file | rename-only | omit | run does not include a no-layout landing page |
+| `app/frontend/src/shared-runtime/**` | copied shared-runtime file | core | keep as generated | shared runtime remains generic and schema-driven |
+| `app/frontend/tests/smoke.e2e.spec.ts` | intentionally custom file | rename-only | replace | route and copy assertions are domain-specific |
 
-## Intentionally custom files
+## Non-starter substitutions
 
-- `app/backend/src/airport_ops/models.py`
-- `app/backend/src/airport_ops/bootstrap.py`
-- `app/backend/src/airport_ops/rules.py`
-- `app/backend/src/airport_ops/fastapi_app.py`
-- `app/frontend/src/Home.tsx`
-- `app/frontend/src/Landing.tsx`
-- backend and frontend tests renamed for airport behavior
+- not applicable; the run remains `rename-only`
 
-## Edit policy after generation
+## Post-generation edit policy
 
-- shared runtime files may receive only compatibility or contract fixes
-- domain files are expected to change per app
-- rule IDs must remain traceable when frontend validation changes
+- `Home.tsx`, resource wrappers, `admin.yaml`, models, bootstrap, and rules
+  may be edited freely for the current app
+- shared-runtime files should be treated as copied contract lanes unless a
+  current-run implementation issue requires a documented fix
+- template-level improvements belong in the playbook, not only in `app/`

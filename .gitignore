@@ -29,7 +29,7 @@ test-results/
 
 # Generated app working tree
 /app/
-
+runs/
 # Local databases and temp files
 *.sqlite
 *.sqlite3

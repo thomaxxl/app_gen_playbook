@@ -11,15 +11,24 @@ last_updated_by: architect
 
 # Resource Classification
 
-| Resource | Resource Class | CRUD Expectation | Menu | First-Class Or Singleton | Custom-Page Implication |
-| --- | --- | --- | --- | --- | --- |
-| Gate | core parent | full CRUD | yes | first-class | feeds dashboard rollups |
-| Flight | core transactional | full CRUD | yes | first-class | feeds dashboard board rows |
-| FlightStatus | reference/status | full CRUD except referenced delete | yes | first-class | controls labels and flags shown in lists/forms |
+## Resource classification table
 
-## Notes
+| Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `MatchPool` | core CRUD | full CRUD | no | yes | no | first-class | aggregate parent with derived counts and totals |
+| `MemberProfile` | core CRUD | full CRUD | no | yes | yes, via Home entry emphasis only | first-class | main operational workflow resource |
+| `ProfileStatus` | reference or status | full CRUD | yes | yes | no | first-class | status catalog that drives copied fields |
+| `Home` | dashboard-only aggregate concept | n/a | n/a | yes | yes | custom page | not a backend resource |
 
-- No singleton settings resource exists in v1.
-- All three resources are explicit SAFRS resources and explicit frontend menu
-  entries.
-- `Home` and `Landing` are project pages, not backend resources.
+## Singleton versus first-class decisions
+
+- `MatchPool` stays first-class because the app needs multiple pools and
+  visible per-pool aggregates
+- `ProfileStatus` stays first-class because discoverability policy is part of
+  the admin surface and must remain editable
+
+## Deferred or excluded resources
+
+- `MatchRecommendation` or pairing resources are deferred
+- photo/media resources are deferred
+- moderation-case resources are deferred

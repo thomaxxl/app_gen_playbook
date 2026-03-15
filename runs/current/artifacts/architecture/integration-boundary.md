@@ -9,29 +9,32 @@ last_updated_by: architect
 
 # Integration Boundary
 
-## What JSON:API owns
+## Boundary table
 
-- collection and item CRUD payload shape
-- relationship linkage shape
-- error-envelope structure
+| Layer | Owns | Does not own |
+| --- | --- | --- |
+| Product artifacts | scope, users, workflows, rule intent | package versions, route wiring |
+| Architecture artifacts | naming, route model, capabilities, generated/custom boundaries | detailed UX copy, backend implementation details |
+| Frontend runtime | `admin.yaml` loading, schema adapter, React-admin resources, Home page behavior | backend truth for rules and aggregates |
+| Backend runtime | SQLAlchemy models, SAFRS exposure, LogicBank rules, seed data | frontend navigation or CTA semantics |
 
-## What SAFRS owns
+## JSON:API and SAFRS ownership
 
-- resource exposure from `EXPOSED_MODELS`
-- route creation under `/api`
-- schema emission through `/jsonapi.json`
+- JSON:API owns wire shape, collection/member endpoints, and include/filter
+  response semantics
+- SAFRS owns exposed resource CRUD routing and schema generation
+- `safrs-jsonapi-client` owns normalized schema consumption and base data
+  provider behavior
+- the local app must define explicitly:
+  - raw `admin.yaml`
+  - resource registry
+  - Home route
+  - search-enabled data provider wrapper
+  - rule-managed fields and seed data
 
-## What `safrs-jsonapi-client` owns
+## Runtime validation notes
 
-- normalization of adapted `admin.yaml`
-- base data-provider behavior for CRUD operations
-- schema metadata consumed by generated pages
-
-## What the local app defines explicitly
-
-- `admin.yaml` resource and field contract
-- resource registry order
-- custom `Home` and `Landing` routes
-- frontend validation mirrors for BR-005 through BR-008
-- dashboard fetch and presentation logic
-- backend model, rule, and bootstrap semantics
+- `admin.yaml` endpoints are treated as intended values until the running app
+  validates them
+- relationship names must match across model code, SAFRS exposure, and
+  `admin.yaml`

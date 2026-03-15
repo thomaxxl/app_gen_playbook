@@ -9,47 +9,30 @@ last_updated_by: backend
 
 # Bootstrap Strategy
 
-## Canonical startup-order constraints
+## Required sections
 
-1. create tables
-2. validate `admin.yaml`
-3. activate rules
-4. seed reference statuses
-5. seed gates
-6. seed flights
+1. canonical startup-order constraints:
+   - validate `admin.yaml` shape before route exposure
+   - activate LogicBank before seeding
+2. empty-DB detection rule:
+   - if `ProfileStatus` already has rows, skip reference and sample seeding
+3. reference-data seed set:
+   - `draft`
+   - `review`
+   - `discoverable`
+4. sample-data seed set:
+   - two pools
+   - four member profiles split across the pools
+5. idempotency and rerun behavior:
+   - seed only on empty reference table
+6. data that MUST NOT be seeded automatically:
+   - user/auth data
+   - recommendation or moderation data
 
-## Empty-DB detection rule
-
-Bootstrap exits early when `FlightStatus` already has rows.
-
-## Reference-data seed set
-
-- `scheduled`
-- `boarding`
-- `delayed`
-- `departed`
-
-## Sample-data seed set
-
-- Gate `A1`
-- Gate `B4`
-- four example flights spanning boarding, delayed, scheduled, and departed
-
-## Idempotency and rerun behavior
-
-- reference/status table count is the bootstrap guard
-- repeated startup must not duplicate seed records
-
-## Data that MUST NOT be seeded automatically
-
-- live schedules
-- airline directories
-- historical operations archives
-
-## Bootstrap table
+## Required bootstrap table
 
 | Dataset | Purpose | Trigger condition | Idempotency rule | Notes |
 | --- | --- | --- | --- | --- |
-| Flight statuses | controlled state definitions | empty `FlightStatus` table | skip when count > 0 | seeded first |
-| Gates | parent resources for sample flights | after statuses on first run | only during initial seed pass | two gates |
-| Flights | dashboard and rule exercise data | after gates on first run | only during initial seed pass | four records |
+| `ProfileStatus` reference rows | provide discoverability truth source | empty `profile_statuses` table | skip if any status row exists | seeded before profiles |
+| `MatchPool` sample rows | support CRUD and aggregate verification | empty status table at first startup | created only during first seed pass | pool codes remain stable for tests |
+| `MemberProfile` sample rows | support search, rule, and aggregate verification | empty status table at first startup | created only during first seed pass | includes discoverable and non-discoverable examples |

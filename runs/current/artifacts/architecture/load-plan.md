@@ -1,5 +1,5 @@
 owner: architect
-phase: phase-2
+phase: phase-2-architecture-contract
 status: ready-for-handoff
 depends_on:
   - capability-profile.md
@@ -9,57 +9,30 @@ last_updated_by: architect
 
 # Load Plan
 
-```yaml
-ProductManager:
-  core:
-    - specs/product/README.md
-    - playbook/process/input-policy.md
-    - runs/current/artifacts/architecture/capability-profile.md
-    - runs/current/artifacts/architecture/load-plan.md
-  optional: []
-  must_not_read:
-    - specs/features/*
+## Product Manager
 
-Architect:
-  core:
-    - specs/architecture/README.md
-    - playbook/process/capability-loading.md
-    - runs/current/artifacts/product/*
-  optional: []
-  must_not_read:
-    - specs/features/*
+- MUST read core process docs and `specs/product/*`
+- MUST NOT load any optional feature pack
 
-Frontend:
-  core:
-    - specs/contracts/frontend/README.md
-    - specs/contracts/frontend/dependencies.md
-    - specs/contracts/frontend/scaffold.md
-    - specs/contracts/frontend/runtime-contract.md
-    - specs/contracts/frontend/routing-and-paths.md
-    - specs/contracts/frontend/ui-principles.md
-    - specs/contracts/frontend/accessibility.md
-    - runs/current/artifacts/architecture/*
-    - runs/current/artifacts/product/*
-  optional: []
-  must_not_read:
-    - specs/features/*
+## Architect
 
-Backend:
-  core:
-    - specs/contracts/backend/README.md
-    - specs/contracts/backend/dependencies.md
-    - specs/contracts/backend/models-and-naming.md
-    - specs/contracts/backend/runtime-and-startup.md
-    - runs/current/artifacts/architecture/*
-    - runs/current/artifacts/product/*
-  optional: []
-  must_not_read:
-    - specs/features/*
+- MUST read core architecture, frontend, backend, and rules contracts
+- MUST read `rename-starter-trio-checklist.md`
+- MUST NOT load disabled feature packs
 
-DevOps:
-  core:
-    - none; role inactive in this run
-  optional: []
-  must_not_read:
-    - specs/features/*
-```
+## Frontend
+
+- MUST read the core frontend contract set
+- MUST apply the rename-only frontend checklist
+- MUST NOT load uploads, reporting, d3, background-jobs, or ux-measurement
+  packs
+
+## Backend
+
+- MUST read the core backend and rules contract set
+- MUST apply the rename-only backend replacement sweep
+- MUST NOT load uploads or any other disabled feature pack
+
+## DevOps
+
+- not activated for this run

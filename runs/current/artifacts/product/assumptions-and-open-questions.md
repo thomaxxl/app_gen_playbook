@@ -1,30 +1,30 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: ready-for-handoff
+status: approved
 depends_on:
   - input-interpretation.md
 unresolved:
-  - whether arrival tracking should become a later resource
-  - whether airline reference data should become a later resource
-last_updated_by: product_manager
+  - none
+last_updated_by: architect
 
 # Assumptions And Open Questions
 
 ## Assumptions made because the brief was sparse
 
-- The first version focuses on airport staff, not passengers.
-- Departures are enough to make the app coherent.
-- Gate assignment can be stored directly on `Flight`.
-- Delay tracking can remain a simple numeric-plus-reason model in v1.
+- the requested app is an internal admin app rather than a consumer dating UI
+- three core resources are enough for v1
+- discoverability status is the key operational state worth modeling in the
+  first version
+- text-only profiles are acceptable for v1
 
-## Unresolved business questions
+## Open questions deferred from v1
 
-- Should future versions model airlines explicitly?
-- Should gate closures or maintenance blocks become a separate resource?
-- Should arrivals be included later as a separate workflow family?
+- whether profile photos should be added in a future uploads-enabled run
+- whether match-pair review should become its own transaction resource
+- whether moderation-case workflows need a dedicated status or queue resource
 
-## Decisions deferred to later phases
+## Decisions deferred to later phases or later runs
 
-- package delivery and Dockerization
-- advanced filtering beyond basic text search
-- non-admin operational reporting
+- authentication and role-based access
+- reporting and analytics
+- messaging or engagement data

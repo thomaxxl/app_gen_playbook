@@ -1,18 +1,19 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: ready-for-handoff
+status: approved
 depends_on:
   - brief.md
 unresolved:
   - none
-last_updated_by: product_manager
+last_updated_by: architect
 
 # User Stories
 
-| Story ID | Actor | Priority | Story | Related Workflows | Related Resources | Acceptance Note |
+| Story ID | Actor | Story statement | Priority | Related workflow IDs | Related resources | Acceptance note |
 | --- | --- | --- | --- | --- | --- | --- |
-| US-001 | duty manager | must | I want to see all gates with active-flight counts so I can spot pressure points quickly. | WF-001, WF-002 | Gate, Flight | dashboard and gate list expose rollups |
-| US-002 | gate coordinator | must | I want to assign and update flights at a specific gate so the operations desk has one current record. | WF-002 | Flight, Gate | create and edit flows succeed with valid references |
-| US-003 | operations supervisor | must | I want delayed flights to require a reason so unresolved disruptions do not hide in free-form notes. | WF-003 | Flight, FlightStatus | delay validation blocks empty reasons |
-| US-004 | admin | should | I want controlled flight-status definitions so teams use the same operational language. | WF-002, WF-003 | FlightStatus | status CRUD is available |
-| US-005 | operations supervisor | should | I want dashboard summaries for active flights and total delay minutes so I can prioritize attention. | WF-003, WF-004 | Gate, Flight | Landing page shows metrics and latest board rows |
+| `US-001` | Profile Operations Manager | As an operations manager, I want to create and organize match pools so I can manage profile inventory by market or cohort. | must | `WF-001` | `MatchPool` | pool CRUD is available and searchable |
+| `US-002` | Profile Operations Manager | As an operations manager, I want to create and edit member profiles so I can keep discoverable records accurate. | must | `WF-002` | `MemberProfile` | create and edit forms cover the full profile contract |
+| `US-003` | Trust and Safety Coordinator | As a trust and safety coordinator, I want discoverable profiles to require approval timestamps so site-visible records have a review signal. | must | `WF-002` | `MemberProfile`, `ProfileStatus` | invalid saves are rejected and explained |
+| `US-004` | Profile Operations Manager | As an operations manager, I want discoverability state to follow the selected status definition so profile visibility is consistent. | must | `WF-002` | `MemberProfile`, `ProfileStatus` | copied status fields are backend-managed |
+| `US-005` | Profile Operations Manager | As an operations manager, I want a dashboard home page so I can understand the profile workload and jump into the main task quickly. | should | `WF-003` | `MatchPool`, `MemberProfile`, `ProfileStatus` | Home shows purpose, proof cues, and quick actions |
+| `US-006` | Trust and Safety Coordinator | As a coordinator, I want to search profiles by name, city, and status-related fields so I can find records that need review. | should | `WF-002`, `WF-003` | `MemberProfile` | list search returns matching profiles without custom reporting |

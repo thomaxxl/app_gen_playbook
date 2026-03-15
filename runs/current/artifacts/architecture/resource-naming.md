@@ -4,20 +4,33 @@ status: ready-for-handoff
 depends_on:
   - ../product/domain-glossary.md
 unresolved:
-  - final wire type values must still be runtime-verified
+  - pending runtime validation of discovered endpoints and wire types
 last_updated_by: architect
 
 # Resource Naming
 
-| Domain Resource | Python Model Class | SQL Table | admin.yaml Key | Expected SAFRS Wire Type | Collection Path | Relationship Names |
-| --- | --- | --- | --- | --- | --- | --- |
-| Gate | `Gate` | `gates` | `Gate` | `Gate` (verify at runtime) | `/api/gates` | `flights` |
-| Flight | `Flight` | `flights` | `Flight` | `Flight` (verify at runtime) | `/api/flights` | `gate`, `status` |
-| FlightStatus | `FlightStatus` | `flight_statuses` | `FlightStatus` | `FlightStatus` (verify at runtime) | `/api/flight_statuses` | `flights` |
+## Resource naming table
 
-## Naming rules
+| Resource | Model class | SQL table | admin.yaml key | Intended relationship names | Provisional endpoint | Discovered endpoint | Discovered wire type | Validation status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `MatchPool` | `MatchPool` | `match_pools` | `MatchPool` | `profiles` | `/api/match_pools` | pending runtime validation | pending runtime validation | pending runtime validation |
+| `MemberProfile` | `MemberProfile` | `member_profiles` | `MemberProfile` | `match_pool`, `status` | `/api/member_profiles` | pending runtime validation | pending runtime validation | pending runtime validation |
+| `ProfileStatus` | `ProfileStatus` | `profile_statuses` | `ProfileStatus` | `profiles` | `/api/profile_statuses` | pending runtime validation | pending runtime validation | pending runtime validation |
 
-- ORM column names remain `snake_case`.
-- Relationship names are literal contract terms and must match `admin.yaml`.
-- Backend tests must verify the actual wire types rather than trusting these
-  expected values blindly.
+## Relationship naming notes
+
+- `MemberProfile.match_pool` is the to-one relationship back to `MatchPool`
+- `MatchPool.profiles` is the reverse one-to-many relationship
+- `MemberProfile.status` is the to-one relationship back to `ProfileStatus`
+- `ProfileStatus.profiles` is the reverse one-to-many relationship
+
+## Runtime validation notes
+
+- model names, table names, and `admin.yaml` keys are project-defined
+- SAFRS collection paths and JSON:API `type` values are runtime facts and must
+  be validated after implementation
+
+## Non-starter exceptions
+
+- none; the run remains structurally rename-only rather than full
+  non-starter

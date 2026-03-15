@@ -3,51 +3,81 @@ phase: phase-2-architecture-contract
 status: ready-for-handoff
 depends_on:
   - ../product/brief.md
-  - ../product/resource-inventory.md
 unresolved:
-  - release-grade package verification is deferred because network lookup is unavailable in this run
+  - none
 last_updated_by: architect
 
 # Architecture Overview
 
-## App purpose
+## Purpose
 
-Airport Ops Control is a schema-driven admin app for managing departure gates,
-flights, and controlled flight statuses.
+This run delivers a dating-profile operations admin app that stays close to
+the starter trio while replacing the domain vocabulary, business rules, and
+Home entry content.
 
-## Lane choice
+## Chosen app framing
 
-- lane: `rename-only`
-- rationale: the app preserves the starter trio structure while renaming the
-  domain resources and business rules
+- selected framing: text-first dating-profile operations app
+- rejected framing: consumer swipe/messaging product
+- carried-forward assumptions:
+  - the app is internal and schema-driven
+  - three resources are enough for v1
+  - discoverability is the main domain status concept
 
 ## Main resources
 
-- `Gate`: parent rollup resource
-- `Flight`: transactional child resource
-- `FlightStatus`: controlled reference resource
+- `MatchPool`: aggregate parent for profile groups
+- `MemberProfile`: primary operational record
+- `ProfileStatus`: discoverability reference/status catalog
 
-## Frontend style
+## House-style fit
 
-- React-Admin SPA under `/admin-app/`
-- explicit resource registry
-- `Home` as required in-admin project page
-- `Landing` as no-layout dashboard route
+- lane: `rename-only`
+- rationale:
+  - the resource structure still matches parent + child + status
+  - no extra transactional resource is needed
+  - custom logic remains modest and rule-friendly
 
-## Backend style
+## Frontend shape
 
-- FastAPI + SAFRS + SQLAlchemy + LogicBank
-- SQLite bootstrap store
-- startup validation of `reference/admin.yaml`
-- no custom non-upload API endpoints
+- standard schema-driven CRUD shell: yes
+- required custom routes or dashboards:
+  - `Home` page only
+- in-admin entry route:
+  - `/admin-app/#/Home`
 
-## Rules usage
+## Backend shape
 
-- LogicBank handles counts, sums, copied fields, and cross-field constraints
-- SQLAlchemy validators cover required references and numeric validation
+- expected backend:
+  - FastAPI + SAFRS + SQLAlchemy + LogicBank + SQLite
+- bootstrap shape:
+  - close to starter
+  - pool/profile/status sample records seeded on empty DB
 
-## Packaging model
+## Rules shape
 
-- local dev run only
-- root `install.sh` and `run.sh` are included
-- DevOps packaging artifacts are not activated in this run
+- LogicBank rules expected: yes
+- derived/constraint-heavy areas:
+  - copied status fields on `MemberProfile`
+  - `MatchPool` aggregates
+  - discoverable approval constraint
+
+## Singleton versus first-class resource decisions
+
+- `MatchPool` could have been a hidden enum or singleton grouping config
+  surface; it remains a first-class CRUD resource because operations staff
+  need multiple named pools with visible aggregates
+- `ProfileStatus` remains a first-class reference resource instead of a
+  hard-coded enum so the CRUD contract stays explicit
+
+## Custom pages
+
+- `Home` is the only custom page and remains inside the React-admin shell
+- no `Landing.tsx` route is required
+
+## Out-of-scope architectural decisions
+
+- auth and authorization
+- background jobs
+- file uploads and stored-file metadata subsystem
+- packaged same-origin deployment verification

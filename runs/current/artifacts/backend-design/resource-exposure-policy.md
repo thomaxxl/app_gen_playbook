@@ -11,14 +11,16 @@ last_updated_by: backend
 
 # Resource Exposure Policy
 
+## Required exposure table
+
 | Resource | Exposed through SAFRS | Resource class | Default menu presence | List | Show | Create | Edit | Delete | Read-only fields | Derived backend-managed fields | Custom endpoints | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Gate | yes | core parent | yes | yes | yes | yes | yes | yes | `scheduled_flights`, `active_flights`, `total_delay_minutes` | same | none | delete cascades to flights |
-| Flight | yes | core transactional | yes | yes | yes | yes | yes | yes | `flight_status_code`, `is_active`, `requires_attention` | same | none | required references |
-| FlightStatus | yes | reference/status | yes | yes | yes | yes | yes | restricted | none | none | none | delete blocked while referenced |
+| `MatchPool` | yes | core CRUD | yes | yes | yes | yes | yes | yes | `profile_count`, `discoverable_profile_count`, `total_completion_score` | same as read-only fields | none | aggregate parent |
+| `MemberProfile` | yes | core CRUD | yes | yes | yes | yes | yes | yes | `status_code`, `is_discoverable`, `discoverable_value` | same as read-only fields | none | primary workflow resource |
+| `ProfileStatus` | yes | reference/status | yes | yes | yes | yes | yes | yes | none | none | none | reference catalog |
 
-## Notes
+## Required notes
 
-- No internal-only resource is needed.
-- No singleton/settings-style handling is needed.
-- No custom endpoints are needed because uploads are disabled.
+- there are no internal-only resources in v1
+- no singleton/settings resource is required
+- no custom non-SAFRS endpoint is required because uploads are disabled

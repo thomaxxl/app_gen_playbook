@@ -10,31 +10,62 @@ last_updated_by: architect
 
 # Domain Adaptation
 
+## Lane selection
+
+`rename-only`
+
 ## Actual domain resources
 
-- `Gate`
-- `Flight`
-- `FlightStatus`
+- `MatchPool`
+- `MemberProfile`
+- `ProfileStatus`
 
-## Retained starter assumptions
+## Structural fit versus starter trio
 
-- three first-class resources
-- one parent rollup resource, one child transactional resource, one status
-  reference resource
-- derived count and sum fields persisted on the parent
-- copied fields persisted on the child
-- React-Admin generated CRUD pages plus custom `Home` and `Landing`
+The run preserves the starter structural shape:
 
-## Replaced starter assumptions
+- aggregate parent resource
+- primary child resource
+- reference/status resource
 
-- media-oriented fields are replaced by airport operations fields
-- upload handling is removed entirely
-- public/private status semantics are replaced by active/attention semantics
-- time and delay validation replace publish-date validation
+The main changes are:
 
-## Consequences for templates and tests
+- dating-domain vocabulary
+- additional child fields (`city`, `age`, `dating_intent`,
+  `completion_score`)
+- dashboard copy and quick-action hierarchy aligned to profile review
 
-- resource wrappers, models, bootstrap data, and rules must all be renamed
-  together
-- upload-specific backend and frontend tests must be removed
-- dashboard copy and metrics must become gate/flight focused
+## Starter assumptions retained
+
+- schema-driven CRUD pages remain the default
+- one parent-to-many-child relationship remains central
+- one status resource drives copied fields on the child resource
+- derived count and sum rules remain appropriate
+- `Home` remains the in-admin entry page
+
+## Starter assumptions replaced
+
+- gallery/image-sharing terms are replaced with dating-profile vocabulary
+- public/published semantics are replaced with discoverability/approval
+  semantics
+- upload-specific fields are removed from the first version
+- `Landing.tsx` is omitted
+
+## Required substitutions
+
+- backend models, bootstrap data, and rules must use the renamed domain
+  resources and field vocabulary
+- `reference/admin.yaml` must replace gallery/image/share-status keys with the
+  dating-domain keys
+- frontend generated resource wrappers must become:
+  - `MatchPool.tsx`
+  - `MemberProfile.tsx`
+  - `ProfileStatus.tsx`
+- tests must assert `Home`, `MatchPool`, `MemberProfile`, and `ProfileStatus`
+  routes instead of the preserved example domain
+
+## Runtime validation obligations
+
+- validate actual SAFRS collection endpoints against the running app
+- validate actual JSON:API wire `type` values against the running app
+- validate that renamed relationship names match both `admin.yaml` and SAFRS

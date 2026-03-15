@@ -1,5 +1,3 @@
-# End-To-End Tests
+# E2E Tests
 
-- Playwright smoke suite was authored at `app/frontend/tests/smoke.e2e.spec.ts`
-- Not run in this session because frontend dependencies and browser runtime
-  were not installed
+Pending browser-level smoke verification.

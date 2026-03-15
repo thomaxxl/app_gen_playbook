@@ -11,13 +11,18 @@ last_updated_by: backend
 
 # Query Behavior
 
+## Required query table
+
 | Resource | Search fields | Filter fields | Sort fields | Include paths | Unsupported query asks | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| Gate | `code`, `terminal`, `zone` | none explicit | `code`, `terminal`, `scheduled_flights`, `active_flights`, `total_delay_minutes` | `flights` | complex analytics filters | text search only |
-| Flight | `flight_number`, `destination`, `delay_reason` | none explicit | `flight_number`, `scheduled_departure_at`, `delay_minutes`, `actual_departure_at` | `gate`, `status` | compound date-range DSL | text search only |
-| FlightStatus | `code`, `label` | none explicit | `code`, `label` | `flights` | boolean-only filter UI | text search only |
+| `MatchPool` | `code`, `name`, `owner_name` | none beyond default equality filters | `code`, `name`, `owner_name`, `profile_count`, `discoverable_profile_count`, `total_completion_score` | `profiles` | custom aggregate reporting | generated search is text-only |
+| `MemberProfile` | `display_name`, `city`, `dating_intent` | `match_pool_id`, `status_id`, `is_discoverable` | `display_name`, `city`, `age`, `completion_score`, `approved_at` | `match_pool`, `status` | compound recommendation scoring queries | supports standard generated CRUD + search |
+| `ProfileStatus` | `code`, `label` | `is_discoverable` | `code`, `label`, `is_discoverable`, `discoverable_value` | `profiles` | status-transition audit history | standard reference search |
 
-## Notes
+## Required notes
 
-- V1 relies on search plus simple sort, not advanced filters.
-- Date, enum, and boolean filtering are out of scope for the generated UI.
+- search remains text-driven through the normal search-enabled provider
+- boolean equality filter support for `is_discoverable` is relied upon by the
+  Home dashboard count query
+- no custom full-text or fuzzy search is in scope
+- reporting/export queries are explicitly out of scope

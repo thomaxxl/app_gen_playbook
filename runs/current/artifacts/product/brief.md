@@ -1,59 +1,71 @@
 owner: product_manager
 phase: phase-1-product-definition
-status: ready-for-handoff
+status: approved
 depends_on:
   - input-interpretation.md
-  - research-notes.md
 unresolved:
   - none
-last_updated_by: product_manager
+last_updated_by: architect
 
-# Airport Ops Control Brief
+# Product Brief
 
 ## Problem statement
 
-Airport duty managers need a compact admin app to manage departure gates,
-scheduled flights, and operational statuses without relying on scattered
-spreadsheets or free-text updates.
+Dating-site operations staff need a simple internal app to manage pools of
+profiles, keep member records current, and control which profiles are
+discoverable on the site.
 
 ## Primary users
 
-- airport duty manager
-- gate coordinator
-- operations supervisor
+- Profile Operations Manager
+- Trust and Safety Coordinator
+
+## Primary user intent on entry
+
+Understand the current profile inventory quickly, then jump into member
+profile review or pool maintenance without exploring the sidebar first.
+
+## First action that matters most
+
+Open the `MemberProfile` list to review discoverability status and edit
+profiles that need approval updates.
+
+## Top three questions the entry page must answer
+
+1. How many profiles and pools are in the system right now?
+2. How many profiles are currently discoverable?
+3. Where do I go first to review or update profiles?
 
 ## App class
 
-Schema-driven admin app with one dashboard page, three resources, and a small
-set of backend-enforced operational rules.
+- admin CRUD + business rules + `Home` dashboard
 
 ## In-scope behavior
 
-- manage gates and their static metadata
-- create, edit, search, and review flights assigned to gates
-- manage reusable flight-status definitions
-- surface active-flight and delay metrics on dashboard pages
-- enforce delay-reason and departure-timestamp rules
+- create, edit, list, show, and delete `MatchPool`
+- create, edit, list, show, and delete `MemberProfile`
+- create, edit, list, show, and delete `ProfileStatus`
+- search across pool, profile, and status records
+- backend-enforced approval and derived aggregate rules
+- Home dashboard with summary cues and quick actions
 
 ## First-version scope boundary
 
-The first version supports internal airport-operations coordination for
-departures only. It does not attempt to become a passenger app, airline
-system, or real-time ATC console.
+The first version is a text-first operations app. It manages profile records
+and discoverability state, but it does not implement consumer member flows or
+advanced operational workflows.
 
 ## Out-of-scope behavior
 
-- check-in and boarding-pass issuance
-- baggage or cargo workflows
-- runway sequencing
-- aircraft maintenance
-- billing and vendor procurement
-- external feed ingestion
+- profile photo uploads
+- recommendation algorithms
+- conversations or messaging
+- user authentication or role administration
+- payments, subscriptions, or billing
+- moderation case management
 
 ## Explicit exclusions
 
-- no uploads
-- no reporting feature pack
-- no background jobs
-- no D3 custom views
-- no same-origin packaging work in this run
+- no public-facing dating-site UI
+- no pairing transaction resource
+- no background jobs or reporting pack activation

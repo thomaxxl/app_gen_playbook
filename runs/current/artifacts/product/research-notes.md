@@ -1,67 +1,80 @@
 owner: product_manager
 phase: phase-0-intake-and-framing
-status: ready-for-handoff
+status: approved
 depends_on:
   - input-interpretation.md
 unresolved:
-  - exact enterprise integration points remain out of scope
-last_updated_by: product_manager
+  - none
+last_updated_by: architect
 
-# Airport Research Notes
+# Research Notes
 
 ## Source input summary
 
-- Sparse user brief: "create an app for an airport management using this playbook."
+- incoming brief is concept-only and does not specify users, resources,
+  workflows, or feature depth
 
 ## Sources consulted
 
-- Internal domain conventions available to the operator
-- Playbook house-style and complexity-envelope guidance
+- the user brief in `runs/current/input.md`
+- playbook house-style interpretation rules in
+  `playbook/process/input-policy.md`
+- generalized domain conventions already known about dating-platform
+  operations apps
+
+No external domain-specific dataset or regulation source was required for
+this first-version framing.
 
 ## Normalized terminology
 
-- `Gate` is the operational anchor resource.
-- `Flight` is the transactional resource.
-- `FlightStatus` is the controlled reference resource.
-- `delay_reason` is used for attention context instead of free-form notes.
+- `MatchPool`: operational grouping of profiles by market, launch cohort, or
+  campaign
+- `MemberProfile`: backend-managed profile record intended for site
+  discoverability
+- `ProfileStatus`: reference definition that determines whether a profile is
+  discoverable
+- `discoverable`: profile is eligible to be shown on the site
+- `approval`: explicit timestamp proving a discoverable profile cleared review
 
 ## Key domain conventions observed
 
-- Airport operations teams commonly organize work around gates, flights, and
-  shared status boards.
-- A controlled status reference table is preferable to free-text states because
-  it supports reliable validation and dashboard rollups.
-- Gate-level summaries are a natural admin abstraction for an airport
-  operations desk because many operational questions are gate-scoped.
-- Delay attention typically requires a reason field and a clear list view.
+- operational staff usually need profile search by name, city, and status
+- status catalogs often drive copied booleans on primary records
+- admin teams often need aggregate counts per cohort or market
+- discoverable records usually require a review or approval checkpoint
 
 ## V1-relevant best practices
 
-- keep statuses normalized
-- keep dashboard metrics derived from transactional rows
-- validate operationally significant timestamps in the backend
-- mirror obvious form-level validation in the frontend
+- keep publication truth backend-enforced
+- expose readable status and pool labels instead of raw foreign keys
+- keep the first version resource-light and avoid pairing or messaging
+  transactions
+- make the Home page explain the primary next action without requiring sidebar
+  discovery
 
 ## Patterns intentionally excluded from v1
 
-- live feed ingestion
-- passenger self-service workflows
-- predictive planning
-- workforce scheduling
+- swipe or recommendation ranking UX
+- messaging or chat transcripts
+- subscription/billing administration
+- profile photo/media lifecycle
+- moderator escalation workflows
 
-## External constraints affecting v1 scope
+## External constraints that affect v1 scope
 
-- the playbook is best suited to a modest admin-app shape
-- no optional capability pack is required for the chosen scope
+- the playbook is optimized for modest schema-driven admin apps
+- placeholder feature packs such as reporting and background jobs remain out
+  of scope
+- uploads are deferred because the current run does not need the wider stored
+  file contract to satisfy the brief
 
 ## Research-derived assumptions
 
-- The first version is departure-focused rather than arrival-focused.
-- A gate can host multiple scheduled flight records over time.
-- Flight status drives whether a flight counts as active and whether it should
-  appear in attention summaries.
+- one primary profile record per member is enough for v1
+- discoverability can be modeled through a small status reference table
+- operational grouping can be modeled as a first-class CRUD resource
 
-## Unresolved questions
+## Remaining open questions
 
-- Whether airline data should become a later explicit resource
-- Whether arrivals should be modeled separately in a later phase
+- whether future iterations need pair-review or moderation-case resources
+- whether profile photos should be added in a later uploads-enabled run

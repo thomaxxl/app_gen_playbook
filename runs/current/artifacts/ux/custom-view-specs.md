@@ -12,13 +12,21 @@ last_updated_by: frontend
 
 # Custom View Specs
 
-| View ID | Route | View class | Required or optional | Starter compatible | Data joins needed | Main interactions | Acceptance hooks | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CV-001 | `/admin-app/#/Home` | in-admin project page | required | yes | none | navigate to main resources | acceptance criteria 2 | required sidebar entry |
-| CV-002 | `/admin-app/#/Landing` | no-layout dashboard | required | yes, but content replaced | Gate + Flight + FlightStatus | open flights and gates from dashboard CTAs | acceptance criteria 2, 3, 6 | uses cards and a table, not charts |
+## Required custom-view table
 
-## Sections
+| View ID | Route | View class | Required or optional | Starter compatible | Standard page shell required | Header or hero structure | Summary sections | CTA hierarchy | Proof or reassurance model | Data joins needed | Main interactions | CTA and recovery behavior | Chart text fallback | Mobile fallback | Acceptance hooks | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `HOME-001` | `/Home` | `Home` | required | no | yes | hero with primary and secondary CTA | summary-card strip plus quick actions | primary CTA to `MemberProfile`, secondary CTA to `MatchPool` and `ProfileStatus` | live counts prove backend wiring | simple count fetches only | navigate to generated routes | retry guidance on fatal bootstrap error; partial-card fallback on count failures | not applicable | stack hero, cards, and quick actions | `entry-primary-cta`, `entry-proof-strip` | no separate no-layout page |
 
-- The app uses both `Home` and a no-layout `Landing` route.
-- `Landing.tsx` is used and fully replaced with airport-specific content.
-- `CustomDashboard.tsx` is not required.
+## Required sections
+
+- app uses only `Home`; no no-layout route
+- `Landing.tsx` is omitted
+- `CustomDashboard.tsx` is not required
+- `Home` uses the shared page shell plus domain-specific hero copy
+- summary cards expose:
+  - total pools
+  - total profiles
+  - discoverable profiles
+- the view uses summary cards rather than charts
+- the view remains inside the standard React-admin shell
