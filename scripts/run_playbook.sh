@@ -382,6 +382,25 @@ check_completion() {
   python3 "$ROOT/tools/check_completion.py" --repo-root "$ROOT"
 }
 
+recover_run_queue() {
+  python3 "$ROOT/tools/recover_run_queue.py" \
+    --repo-root "$ROOT" \
+    --change-id "$ACTIVE_CHANGE_ID"
+}
+
+run_recovery_pass() {
+  local output
+  output="$(recover_run_queue 2>/dev/null || true)"
+  if [[ -z "$output" ]]; then
+    return 0
+  fi
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    log "recovery-queued note=$line"
+  done <<< "$output"
+}
+
 validate_role_turn() {
   local runtime_role="$1"
   local snapshot_file="$2"
@@ -816,6 +835,10 @@ PY
 )"
   fi
   set_run_status "active"
+
+  if ! check_completion >/dev/null 2>&1; then
+    run_recovery_pass
+  fi
 }
 
 main_loop() {
@@ -830,6 +853,8 @@ main_loop() {
       log "playbook run complete"
       break
     fi
+
+    run_recovery_pass
 
     did_work=0
 

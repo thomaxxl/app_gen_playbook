@@ -177,6 +177,23 @@ When `--resume` is used, the orchestrator MUST:
 - resume a stored Codex session only when the inflight state is still
   consistent
 - rebuild from repo state when session continuity is missing or unsafe
+- run a queue-recovery pass before continuing normal scheduling when
+  completion still fails
+
+## Canonical-artifact recovery
+
+If completion still fails because canonical run-owned artifacts are missing or
+still `status: stub`, the orchestrator SHOULD synthesize targeted recovery
+handoffs instead of waiting for the queue to drain permanently.
+
+The recovery pass MUST:
+
+- use the exact canonical artifact filenames required by completion, not
+  semantically similar alternates
+- requeue only into a role whose inbox and inflight lanes are currently empty
+- avoid creating late-phase acceptance or integration-review work before the
+  earlier phase-0 through phase-4 canonical artifact set is complete
+- prefer recovery notes in the owning role inbox over silent automatic edits
 
 ## Stall detection
 
