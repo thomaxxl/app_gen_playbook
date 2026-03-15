@@ -42,6 +42,9 @@ on this file for execution rules.
 - `scripts/clean.sh`
   Cleans local `runs/current/` and `app/` without touching tracked starter or
   example content.
+- `scripts/monitor.sh`
+  Tails the raw per-turn Codex event streams under
+  `runs/current/evidence/orchestrator/jsonl/`.
 
 ## Repository Model
 
@@ -75,6 +78,16 @@ For a new run:
 
 The orchestrator keeps per-role evidence under `runs/current/evidence/` and
 per-role mutable state under `runs/current/role-state/`.
+
+If you want to watch the raw Codex subprocess output live while the run is
+active:
+
+```bash
+./scripts/monitor.sh
+```
+
+That monitor prints all current and future `*.events.jsonl` streams with
+filename prefixes, including parallel role turns.
 
 For authoritative iteration on an existing app:
 
