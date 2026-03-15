@@ -29,6 +29,9 @@ on this file for execution rules.
   Operator entrypoints such as the playbook runner and local cleanup helpers.
 - `tools/`
   Helper scripts used by the orchestrator and by maintainers.
+- `run_dashboard/`
+  A standalone SQLite/SQLAlchemy observer that mirrors `runs/current/` into a
+  queryable database without becoming part of the playbook source of truth.
 - `runs/`
   The run workspace model.
   `runs/template/` is the tracked starter.
@@ -134,6 +137,8 @@ For generated-app shape:
 
 - `app/` is local and gitignored. It is created when a run starts.
 - `runs/current/` is local run state, not committed playbook source.
+- `run_dashboard/` is operator tooling. It may observe `runs/current/`, but it
+  is not a normative contract or role-loading surface.
 - `example/` is a proof/reference app, not the source of truth for contracts.
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are template sources; run-specific artifacts belong

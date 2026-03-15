@@ -40,6 +40,8 @@ These instructions apply to the `app_gen_playbook` repository.
 - `runs/current/` is local mutable run state.
 - `app/` is a local ignored generated-app worktree.
 - `specs/` and `templates/` are playbook source, not run output.
+- `run_dashboard/` is a standalone observer/tooling area, not part of the
+  role read path unless the task explicitly concerns dashboard/reporting work.
 - When changing the playbook itself, commit those changes unless the user
   explicitly asks to leave them uncommitted.
 

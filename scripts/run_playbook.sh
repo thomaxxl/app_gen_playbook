@@ -4,7 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 EXPECTED_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORKSPACE_ROOT="$(cd "$ROOT/.." && pwd)"
 if [[ "$ROOT" != "$EXPECTED_ROOT" ]]; then
   echo "error: run_playbook.sh must live under the playbook repo scripts/ directory: $SCRIPT_DIR" >&2
   exit 2
@@ -104,7 +103,7 @@ SESSIONS_JSON="$EVIDENCE_ROOT/sessions.json"
 LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
-RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$WORKSPACE_ROOT/run_dashboard}"
+RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
 RUN_DASHBOARD_INIT="$RUN_DASHBOARD_ROOT/scripts/init_db.sh"
 RUN_DASHBOARD_SYNC="$RUN_DASHBOARD_ROOT/scripts/sync_once.sh"
