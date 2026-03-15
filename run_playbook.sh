@@ -32,9 +32,9 @@ SESSIONS_JSON="$EVIDENCE_ROOT/sessions.json"
 LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 
 POLL_SECONDS="${POLL_SECONDS:-1}"
-FAST_MODEL="${FAST_MODEL:-codex-mini-latest}"
-MAIN_MODEL="${MAIN_MODEL:-gpt-5.3-codex}"
-LONG_MODEL="${LONG_MODEL:-gpt-5.1-codex-max}"
+FAST_MODEL="${FAST_MODEL:-}"
+MAIN_MODEL="${MAIN_MODEL:-}"
+LONG_MODEL="${LONG_MODEL:-}"
 
 frontend_pid=""
 backend_pid=""
@@ -55,6 +55,14 @@ role_model() {
     deployment) printf '%s\n' "$MAIN_MODEL" ;;
     *) printf '%s\n' "$FAST_MODEL" ;;
   esac
+}
+
+display_model() {
+  if [[ -n "${1:-}" ]]; then
+    printf '%s\n' "$1"
+  else
+    printf '%s\n' "<codex-default>"
+  fi
 }
 
 display_role_for_runtime() {
@@ -200,13 +208,17 @@ run_codex_fresh() {
 
   (
     cd "$role_cwd"
-    codex exec \
-      --full-auto \
-      --json \
-      --model "$model" \
-      --output-last-message "$result_file" \
-      - < "$prompt_file" \
-      > "$jsonl_file"
+    local cmd=(
+      codex exec
+      --full-auto
+      --json
+      --output-last-message "$result_file"
+      -
+    )
+    if [[ -n "$model" ]]; then
+      cmd+=(--model "$model")
+    fi
+    "${cmd[@]}" < "$prompt_file" > "$jsonl_file"
   )
 }
 
@@ -220,15 +232,67 @@ run_codex_resume() {
 
   (
     cd "$role_cwd"
-    codex exec resume \
-      --full-auto \
-      --json \
-      --model "$model" \
-      --output-last-message "$result_file" \
-      "$resume_id" \
-      - < "$prompt_file" \
-      > "$jsonl_file"
+    local cmd=(
+      codex exec resume
+      --full-auto
+      --json
+      --output-last-message "$result_file"
+      "$resume_id"
+      -
+    )
+    if [[ -n "$model" ]]; then
+      cmd+=(--model "$model")
+    fi
+    "${cmd[@]}" < "$prompt_file" > "$jsonl_file"
   )
+}
+
+assert_codex_success() {
+  local jsonl_file="$1"
+  local result_file="$2"
+  python3 - "$jsonl_file" "$result_file" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+jsonl_path = Path(sys.argv[1])
+result_path = Path(sys.argv[2])
+
+errors: list[str] = []
+if jsonl_path.exists():
+    for raw_line in jsonl_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        event_type = obj.get("type")
+        if event_type == "turn.failed":
+            message = obj.get("error", {}).get("message")
+            if isinstance(message, str) and message:
+                errors.append(message)
+        elif event_type == "error":
+            message = obj.get("message")
+            if isinstance(message, str) and message:
+                errors.append(message)
+
+if errors:
+    print(errors[-1])
+    raise SystemExit(1)
+
+if not result_path.exists():
+    print(f"missing final result file: {result_path}")
+    raise SystemExit(1)
+
+content = result_path.read_text(encoding="utf-8").strip()
+if not content:
+    print("codex run completed without a final agent message")
+    raise SystemExit(1)
+PY
 }
 
 run_role_once() {
@@ -259,7 +323,7 @@ run_role_once() {
   model="$(role_model "$runtime_role")"
   resume_id="$(session_get "$runtime_role")"
 
-  log "agent-start role=$runtime_role model=$model message=$(basename "$message_path") session=${resume_id:-new}"
+  log "agent-start role=$runtime_role model=$(display_model "$model") message=$(basename "$message_path") session=${resume_id:-new}"
 
   python3 "$ROOT/tools/validate_role_diff.py" snapshot \
     --repo-root "$ROOT" \
@@ -277,7 +341,13 @@ run_role_once() {
     run_codex_fresh "$role_dir" "$model" "$prompt_file" "$result_file" "$jsonl_file"
   fi
 
-  session_record "$runtime_role" "$jsonl_file" "$role_dir" "$model"
+  if ! codex_error="$(assert_codex_success "$jsonl_file" "$result_file" 2>&1)"; then
+    log "agent-failed role=$runtime_role message=${message_base}.md error=$codex_error"
+    echo "error: codex failed for role $runtime_role: $codex_error" >&2
+    exit 1
+  fi
+
+  session_record "$runtime_role" "$jsonl_file" "$role_dir" "$(display_model "$model")"
   validate_role_turn "$runtime_role" "$snapshot_file" "$validation_file" "${ignore_roles[@]}"
 
   if [[ -f "$message_path" ]]; then

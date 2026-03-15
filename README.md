@@ -98,6 +98,8 @@ The orchestrator now also:
 - keeps one resume-capable Codex session per runtime role
 - switches to parallel Frontend and Backend workers only after the Phase 5
   entry gate passes
+- uses your local Codex CLI default model unless you explicitly set
+  `FAST_MODEL`, `MAIN_MODEL`, or `LONG_MODEL`
 
 ## Fresh-run agent reading rule
 

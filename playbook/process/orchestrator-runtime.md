@@ -60,6 +60,23 @@ Codex session history MUST NOT be treated as authoritative run state.
 If a stored session cannot be resumed cleanly, the orchestrator MAY discard the
 stored session id for that role and start a fresh session.
 
+## Model-selection rule
+
+The orchestrator SHOULD default to the local Codex CLI model/account default.
+
+It MAY accept explicit model overrides through environment variables such as:
+
+- `FAST_MODEL`
+- `MAIN_MODEL`
+- `LONG_MODEL`
+
+If those overrides are unset, the orchestrator MUST NOT force a hardcoded
+model name that may be unsupported by the local Codex account.
+
+If Codex emits a runtime error such as an unsupported model failure, the
+orchestrator MUST stop and surface that real error instead of continuing into a
+misleading inbox-state failure.
+
 ## Role-local AGENTS
 
 At run reset, the orchestrator runtime MUST seed local role directories under
