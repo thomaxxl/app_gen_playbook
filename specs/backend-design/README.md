@@ -10,6 +10,8 @@ Rules:
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
   NOT replace run-owned backend-design artifacts or the maintained runtime
   baseline.
+- routing-first agents SHOULD start from the Backend summary and the current
+  backend task bundle before loading individual template files
 
 Template files:
 

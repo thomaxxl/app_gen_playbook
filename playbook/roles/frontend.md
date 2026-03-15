@@ -58,6 +58,21 @@ After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
 
+## Writable targets
+
+- `../../runs/current/artifacts/ux/**`
+- `../../runs/current/role-state/frontend/**`
+- `../../app/frontend/**`
+
+## Forbidden writes
+
+- `../../runs/current/artifacts/product/**`
+- `../../runs/current/artifacts/architecture/**`
+- `../../runs/current/artifacts/backend-design/**`
+- `../../runs/current/artifacts/devops/**`
+- `../../app/backend/**`
+- `../../app/rules/**`
+
 ## Tier 2 task-driven reads
 
 After Tier 1, the Frontend agent MUST load only the run-owned artifacts needed
@@ -96,6 +111,15 @@ The Frontend agent MUST treat
 authoritative package/source decision record for implementation. The Frontend
 agent MUST NOT leave `safrs-jsonapi-client` unresolved while proceeding with
 implementation.
+
+## Escalation targets
+
+- `../../runs/current/role-state/architect/inbox/` for broken route, naming,
+  entry, or feature-gating contracts
+- `../../runs/current/role-state/backend/inbox/` when backend support is
+  missing or mismatched
+- `../../runs/current/role-state/product_manager/inbox/` only for explicit
+  acceptance follow-up after Architect review
 
 ## Business-rules mirroring boundary
 

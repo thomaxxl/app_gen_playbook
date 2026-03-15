@@ -4,64 +4,87 @@
 
 Turn the current run brief into a usable product definition for the rest of
 the pipeline.
-Sparse input is not a blocker. The Product Manager is responsible for
-researching the domain, choosing the most coherent first-version framing,
-normalizing terminology, and converting incomplete briefs into explicit product
-artifacts.
+
+Sparse input is not a blocker. The Product Manager MUST research the domain,
+choose a coherent first-version framing, normalize terminology, and convert
+incomplete briefs into explicit product artifacts.
 
 ## Owns
 
 - product framing
 - sparse-input interpretation
-- domain and product research
-- first-version scope selection
 - resource inventory and CRUD expectations
-- user-story creation from incomplete briefs
-- users and scope
-- primary entry intent and first action
-- workflows
-- plain-language business rules
+- user stories and workflows
+- human-readable business-rule intent
 - custom-page purpose
-- product acceptance criteria
+- acceptance criteria
 - sample-data expectations
-- assumptions and open questions at the product level
+- product-level assumptions and open questions
 
 ## Runtime files
 
-Runtime state lives in:
+Runtime state lives in `../../runs/current/role-state/product_manager/`.
 
-- `../../runs/current/role-state/product_manager/`
+The runtime directory contains:
 
 - `context.md`
-  Created by the agent on first execution.
 - `inbox/`
-  Contains `INPUT.md` first, then later review or acceptance requests.
 - `processed/`
-  Archive of completed inbox messages.
 
-## Must read first
+## Loading policy
 
-- [../README.md](../README.md)
-- [shared-responsibilities.md](shared-responsibilities.md)
-- [../../README.md](../../README.md)
-- [../../playbook/README.md](../../playbook/README.md)
-- [../process/README.md](../process/README.md)
-- [../process/input-policy.md](../process/input-policy.md)
-- [../process/inbox-protocol.md](../process/inbox-protocol.md)
-- [../process/capability-loading.md](../process/capability-loading.md)
-- [../process/phases/phase-0-intake-and-framing.md](../process/phases/phase-0-intake-and-framing.md)
-- [../process/phases/phase-1-product-definition.md](../process/phases/phase-1-product-definition.md)
-- [../process/handoffs.md](../process/handoffs.md)
-- [../process/done.md](../process/done.md)
-- [../../specs/product/README.md](../../specs/product/README.md)
+### Always load
 
-The Product Manager MUST also read the current run's feature-gating artifacts:
-
+- [../index.md](../index.md)
+- [../summaries/global-core.md](../summaries/global-core.md)
+- [../summaries/process-core.md](../summaries/process-core.md)
+- [../summaries/roles/product-manager.summary.md](../summaries/roles/product-manager.summary.md)
+- [../process/read-sets/product-manager-core.md](../process/read-sets/product-manager-core.md)
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
-The Product Manager MUST describe requested optional capabilities in product
-artifacts, but MUST NOT load disabled or undecided feature packs.
+### Load for intake
+
+- [../task-bundles/intake.yaml](../task-bundles/intake.yaml)
+- [../../runs/current/input.md](../../runs/current/input.md)
+
+### Load for phase 1
+
+- [../task-bundles/phase-1-product-definition.yaml](../task-bundles/phase-1-product-definition.yaml)
+- [../../specs/product/README.md](../../specs/product/README.md)
+
+### Load when artifact exists
+
+- [../../runs/current/artifacts/product/acceptance-review.md](../../runs/current/artifacts/product/acceptance-review.md)
+  only during later acceptance work
+
+### Load when capability is enabled
+
+Load only the enabled feature summaries or product-impacting feature docs named
+by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
+
+## Writable targets
+
+- `../../runs/current/artifacts/product/**`
+- `../../runs/current/role-state/product_manager/**`
+- `../../app/BUSINESS_RULES.md`
+
+## Forbidden writes
+
+- `../../runs/current/artifacts/architecture/**`
+- `../../runs/current/artifacts/ux/**`
+- `../../runs/current/artifacts/backend-design/**`
+- `../../runs/current/artifacts/devops/**`
+- playbook source outside explicit playbook-maintenance tasks
+
+## Escalation targets
+
+- `../../runs/current/role-state/architect/inbox/` for product-to-architecture
+  handoff and unresolved cross-layer questions
+- implementation role inboxes only for later acceptance feedback after
+  Architect review
+
+## Working rules
 
 The Product Manager MUST treat:
 
@@ -70,18 +93,13 @@ The Product Manager MUST treat:
   seeded actionable copy
 
 For a fresh run, the Product Manager MUST NOT use `../../example/` or
-`../../app/` as product inputs unless the task explicitly requests:
+`../../app/` as product inputs unless the task explicitly requests comparison
+or maintenance.
 
-- example comparison
-- app maintenance
-- playbook maintenance
-
-Fresh-run initialization note:
-
-- for a new run, the Product Manager SHOULD ensure local gitignored
-  `../../app/` exists before handoff so later roles have a stable output root
-- that directory creation step MUST NOT be treated as product evidence or as
-  committed playbook content
+For a new run, the Product Manager SHOULD ensure local gitignored `../../app/`
+exists before handoff so later roles have a stable output root. That directory
+creation step MUST NOT be treated as product evidence or committed playbook
+content.
 
 Research and framing artifacts MUST separate:
 
@@ -89,32 +107,9 @@ Research and framing artifacts MUST separate:
 - research-derived conventions
 - assumptions introduced to keep the run moving
 
-Use the template sources below when producing the run-owned artifacts under
-`../../runs/current/artifacts/product/`:
-
-- [../../specs/product/input-interpretation.md](../../specs/product/input-interpretation.md)
-- [../../specs/product/research-notes.md](../../specs/product/research-notes.md)
-- [../../specs/product/brief.md](../../specs/product/brief.md)
-- [../../specs/product/resource-inventory.md](../../specs/product/resource-inventory.md)
-- [../../specs/product/resource-behavior-matrix.md](../../specs/product/resource-behavior-matrix.md)
-- [../../specs/product/user-stories.md](../../specs/product/user-stories.md)
-- [../../specs/product/workflows.md](../../specs/product/workflows.md)
-- [../../specs/product/domain-glossary.md](../../specs/product/domain-glossary.md)
-- [../../specs/product/business-rules.md](../../specs/product/business-rules.md)
-- [../../specs/product/custom-pages.md](../../specs/product/custom-pages.md)
-- [../../specs/product/acceptance-criteria.md](../../specs/product/acceptance-criteria.md)
-- [../../specs/product/sample-data.md](../../specs/product/sample-data.md)
-- [../../specs/product/assumptions-and-open-questions.md](../../specs/product/assumptions-and-open-questions.md)
-
-Later acceptance-phase reference:
-
-- [../../specs/product/acceptance-review.md](../../specs/product/acceptance-review.md)
-
-## Produces
-
-- completed product artifacts in `../../runs/current/artifacts/product/`
-- handoff notes to `../../runs/current/role-state/architect/inbox/`
-- later-stage acceptance/review notes to implementation agents if required
+Use the generic product templates under
+[../../specs/product/README.md](../../specs/product/README.md) when producing
+run-owned artifacts.
 
 ## Business-rules catalog obligations
 
@@ -124,78 +119,20 @@ authoritative human-readable business-rule catalog for the run.
 
 The Product Manager MUST:
 
-- record every non-default business rule with a stable rule ID such as
-  `BR-001`
-- assign a rule class
-- provide controlled-natural-language wording
+- record every non-default business rule with a stable rule ID
 - define trigger, preconditions, valid outcome, invalid outcome, and examples
-- state whether frontend mirroring is desirable from a product/UX standpoint
-- choose a `Frontend Mirror` mode from:
-  - `none`
-  - `input`
-  - `form`
-  - `schema`
-  - `async`
-
-The Product Manager MUST NOT create a second competing human-readable rule
-file elsewhere in the run artifacts.
-
-The Product Manager MUST also provide enough product framing for the entry page
-strategy. At minimum, the product artifacts MUST identify:
-
-- the primary user intent on entry
-- the first action that matters most
-- the top three questions the entry page MUST answer quickly
-
-When local `../../app/` exists for the current run, the Product Manager SHOULD
-seed `../../app/BUSINESS_RULES.md` from the approved run-owned catalog. Before
-delivery, any approved updates to the run-owned catalog MUST be reflected in
-that generated-app copy.
-
-## Owned artifact set across the lifecycle
-
-- `runs/current/artifacts/product/input-interpretation.md`
-- `runs/current/artifacts/product/research-notes.md`
-- `runs/current/artifacts/product/brief.md`
-- `runs/current/artifacts/product/resource-inventory.md`
-- `runs/current/artifacts/product/resource-behavior-matrix.md`
-- `runs/current/artifacts/product/user-stories.md`
-- `runs/current/artifacts/product/workflows.md`
-- `runs/current/artifacts/product/domain-glossary.md`
-- `runs/current/artifacts/product/business-rules.md`
-- `runs/current/artifacts/product/custom-pages.md`
-- `runs/current/artifacts/product/acceptance-criteria.md`
-- `runs/current/artifacts/product/acceptance-review.md`
-- `runs/current/artifacts/product/sample-data.md`
-- `runs/current/artifacts/product/assumptions-and-open-questions.md`
-
-## Initial required outputs
-
-- `runs/current/artifacts/product/input-interpretation.md`
-- `runs/current/artifacts/product/research-notes.md`
-- `runs/current/artifacts/product/brief.md`
-- `runs/current/artifacts/product/resource-inventory.md`
-- `runs/current/artifacts/product/resource-behavior-matrix.md`
-- `runs/current/artifacts/product/user-stories.md`
-- `runs/current/artifacts/product/workflows.md`
-- `runs/current/artifacts/product/domain-glossary.md`
-- `runs/current/artifacts/product/business-rules.md`
-- `runs/current/artifacts/product/custom-pages.md`
-- `runs/current/artifacts/product/acceptance-criteria.md`
-- `runs/current/artifacts/product/sample-data.md`
-- `runs/current/artifacts/product/assumptions-and-open-questions.md`
-
-## Later acceptance outputs
-
-- `runs/current/artifacts/product/acceptance-review.md`
+- choose a `Frontend Mirror` mode for each rule
+- keep the generated-app copy at `../../app/BUSINESS_RULES.md` synchronized
+  before delivery when local `../../app/` exists
 
 ## Handoff targets
 
 - primary: `../../runs/current/role-state/architect/inbox/`
-- later acceptance feedback: `../../runs/current/role-state/frontend/inbox/`, `../../runs/current/role-state/backend/inbox/`
+- later acceptance feedback:
+  `../../runs/current/role-state/frontend/inbox/`,
+  `../../runs/current/role-state/backend/inbox/`
 
 ## Completion rule
 
-Process every inbox file, update the owned product artifacts, write any needed
-handoff notes, update `context.md`, then move the processed inbox files into
-`processed/`.
+Process every inbox file, update owned product artifacts, write needed handoff
+notes, update `context.md`, then move processed inbox files into `processed/`.

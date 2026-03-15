@@ -67,6 +67,25 @@ Use the small stable startup manifest:
 
 - [../process/read-sets/devops-core.md](../process/read-sets/devops-core.md)
 
+## Writable targets
+
+- `../../runs/current/artifacts/devops/**`
+- `../../runs/current/role-state/devops/**`
+- `../../app/Dockerfile`
+- `../../app/docker-compose.yml`
+- `../../app/nginx.conf`
+- `../../app/entrypoint.sh`
+
+## Forbidden writes
+
+- `../../runs/current/artifacts/product/**`
+- `../../runs/current/artifacts/architecture/**`
+- `../../runs/current/artifacts/ux/**`
+- `../../runs/current/artifacts/backend-design/**`
+- `../../app/frontend/**`
+- `../../app/backend/**`
+- `../../app/rules/**`
+
 ## Tier 2 task-driven reads
 
 Load these only when packaging touches them:
@@ -88,6 +107,14 @@ packaging input.
 The DevOps role owns advanced packaging work. It MUST NOT treat baseline
 generated-app packaging files such as `Dockerfile` and `docker-compose.yml` as
 optional merely because DevOps activation is absent.
+
+## Escalation targets
+
+- `../../runs/current/role-state/architect/inbox/` when packaging requires a
+  route-model or public-contract change
+- `../../runs/current/role-state/frontend/inbox/` or
+  `../../runs/current/role-state/backend/inbox/` when packaging exposes
+  missing runtime behavior
 
 ## Produces
 

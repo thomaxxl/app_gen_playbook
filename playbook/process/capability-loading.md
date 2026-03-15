@@ -33,6 +33,11 @@ The load plan is the shortest role-specific statement of:
 
 - what each role MUST read
 - what each role MUST NOT read
+- which required, conditional, and reference-only artifacts apply to the role
+
+The load plan SHOULD include a normalized section named:
+
+- `Resolved allowed reads by role`
 
 These files MAY start as stubs, but they MUST NOT remain starter-placeholder
 stubs once Phase 2 is handed off for implementation. A run MUST treat them as

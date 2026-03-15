@@ -1,0 +1,35 @@
+phase_0_intake_and_framing:
+  summary: playbook/summaries/phases/phase-0.summary.md
+  product_manager: playbook/task-bundles/intake.yaml
+
+phase_1_product_definition:
+  summary: playbook/summaries/phases/phase-1.summary.md
+  product_manager: playbook/task-bundles/phase-1-product-definition.yaml
+
+phase_2_architecture_contract:
+  summary: playbook/summaries/phases/phase-2.summary.md
+  architect: playbook/task-bundles/phase-2-architecture-contract.yaml
+
+phase_3_ux_and_interaction_design:
+  summary: playbook/summaries/phases/phase-3.summary.md
+  frontend: playbook/task-bundles/ux-design.yaml
+
+phase_4_backend_design_and_rules_mapping:
+  summary: playbook/summaries/phases/phase-4.summary.md
+  backend: playbook/task-bundles/backend-design.yaml
+
+phase_5_frontend_implementation:
+  summary: playbook/summaries/phases/phase-5.summary.md
+  frontend: playbook/task-bundles/frontend-implementation.yaml
+
+phase_5_backend_implementation:
+  summary: playbook/summaries/phases/phase-5.summary.md
+  backend: playbook/task-bundles/backend-implementation.yaml
+
+phase_6_integration_review:
+  summary: playbook/summaries/phases/phase-6.summary.md
+  architect: playbook/task-bundles/integration-review.yaml
+
+deployment:
+  summary: playbook/summaries/phases/phase-6.summary.md
+  devops: playbook/task-bundles/deployment.yaml

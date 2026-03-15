@@ -5,3 +5,12 @@ artifacts.
 
 Populate local `runs/current/artifacts/` from the generic spec templates when
 the run begins.
+
+Starter gating stubs live under:
+
+- `architecture/capability-profile.md`
+- `architecture/load-plan.md`
+
+Optional packaging starter stubs MAY live under:
+
+- `devops/`

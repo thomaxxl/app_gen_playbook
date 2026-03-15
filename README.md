@@ -64,22 +64,27 @@ requirements without an explicit documented reason.
 
 Use these files to understand the repository layout and the current run state:
 
-1. [playbook/README.md](playbook/README.md)
-2. [runs/README.md](runs/README.md)
-3. [specs/README.md](specs/README.md)
-4. [templates/README.md](templates/README.md)
-5. [example/README.md](example/README.md)
-6. [templates/app/project/README.app.md](templates/app/project/README.app.md)
+1. [playbook/index.md](playbook/index.md)
+2. [playbook/README.md](playbook/README.md)
+3. [runs/README.md](runs/README.md)
+4. [specs/README.md](specs/README.md)
+5. [templates/README.md](templates/README.md)
+6. [example/README.md](example/README.md)
+7. [templates/app/project/README.app.md](templates/app/project/README.app.md)
 
 ## Fresh-run agent reading rule
 
 For a fresh run, agents MUST start from:
 
-1. [playbook/README.md](playbook/README.md)
-2. [runs/README.md](runs/README.md)
-3. the current role definition under `playbook/roles/`
-4. local `runs/current/` after it has been created from `runs/template/`
-5. the run-owned artifacts and owned specs required by that role
+1. [playbook/index.md](playbook/index.md)
+2. [playbook/summaries/global-core.md](playbook/summaries/global-core.md)
+3. [playbook/summaries/process-core.md](playbook/summaries/process-core.md)
+4. the current role summary under `playbook/summaries/roles/`
+5. the current role Tier 1 read set under `playbook/process/read-sets/`
+6. the current task bundle under `playbook/task-bundles/`
+7. local `runs/current/` after it has been created from `runs/template/`
+8. the minimum run-owned artifacts and enabled feature packs required by that
+   task bundle
 
 For a fresh run, agents MUST NOT use `example/` or `app/` as product or
 architecture inputs unless the task explicitly requests:
@@ -158,3 +163,18 @@ Capability-loading rule:
   imply zero dormant runtime footprint unless the relevant feature pack says so
 - feature-pack maturity, owner roles, and allowed activation status are
   cataloged in `specs/features/catalog.md`
+
+## Retrieval-first rule
+
+This repository is a retrieval library for agents, not a monolithic document
+set for preload.
+
+Agents MUST prefer:
+
+1. summary files
+2. read-set manifests
+3. task bundles
+4. the minimum run-owned artifacts needed for the current task
+5. enabled feature-pack contracts only
+
+Agents MUST NOT start by scanning whole directories "just in case".

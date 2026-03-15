@@ -1,0 +1,23 @@
+name: phase-2-architecture-contract
+role: architect
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/architect.summary.md
+  - playbook/process/read-sets/architect-core.md
+required_phase:
+  - playbook/process/phases/phase-2-architecture-contract.md
+  - playbook/process/architect-decision-procedure.md
+required_artifacts:
+  - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/resource-inventory.md
+  - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/architecture/capability-profile.md
+  - runs/current/artifacts/architecture/load-plan.md
+reference_only:
+  - specs/architecture/README.md
+  - playbook/process/rename-starter-trio-checklist.md
+writable_targets:
+  - runs/current/artifacts/architecture/**
+  - runs/current/role-state/architect/**

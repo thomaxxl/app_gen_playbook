@@ -8,6 +8,8 @@ Rules:
 - Frontend run output MUST be written under `../../runs/current/artifacts/ux/`.
 - `../../example/` MAY be consulted as a runnable reference app, but it MUST
   NOT replace run-owned UX artifacts or the maintained frontend baseline.
+- routing-first agents SHOULD start from the Frontend summary and the current
+  UX task bundle before loading individual template files
 
 Template files:
 

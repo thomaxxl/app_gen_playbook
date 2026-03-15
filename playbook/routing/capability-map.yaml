@@ -1,0 +1,61 @@
+uploads:
+  maturity: supported
+  summary: playbook/summaries/features/uploads.summary.md
+  roles:
+    - architect
+    - backend
+    - frontend
+    - devops
+  contracts:
+    - specs/features/uploads/
+    - specs/contracts/files/
+  templates:
+    - templates/features/uploads/
+
+ux-measurement:
+  maturity: experimental
+  summary: playbook/summaries/features/ux-measurement.summary.md
+  roles:
+    - architect
+    - frontend
+    - product_manager
+  contracts:
+    - specs/features/ux-measurement/
+  templates:
+    - templates/features/ux-measurement/
+
+d3-custom-views:
+  maturity: placeholder
+  summary: playbook/summaries/features/d3-custom-views.summary.md
+  roles:
+    - architect
+    - frontend
+  contracts:
+    - specs/features/d3-custom-views/
+  templates:
+    - templates/features/d3-custom-views/
+
+reporting:
+  maturity: placeholder
+  summary: playbook/summaries/features/reporting.summary.md
+  roles:
+    - architect
+    - backend
+    - frontend
+    - devops
+  contracts:
+    - specs/features/reporting/
+  templates:
+    - templates/features/reporting/
+
+background-jobs:
+  maturity: placeholder
+  summary: playbook/summaries/features/background-jobs.summary.md
+  roles:
+    - architect
+    - backend
+    - devops
+  contracts:
+    - specs/features/background-jobs/
+  templates:
+    - templates/features/background-jobs/

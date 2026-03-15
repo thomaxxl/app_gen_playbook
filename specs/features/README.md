@@ -29,6 +29,11 @@ The canonical feature catalog is:
 
 - [catalog.md](catalog.md)
 
+For routing-first loading, start from:
+
+- `../../playbook/summaries/features/`
+- `../../playbook/routing/capability-map.yaml`
+
 Placeholder packs MUST remain `disabled` or `undecided` in the capability
 profile unless the current run explicitly expands them into real run-specific
 feature work.

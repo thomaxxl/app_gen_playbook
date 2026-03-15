@@ -26,10 +26,10 @@ Required steps:
    - `contract-samples.md` for the route-to-record trace
 8. seed `../../runs/current/role-state/product_manager/inbox/INPUT.md` from
    `../../runs/current/input.md`
-9. recreate `../../runs/current/artifacts/architecture/capability-profile.md`
-   from the starter template shape
-10. recreate `../../runs/current/artifacts/architecture/load-plan.md`
-   from the starter template shape
+9. seed `../../runs/current/artifacts/architecture/capability-profile.md`
+   from `../../runs/template/artifacts/architecture/capability-profile.md`
+10. seed `../../runs/current/artifacts/architecture/load-plan.md`
+    from `../../runs/template/artifacts/architecture/load-plan.md`
 11. if packaging or runtime normalization is expected for the run, recreate
    `../../runs/current/artifacts/devops/` from the starter stub set
 12. if packaging or runtime normalization is expected for the run, ensure

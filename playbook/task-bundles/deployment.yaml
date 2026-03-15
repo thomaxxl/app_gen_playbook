@@ -1,0 +1,27 @@
+name: deployment
+role: devops
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/devops.summary.md
+  - playbook/process/read-sets/devops-core.md
+required_phase:
+  - playbook/process/packaging-lanes.md
+required_artifacts:
+  - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/route-and-entry-model.md
+  - runs/current/artifacts/architecture/capability-profile.md
+  - runs/current/artifacts/architecture/load-plan.md
+conditional_artifacts:
+  uploads:
+    - specs/features/uploads/README.md
+reference_only:
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/backend-design/query-behavior.md
+writable_targets:
+  - runs/current/artifacts/devops/**
+  - runs/current/role-state/devops/**
+  - app/Dockerfile
+  - app/docker-compose.yml
+  - app/nginx.conf
+  - app/entrypoint.sh

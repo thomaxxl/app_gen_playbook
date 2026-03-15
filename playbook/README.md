@@ -1,6 +1,8 @@
 # Playbook
 
-This directory contains the static instructions for using the system.
+This directory contains the static operating instructions for the system.
+
+Use [index.md](index.md) as the discovery entrypoint.
 
 It is the canonical home for:
 
@@ -59,12 +61,38 @@ Segmentation rule:
 
 ## Structure
 
+- [index.md](index.md)
+- [summaries/global-core.md](summaries/global-core.md)
+- [summaries/process-core.md](summaries/process-core.md)
 - [roles/README.md](roles/README.md)
 - [process/README.md](process/README.md)
+- [routing/role-core.yaml](routing/role-core.yaml)
+- [routing/phase-bundles.yaml](routing/phase-bundles.yaml)
+- [routing/artifact-access.yaml](routing/artifact-access.yaml)
+- [task-bundles/](task-bundles/)
 
-Read this before starting a run:
+## Default loading path
 
-1. [../README.md](../README.md)
-2. [roles/README.md](roles/README.md)
-3. [process/README.md](process/README.md)
-4. [../runs/README.md](../runs/README.md)
+Agents SHOULD start in this order:
+
+1. [index.md](index.md)
+2. [summaries/global-core.md](summaries/global-core.md)
+3. [summaries/process-core.md](summaries/process-core.md)
+4. the current role summary
+5. the current role Tier 1 read set
+6. the current task bundle
+7. the minimum run-owned artifacts and enabled feature packs required by that
+   task
+
+Detailed reference files SHOULD be loaded only after the smaller routing files
+above have narrowed the scope.
+
+## Context-budget rule
+
+Segmentation exists to reduce context load for agents. Maintainers MUST keep
+the loading path narrow.
+
+See:
+
+- [process/context-budgets.md](process/context-budgets.md)
+- [process/loading-protocol.md](process/loading-protocol.md)

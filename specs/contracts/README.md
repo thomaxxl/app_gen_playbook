@@ -5,6 +5,12 @@ This directory contains the technical implementation contracts.
 Read these only after the product, architecture, UX, and backend-design specs
 are written.
 
+For routing-first loading, start from:
+
+- `../../playbook/summaries/contracts/`
+- `../../playbook/task-bundles/`
+- `../../playbook/process/loading-protocol.md`
+
 Subdirectories:
 
 - [frontend/README.md](frontend/README.md)

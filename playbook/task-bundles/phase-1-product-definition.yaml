@@ -1,0 +1,21 @@
+name: phase-1-product-definition
+role: product_manager
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/product-manager.summary.md
+  - playbook/process/read-sets/product-manager-core.md
+required_phase:
+  - playbook/process/phases/phase-1-product-definition.md
+required_artifacts:
+  - runs/current/input.md
+  - runs/current/artifacts/architecture/capability-profile.md
+  - runs/current/artifacts/architecture/load-plan.md
+conditional_artifacts:
+  example_comparison:
+    - example/README.md
+reference_only:
+  - specs/product/README.md
+writable_targets:
+  - runs/current/artifacts/product/**
+  - runs/current/role-state/product_manager/**

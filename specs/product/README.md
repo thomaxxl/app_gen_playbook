@@ -15,6 +15,8 @@ Rules:
 - `business-rules.md` is the single authoritative human-readable business-rule
   catalog for the run. Product templates MUST NOT create a second competing
   rule-intent file.
+- routing-first agents SHOULD start from the Product Manager summary and task
+  bundle before loading individual template files
 
 Template files:
 

@@ -1,0 +1,57 @@
+product_manager:
+  write:
+    - runs/current/artifacts/product/**
+    - runs/current/role-state/product_manager/**
+    - app/BUSINESS_RULES.md
+  read_only:
+    - runs/current/artifacts/architecture/**
+    - runs/current/artifacts/ux/**
+    - runs/current/artifacts/backend-design/**
+    - runs/current/artifacts/devops/**
+
+architect:
+  write:
+    - runs/current/artifacts/architecture/**
+    - runs/current/role-state/architect/**
+  read_only:
+    - runs/current/artifacts/product/**
+    - runs/current/artifacts/ux/**
+    - runs/current/artifacts/backend-design/**
+    - runs/current/artifacts/devops/**
+
+frontend:
+  write:
+    - runs/current/artifacts/ux/**
+    - runs/current/role-state/frontend/**
+    - app/frontend/**
+  read_only:
+    - runs/current/artifacts/product/**
+    - runs/current/artifacts/architecture/**
+    - runs/current/artifacts/backend-design/**
+    - runs/current/artifacts/devops/**
+
+backend:
+  write:
+    - runs/current/artifacts/backend-design/**
+    - runs/current/role-state/backend/**
+    - app/backend/**
+    - app/rules/**
+  read_only:
+    - runs/current/artifacts/product/**
+    - runs/current/artifacts/architecture/**
+    - runs/current/artifacts/ux/**
+    - runs/current/artifacts/devops/**
+
+devops:
+  write:
+    - runs/current/artifacts/devops/**
+    - runs/current/role-state/devops/**
+    - app/Dockerfile
+    - app/docker-compose.yml
+    - app/nginx.conf
+    - app/entrypoint.sh
+  read_only:
+    - runs/current/artifacts/product/**
+    - runs/current/artifacts/architecture/**
+    - runs/current/artifacts/ux/**
+    - runs/current/artifacts/backend-design/**

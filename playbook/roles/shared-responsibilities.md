@@ -2,6 +2,9 @@
 
 These rules apply to every agent.
 
+Load `../summaries/global-core.md` first. This file expands only the shared
+details that need more precision than the global summary.
+
 ## General
 
 - Stay within the scope owned by the current role.
@@ -58,14 +61,9 @@ Persistent artifact files in `runs/current/artifacts/product/`,
 `runs/current/artifacts/architecture/`, `runs/current/artifacts/ux/`, and
 `runs/current/artifacts/backend-design/`, and
 `runs/current/artifacts/devops/` must start with a small metadata block
-containing:
+matching:
 
-- `owner`
-- `phase`
-- `status`
-- `depends_on`
-- `unresolved`
-- `last_updated_by`
+- `../../specs/contracts/artifact-frontmatter-template.md`
 
 Allowed `status` values:
 

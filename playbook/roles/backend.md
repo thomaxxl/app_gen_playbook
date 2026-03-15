@@ -47,6 +47,21 @@ After the core reads above, the Backend agent MUST load only the enabled
 feature packs assigned to the backend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
 
+## Writable targets
+
+- `../../runs/current/artifacts/backend-design/**`
+- `../../runs/current/role-state/backend/**`
+- `../../app/backend/**`
+- `../../app/rules/**`
+
+## Forbidden writes
+
+- `../../runs/current/artifacts/product/**`
+- `../../runs/current/artifacts/architecture/**`
+- `../../runs/current/artifacts/ux/**`
+- `../../runs/current/artifacts/devops/**`
+- `../../app/frontend/**`
+
 ## Tier 2 task-driven reads
 
 After Tier 1, the Backend agent MUST load only the run-owned artifacts needed
@@ -131,6 +146,15 @@ run-owned backend-design artifacts, especially:
 
 If the business-rules catalog is too vague to implement, the Backend agent
 MUST send the ambiguity back upstream instead of inventing rule meaning.
+
+## Escalation targets
+
+- `../../runs/current/role-state/architect/inbox/` for broken architecture or
+  route contracts
+- `../../runs/current/role-state/frontend/inbox/` when frontend assumptions
+  must change
+- `../../runs/current/role-state/product_manager/inbox/` only for explicit
+  acceptance follow-up after Architect review
 
 ## Produces
 
