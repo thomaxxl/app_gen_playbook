@@ -25,6 +25,9 @@ A feature is done only when all of these are true:
 - generated application output lives under local gitignored `app/`, not mixed
   into the
   playbook contract directories
+- required generated-app files exist, including the repo-ready root files and
+  the baseline frontend, backend, rules, and reference outputs needed to run
+  the app
 - integration and acceptance approvals have matching processed inbox items and
   matching gate-owner `context.md` entries
 - if a run claims backend, frontend, or Playwright success, supporting files

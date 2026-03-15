@@ -55,9 +55,32 @@ def write_run_artifact(path: Path, status: str = "ready-for-handoff") -> None:
     )
 
 
+def write_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def ensure_role_dirs(repo_root: Path, role: str) -> None:
     for subdir in ("inbox", "inflight", "processed"):
         (repo_root / "runs" / "current" / "role-state" / role / subdir).mkdir(parents=True, exist_ok=True)
+
+
+def write_app_baseline(repo_root: Path) -> None:
+    for relative in (
+        "app/README.md",
+        "app/.gitignore",
+        "app/install.sh",
+        "app/run.sh",
+        "app/Dockerfile",
+        "app/docker-compose.yml",
+        "app/frontend/package.json",
+        "app/frontend/vite.config.ts",
+        "app/backend/requirements.txt",
+        "app/backend/run.py",
+        "app/rules/rules.py",
+        "app/reference/admin.yaml",
+    ):
+        write_file(repo_root / relative, "generated\n")
 
 
 class RecoverRunQueueTests(unittest.TestCase):
@@ -94,6 +117,8 @@ class RecoverRunQueueTests(unittest.TestCase):
 
             write_run_artifact(repo_root / "runs/current/artifacts/product/brief.md")
             write_run_artifact(repo_root / "runs/current/artifacts/ux/iconography.md")
+            write_app_baseline(repo_root)
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "# samples\n")
 
             targets = select_recovery_targets(repo_root)
 
@@ -111,6 +136,8 @@ class RecoverRunQueueTests(unittest.TestCase):
                 ensure_role_dirs(repo_root, role)
 
             write_run_artifact(repo_root / "runs/current/artifacts/architecture/integration-review.md")
+            write_app_baseline(repo_root)
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "# samples\n")
             (repo_root / "runs/current/role-state/backend/inflight/todo.md").write_text("busy\n", encoding="utf-8")
 
             targets = select_recovery_targets(repo_root)
@@ -140,6 +167,20 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("specs/ux/README.md", note)
             self.assertIn("specs/ux/iconography.md", note)
             self.assertIn("runs/current/artifacts/ux/iconography.md", note)
+
+    def test_does_not_requeue_architect_runtime_bom_while_devops_queue_is_active(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_template(repo_root / "specs/architecture/runtime-bom.md", "architect", "phase-2-architecture-contract")
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/runtime-bom.md", status="blocked")
+            write_file(repo_root / "runs/current/role-state/devops/inbox/pending.md", "from: architect\nto: devops\n")
+
+            targets = select_recovery_targets(repo_root)
+            self.assertNotIn("architect", targets)
 
 
 if __name__ == "__main__":

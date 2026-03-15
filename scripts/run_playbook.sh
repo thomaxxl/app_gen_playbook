@@ -116,6 +116,21 @@ backend_pid=""
 ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
 
+role_state_dir() {
+  case "$1" in
+    deployment)
+      if [[ -d "$STATE_ROOT/devops" ]]; then
+        printf '%s\n' "$STATE_ROOT/devops"
+      else
+        printf '%s\n' "$STATE_ROOT/deployment"
+      fi
+      ;;
+    *)
+      printf '%s\n' "$STATE_ROOT/$1"
+      ;;
+  esac
+}
+
 append_run_remark() {
   local title="$1"
   local body="$2"
@@ -699,7 +714,8 @@ PY
 
 claim_message() {
   local runtime_role="$1"
-  local role_dir="$STATE_ROOT/$runtime_role"
+  local role_dir
+  role_dir="$(role_state_dir "$runtime_role")"
   local inflight_dir="$role_dir/inflight"
   local inbox_dir="$role_dir/inbox"
   mkdir -p "$inflight_dir" "$inbox_dir"
@@ -730,7 +746,7 @@ run_role_once() {
   local display_role role_file role_dir message_path
   display_role="$(display_role_for_runtime "$runtime_role")"
   role_file="$(role_file_for_runtime "$runtime_role")"
-  role_dir="$STATE_ROOT/$runtime_role"
+  role_dir="$(role_state_dir "$runtime_role")"
   message_path="$(claim_message "$runtime_role")" || return 1
 
   local message_base turn_stamp turn_key
@@ -1020,6 +1036,10 @@ main_loop() {
     fi
 
     if run_role_once "architect"; then
+      did_work=1
+    fi
+
+    if run_role_once "deployment"; then
       did_work=1
     fi
 

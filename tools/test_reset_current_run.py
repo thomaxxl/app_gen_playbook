@@ -24,6 +24,7 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertTrue((repo_root / "app" / "backend").is_dir())
             self.assertTrue((repo_root / "app" / "rules").is_dir())
             self.assertTrue((repo_root / "app" / "reference").is_dir())
+            self.assertTrue((repo_root / "runs" / "current" / "role-state" / "devops").is_dir())
 
 
 if __name__ == "__main__":

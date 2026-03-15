@@ -9,10 +9,33 @@ from pathlib import Path
 from orchestrator_common import (
     CORE_DISPLAY_ROLES,
     DISPLAY_TO_RUNTIME,
+    all_role_state_dirs,
     iter_required_artifact_templates,
     owner_for_run_artifact,
     parse_metadata_block,
     resolve_repo_root,
+)
+
+
+READY_ARTIFACT_STATUSES = {"ready-for-handoff", "approved"}
+NON_FINAL_ARTIFACT_STATUSES = {"blocked", "draft", "in-progress", "interrupted", "superseded", "unknown"}
+REQUIRED_APP_OUTPUTS = (
+    ("app/.gitignore", "deployment"),
+    ("app/README.md", "architect"),
+    ("app/BUSINESS_RULES.md", "product_manager"),
+    ("app/install.sh", "deployment"),
+    ("app/run.sh", "deployment"),
+    ("app/Dockerfile", "deployment"),
+    ("app/docker-compose.yml", "deployment"),
+    ("app/reference/admin.yaml", "backend"),
+    ("app/backend/requirements.txt", "backend"),
+    ("app/backend/run.py", "backend"),
+    ("app/frontend/package.json", "frontend"),
+    ("app/frontend/vite.config.ts", "frontend"),
+    ("app/rules/rules.py", "backend"),
+)
+REQUIRED_EVIDENCE_OUTPUTS = (
+    ("runs/current/evidence/contract-samples.md", "architect", "phase-6-integration-review"),
 )
 
 
@@ -63,13 +86,15 @@ def is_optional_devops_active(repo_root: Path) -> bool:
     if any(path.name != "README.md" for path in devops_artifacts_dir.glob("*.md")):
         return True
 
-    deployment_dir = repo_root / "runs" / "current" / "role-state" / "deployment"
-    inbox_dir = deployment_dir / "inbox"
-    processed_dir = deployment_dir / "processed"
-    return (
-        (inbox_dir.exists() and any(inbox_dir.iterdir()))
-        or (processed_dir.exists() and any(processed_dir.iterdir()))
-    )
+    for deployment_dir in all_role_state_dirs(repo_root, "deployment"):
+        inbox_dir = deployment_dir / "inbox"
+        processed_dir = deployment_dir / "processed"
+        if (
+            (inbox_dir.exists() and any(inbox_dir.iterdir()))
+            or (processed_dir.exists() and any(processed_dir.iterdir()))
+        ):
+            return True
+    return False
 
 
 def architect_blocked_integration_work(repo_root: Path) -> list[str]:
@@ -133,6 +158,22 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
             if alias_hint:
                 blocker["alias_hint"] = alias_hint
             blockers.append(blocker)
+            continue
+
+        status = str(parse_metadata_block(required_path).get("status", "")).strip() or "unknown"
+        if status == "stub":
+            continue
+        if status in NON_FINAL_ARTIFACT_STATUSES:
+            blockers.append(
+                artifact_blocker(
+                    "required-artifact-not-final",
+                    required_path,
+                    repo_root,
+                    f"required artifact is not in a terminal ready state: status={status!r}",
+                    owner=owner,
+                    phase=phase,
+                )
+            )
 
     for artifact_path in sorted((repo_root / "runs" / "current" / "artifacts").rglob("*.md")):
         if artifact_path.name == "README.md":
@@ -193,32 +234,33 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
         )
 
     if is_optional_devops_active(repo_root):
-        deployment_inbox = repo_root / "runs" / "current" / "role-state" / "deployment" / "inbox"
-        deployment_inflight = repo_root / "runs" / "current" / "role-state" / "deployment" / "inflight"
-        if deployment_inbox.exists():
-            pending = sorted(path.name for path in deployment_inbox.glob("*.md"))
-            if pending:
-                blockers.append(
-                    {
-                        "kind": "optional-deployment-inbox-not-empty",
-                        "path": deployment_inbox.relative_to(repo_root).as_posix(),
-                        "owner": "deployment",
-                        "phase": "",
-                        "reason": f"optional deployment inbox not empty: {', '.join(pending)}",
-                    }
-                )
-        if deployment_inflight.exists():
-            pending = sorted(path.name for path in deployment_inflight.glob("*.md"))
-            if pending:
-                blockers.append(
-                    {
-                        "kind": "optional-deployment-inflight-not-empty",
-                        "path": deployment_inflight.relative_to(repo_root).as_posix(),
-                        "owner": "deployment",
-                        "phase": "",
-                        "reason": f"optional deployment inflight not empty: {', '.join(pending)}",
-                    }
-                )
+        for deployment_root in all_role_state_dirs(repo_root, "deployment"):
+            deployment_inbox = deployment_root / "inbox"
+            deployment_inflight = deployment_root / "inflight"
+            if deployment_inbox.exists():
+                pending = sorted(path.name for path in deployment_inbox.glob("*.md"))
+                if pending:
+                    blockers.append(
+                        {
+                            "kind": "optional-deployment-inbox-not-empty",
+                            "path": deployment_inbox.relative_to(repo_root).as_posix(),
+                            "owner": "deployment",
+                            "phase": "",
+                            "reason": f"optional deployment inbox not empty: {', '.join(pending)}",
+                        }
+                    )
+            if deployment_inflight.exists():
+                pending = sorted(path.name for path in deployment_inflight.glob("*.md"))
+                if pending:
+                    blockers.append(
+                        {
+                            "kind": "optional-deployment-inflight-not-empty",
+                            "path": deployment_inflight.relative_to(repo_root).as_posix(),
+                            "owner": "deployment",
+                            "phase": "",
+                            "reason": f"optional deployment inflight not empty: {', '.join(pending)}",
+                        }
+                    )
 
         verification_file = (
             repo_root / "runs" / "current" / "artifacts" / "devops" / "verification.md"
@@ -233,6 +275,32 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                     owner="deployment",
                     phase="deployment",
                 )
+            )
+
+    for relative_path, owner in REQUIRED_APP_OUTPUTS:
+        path = repo_root / relative_path
+        if not path.exists():
+            blockers.append(
+                {
+                    "kind": "missing-generated-app-output",
+                    "path": relative_path,
+                    "owner": owner,
+                    "phase": "phase-5-parallel-implementation",
+                    "reason": "required generated app output is missing",
+                }
+            )
+
+    for relative_path, owner, phase in REQUIRED_EVIDENCE_OUTPUTS:
+        path = repo_root / relative_path
+        if not path.exists():
+            blockers.append(
+                {
+                    "kind": "missing-required-evidence-output",
+                    "path": relative_path,
+                    "owner": owner,
+                    "phase": phase,
+                    "reason": "required evidence output is missing",
+                }
             )
 
     return blockers

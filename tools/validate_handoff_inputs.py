@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from orchestrator_common import (
+    preferred_role_state_dir,
     DISPLAY_TO_RUNTIME,
     canonical_artifacts_for_role_phases,
     owner_for_run_artifact,
@@ -185,6 +186,15 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                     "message": f"task-bundle prerequisite is still stub: {artifact_path}",
                 }
             )
+        elif gate_status in {"pass", "pass with assumptions"} and status not in {"ready-for-handoff", "approved"}:
+            blockers.append(
+                {
+                    "type": "task-bundle-artifact-not-ready",
+                    "path": artifact_path,
+                    "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                    "message": f"task-bundle prerequisite is not ready: {artifact_path} (status={status!r})",
+                }
+            )
 
     if gate_status in {"pass", "pass with assumptions"} and sender_runtime_role:
         for read in required_reads:
@@ -250,7 +260,7 @@ def write_correction_note(
     message_path: Path,
     report: dict[str, object],
 ) -> Path:
-    inbox_dir = repo_root / "runs" / "current" / "role-state" / sender_runtime_role / "inbox"
+    inbox_dir = preferred_role_state_dir(repo_root, sender_runtime_role) / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
     note_path = inbox_dir / (
         f"{utc_stamp()}-from-orchestrator-to-{sender_runtime_role}-handoff-correction.md"

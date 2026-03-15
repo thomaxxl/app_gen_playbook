@@ -5,7 +5,7 @@ import argparse
 import shutil
 from pathlib import Path
 
-from orchestrator_common import RUNTIME_TO_DISPLAY, resolve_repo_root
+from orchestrator_common import ROLE_STATE_DIR_BY_RUNTIME, RUNTIME_TO_DISPLAY, resolve_repo_root
 
 
 RUNTIME_ROLE_DIRS = (
@@ -64,7 +64,7 @@ def reset_current_run(repo_root: Path) -> Path:
 
     role_state_dir = current_dir / "role-state"
     for runtime_role in RUNTIME_ROLE_DIRS:
-        runtime_dir = role_state_dir / runtime_role
+        runtime_dir = role_state_dir / ROLE_STATE_DIR_BY_RUNTIME.get(runtime_role, runtime_role)
         (runtime_dir / "inbox").mkdir(parents=True, exist_ok=True)
         (runtime_dir / "inflight").mkdir(parents=True, exist_ok=True)
         (runtime_dir / "processed").mkdir(parents=True, exist_ok=True)

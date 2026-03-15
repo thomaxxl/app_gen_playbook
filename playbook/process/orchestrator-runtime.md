@@ -22,6 +22,9 @@ The orchestrator MUST:
 - validate handoff inputs before dispatching the receiver
 - surface canonical output filenames to the active role at prompt time when
   the current phase or task bundle implies them
+- refuse to declare completion while required run-owned artifacts remain
+  missing, stub, or blocked, or while required generated-app outputs under
+  `app/` are still absent
 
 ## Logging
 
@@ -74,6 +77,11 @@ prompt from standard input, it MUST redirect the prompt file into the Codex
 process explicitly. It MUST NOT rely on inherited stdin after backgrounding the
 Codex subprocess.
 
+Every maintained shell entrypoint under `scripts/` MUST continue to pass
+`bash -n`. Playbook validation MUST treat shell-syntax regressions as release
+blocking, because a broken runner cannot self-recover once the shell parser
+fails before startup.
+
 ## Session model
 
 The orchestrator MUST maintain one Codex session record per runtime role in:
@@ -117,6 +125,15 @@ misleading inbox-state failure.
 
 At run reset, the orchestrator runtime MUST seed local role directories under
 `runs/current/role-state/<role>/` with a role-local `AGENTS.md`.
+
+The optional DevOps lane uses the runtime role token `deployment`, but its
+physical run-state directory MUST be:
+
+- `runs/current/role-state/devops/`
+
+The orchestrator MUST continue to recognize legacy `runs/current/role-state/deployment/`
+state if it already exists in an interrupted run, but new runs MUST seed and
+prefer the `devops/` directory.
 
 Those role-local instructions MUST remain small and stable. They MUST define:
 
@@ -234,6 +251,10 @@ Recovery queue synthesis is a required orchestrator responsibility. When
 completion still fails and no inflight work can legally advance the run, the
 orchestrator MUST turn canonical blockers into owner-specific recovery notes
 instead of waiting passively for the queue to refill.
+
+The recovery pass MUST also reopen Phase 5 implementation when the artifact
+packages are ready but required generated-app outputs under `app/` have not
+been materialized yet.
 
 Those recovery notes MUST:
 

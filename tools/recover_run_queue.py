@@ -6,12 +6,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from check_phase5_ready import collect_phase5_blockers
 from orchestrator_common import (
     DISPLAY_TO_RUNTIME,
     CORE_DISPLAY_ROLES,
     RUN_ARTIFACT_TEMPLATE_DIRS,
+    all_role_state_dirs,
     iter_required_artifact_templates,
     parse_metadata_block,
+    preferred_role_state_dir,
     resolve_repo_root,
 )
 
@@ -22,6 +25,7 @@ PHASE_ORDER = {
     "phase-2-architecture-contract": 2,
     "phase-3-ux-and-interaction-design": 3,
     "phase-4-backend-design-and-rules-mapping": 4,
+    "phase-5-parallel-implementation": 5,
     "phase-6-integration-review": 6,
     "phase-7-product-acceptance": 7,
 }
@@ -39,7 +43,7 @@ ROLE_LABELS = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
-    "deployment": "deployment",
+    "deployment": "devops",
 }
 
 ROLE_PURPOSE = {
@@ -64,6 +68,141 @@ ROLE_PURPOSE = {
         "the deployment lane is active"
     ),
 }
+
+RECOVERABLE_NON_FINAL_STATUSES = {"blocked", "draft", "in-progress", "interrupted", "superseded", "unknown"}
+APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
+    (
+        "architect",
+        "app/README.md",
+        "missing",
+        (
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "playbook/process/playbook-execution-outputs.md",
+            "templates/app/project/README.app.md",
+        ),
+    ),
+    (
+        "deployment",
+        "app/.gitignore",
+        "missing",
+        (
+            "playbook/task-bundles/deployment.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/project/.gitignore.md",
+        ),
+    ),
+    (
+        "deployment",
+        "app/install.sh",
+        "missing",
+        (
+            "playbook/task-bundles/deployment.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/project/install.sh.md",
+        ),
+    ),
+    (
+        "deployment",
+        "app/run.sh",
+        "missing",
+        (
+            "playbook/task-bundles/deployment.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/project/run.sh.md",
+        ),
+    ),
+    (
+        "deployment",
+        "app/Dockerfile",
+        "missing",
+        (
+            "playbook/task-bundles/deployment.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/deployment/Dockerfile.md",
+        ),
+    ),
+    (
+        "deployment",
+        "app/docker-compose.yml",
+        "missing",
+        (
+            "playbook/task-bundles/deployment.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/deployment/docker-compose.yml.md",
+        ),
+    ),
+    (
+        "backend",
+        "app/reference/admin.yaml",
+        "missing",
+        (
+            "playbook/task-bundles/backend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/reference/admin.yaml.md",
+        ),
+    ),
+    (
+        "backend",
+        "app/backend/requirements.txt",
+        "missing",
+        (
+            "playbook/task-bundles/backend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/backend/requirements.txt.md",
+        ),
+    ),
+    (
+        "backend",
+        "app/backend/run.py",
+        "missing",
+        (
+            "playbook/task-bundles/backend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/backend/run.py.md",
+        ),
+    ),
+    (
+        "backend",
+        "app/rules/rules.py",
+        "missing",
+        (
+            "playbook/task-bundles/backend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/rules/rules.py.md",
+        ),
+    ),
+    (
+        "frontend",
+        "app/frontend/package.json",
+        "missing",
+        (
+            "playbook/task-bundles/frontend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/frontend/package.json.md",
+        ),
+    ),
+    (
+        "frontend",
+        "app/frontend/vite.config.ts",
+        "missing",
+        (
+            "playbook/task-bundles/frontend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "templates/app/frontend/vite.config.ts.md",
+        ),
+    ),
+)
+REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
+    (
+        "architect",
+        "runs/current/evidence/contract-samples.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+        ),
+    ),
+)
 
 PHASE_REQUIRED_READS = {
     "phase-1-product-definition": (
@@ -105,6 +244,7 @@ class ArtifactNeed:
     phase: str
     path: Path
     reason: str
+    extra_reads: tuple[str, ...] = ()
 
 
 def utc_stamp() -> str:
@@ -116,11 +256,11 @@ def active_core_roles() -> tuple[str, ...]:
 
 
 def role_pending(repo_root: Path, role: str) -> bool:
-    role_root = repo_root / "runs" / "current" / "role-state" / role
-    for subdir in ("inbox", "inflight"):
-        directory = role_root / subdir
-        if directory.exists() and any(directory.glob("*.md")):
-            return True
+    for role_root in all_role_state_dirs(repo_root, role):
+        for subdir in ("inbox", "inflight"):
+            directory = role_root / subdir
+            if directory.exists() and any(directory.glob("*.md")):
+                return True
     return False
 
 
@@ -165,9 +305,53 @@ def collect_artifact_needs(repo_root: Path) -> list[ArtifactNeed]:
             needs.append(ArtifactNeed(role=role, phase=phase, path=run_path, reason="stub"))
             continue
 
+        if status in RECOVERABLE_NON_FINAL_STATUSES:
+            needs.append(ArtifactNeed(role=role, phase=phase, path=run_path, reason=f"status={status}"))
+            continue
+
         if run_path.name == "acceptance-review.md" and status != "approved":
             needs.append(ArtifactNeed(role=role, phase=phase, path=run_path, reason=f"status={status or 'missing-status'}"))
 
+    return needs
+
+
+def collect_app_implementation_needs(repo_root: Path) -> list[ArtifactNeed]:
+    if collect_phase5_blockers(repo_root):
+        return []
+
+    needs: list[ArtifactNeed] = []
+    for role, relative_path, reason, extra_reads in APP_IMPLEMENTATION_NEEDS:
+        path = repo_root / relative_path
+        if not path.exists():
+            needs.append(
+                ArtifactNeed(
+                    role=role,
+                    phase="phase-5-parallel-implementation",
+                    path=path,
+                    reason=reason,
+                    extra_reads=extra_reads,
+                )
+            )
+    return needs
+
+
+def collect_required_evidence_needs(repo_root: Path, app_needs: list[ArtifactNeed]) -> list[ArtifactNeed]:
+    if app_needs:
+        return []
+
+    needs: list[ArtifactNeed] = []
+    for role, relative_path, reason, extra_reads in REQUIRED_EVIDENCE_NEEDS:
+        path = repo_root / relative_path
+        if not path.exists():
+            needs.append(
+                ArtifactNeed(
+                    role=role,
+                    phase="phase-6-integration-review",
+                    path=path,
+                    reason=reason,
+                    extra_reads=extra_reads,
+                )
+            )
     return needs
 
 
@@ -195,6 +379,13 @@ def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNe
     if early_needs:
         return False
 
+    if phase == "phase-5-parallel-implementation":
+        return True
+
+    phase5_needs = [need for need in all_needs if need.phase == "phase-5-parallel-implementation"]
+    if phase5_needs:
+        return False
+
     if phase == "phase-6-integration-review":
         return frontend_backend_quiescent(repo_root)
 
@@ -209,6 +400,9 @@ def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNe
 
 def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
     needs = collect_artifact_needs(repo_root)
+    app_needs = collect_app_implementation_needs(repo_root)
+    needs.extend(app_needs)
+    needs.extend(collect_required_evidence_needs(repo_root, app_needs))
     targets: dict[str, list[ArtifactNeed]] = {}
 
     for role in ROLE_LABELS:
@@ -220,6 +414,8 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
             continue
 
         eligible = [need for need in role_needs if should_recover_phase(repo_root, need.phase, needs, role)]
+        if role == "architect" and role_pending(repo_root, "deployment"):
+            eligible = [need for need in eligible if need.path.name != "runtime-bom.md"]
         if not eligible:
             continue
 
@@ -239,6 +435,7 @@ def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], 
         required_reads.extend(PHASE_REQUIRED_READS.get(phase, ()))
 
     for need in needs:
+        required_reads.extend(need.extra_reads)
         template_path = template_path_for_need(repo_root, need)
         if template_path is not None:
             required_reads.append(template_path.relative_to(repo_root).as_posix())
@@ -301,7 +498,7 @@ def write_recovery_notes(repo_root: Path, targets: dict[str, list[ArtifactNeed]]
     created: list[Path] = []
     stamp = utc_stamp()
     for role, needs in sorted(targets.items()):
-        inbox_dir = repo_root / "runs" / "current" / "role-state" / role / "inbox"
+        inbox_dir = preferred_role_state_dir(repo_root, role) / "inbox"
         inbox_dir.mkdir(parents=True, exist_ok=True)
         note_path = inbox_dir / f"{stamp}-from-orchestrator-to-{role}-recovery.md"
         note_path.write_text(format_recovery_note(repo_root, role, needs, change_id), encoding="utf-8")

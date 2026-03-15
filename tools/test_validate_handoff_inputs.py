@@ -114,6 +114,72 @@ class ValidateHandoffInputsTests(unittest.TestCase):
             self.assertIn("repair the missing or incomplete prerequisites", note_text)
             self.assertIn("runs/current/artifacts/ux/navigation.md", note_text)
 
+    def test_devops_sender_correction_note_uses_devops_runtime_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            message_path = repo_root / "runs/current/role-state/architect/inflight/handoff.md"
+            write_file(message_path, "from: devops\nto: architect\n")
+
+            report = {
+                "valid": False,
+                "blockers": [
+                    {
+                        "message": "missing package evidence",
+                    }
+                ],
+            }
+            note_path = write_correction_note(repo_root, "deployment", "architect", message_path, report)
+            self.assertIn("runs/current/role-state/devops/inbox/", note_path.as_posix())
+            self.assertTrue(note_path.exists())
+
+    def test_pass_handoff_rejects_blocked_task_bundle_prerequisite(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/runtime-bom.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: blocked\n",
+            )
+            write_file(
+                repo_root / "playbook/task-bundles/frontend-implementation.yaml",
+                "\n".join(
+                    [
+                        "name: frontend-implementation",
+                        "role: frontend",
+                        "required_artifacts:",
+                        "  - runs/current/artifacts/architecture/runtime-bom.md",
+                    ]
+                ),
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: frontend",
+                        "",
+                        "## Required Reads",
+                        "- playbook/task-bundles/frontend-implementation.yaml",
+                        "- runs/current/artifacts/architecture/runtime-bom.md",
+                        "",
+                        "## Gate Status",
+                        "- pass",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+            self.assertFalse(report["valid"])
+            self.assertTrue(
+                any(
+                    blocker.get("type") == "task-bundle-artifact-not-ready"
+                    for blocker in report["blockers"]
+                    if isinstance(blocker, dict)
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

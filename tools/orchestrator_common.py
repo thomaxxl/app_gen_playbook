@@ -39,6 +39,19 @@ RUNTIME_TO_DISPLAY = {
     "deployment": "deployment",
 }
 
+ROLE_STATE_DIR_BY_RUNTIME = {
+    "product_manager": "product_manager",
+    "architect": "architect",
+    "frontend": "frontend",
+    "backend": "backend",
+    "ceo": "ceo",
+    "deployment": "devops",
+}
+
+ROLE_STATE_LEGACY_DIRS = {
+    "deployment": ("deployment",),
+}
+
 ARTIFACT_AREA_BY_ROLE = {
     "product_manager": "product",
     "architect": "architecture",
@@ -86,6 +99,7 @@ ROLE_OWNED_PREFIXES = {
     ),
     "deployment": (
         "runs/current/artifacts/devops/",
+        "runs/current/role-state/devops/",
         "runs/current/role-state/deployment/",
         "app/.gitignore",
         "app/Dockerfile",
@@ -154,6 +168,31 @@ def relpath(path: Path, repo_root: Path) -> str:
         raise ValueError(f"{path_abs!s} is not in the subpath of {repo_root_abs!s}")
 
     return path_abs.relative_to(repo_root_abs).as_posix()
+
+
+def role_state_dir_names(runtime_role: str) -> tuple[str, ...]:
+    preferred = ROLE_STATE_DIR_BY_RUNTIME.get(runtime_role, runtime_role)
+    legacy = ROLE_STATE_LEGACY_DIRS.get(runtime_role, ())
+    names = (preferred, *legacy)
+    deduped: list[str] = []
+    for name in names:
+        if name not in deduped:
+            deduped.append(name)
+    return tuple(deduped)
+
+
+def preferred_role_state_dir(repo_root: Path, runtime_role: str) -> Path:
+    current_root = repo_root / "runs" / "current" / "role-state"
+    for name in role_state_dir_names(runtime_role):
+        candidate = current_root / name
+        if candidate.exists():
+            return candidate
+    return current_root / role_state_dir_names(runtime_role)[0]
+
+
+def all_role_state_dirs(repo_root: Path, runtime_role: str) -> list[Path]:
+    current_root = repo_root / "runs" / "current" / "role-state"
+    return [current_root / name for name in role_state_dir_names(runtime_role)]
 
 
 def write_json(path: Path, payload: object) -> None:
