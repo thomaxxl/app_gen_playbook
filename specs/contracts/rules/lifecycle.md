@@ -57,6 +57,10 @@ Pattern:
 LogicBank.activate(session=session_factory, activator=declare_logic)
 ```
 
+Rule activation depends on mapped SQLAlchemy attributes and relationships.
+The implementation MUST ensure those rule-facing columns and relationships
+exist before activation is attempted.
+
 ## No import-side effects
 
 The implementation MUST NOT activate LogicBank at import time.
@@ -76,3 +80,10 @@ The starter playbook chooses one explicit policy:
   session factory without stacking duplicate activation on the same factory
 
 The implementation MUST NOT leave this undefined or implicit in templates.
+
+## Advanced API verification
+
+If a run must verify LogicBank signatures or engine behavior beyond this file,
+the agent MAY load `logicbank-reference.md`.
+
+That advanced reference MUST NOT become part of the default rules read set.

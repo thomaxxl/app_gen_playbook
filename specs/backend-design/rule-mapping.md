@@ -34,3 +34,12 @@ The real artifact MUST also define:
 - which rule IDs require custom Python behavior
 - which fields are backend-managed because of those rules
 - which rule IDs are explicitly deferred or out of scope
+- when `copy` and `formula` both appear, which rule IDs are snapshot semantics
+  versus live-propagation semantics
+
+If the run needs LogicBank event handlers or signature-level API verification,
+the Backend role MAY load
+`../contracts/rules/logicbank-reference.md`.
+
+That advanced reference MUST NOT become a default read for unrelated backend
+tasks.

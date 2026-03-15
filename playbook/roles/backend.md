@@ -82,6 +82,11 @@ Typical task-driven reads:
   `backend-design/rule-mapping.md`, `backend-design/bootstrap-strategy.md`,
   `backend-design/resource-exposure-policy.md`, `backend-design/query-behavior.md`,
   `backend-design/test-plan.md`
+- advanced LogicBank reference:
+  `../../specs/contracts/rules/logicbank-reference.md` only when the task is
+  implementing `app/rules/rules.py`, resolving rule-mapping details,
+  verifying actual LogicBank API behavior, or adding advanced event-driven
+  rule logic
 
 The Backend agent MUST NOT load the entire run-owned artifact tree by
 default.

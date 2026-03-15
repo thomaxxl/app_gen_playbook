@@ -73,6 +73,42 @@ handwritten validation:
 - aggregate maintenance across inserts, updates, deletes, and reparenting
 - rollback on constraint failure
 
+## Persisted derived-column rule
+
+Every starter target referenced by `Rule.copy`, `Rule.formula`, `Rule.count`,
+or `Rule.sum` MUST exist as a real mapped SQLAlchemy model attribute.
+
+The starter contract assumes persisted derived columns, not helper-only or
+hidden runtime values.
+
+Aggregate intermediates MUST be modeled explicitly rather than implied.
+
+## Copy versus formula
+
+`Rule.copy` and `Rule.formula` MUST NOT be treated as interchangeable.
+
+Use `Rule.copy` when the business meaning is:
+
+- snapshot the parent value at transaction time
+- freeze or store a denormalized value
+
+Use `Rule.formula` when the business meaning is:
+
+- always reflect the current upstream state
+- recompute live derived values when dependencies change
+
+If a run uses both patterns, the backend rule mapping SHOULD record that
+semantic choice explicitly.
+
+## Visibility rule
+
+The implementation MUST NOT hide required LogicBank dependencies in helper-only
+code paths that the rule engine cannot see.
+
+If a derivation or constraint depends on a field, relationship, or aggregate,
+that dependency MUST be visible through mapped model attributes and the normal
+ORM transaction path.
+
 ## Python extensibility boundary
 
 The implementation MUST use declarative `Rule.*` APIs for:

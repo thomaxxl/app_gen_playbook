@@ -25,6 +25,9 @@ Across those stories, validate:
 - `Item.status_code` tracks `Status.code`
 - `Item.is_completed` tracks the declared formula
 - invalid completed-state writes roll back
+- reparenting recomputes parent aggregates on both the old and new parent
+- persisted derived targets stay synchronized with the declared `Rule.copy`
+  and `Rule.formula` behavior
 
 ## API-path validation
 
@@ -43,6 +46,12 @@ same session factory the app uses in production.
 
 This proves the rules are attached to the real session/commit path rather than
 only to the transport layer.
+
+## Rule-mapping coverage note
+
+If a run adds advanced LogicBank patterns beyond the starter subset, the
+validation set SHOULD add at least one test per non-starter pattern documented
+in `runs/current/artifacts/backend-design/rule-mapping.md`.
 
 ## Required test file
 

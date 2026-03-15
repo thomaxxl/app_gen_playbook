@@ -46,6 +46,14 @@ The agent MAY load these files on demand:
   Python endpoints
 - [validation.md](validation.md)
   when writing tests or checking rule behavior across create/update/delete flows
+- [logicbank-reference.md](logicbank-reference.md)
+  only when the current task is implementing `app/rules/rules.py`,
+  resolving `backend-design/rule-mapping.md`, verifying actual LogicBank API
+  behavior, or adding advanced event-driven rule logic
+
+The agent MUST NOT load `logicbank-reference.md` for unrelated backend work.
+That file exists to keep advanced LogicBank knowledge confined and out of the
+default backend context budget.
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local rule file as the source of truth unless the required pattern is

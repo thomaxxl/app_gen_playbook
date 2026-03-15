@@ -2,6 +2,9 @@
 
 Load this when a task touches LogicBank lifecycle or rule behavior.
 
+Do not load the advanced LogicBank reference notes unless the task is
+implementing or verifying rule behavior directly.
+
 The rules contract controls:
 
 - declare vs activate lifecycle
