@@ -35,13 +35,13 @@ move to a narrower role without widening the default backend read path.
 Use this precedence order when LogicBank docs disagree:
 
 1. the playbook's generated-app contract under this `rules/` directory
-2. the local LogicBank source repo under `/home/t/lab/LogicBank`
+2. the installed published `logicbank` package in the current backend runtime
 3. the ApiLogicServer training docs under `/home/t/lab/ApiLogicServer-src`
 
 The playbook remains the normative generated-app contract.
 
-The local LogicBank source is the truth for actual API signatures and engine
-behavior.
+The installed published `logicbank` package is the truth for actual API
+signatures and engine behavior.
 
 The ApiLogicServer training material is a pattern library and warning source.
 It MUST NOT become a second source of business meaning or generated-app
@@ -171,5 +171,5 @@ When consulting upstream training material, be cautious about:
 - contradictory import guidance
 - helper examples that use the wrong `new_logic_row(...)` target type
 
-If the training docs and `/home/t/lab/LogicBank/logic_bank/logic_bank.py`
-disagree, trust the local LogicBank source.
+If the training docs and the installed `logicbank` package disagree, trust the
+installed package source.

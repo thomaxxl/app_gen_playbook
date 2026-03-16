@@ -51,15 +51,6 @@ the SAFRS JSON:API error handlers.
 
 ## Compatibility caveat
 
-LogicBank currently uses a temporary local-checkout override only when
-`LOCAL_LOGICBANK_PATH` is set because the required fix is not yet in a
-published release. This is temporary; switch back to the normal pip package
-when the next fixed release is available. Install the override with
-`pip install --no-deps "$LOCAL_LOGICBANK_PATH"` so its local dependency
-metadata does not override the backend SQLAlchemy selection. If the override
-is unavailable or unset, install the published package with
-`pip install --no-deps logicbank`. Current validated example:
-`LOCAL_LOGICBANK_PATH=/home/t/lab/LogicBank`. Expect SQLAlchemy deprecation
-warnings under the current stack.
+Install LogicBank as the normal published pip package.
 Delete and cascade behavior on rule-managed child relationships must be tested
 explicitly; do not assume default passive-delete behavior is safe.

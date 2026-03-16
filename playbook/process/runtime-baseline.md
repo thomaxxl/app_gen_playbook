@@ -15,7 +15,7 @@ The maintained baseline MUST NOT be recovered from `example/`.
 | Python | `3.12` | Standard backend interpreter |
 | Node | `24.x` | Standard frontend/build runtime |
 | SAFRS source rule | published pip package | Each run MUST pin the validated published version in `runtime-bom.md` |
-| LogicBank source rule | published `logicbank` with `--no-deps` | Local override is temporary and MUST be recorded as a deviation |
+| LogicBank source rule | published `logicbank` | Use the normal pip package path |
 | FastAPI lane | published pip package | Version pin belongs in the run-owned `runtime-bom.md` |
 | SQLAlchemy lane | published pip package | Version pin belongs in the run-owned `runtime-bom.md` |
 | Package manager | `npm` for frontend, `pip` for backend | House default |

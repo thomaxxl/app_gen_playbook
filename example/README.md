@@ -51,10 +51,10 @@ Implemented business rules:
 ./install.sh
 ```
 
-`install.sh` installs backend Python packages into `backend/.deps`, prefers a
-local LogicBank checkout when available, reuses `frontend/node_modules` when
-they still match the lockfile, and prepares the Playwright Chromium runtime
-used by the smoke suite.
+`install.sh` installs backend Python packages into `backend/.deps`, installs
+the published `logicbank` package, reuses `frontend/node_modules` when they
+still match the lockfile, and prepares the Playwright Chromium runtime used by
+the smoke suite.
 
 For faster repeated local runs, keep this example directory in place between
 sessions and, when needed, set `NPM_CONFIG_CACHE` to a stable local-disk path
@@ -68,7 +68,7 @@ Recommended install on this host:
 ```bash
 cd backend
 python3 -m pip install --upgrade --target .deps -r requirements.txt
-python3 -m pip install --upgrade --target .deps --no-deps logicbank
+python3 -m pip install --upgrade --target .deps logicbank
 PYTHONPATH="$PWD/.deps:$PWD/src" python3 run.py
 ```
 

@@ -96,29 +96,13 @@ deviation and the chosen workaround before continuing.
 ## Backend package policy
 
 - SAFRS: install as a normal pip package
-- LogicBank: temporarily install from a local checkout only when explicitly
-  requested through `LOCAL_LOGICBANK_PATH`
+- LogicBank: install as a normal pip package
 
 The playbook baseline does not recover a SAFRS pin from `example/`. Each
 generated app must record the validated published `safrs==...` version it
 actually uses in the run-owned `runtime-bom.md`.
-
-The local LogicBank checkout override is temporary. Switch back to the normal
-published pip package when the next LogicBank release with the required fix is
-available.
-
-Current validated example:
-
-- `LOCAL_LOGICBANK_PATH=/home/t/lab/LogicBank`
-
-Important:
-
-- if `LOCAL_LOGICBANK_PATH` is set, install with:
-  `pip install --no-deps "$LOCAL_LOGICBANK_PATH"`
-- if that override is unavailable or unset, install the published package
-  with `pip install --no-deps logicbank`
-- do not let the local LogicBank checkout downgrade the backend SQLAlchemy
-  stack through its own dependency metadata
+- install LogicBank with the standard published package path:
+  `pip install logicbank`
 
 ## Frontend package policy
 

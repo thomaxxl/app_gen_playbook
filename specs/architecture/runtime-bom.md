@@ -42,7 +42,7 @@ The real artifact MUST define at least:
 | --- | --- | --- | --- |
 | Python version | `3.12` or approved deviation | runtime-baseline | Replace this row |
 | SAFRS package strategy | published pip package | runtime-baseline | Replace this row |
-| LogicBank strategy | published `logicbank --no-deps` or approved local override | runtime-baseline | Replace this row |
+| LogicBank strategy | published `logicbank` | runtime-baseline | Replace this row |
 | SQLite strategy | `starter default` or replacement | replace | Replace this row |
 
 ## Frontend runtime baseline

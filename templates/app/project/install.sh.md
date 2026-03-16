@@ -11,8 +11,7 @@ frontend dependency trees but should remain easy to bootstrap with one command.
 The key behavior is:
 
 - install backend Python dependencies into `backend/.deps`
-- prefer a local LogicBank checkout when documented by the playbook
-- fall back cleanly to `pip install --no-deps logicbank`
+- install published `logicbank` into `backend/.deps`
 - reuse existing frontend `node_modules` when they still match the lockfile
 - run `npm install` for the frontend only when `node_modules` is missing or stale
 - verify Playwright is available for the frontend smoke suite
@@ -25,7 +24,6 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
-LOGICBANK_LOCAL_PATH="${LOGICBANK_LOCAL_PATH:-/home/t/lab/LogicBank}"
 
 file_sha256() {
   if command -v sha256sum >/dev/null 2>&1; then
@@ -52,14 +50,7 @@ echo "Installing backend dependencies into $BACKEND_DIR/.deps"
 (
   cd "$BACKEND_DIR"
   python3 -m pip install --upgrade --target .deps -r requirements.txt
-
-  if [[ -d "$LOGICBANK_LOCAL_PATH" ]]; then
-    echo "Installing LogicBank from local path: $LOGICBANK_LOCAL_PATH"
-    python3 -m pip install --upgrade --target .deps --no-deps "$LOGICBANK_LOCAL_PATH"
-  else
-    echo "Local LogicBank checkout not found. Installing published logicbank with --no-deps."
-    python3 -m pip install --upgrade --target .deps --no-deps logicbank
-  fi
+  python3 -m pip install --upgrade --target .deps logicbank
 )
 
 (
@@ -119,5 +110,3 @@ Notes:
   persistent local-disk npm cache such as `NPM_CONFIG_CACHE="$HOME/.npm"`.
 - `install.sh` SHOULD prepare the Playwright delivery gate so `npm run test:e2e`
   does not fail later just because the browser runtime was never installed.
-- If the app no longer needs the temporary LogicBank local-path override,
-  update this template and the generated app together.

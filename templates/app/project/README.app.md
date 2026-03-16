@@ -34,10 +34,10 @@ from the SAFRS app-development playbook.
 ./install.sh
 ```
 
-`install.sh` installs backend Python packages into `backend/.deps`, prefers a
-local LogicBank checkout when available, reuses `frontend/node_modules` when
-they still match the lockfile, and prepares the Playwright Chromium runtime
-used by the delivery smoke suite.
+`install.sh` installs backend Python packages into `backend/.deps`, installs
+the published `logicbank` package, reuses `frontend/node_modules` when they
+still match the lockfile, and prepares the Playwright Chromium runtime used by
+the delivery smoke suite.
 
 If frontend installs are slow in your environment, keep the generated `app/`
 directory local and persistent between sessions and, when needed, set
@@ -126,11 +126,6 @@ Notes:
 - If the app supports uploaded files, also document the logical `/media/...`
   route and make clear that those URLs are logical app routes, not raw storage
   paths.
-- If the current validated stack still needs the temporary local LogicBank
-  override, document it through `LOCAL_LOGICBANK_PATH` and note that it should
-  be removed once the fixed release is published.
-- If the local LogicBank override is unavailable or unset, document the
-  fallback `pip install --no-deps logicbank` step instead.
 - If the frontend depends on `safrs-jsonapi-client`, keep it pinned through an
   immutable tarball URL or a published registry release. Do not document a git
   dependency as the default generated-app path.
