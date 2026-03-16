@@ -43,6 +43,16 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if [[ -f "$processed_dir/$basename" ]]; then', script)
         self.assertIn('if [[ -f "$processed_dir/$basename" || -f "$inflight_dir/$basename" ]]; then', script)
 
+    def test_runner_claims_deployment_work_across_devops_and_legacy_deployment_dirs(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("oldest_role_queue_file()", script)
+        self.assertIn('candidate_dirs+=("$STATE_ROOT/devops")', script)
+        self.assertIn('candidate_dirs+=("$STATE_ROOT/deployment")', script)
+        self.assertIn('done < <(oldest_role_queue_file inflight "${candidate_dirs[@]}")', script)
+        self.assertIn('done < <(oldest_role_queue_file inbox "${candidate_dirs[@]}")', script)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -961,19 +961,55 @@ archive_duplicate_queue_trace() {
   log "queue-duplicate-archived role=$runtime_role source=$source_lane archived=${archived_path#$ROOT/}"
 }
 
+oldest_role_queue_file() {
+  local lane="$1"
+  shift
+  local role_dir path
+  for role_dir in "$@"; do
+    for path in "$role_dir/$lane"/*.md; do
+      [[ -f "$path" ]] || continue
+      printf '%s::%s\n' "$role_dir" "$path"
+    done
+  done | sort -t: -k3,3 | head -n 1
+}
+
 claim_message() {
   local runtime_role="$1"
-  local role_dir
-  role_dir="$(role_state_dir "$runtime_role")"
-  local inflight_dir="$role_dir/inflight"
-  local inbox_dir="$role_dir/inbox"
-  local processed_dir="$role_dir/processed"
-  mkdir -p "$inflight_dir" "$inbox_dir" "$processed_dir"
+  local candidate_dirs=()
+  case "$runtime_role" in
+    deployment)
+      if [[ -d "$STATE_ROOT/devops" ]]; then
+        candidate_dirs+=("$STATE_ROOT/devops")
+      fi
+      if [[ -d "$STATE_ROOT/deployment" ]]; then
+        candidate_dirs+=("$STATE_ROOT/deployment")
+      fi
+      if [[ "${#candidate_dirs[@]}" -eq 0 ]]; then
+        candidate_dirs+=("$STATE_ROOT/devops" "$STATE_ROOT/deployment")
+      fi
+      ;;
+    *)
+      candidate_dirs+=("$(role_state_dir "$runtime_role")")
+      ;;
+  esac
 
-  local existing oldest claimed basename
+  local role_dir inflight_dir inbox_dir processed_dir
+  for role_dir in "${candidate_dirs[@]}"; do
+    mkdir -p "$role_dir/inflight" "$role_dir/inbox" "$role_dir/processed"
+  done
+
+  local existing oldest claimed basename source_role_dir
   while true; do
-    existing="$(find "$inflight_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
+    existing=""
+    source_role_dir=""
+    while IFS= read -r line; do
+      source_role_dir="${line%%::*}"
+      existing="${line#*::}"
+      break
+    done < <(oldest_role_queue_file inflight "${candidate_dirs[@]}")
     if [[ -n "$existing" ]]; then
+      inflight_dir="$source_role_dir/inflight"
+      processed_dir="$source_role_dir/processed"
       basename="$(basename "$existing")"
       if [[ -f "$processed_dir/$basename" ]]; then
         archive_duplicate_queue_trace "$runtime_role" "$existing" "$processed_dir" "inflight"
@@ -983,11 +1019,20 @@ claim_message() {
       return 0
     fi
 
-    oldest="$(find "$inbox_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
+    oldest=""
+    source_role_dir=""
+    while IFS= read -r line; do
+      source_role_dir="${line%%::*}"
+      oldest="${line#*::}"
+      break
+    done < <(oldest_role_queue_file inbox "${candidate_dirs[@]}")
     if [[ -z "$oldest" ]]; then
       return 1
     fi
 
+    inbox_dir="$source_role_dir/inbox"
+    inflight_dir="$source_role_dir/inflight"
+    processed_dir="$source_role_dir/processed"
     basename="$(basename "$oldest")"
     if [[ -f "$processed_dir/$basename" || -f "$inflight_dir/$basename" ]]; then
       archive_duplicate_queue_trace "$runtime_role" "$oldest" "$processed_dir" "inbox"
