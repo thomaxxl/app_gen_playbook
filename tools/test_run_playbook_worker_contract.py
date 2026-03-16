@@ -18,6 +18,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
 
         self.assertIn("process_orchestrator_inbox()", script)
+        self.assertIn('[[ -d "$inbox_dir" ]] || return 1', script)
         self.assertIn('if process_orchestrator_inbox; then', script)
         self.assertIn('if run_role_once "ceo"; then', script)
         self.assertIn("orchestrator generated invalid recovery note", script)

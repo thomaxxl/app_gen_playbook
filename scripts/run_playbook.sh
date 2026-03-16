@@ -293,6 +293,7 @@ process_orchestrator_inbox() {
   local processed_dir="$orchestrator_dir/processed"
   local oldest processed_path sender topic ceo_note reason
 
+  [[ -d "$inbox_dir" ]] || return 1
   oldest="$(find "$inbox_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
   if [[ -z "$oldest" ]]; then
     return 1

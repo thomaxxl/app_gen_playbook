@@ -170,6 +170,11 @@ exception-routing notes that are not normal role handoffs. The orchestrator
 runtime itself MUST process that inbox. It MUST NOT leave those notes counted
 as actionable work without routing them onward.
 
+If an optional queue directory such as `runs/current/role-state/orchestrator/inbox/`
+is absent in an older or partially initialized run, the orchestrator MUST
+treat that lane as empty. It MUST NOT call `find` or similar scanners on a
+missing optional queue path and spam the console with repeated errors.
+
 When an orchestrator exception note is received, the orchestrator SHOULD
 archive it under `runs/current/role-state/orchestrator/processed/` and convert
 it into an explicit CEO intervention note unless a more specific automatic
