@@ -37,7 +37,12 @@ Runtime state lives in:
 
 Use the small stable startup manifest:
 
-- [../process/read-sets/backend-core.md](../process/read-sets/backend-core.md)
+- [../process/read-sets/backend-design-core.md](../process/read-sets/backend-design-core.md)
+  for Phase 4 backend-design work
+- [../process/read-sets/backend-implementation-core.md](../process/read-sets/backend-implementation-core.md)
+  for Phase 5 implementation work
+- [../process/read-sets/backend-change-delta.md](../process/read-sets/backend-change-delta.md)
+  for change-run delta work
 
 Before loading any optional feature pack or any on-demand contract file beyond
 the core set above, the Backend agent MUST read those two gating artifacts and

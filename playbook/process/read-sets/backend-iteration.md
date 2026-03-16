@@ -1,11 +1,5 @@
 # Backend Iteration Read Set
 
-Required reads:
+Compatibility wrapper only.
 
-- `backend-core.md`
-- `../run-modes.md`
-- `../phases/phase-I4-design-delta.md`
-- `../phases/phase-I5-implementation-delta.md`
-- `../../../runs/current/artifacts/backend-design/`
-- `../../../runs/current/artifacts/architecture/`
-- `../../../app/backend/`
+Use `backend-change-delta.md` for change-run backend delta work.

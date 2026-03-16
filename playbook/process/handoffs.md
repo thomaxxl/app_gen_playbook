@@ -11,6 +11,10 @@ Iteration and resumed work MUST still use the same inbox mechanism. When a
 handoff belongs to a change run, it SHOULD carry `change_id`, `task_id`, and
 other delta-scoping fields defined by `inbox-protocol.md`.
 
+Change-run handoffs SHOULD also point to the current change packet files under
+`runs/current/artifacts/product/changes/<change_id>/` instead of telling the
+receiver to scan whole artifact or `app/` trees.
+
 ## Product Manager -> Architect
 
 Complete only when:

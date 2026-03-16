@@ -1,21 +1,13 @@
 # Architect Core Read Set
 
-Use this as the Tier 1 startup read set for the Architect role.
+Compatibility wrapper only.
 
-Required startup reads:
+New task bundles MUST choose the stage-specific Architect read set instead of
+using this file directly:
 
-- `../README.md`
-- `../inbox-protocol.md`
-- `../capability-loading.md`
-- `../phases/phase-2-architecture-contract.md`
-- `../architect-decision-procedure.md`
-- `../../roles/shared-responsibilities.md`
-- `../../../playbook/summaries/contracts/frontend.summary.md`
-- `../../../playbook/summaries/contracts/backend.summary.md`
-- `../../../playbook/summaries/contracts/rules.summary.md`
-- `../../../specs/architecture/README.md`
-- `../../../runs/current/artifacts/architecture/capability-profile.md`
-- `../../../runs/current/artifacts/architecture/load-plan.md`
+- `architect-authoring-core.md` for Phase 2 and change-impact authoring work
+- `architect-review-core.md` for Phase 6 integration review
 
-After these reads, load only the task-driven product, UX, backend-design, and
-enabled feature artifacts required by the current phase or inbox item.
+If a legacy task still cites `architect-core.md`, load only the one
+stage-specific manifest that matches the current task. Do not preload both
+unless the inbox item explicitly spans both authoring and review work.

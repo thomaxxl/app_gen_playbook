@@ -14,6 +14,85 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_phase2_bundle_inherits_procedure_required_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "playbook/process/architect-decision-procedure.md",
+                "# Architect Decision Procedure\n",
+            )
+            write_file(
+                repo_root / "playbook/task-bundles/phase-2-architecture-contract.yaml",
+                "\n".join(
+                    [
+                        "name: phase-2-architecture-contract",
+                        "role: architect",
+                        "required_phase:",
+                        "  - playbook/process/phases/phase-2-architecture-contract.md",
+                        "  - playbook/process/architect-decision-procedure.md",
+                        "required_artifacts:",
+                        "  - runs/current/artifacts/product/brief.md",
+                        "  - runs/current/artifacts/product/resource-inventory.md",
+                        "  - runs/current/artifacts/product/resource-behavior-matrix.md",
+                        "  - runs/current/artifacts/product/business-rules.md",
+                        "  - runs/current/artifacts/architecture/capability-profile.md",
+                        "  - runs/current/artifacts/architecture/load-plan.md",
+                    ]
+                ),
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/brief.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/resource-inventory.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/resource-behavior-matrix.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/business-rules.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/capability-profile.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/load-plan.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            message_path = repo_root / "runs/current/role-state/architect/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: product_manager",
+                        "to: architect",
+                        "",
+                        "## Required Reads",
+                        "- playbook/task-bundles/phase-2-architecture-contract.yaml",
+                        "",
+                        "## Gate Status",
+                        "- pass",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "architect", message_path)
+            self.assertFalse(report["valid"])
+            messages = [
+                blocker.get("message", "")
+                for blocker in report["blockers"]
+                if isinstance(blocker, dict)
+            ]
+            self.assertTrue(any("workflows.md" in message for message in messages))
+            self.assertTrue(any("custom-pages.md" in message for message in messages))
+            self.assertTrue(any("acceptance-criteria.md" in message for message in messages))
+
     def test_blocked_recovery_note_allows_missing_task_bundle_prerequisite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

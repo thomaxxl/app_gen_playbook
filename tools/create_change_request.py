@@ -29,6 +29,21 @@ def main() -> int:
     change_dir = repo_root / "runs" / "current" / "artifacts" / "product" / "changes" / change_id
     change_dir.mkdir(parents=True, exist_ok=True)
     (change_dir / "request.md").write_text(input_path.read_text(encoding="utf-8"), encoding="utf-8")
+    (change_dir / "affected-artifacts.md").write_text(
+        "# Affected Artifacts\n\n"
+        "- Fill with the exact run-owned artifacts this change reopens.\n",
+        encoding="utf-8",
+    )
+    (change_dir / "affected-app-paths.md").write_text(
+        "# Affected App Paths\n\n"
+        "- Fill with the exact `app/` paths this change is allowed to touch.\n",
+        encoding="utf-8",
+    )
+    (change_dir / "reopened-gates.md").write_text(
+        "# Reopened Gates\n\n"
+        "- Fill with only the gates this change must reopen.\n",
+        encoding="utf-8",
+    )
 
     topic = "change-request" if args.mode == "iterative-change-run" else "hotfix-request"
     inbox_name = f"{stamp}-from-operator-to-product_manager-{topic}.md"
@@ -47,11 +62,14 @@ def main() -> int:
                 "## Required Reads",
                 "- runs/current/input.md",
                 f"- runs/current/artifacts/product/changes/{change_id}/request.md",
-                "- runs/current/artifacts/product/",
+                f"- runs/current/artifacts/product/changes/{change_id}/affected-artifacts.md",
+                f"- runs/current/artifacts/product/changes/{change_id}/affected-app-paths.md",
+                f"- runs/current/artifacts/product/changes/{change_id}/reopened-gates.md",
                 "",
                 "## Requested Outputs",
                 "- classify the request and select the proper run mode",
                 "- update product delta artifacts as needed",
+                "- keep the change packet narrow and current",
                 "- hand off the impacted lanes",
                 "",
                 "## Dependencies",

@@ -1,23 +1,13 @@
 # Backend Core Read Set
 
-Use this as the Tier 1 startup read set for the Backend role.
+Compatibility wrapper only.
 
-Required startup reads:
+New task bundles MUST choose the stage-specific Backend read set instead of
+using this file directly:
 
-- `../README.md`
-- `../inbox-protocol.md`
-- `../capability-loading.md`
-- `../compatibility.md`
-- `../dependency-materialization.md`
-- `../phases/phase-4-backend-design-and-rules-mapping.md`
-- `../phases/phase-5-parallel-implementation.md`
-- `../../roles/shared-responsibilities.md`
-- `../../../specs/contracts/backend/README.md`
-- `../../../specs/contracts/rules/README.md`
-- `../../../specs/contracts/backend/validation.md`
-- `../../../specs/contracts/backend/verification-fallbacks.md`
-- `../../../runs/current/artifacts/architecture/capability-profile.md`
-- `../../../runs/current/artifacts/architecture/load-plan.md`
+- `backend-design-core.md` for Phase 4 backend-design work
+- `backend-implementation-core.md` for Phase 5 implementation work
 
-After these reads, load only the task-driven run-owned artifacts and enabled
-feature packs required by the current task.
+If a legacy task still cites `backend-core.md`, load only the one
+stage-specific manifest that matches the current task. Do not preload both
+unless the inbox item explicitly spans both design and implementation.

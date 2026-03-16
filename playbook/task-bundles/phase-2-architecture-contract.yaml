@@ -4,7 +4,7 @@ always_load:
   - playbook/summaries/global-core.md
   - playbook/summaries/process-core.md
   - playbook/summaries/roles/architect.summary.md
-  - playbook/process/read-sets/architect-core.md
+  - playbook/process/read-sets/architect-authoring-core.md
 required_phase:
   - playbook/process/phases/phase-2-architecture-contract.md
   - playbook/process/architect-decision-procedure.md
@@ -12,7 +12,10 @@ required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/resource-inventory.md
   - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/product/custom-pages.md
+  - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
 reference_only:

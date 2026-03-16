@@ -1,14 +1,9 @@
 # Product Manager Iteration Read Set
 
-Use this read set for `iterative-change-run` and `app-only-hotfix`
-classification work.
+Compatibility wrapper only.
 
-Required reads:
+New change-run task bundles MUST choose the smaller stage-specific Product
+Manager read set instead of using this file directly:
 
-- `product-manager-core.md`
-- `../run-modes.md`
-- `../change-classification.md`
-- `../phases/phase-I1-change-intake-and-triage.md`
-- `../../../runs/current/input.md`
-- `../../../runs/current/remarks.md`
-- `../../../runs/current/artifacts/product/`
+- `product-manager-change-intake.md` for I1/I2 change intake and scope delta
+- `product-manager-change-acceptance.md` for I6/I7 change acceptance

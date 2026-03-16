@@ -53,6 +53,13 @@ The runtime directory contains:
 - [../task-bundles/phase-1-product-definition.yaml](../task-bundles/phase-1-product-definition.yaml)
 - [../../specs/product/README.md](../../specs/product/README.md)
 
+### Load for change runs
+
+- [../process/read-sets/product-manager-change-intake.md](../process/read-sets/product-manager-change-intake.md)
+  for I1/I2 change intake and product delta work
+- [../process/read-sets/product-manager-change-acceptance.md](../process/read-sets/product-manager-change-acceptance.md)
+  for I6/I7 change acceptance
+
 ### Load for phase 7
 
 - [../task-bundles/acceptance-review.yaml](../task-bundles/acceptance-review.yaml)

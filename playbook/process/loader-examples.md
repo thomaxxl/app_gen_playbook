@@ -24,7 +24,7 @@ Load:
 - `playbook/summaries/global-core.md`
 - `playbook/summaries/process-core.md`
 - `playbook/summaries/roles/frontend.summary.md`
-- `playbook/process/read-sets/frontend-core.md`
+- `playbook/process/read-sets/frontend-implementation-core.md`
 - `playbook/task-bundles/frontend-implementation.yaml`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/business-rules.md`
@@ -41,10 +41,25 @@ Load:
 - `playbook/summaries/global-core.md`
 - `playbook/summaries/process-core.md`
 - `playbook/summaries/roles/backend.summary.md`
-- `playbook/process/read-sets/backend-core.md`
+- `playbook/process/read-sets/backend-implementation-core.md`
 - `playbook/task-bundles/backend-implementation.yaml`
 - required product and backend-design artifacts only
 - conditional artifacts only when the task activates them
 - enabled feature-pack contracts only
 
 Do not load unrelated frontend or placeholder feature material.
+
+## Product Manager handling a change request
+
+Load:
+
+- `playbook/index.md`
+- `playbook/summaries/global-core.md`
+- `playbook/summaries/process-core.md`
+- `playbook/summaries/roles/product-manager.summary.md`
+- `playbook/process/read-sets/product-manager-change-intake.md`
+- `playbook/task-bundles/change-intake.yaml`
+- the current `runs/current/artifacts/product/changes/<change_id>/` packet files
+- only the exact product artifacts named by the inbox item or task bundle
+
+Do not load the whole product artifact tree just because the run is iterative.

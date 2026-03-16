@@ -23,6 +23,9 @@ Ownership map:
 Rules:
 
 - only the owning role may directly edit files in its artifact area
+- `playbook/routing/role-core.yaml` is the canonical routing manifest for
+  role startup and writable targets
+- this file is the canonical ownership and edit-policy reference
 - non-owning roles must request changes through inbox handoff unless
   ownership is explicitly delegated
 - exception: during an orchestrator-declared stall intervention, the CEO MAY

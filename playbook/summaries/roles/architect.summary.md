@@ -8,7 +8,10 @@ Always load:
 
 - `global-core.md`
 - `process-core.md`
-- `../../process/read-sets/architect-core.md`
+- one stage-specific Architect read set:
+  - `../../process/read-sets/architect-authoring-core.md`
+  - `../../process/read-sets/architect-review-core.md`
+  - `../../process/read-sets/architect-change-analysis.md`
 
 This role decides architecture and cross-layer integration boundaries. It does
 not redefine product intent, UX content details, or backend implementation

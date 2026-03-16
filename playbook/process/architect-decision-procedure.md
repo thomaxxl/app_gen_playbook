@@ -19,6 +19,9 @@ current run contains at least:
 If those artifacts are missing or materially contradictory, the Architect MUST
 handoff back to Product Manager instead of guessing.
 
+The Phase 2 task bundle and any passing Product Manager handoff MUST carry
+that same minimum product set. A narrower retrieval set is non-conformant.
+
 ## Step 2. Choose the domain-adaptation lane
 
 The Architect MUST classify the run into exactly one of these lanes:

@@ -34,17 +34,20 @@ The runtime directory contains:
 - [../summaries/global-core.md](../summaries/global-core.md)
 - [../summaries/process-core.md](../summaries/process-core.md)
 - [../summaries/roles/architect.summary.md](../summaries/roles/architect.summary.md)
-- [../process/read-sets/architect-core.md](../process/read-sets/architect-core.md)
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
-### Load for phase 2
+### Load for phase 2 and change authoring
 
+- [../process/read-sets/architect-authoring-core.md](../process/read-sets/architect-authoring-core.md)
 - [../task-bundles/phase-2-architecture-contract.yaml](../task-bundles/phase-2-architecture-contract.yaml)
+- [../process/read-sets/architect-change-analysis.md](../process/read-sets/architect-change-analysis.md)
 
 ### Load for phase 6
 
+- [../process/read-sets/architect-review-core.md](../process/read-sets/architect-review-core.md)
 - [../task-bundles/integration-review.yaml](../task-bundles/integration-review.yaml)
+- [../task-bundles/change-integration-review.yaml](../task-bundles/change-integration-review.yaml)
 
 ### Load when starter adaptation is needed
 

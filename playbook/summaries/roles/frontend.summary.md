@@ -8,7 +8,10 @@ Always load:
 
 - `global-core.md`
 - `process-core.md`
-- `../../process/read-sets/frontend-core.md`
+- one stage-specific Frontend read set:
+  - `../../process/read-sets/frontend-design-core.md`
+  - `../../process/read-sets/frontend-implementation-core.md`
+  - `../../process/read-sets/frontend-change-delta.md`
 
 This role controls UX artifacts and frontend code. It does not invent product
 rules, backend semantics, or packaging policy.

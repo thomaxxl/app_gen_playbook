@@ -47,6 +47,7 @@ Agents SHOULD use this path instead:
 - [artifact-metadata.md](artifact-metadata.md)
 - [run-modes.md](run-modes.md)
 - [change-classification.md](change-classification.md)
+- [change-packet-discipline.md](change-packet-discipline.md)
 - [run-lifecycle.md](run-lifecycle.md)
 - [interrupted-runs.md](interrupted-runs.md)
 - [checkpoints.md](checkpoints.md)
@@ -79,6 +80,10 @@ Agents SHOULD use this path instead:
 - [../routing/phase-bundles.yaml](../routing/phase-bundles.yaml)
 - [read-sets/](read-sets/)
 - [loader-examples.md](loader-examples.md)
+
+The change lane is first-class. Use the change-phase summaries and the change
+packet discipline above instead of widening change work into broad artifact or
+`app/` tree reads.
 
 ## Maintainer reference
 

@@ -7,7 +7,10 @@ Always load:
 
 - `global-core.md`
 - `process-core.md`
-- `../../process/read-sets/backend-core.md`
+- one stage-specific Backend read set:
+  - `../../process/read-sets/backend-design-core.md`
+  - `../../process/read-sets/backend-implementation-core.md`
+  - `../../process/read-sets/backend-change-delta.md`
 
 This role controls backend-design artifacts and backend implementation. It
 does not invent product scope, UX behavior, or packaging decisions.

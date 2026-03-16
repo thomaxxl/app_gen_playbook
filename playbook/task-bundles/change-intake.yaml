@@ -4,7 +4,7 @@ always_load:
   - playbook/summaries/global-core.md
   - playbook/summaries/process-core.md
   - playbook/summaries/roles/product-manager.summary.md
-  - playbook/process/read-sets/product-manager-iteration.md
+  - playbook/process/read-sets/product-manager-change-intake.md
 required_phase:
   - playbook/process/phases/phase-I1-change-intake-and-triage.md
   - playbook/process/phases/phase-I2-product-and-scope-delta.md

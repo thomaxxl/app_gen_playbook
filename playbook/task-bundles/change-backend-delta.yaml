@@ -4,7 +4,7 @@ always_load:
   - playbook/summaries/global-core.md
   - playbook/summaries/process-core.md
   - playbook/summaries/roles/backend.summary.md
-  - playbook/process/read-sets/backend-iteration.md
+  - playbook/process/read-sets/backend-change-delta.md
 required_phase:
   - playbook/process/phases/phase-I4-design-delta.md
   - playbook/process/phases/phase-I5-implementation-delta.md

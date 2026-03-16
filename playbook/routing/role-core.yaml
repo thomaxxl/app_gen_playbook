@@ -4,7 +4,6 @@ product_manager:
     - playbook/summaries/process-core.md
     - playbook/summaries/roles/product-manager.summary.md
     - playbook/roles/shared-responsibilities.md
-    - playbook/process/read-sets/product-manager-core.md
   writable:
     - runs/current/artifacts/product/**
     - runs/current/role-state/product_manager/**
@@ -24,7 +23,6 @@ architect:
     - playbook/summaries/process-core.md
     - playbook/summaries/roles/architect.summary.md
     - playbook/roles/shared-responsibilities.md
-    - playbook/process/read-sets/architect-core.md
   writable:
     - runs/current/artifacts/architecture/**
     - runs/current/role-state/architect/**
@@ -42,7 +40,6 @@ frontend:
     - playbook/summaries/process-core.md
     - playbook/summaries/roles/frontend.summary.md
     - playbook/roles/shared-responsibilities.md
-    - playbook/process/read-sets/frontend-core.md
   writable:
     - runs/current/artifacts/ux/**
     - runs/current/role-state/frontend/**
@@ -61,7 +58,6 @@ backend:
     - playbook/summaries/process-core.md
     - playbook/summaries/roles/backend.summary.md
     - playbook/roles/shared-responsibilities.md
-    - playbook/process/read-sets/backend-core.md
   writable:
     - runs/current/artifacts/backend-design/**
     - runs/current/role-state/backend/**

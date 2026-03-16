@@ -14,3 +14,5 @@ the current accepted baseline.
 - business-rules delta
 - acceptance delta
 - exclusions and assumptions
+- updated change-packet scope files when the affected artifact set or reopened
+  gates change

@@ -1,11 +1,6 @@
 # Architect Iteration Read Set
 
-Required reads:
+Compatibility wrapper only.
 
-- `architect-core.md`
-- `../run-modes.md`
-- `../interrupted-runs.md`
-- `../phases/phase-I0-baseline-alignment.md`
-- `../phases/phase-I3-architecture-and-contract-delta.md`
-- `../../../runs/current/artifacts/product/`
-- `../../../runs/current/artifacts/architecture/`
+Use `architect-change-analysis.md` for change-run baseline alignment and
+architecture delta work.

@@ -22,11 +22,21 @@ reading assignment.
 12. expand only the enabled capability packs assigned to the current role
 13. record the resolved load set in the role `context.md`
 
+For `iterative-change-run` and `app-only-hotfix`, insert this rule after the
+task bundle:
+
+- load the current change packet under
+  `runs/current/artifacts/product/changes/<change_id>/`
+- then load only the affected artifacts and app paths explicitly named by the
+  inbox item or task bundle
+
 ## Negative rules
 
 - do not scan every role file
 - do not scan the whole process tree
 - do not read the whole run-owned artifact tree
+- do not read the whole `app/frontend/` or `app/backend/` tree for a normal
+  change task
 - do not load disabled or undecided feature packs
 - do not treat `example/` as a baseline source
 - do not ignore the context-budget rules in `playbook/process/context-budgets.md`

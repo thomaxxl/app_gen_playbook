@@ -38,6 +38,17 @@ Use this file as the discovery entrypoint for the playbook library.
 - [summaries/phases/phase-6.summary.md](summaries/phases/phase-6.summary.md)
 - [summaries/phases/phase-7.summary.md](summaries/phases/phase-7.summary.md)
 
+## Change-phase summaries
+
+- [summaries/phases/phase-I0.summary.md](summaries/phases/phase-I0.summary.md)
+- [summaries/phases/phase-I1.summary.md](summaries/phases/phase-I1.summary.md)
+- [summaries/phases/phase-I2.summary.md](summaries/phases/phase-I2.summary.md)
+- [summaries/phases/phase-I3.summary.md](summaries/phases/phase-I3.summary.md)
+- [summaries/phases/phase-I4.summary.md](summaries/phases/phase-I4.summary.md)
+- [summaries/phases/phase-I5.summary.md](summaries/phases/phase-I5.summary.md)
+- [summaries/phases/phase-I6.summary.md](summaries/phases/phase-I6.summary.md)
+- [summaries/phases/phase-I7.summary.md](summaries/phases/phase-I7.summary.md)
+
 ## Role summaries
 
 - [summaries/roles/product-manager.summary.md](summaries/roles/product-manager.summary.md)
@@ -52,6 +63,16 @@ Use this file as the discovery entrypoint for the playbook library.
 - [routing/role-core.yaml](routing/role-core.yaml)
 - [routing/phase-bundles.yaml](routing/phase-bundles.yaml)
 - [routing/capability-map.yaml](routing/capability-map.yaml)
+
+Canonical policy split:
+
+- loading order: [process/loading-protocol.md](process/loading-protocol.md)
+- ownership and edit policy:
+  [process/ownership-and-edits.md](process/ownership-and-edits.md)
+- role/task routing: [routing/role-core.yaml](routing/role-core.yaml)
+
+Compatibility-only alias:
+
 - [routing/artifact-access.yaml](routing/artifact-access.yaml)
 
 ## Task bundles
@@ -71,6 +92,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [task-bundles/change-impact-analysis.yaml](task-bundles/change-impact-analysis.yaml)
 - [task-bundles/change-frontend-delta.yaml](task-bundles/change-frontend-delta.yaml)
 - [task-bundles/change-backend-delta.yaml](task-bundles/change-backend-delta.yaml)
+- [task-bundles/change-integration-review.yaml](task-bundles/change-integration-review.yaml)
 - [task-bundles/change-acceptance.yaml](task-bundles/change-acceptance.yaml)
 
 ## Loader rules
@@ -80,6 +102,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [process/context-budgets.md](process/context-budgets.md)
 - [process/orchestrator-runtime.md](process/orchestrator-runtime.md)
 - [process/run-modes.md](process/run-modes.md)
+- [process/change-packet-discipline.md](process/change-packet-discipline.md)
 - [process/interrupted-runs.md](process/interrupted-runs.md)
 
 ## Feature catalog

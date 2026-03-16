@@ -72,8 +72,18 @@ Segmentation rule:
 - [process/README.md](process/README.md)
 - [routing/role-core.yaml](routing/role-core.yaml)
 - [routing/phase-bundles.yaml](routing/phase-bundles.yaml)
-- [routing/artifact-access.yaml](routing/artifact-access.yaml)
+- [routing/artifact-access.yaml](routing/artifact-access.yaml) compatibility
+  alias only
 - [task-bundles/](task-bundles/)
+
+Canonical policy split:
+
+- loading order lives in [process/loading-protocol.md](process/loading-protocol.md)
+- ownership and writable-boundary policy lives in
+  [process/ownership-and-edits.md](process/ownership-and-edits.md)
+- role/task routing manifests live in [routing/role-core.yaml](routing/role-core.yaml)
+
+Do not maintain the same write/read rule in multiple files.
 
 ## Default loading path
 
@@ -87,6 +97,11 @@ Agents SHOULD start in this order:
 6. the current task bundle
 7. the minimum run-owned artifacts and enabled feature packs required by that
    task
+
+For change runs, the delta packet under
+`../runs/current/artifacts/product/changes/<change_id>/` is part of that
+minimum load set. Change work MUST expand from the packet plus explicitly
+affected artifacts or app paths, not from whole trees.
 
 Detailed reference files SHOULD be loaded only after the smaller routing files
 above have narrowed the scope.

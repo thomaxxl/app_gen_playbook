@@ -30,6 +30,19 @@ SECTION_TITLES = (
 )
 
 
+PROCEDURE_REQUIRED_ARTIFACTS: dict[str, tuple[str, ...]] = {
+    "playbook/process/architect-decision-procedure.md": (
+        "runs/current/artifacts/product/brief.md",
+        "runs/current/artifacts/product/resource-inventory.md",
+        "runs/current/artifacts/product/resource-behavior-matrix.md",
+        "runs/current/artifacts/product/workflows.md",
+        "runs/current/artifacts/product/business-rules.md",
+        "runs/current/artifacts/product/custom-pages.md",
+        "runs/current/artifacts/product/acceptance-criteria.md",
+    ),
+}
+
+
 def parse_message_sections(message_text: str) -> dict[str, list[str] | str]:
     lines = message_text.splitlines()
     sections: dict[str, list[str]] = {title: [] for title in SECTION_TITLES}
@@ -95,7 +108,10 @@ def run_artifact_status(path: Path) -> str | None:
 def collect_bundle_requirements(repo_root: Path, required_reads: list[str]) -> tuple[list[str], list[str]]:
     required_artifacts: list[str] = []
     phases: list[str] = []
+    procedure_reads: set[str] = set()
     for read in required_reads:
+        if read in PROCEDURE_REQUIRED_ARTIFACTS:
+            procedure_reads.add(read)
         if not read.startswith("playbook/task-bundles/") or not read.endswith(".yaml"):
             continue
         bundle_path = repo_root / read
@@ -113,9 +129,13 @@ def collect_bundle_requirements(repo_root: Path, required_reads: list[str]) -> t
         for phase_doc in bundle_phases:
             if not isinstance(phase_doc, str):
                 continue
+            if phase_doc in PROCEDURE_REQUIRED_ARTIFACTS:
+                procedure_reads.add(phase_doc)
             phase_name = phase_name_from_phase_doc(phase_doc)
             if phase_name:
                 phases.append(phase_name)
+    for procedure_read in sorted(procedure_reads):
+        required_artifacts.extend(PROCEDURE_REQUIRED_ARTIFACTS[procedure_read])
     return sorted(dict.fromkeys(required_artifacts)), sorted(dict.fromkeys(phases))
 
 

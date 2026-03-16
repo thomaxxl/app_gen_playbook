@@ -4,9 +4,8 @@ always_load:
   - playbook/summaries/global-core.md
   - playbook/summaries/process-core.md
   - playbook/summaries/roles/product-manager.summary.md
-  - playbook/process/read-sets/product-manager-iteration.md
+  - playbook/process/read-sets/product-manager-change-acceptance.md
 required_phase:
-  - playbook/process/phases/phase-I6-integration-and-regression-review.md
   - playbook/process/phases/phase-I7-change-acceptance.md
 required_artifacts:
   - runs/current/artifacts/product/acceptance-criteria.md

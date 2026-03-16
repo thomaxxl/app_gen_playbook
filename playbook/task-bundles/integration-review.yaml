@@ -4,7 +4,7 @@ always_load:
   - playbook/summaries/global-core.md
   - playbook/summaries/process-core.md
   - playbook/summaries/roles/architect.summary.md
-  - playbook/process/read-sets/architect-core.md
+  - playbook/process/read-sets/architect-review-core.md
 required_phase:
   - playbook/process/phases/phase-6-integration-review.md
 required_artifacts:

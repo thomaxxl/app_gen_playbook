@@ -23,6 +23,13 @@ For a normal task, a role SHOULD need only:
 6. the minimum required run-owned artifacts for that task
 7. enabled feature packs only
 
+For a change task, replace broad baseline reads with:
+
+1. the current change packet
+2. the exact affected artifacts
+3. the exact affected app paths
+4. reopened gates only when the packet says they are reopened
+
 ## Maintenance rule
 
 Maintainers MUST NOT expand role startup reads or task bundles casually.

@@ -41,32 +41,10 @@ details that need more precision than the global summary.
 - Only the owning role may directly edit an artifact area unless ownership is
   explicitly delegated through a handoff.
 
-Ownership map:
+Canonical ownership and writable-boundary rules live in:
 
-- `runs/current/artifacts/product/` -> Product Manager
-- `runs/current/artifacts/architecture/` -> Architect
-- `runs/current/artifacts/ux/` -> UX/UI + Frontend
-- `runs/current/artifacts/backend-design/` -> Backend
-- `runs/current/artifacts/devops/` -> DevOps
-- `CEO` -> no steady-state ownership; stall-only override across run-owned
-  artifacts and local `app/`
-- `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
-- `specs/contracts/backend/` -> Backend technical contracts
-- `specs/contracts/rules/` -> Backend technical contracts
-- `specs/contracts/deployment/` -> optional DevOps technical contracts when packaging is in scope
-- `specs/contracts/files/` -> uploads-support contract, loaded only through
-  the uploads feature pack unless the task explicitly says otherwise
-- `specs/features/` -> optional feature-pack contracts, loaded only when
-  enabled in the run capability profile
-- `specs/product/`, `specs/architecture/`, `specs/ux/`, and
-  `specs/backend-design/` -> generic playbook template source
-- `app/BUSINESS_RULES.md` -> Product Manager
-- `app/README.md` -> Architect
-- `app/frontend/**` -> Frontend
-- `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml` -> Backend
-- `app/.gitignore`, `app/Dockerfile`, `app/docker-compose.yml`,
-  `app/nginx.conf`, `app/entrypoint.sh`, `app/install.sh`, `app/run.sh` ->
-  DevOps
+- `../process/ownership-and-edits.md`
+- `../routing/role-core.yaml`
 
 Exception rule:
 
