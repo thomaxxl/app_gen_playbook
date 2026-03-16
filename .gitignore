@@ -31,6 +31,7 @@ test-results/
 /app/
 /app.cmdb/
 /runs/current/
+/saved/
 /tmp/
 # Local databases and temp files
 *.sqlite

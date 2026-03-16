@@ -45,6 +45,9 @@ on this file for execution rules.
 - `scripts/clean.sh`
   Cleans local `runs/current/` and `app/` without touching tracked starter or
   example content.
+- `scripts/save_run.sh`
+  Archives local `runs/current/` and `app/` under `saved/`, with an optional
+  `--clean` step to reset the workspace after the snapshot succeeds.
 - `scripts/monitor.sh`
   Tails the raw per-turn Codex event streams under
   `runs/current/evidence/orchestrator/jsonl/`.
@@ -107,6 +110,15 @@ If you want a high-level run status snapshot:
 ./scripts/status_report.sh
 ./scripts/status_report.sh --format json
 ```
+
+If you want to preserve the current local run and generated app before
+resetting the workspace:
+
+```bash
+./scripts/save_run.sh --name before-reset --clean
+```
+
+That stores a local snapshot under `saved/` and then runs the normal cleanup.
 
 For authoritative iteration on an existing app:
 

@@ -11,6 +11,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         scripts = (
             repo_root / "scripts" / "run_playbook.sh",
             repo_root / "scripts" / "clean.sh",
+            repo_root / "scripts" / "save_run.sh",
             repo_root / "scripts" / "monitor.sh",
             repo_root / "scripts" / "status_report.sh",
         )
