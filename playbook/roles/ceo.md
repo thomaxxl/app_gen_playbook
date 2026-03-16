@@ -80,6 +80,10 @@ The CEO role MUST:
   can resume quickly
 - directly repair run-owned artifacts or local `app/` files only when the
   normal owners cannot move the run forward quickly enough
+- write `runs/current/orchestrator/operator-action-required.md` when the
+  remaining blocker requires external operator intervention, environment
+  provisioning, credentials, network access, or a policy decision the agents
+  cannot make
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared
@@ -92,4 +96,7 @@ explicitly targeted the CEO role.
 
 Process every CEO inbox file, record the stall assessment in `context.md`,
 update `runs/current/remarks.md`, restore forward progress if possible, write
-any required downstream handoffs, then archive processed inbox files.
+any required downstream handoffs, write
+`runs/current/orchestrator/operator-action-required.md` instead of re-queuing
+the same unresolved blocker when only the operator can unblock the run, then
+archive processed inbox files.

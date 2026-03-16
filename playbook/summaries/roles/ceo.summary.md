@@ -5,6 +5,9 @@ Use this role only for stalled-run inspection and emergency intervention.
 Its first responsibility is to gauge progress and decide whether the run is
 truly blocked. If the run is blocked, the CEO MAY temporarily assume any
 run-owned artifact or local `app/` responsibility needed to restore progress.
+If only the operator can unblock the run, CEO must write
+`runs/current/orchestrator/operator-action-required.md` and stop the requeue
+loop.
 
 Always load:
 

@@ -23,6 +23,17 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("orchestrator generated invalid recovery note", script)
         self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
 
+    def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn('OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"', script)
+        self.assertIn('operator_action_required_exit()', script)
+        self.assertIn('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', script)
+        self.assertIn('blocked_exit "run requires operator action" "$body"', script)
+        self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
+        self.assertIn('if run_recovery_pass; then', script)
+
     def test_runner_archives_duplicate_queue_traces_before_claiming(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")

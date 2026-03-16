@@ -155,6 +155,10 @@ When a run is complete:
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
   not belong in the app tree, including orchestrator-detected stall diagnoses
+- `../../runs/current/orchestrator/operator-action-required.md` MAY be created
+  during blocked runs when only the operator can unblock the work; when it
+  exists, the orchestrator is expected to stop and surface that file as the
+  final diagnosis instead of looping
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned
   product, architecture, UX, backend-design, and optional DevOps artifacts
 - `../../runs/current/artifacts/architecture/capability-profile.md` SHOULD

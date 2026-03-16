@@ -103,6 +103,7 @@ SESSIONS_JSON="$EVIDENCE_ROOT/sessions.json"
 LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
+OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
 RUN_DASHBOARD_INIT="$RUN_DASHBOARD_ROOT/scripts/init_db.sh"
@@ -192,6 +193,8 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Requested Outputs
 - updated stalled-run assessment in runs/current/remarks.md
 - any required recovery or re-queue handoff notes
+- runs/current/orchestrator/operator-action-required.md if the remaining blocker
+  requires external operator, environment, or policy intervention
 - direct artifact or app repairs only if the normal owners cannot move the run forward quickly enough
 
 ## Dependencies
@@ -209,6 +212,9 @@ change_id: ${ACTIVE_CHANGE_ID}
 - the CEO role MAY assume any run-owned artifact or app responsibility needed
   to restore progress, but MUST return control to the normal owners as soon as
   the stall is cleared
+- if the remaining blocker cannot be resolved by the agents alone, the CEO
+  must write runs/current/orchestrator/operator-action-required.md instead of
+  re-queuing the same unresolved blocker
 EOF
 }
 
@@ -258,6 +264,8 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Requested Outputs
 - record the stalled-run assessment in runs/current/remarks.md
 - restore progress through an explicit reroute, recovery handoff, or blocked-run decision
+- runs/current/orchestrator/operator-action-required.md if only the operator
+  can unblock the run
 
 ## Dependencies
 - none
@@ -272,6 +280,9 @@ change_id: ${ACTIVE_CHANGE_ID}
 - original sender: ${original_sender:-unknown}
 - original topic: ${original_topic:-unspecified}
 - the original orchestrator escalation note has been archived for reference
+- if the remaining blocker cannot be resolved by the agents alone, the CEO
+  must write runs/current/orchestrator/operator-action-required.md instead of
+  re-queuing the same unresolved blocker
 EOF
   printf '%s\n' "$note_path"
 }
@@ -402,6 +413,38 @@ fatal_exit() {
   exit 1
 }
 
+blocked_exit() {
+  local title="$1"
+  local body="$2"
+  log "blocked: $title"
+  append_run_remark "$title" "$body"
+  set_run_status "blocked"
+  echo "error: $title" >&2
+  echo "$body" >&2
+  exit 1
+}
+
+operator_action_required_exit() {
+  local body
+  if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+    body=$(
+      cat <<EOF
+The run requires operator action and was terminated automatically.
+
+Operator action file:
+- ${OPERATOR_ACTION_REQUIRED_MD#$ROOT/}
+
+After resolving the issue, update or remove that file and resume the run.
+
+$(cat "$OPERATOR_ACTION_REQUIRED_MD")
+EOF
+    )
+  else
+    body="The run requires operator action, but no operator-action-required file was present."
+  fi
+  blocked_exit "run requires operator action" "$body"
+}
+
 stall_exit() {
   local reason="$1"
   local completion_detail="$2"
@@ -447,6 +490,9 @@ attempt_ceo_intervention() {
 
   log "stall-ceo-intervention reason=$reason"
   run_role_once "ceo"
+  if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+    operator_action_required_exit
+  fi
 }
 
 role_model() {
@@ -1224,6 +1270,10 @@ main_loop() {
   priority_role="$TARGET_ROLE"
 
   while true; do
+    if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+      operator_action_required_exit
+    fi
+
     if completion_detail="$(check_completion 2>&1)"; then
       touch "$RUN_ROOT/APP_DONE"
       set_run_status "complete"
@@ -1237,8 +1287,10 @@ main_loop() {
       did_work=1
     fi
 
-    if run_recovery_pass; then
-      did_work=1
+    if [[ "$(pending_actionable_count)" -eq 0 ]]; then
+      if run_recovery_pass; then
+        did_work=1
+      fi
     fi
 
     if [[ -n "$priority_role" ]]; then
@@ -1250,6 +1302,9 @@ main_loop() {
 
     if run_role_once "ceo"; then
       did_work=1
+      if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+        operator_action_required_exit
+      fi
     fi
 
     if architect_blocked_integration_pending; then

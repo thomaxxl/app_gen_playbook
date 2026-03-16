@@ -353,7 +353,14 @@ The CEO intervention path MUST:
 - load broad context only because the orchestrator explicitly declared a stall
 - either restore forward progress directly or emit the handoffs needed to
   restore progress
+- write `runs/current/orchestrator/operator-action-required.md` when the
+  remaining blocker requires external operator action, environment
+  provisioning, credentials, or a policy decision the agents cannot make
 - avoid becoming a normal always-on review role
+
+When `runs/current/orchestrator/operator-action-required.md` exists, the
+orchestrator MUST terminate non-zero with that file's contents as the final
+operator-facing diagnosis instead of continuing to re-queue recovery work.
 
 ## Active-but-idle detection
 
@@ -371,6 +378,12 @@ configured idle threshold, the orchestrator MUST:
 The Product Manager is the default owner of run-level stall triage. The
 Product Manager MUST decide whether the run should be re-queued, corrected, or
 reset.
+
+## Recovery emission rule
+
+The orchestrator MUST NOT synthesize recovery notes while actionable inbox or
+inflight work still exists elsewhere in the run. Recovery synthesis is a
+queue-drain fallback, not a replacement for still-runnable downstream work.
 
 ## Parallel-write rule
 
