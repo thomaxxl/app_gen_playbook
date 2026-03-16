@@ -39,6 +39,12 @@ Preferred local override keys:
 - `BACKEND_VENV`
 - `FRONTEND_NODE_MODULES_DIR`
 
+Generated apps MAY also treat these local paths as the primary convenience
+convention for repeated runs:
+
+- `backend/.venv`
+- `frontend/node_modules`
+
 If the frontend runtime uses an external dependency root, the generated app MAY
 create a local `frontend/node_modules` symlink that points at
 `FRONTEND_NODE_MODULES_DIR`, because frontend scripts often resolve packages

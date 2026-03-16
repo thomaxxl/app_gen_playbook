@@ -26,9 +26,12 @@ PY
 
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
-  BACKEND_VENV="$(normalize_path "$BACKEND_VENV")"
+  BACKEND_VENV_DIR="$(normalize_path "$BACKEND_VENV")"
+elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
+  BACKEND_VENV_DIR="$BACKEND_DIR/.venv"
 fi
 
 if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
@@ -87,17 +90,17 @@ ensure_frontend_node_modules_path() {
   ln -s "$FRONTEND_NODE_MODULES_DIR" "$link_path"
 }
 
-if [[ -n "$BACKEND_VENV" ]]; then
-  if [[ ! -x "$BACKEND_VENV/bin/python" ]]; then
-    echo "Creating backend virtualenv at $BACKEND_VENV"
-    python3 -m venv "$BACKEND_VENV"
+if [[ -n "$BACKEND_VENV_DIR" ]]; then
+  if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
+    echo "Creating backend virtualenv at $BACKEND_VENV_DIR"
+    python3 -m venv "$BACKEND_VENV_DIR"
   fi
 
-  echo "Installing backend dependencies into external virtualenv $BACKEND_VENV"
+  echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
   (
     cd "$BACKEND_DIR"
-    "$BACKEND_VENV/bin/python" -m pip install --upgrade pip
-    "$BACKEND_VENV/bin/python" -m pip install --upgrade -r requirements.txt logicbank
+    "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade pip
+    "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade -r requirements.txt logicbank
   )
 else
   echo "Installing backend dependencies into $BACKEND_DIR/.deps"

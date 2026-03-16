@@ -50,7 +50,13 @@ trees such as `frontend/node_modules/` can be reused.
 
 When the operator wants to reuse a prepared backend virtual environment or an
 external frontend dependency tree across repeated runs, the generated app MAY
-support a local-only override file such as:
+support the local convenience layout:
+
+- `backend/.venv` as a real venv or a symlink to a prepared venv
+- `frontend/node_modules` as a real directory or a symlink to a prepared
+  dependency tree
+
+The generated app MAY also support a local-only override file such as:
 
 - `app/.runtime.local.env`
 
@@ -63,13 +69,13 @@ Preferred override keys:
 - `BACKEND_VENV=/absolute/or/project-relative/path/to/venv`
 - `FRONTEND_NODE_MODULES_DIR=/absolute/or/project-relative/path/to/node_modules`
 
-Use `BACKEND_VENV` for Python dependency reuse instead of symlinking whole
-backend directories.
+Use `backend/.venv` or `BACKEND_VENV` for Python dependency reuse instead of
+symlinking whole backend directories.
 
-Use `FRONTEND_NODE_MODULES_DIR` only for the dependency tree itself. If the
-generated frontend tooling expects a local `frontend/node_modules` path, the
-generated `install.sh` MAY realize that override as a single managed symlink at
-`frontend/node_modules -> $FRONTEND_NODE_MODULES_DIR`.
+Use a local `frontend/node_modules` directory or symlink for frontend
+dependency reuse. If the operator prefers not to create that link manually, the
+generated `install.sh` MAY realize `FRONTEND_NODE_MODULES_DIR` as a single
+managed symlink at `frontend/node_modules -> $FRONTEND_NODE_MODULES_DIR`.
 
 The generated `app/install.sh` SHOULD skip `npm install` when
 `frontend/node_modules/` still matches the current lockfile and MUST still

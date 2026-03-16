@@ -62,8 +62,15 @@ sessions and, when needed, set `NPM_CONFIG_CACHE` to a stable local-disk path
 such as `$HOME/.npm`. In a clean environment, `install.sh` still performs a
 full install automatically when `node_modules` is absent.
 
-If you want to reuse a prepared backend virtualenv or an external
-`node_modules` tree, create a local-only `.runtime.local.env` file:
+For repeated local runs, the preferred local convenience path is:
+
+```bash
+ln -sfr "$HOME/venv" backend/.venv
+ln -sfr "$HOME/.cache/cmdb/frontend-node_modules" frontend/node_modules
+```
+
+If you prefer not to create those links manually, you can also use a local-only
+`.runtime.local.env` file:
 
 ```bash
 cat > .runtime.local.env <<'EOF'

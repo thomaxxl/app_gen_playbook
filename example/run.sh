@@ -32,9 +32,12 @@ FRONTEND_MODE="${FRONTEND_MODE:-preview}"
 REMOTE="${REMOTE:-}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
-  BACKEND_VENV="$(normalize_path "$BACKEND_VENV")"
+  BACKEND_VENV_DIR="$(normalize_path "$BACKEND_VENV")"
+elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
+  BACKEND_VENV_DIR="$BACKEND_DIR/.venv"
 fi
 
 if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
@@ -42,10 +45,8 @@ if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
 fi
 
 BACKEND_PYTHON="python3"
-if [[ -n "$BACKEND_VENV" ]]; then
-  BACKEND_PYTHON="$BACKEND_VENV/bin/python"
-elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
-  BACKEND_PYTHON="$BACKEND_DIR/.venv/bin/python"
+if [[ -n "$BACKEND_VENV_DIR" ]]; then
+  BACKEND_PYTHON="$BACKEND_VENV_DIR/bin/python"
 fi
 
 if [[ -n "$REMOTE" ]]; then
@@ -85,7 +86,7 @@ frontend_dependencies_ready() {
 }
 
 backend_dependencies_ready() {
-  if [[ -n "$BACKEND_VENV" ]]; then
+  if [[ -n "$BACKEND_VENV_DIR" ]]; then
     if [[ ! -x "$BACKEND_PYTHON" ]]; then
       return 1
     fi
@@ -106,8 +107,8 @@ require_installed_dependencies() {
   local missing=()
 
   if ! backend_dependencies_ready; then
-    if [[ -n "$BACKEND_VENV" ]]; then
-      missing+=("backend Python dependencies in BACKEND_VENV=$BACKEND_VENV")
+    if [[ -n "$BACKEND_VENV_DIR" ]]; then
+      missing+=("backend Python dependencies in ${BACKEND_VENV_DIR}")
     else
       missing+=("backend Python dependencies in backend/.deps")
     fi
@@ -179,8 +180,8 @@ require_installed_dependencies
 
 (
   cd "$BACKEND_DIR"
-  if [[ -n "$BACKEND_VENV" ]] && [[ -f "$BACKEND_VENV/bin/activate" ]]; then
-    . "$BACKEND_VENV/bin/activate"
+  if [[ -n "$BACKEND_VENV_DIR" ]] && [[ -f "$BACKEND_VENV_DIR/bin/activate" ]]; then
+    . "$BACKEND_VENV_DIR/bin/activate"
   elif [[ -f .venv/bin/activate ]]; then
     . .venv/bin/activate
   fi

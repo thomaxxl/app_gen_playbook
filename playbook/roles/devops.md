@@ -117,6 +117,8 @@ optional merely because DevOps activation is absent.
 When reusable local dependency roots are needed for implementation or delivery,
 DevOps owns the normalization policy for:
 
+- optional local `app/backend/.venv`
+- optional local `app/frontend/node_modules` symlink
 - optional local `app/.runtime.local.env`
 - `BACKEND_VENV`
 - `FRONTEND_NODE_MODULES_DIR`
