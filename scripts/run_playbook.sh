@@ -902,30 +902,57 @@ for blocker in blockers:
 PY
 }
 
+archive_duplicate_queue_trace() {
+  local runtime_role="$1"
+  local duplicate_path="$2"
+  local processed_dir="$3"
+  local source_lane="$4"
+  local stamp base archived_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  base="$(basename "$duplicate_path" .md)"
+  archived_path="$processed_dir/${base}.duplicate-${source_lane}-${stamp}.md"
+  mv "$duplicate_path" "$archived_path"
+  log "queue-duplicate-archived role=$runtime_role source=$source_lane archived=${archived_path#$ROOT/}"
+}
+
 claim_message() {
   local runtime_role="$1"
   local role_dir
   role_dir="$(role_state_dir "$runtime_role")"
   local inflight_dir="$role_dir/inflight"
   local inbox_dir="$role_dir/inbox"
-  mkdir -p "$inflight_dir" "$inbox_dir"
+  local processed_dir="$role_dir/processed"
+  mkdir -p "$inflight_dir" "$inbox_dir" "$processed_dir"
 
-  local existing
-  existing="$(find "$inflight_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
-  if [[ -n "$existing" ]]; then
-    printf '%s\n' "$existing"
+  local existing oldest claimed basename
+  while true; do
+    existing="$(find "$inflight_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
+    if [[ -n "$existing" ]]; then
+      basename="$(basename "$existing")"
+      if [[ -f "$processed_dir/$basename" ]]; then
+        archive_duplicate_queue_trace "$runtime_role" "$existing" "$processed_dir" "inflight"
+        continue
+      fi
+      printf '%s\n' "$existing"
+      return 0
+    fi
+
+    oldest="$(find "$inbox_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
+    if [[ -z "$oldest" ]]; then
+      return 1
+    fi
+
+    basename="$(basename "$oldest")"
+    if [[ -f "$processed_dir/$basename" || -f "$inflight_dir/$basename" ]]; then
+      archive_duplicate_queue_trace "$runtime_role" "$oldest" "$processed_dir" "inbox"
+      continue
+    fi
+
+    claimed="$inflight_dir/$basename"
+    mv "$oldest" "$claimed"
+    printf '%s\n' "$claimed"
     return 0
-  fi
-
-  local oldest
-  oldest="$(find "$inbox_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
-  if [[ -z "$oldest" ]]; then
-    return 1
-  fi
-
-  local claimed="$inflight_dir/$(basename "$oldest")"
-  mv "$oldest" "$claimed"
-  printf '%s\n' "$claimed"
+  done
 }
 
 run_role_once() {

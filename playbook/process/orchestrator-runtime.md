@@ -175,6 +175,13 @@ archive it under `runs/current/role-state/orchestrator/processed/` and convert
 it into an explicit CEO intervention note unless a more specific automatic
 recovery path is defined.
 
+Before claiming work for any runtime role, the orchestrator MUST quarantine
+duplicate queue traces. If a message basename already exists in `processed/`,
+an `inflight/` or `inbox/` copy of that same basename MUST be archived as a
+duplicate trace instead of being re-run. The orchestrator MUST preserve the
+duplicate file as evidence and MUST NOT misclassify that condition as a role
+implementation failure.
+
 ## Writable-root rule
 
 When the orchestrator starts Codex from a role-local runtime directory under

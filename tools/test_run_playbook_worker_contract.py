@@ -23,6 +23,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("orchestrator generated invalid recovery note", script)
         self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
 
+    def test_runner_archives_duplicate_queue_traces_before_claiming(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("archive_duplicate_queue_trace()", script)
+        self.assertIn('queue-duplicate-archived role=$runtime_role source=$source_lane', script)
+        self.assertIn('if [[ -f "$processed_dir/$basename" ]]; then', script)
+        self.assertIn('if [[ -f "$processed_dir/$basename" || -f "$inflight_dir/$basename" ]]; then', script)
+
 
 if __name__ == "__main__":
     unittest.main()
