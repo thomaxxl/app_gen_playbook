@@ -29,6 +29,7 @@ test-results/
 
 # Generated app working tree
 /app/
+/app.cmdb/
 /runs/current/
 /tmp/
 # Local databases and temp files
