@@ -33,7 +33,7 @@ start_tail() {
   label="$(basename "$file")"
 
   (
-    tail -n +1 -F "$file" 2>/dev/null | while IFS= read -r line; do
+    tail -n 120 -F "$file" 2>/dev/null | while IFS= read -r line; do
       printf '[%s] %s\n' "$label" "$line"
     done
   ) &

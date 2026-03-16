@@ -95,7 +95,8 @@ active:
 ```
 
 That monitor prints all current and future `*.events.jsonl` streams with
-filename prefixes, including parallel role turns.
+filename prefixes, including parallel role turns. Each stream starts from the
+last 120 lines instead of replaying the whole file.
 
 If you want a high-level run status snapshot:
 
