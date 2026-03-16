@@ -48,6 +48,29 @@ For repeated local runs, the operator SHOULD keep the generated local
 unnecessarily. That local workspace is gitignored specifically so dependency
 trees such as `frontend/node_modules/` can be reused.
 
+When the operator wants to reuse a prepared backend virtual environment or an
+external frontend dependency tree across repeated runs, the generated app MAY
+support a local-only override file such as:
+
+- `app/.runtime.local.env`
+
+That file is an operator-local runtime-normalization input, not committed app
+source. Generated scripts MAY also accept the same values directly as
+environment variables.
+
+Preferred override keys:
+
+- `BACKEND_VENV=/absolute/or/project-relative/path/to/venv`
+- `FRONTEND_NODE_MODULES_DIR=/absolute/or/project-relative/path/to/node_modules`
+
+Use `BACKEND_VENV` for Python dependency reuse instead of symlinking whole
+backend directories.
+
+Use `FRONTEND_NODE_MODULES_DIR` only for the dependency tree itself. If the
+generated frontend tooling expects a local `frontend/node_modules` path, the
+generated `install.sh` MAY realize that override as a single managed symlink at
+`frontend/node_modules -> $FRONTEND_NODE_MODULES_DIR`.
+
 The generated `app/install.sh` SHOULD skip `npm install` when
 `frontend/node_modules/` still matches the current lockfile and MUST still
 perform a full install automatically in a clean environment where
@@ -147,3 +170,9 @@ dropping the gate silently.
 If the environment does not support symlink-friendly or editable-install
 layouts reliably, the generated app SHOULD prefer plain pip/npm installs over
 filesystem tricks that depend on preserved links across mounted paths.
+
+If reusable dependency roots are enabled, generated apps MUST NOT symlink the
+entire `backend/` or `frontend/` trees. The only allowed symlink in this local
+override path is the explicit `frontend/node_modules` link created to satisfy
+frontend toolchains that resolve packages through a project-local
+`./node_modules` path.

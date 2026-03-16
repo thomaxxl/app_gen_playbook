@@ -25,6 +25,7 @@ from the SAFRS app-development playbook.
 - `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
+- `.runtime.local.env`: optional local-only dependency-path overrides
 - `Dockerfile`: same-origin container build
 - `docker-compose.yml`: local container orchestration entrypoint
 
@@ -34,16 +35,37 @@ from the SAFRS app-development playbook.
 ./install.sh
 ```
 
-`install.sh` installs backend Python packages into `backend/.deps`, installs
-the published `logicbank` package, reuses `frontend/node_modules` when they
-still match the lockfile, and prepares the Playwright Chromium runtime used by
-the delivery smoke suite.
+`install.sh` installs backend Python packages into `backend/.deps` by default,
+installs the published `logicbank` package, reuses `frontend/node_modules`
+when they still match the lockfile, and prepares the Playwright Chromium
+runtime used by the delivery smoke suite.
 
 If frontend installs are slow in your environment, keep the generated `app/`
 directory local and persistent between sessions and, when needed, set
 `NPM_CONFIG_CACHE` to a stable local-disk cache path such as `$HOME/.npm`.
 In a clean environment, `install.sh` still performs a full install
 automatically when `node_modules` is absent.
+
+If you want to reuse a prepared backend virtualenv or an external
+`node_modules` tree, create a local-only `.runtime.local.env` file:
+
+```bash
+cat > .runtime.local.env <<'EOF'
+BACKEND_VENV="$HOME/venv"
+FRONTEND_NODE_MODULES_DIR="$HOME/.cache/my-app/frontend-node_modules"
+EOF
+```
+
+With that file in place:
+
+- `install.sh` installs backend packages into `BACKEND_VENV` instead of
+  `backend/.deps`
+- `install.sh` keeps `frontend/node_modules` as a managed symlink to
+  `FRONTEND_NODE_MODULES_DIR`
+- `run.sh` uses those same local overrides automatically
+
+Do not symlink the whole `backend/` or `frontend/` directories. Only the
+explicit `frontend/node_modules` link is supported for this local reuse path.
 
 ## Backend
 
@@ -101,6 +123,8 @@ FRONTEND_HOST=0.0.0.0 FRONTEND_PORT=5173 ./run.sh
 FRONTEND_MODE=dev ./run.sh
 VITE_BACKEND_ORIGIN=http://127.0.0.1:9000 ./run.sh
 REMOTE=1 ./run.sh
+BACKEND_VENV="$HOME/venv" ./run.sh
+FRONTEND_NODE_MODULES_DIR="$HOME/.cache/my-app/frontend-node_modules" ./run.sh
 ```
 
 If `REMOTE=1` is set, `run.sh` binds both the backend and frontend to
@@ -131,6 +155,8 @@ Notes:
   dependency as the default generated-app path.
 - Document the root container files unconditionally because every generated app
   MUST ship `Dockerfile` and `docker-compose.yml`.
+- Document `.runtime.local.env` only as an optional local convenience file, not
+  as a required committed artifact.
 - Keep the launcher portable. Do not document or generate a `run.sh` that
   requires Bash-5-only features such as `wait -n` unless the app explicitly
   raises the shell/runtime baseline.

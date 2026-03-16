@@ -20,6 +20,33 @@ DevOps owns:
 
 DevOps MUST NOT silently redesign the application dependency graph.
 
+## Local reusable dependency roots
+
+Generated apps MAY support operator-local dependency reuse for repeated runs
+without changing the clean-environment default install path.
+
+If that support exists, it MUST remain optional and local-only:
+
+- the generated app must still work in a clean environment with no local
+  override file
+- the override file MUST be gitignored and MUST NOT become a required delivery
+  artifact
+- the default backend fallback remains `backend/.deps`
+- the default frontend fallback remains `frontend/node_modules`
+
+Preferred local override keys:
+
+- `BACKEND_VENV`
+- `FRONTEND_NODE_MODULES_DIR`
+
+If the frontend runtime uses an external dependency root, the generated app MAY
+create a local `frontend/node_modules` symlink that points at
+`FRONTEND_NODE_MODULES_DIR`, because frontend scripts often resolve packages
+through a literal local `./node_modules` path.
+
+The generated app MUST NOT rely on symlinking the entire `backend/` or
+`frontend/` trees as the package-management strategy.
+
 ## Frontend policy
 
 Generated frontends MUST:
@@ -72,6 +99,8 @@ Before packaging is treated as viable, DevOps MUST verify:
 - the generated app launcher and install flow remain consistent with the
   runtime declarations
 - container or packaging builds do not rely on undeclared ambient toolchains
+- any optional local dependency-root override still degrades cleanly to the
+  normal clean-environment install path when the override is absent
 
 ## Change proposal rule
 

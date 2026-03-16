@@ -1,6 +1,7 @@
 # Python
 .venv/
 venv/
+backend/.venv/
 backend/.deps/
 backend/**/__pycache__/
 backend/**/*.py[cod]
@@ -16,6 +17,9 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/*.tsbuildinfo
 frontend/.vite/
+
+# Local runtime overrides
+.runtime.local.env
 
 # Local runtime data
 backend/data/*.sqlite

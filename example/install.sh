@@ -4,6 +4,36 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
+RUNTIME_ENV_FILE="${RUNTIME_ENV_FILE:-$PROJECT_DIR/.runtime.local.env}"
+
+if [[ -f "$RUNTIME_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  . "$RUNTIME_ENV_FILE"
+fi
+
+normalize_path() {
+  python3 - "$1" "${2:-$PROJECT_DIR}" <<'PY'
+import pathlib
+import sys
+
+raw = pathlib.Path(sys.argv[1]).expanduser()
+base = pathlib.Path(sys.argv[2]).expanduser().resolve()
+if not raw.is_absolute():
+    raw = base / raw
+print(raw.resolve())
+PY
+}
+
+BACKEND_VENV="${BACKEND_VENV:-}"
+FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+
+if [[ -n "$BACKEND_VENV" ]]; then
+  BACKEND_VENV="$(normalize_path "$BACKEND_VENV")"
+fi
+
+if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
+  FRONTEND_NODE_MODULES_DIR="$(normalize_path "$FRONTEND_NODE_MODULES_DIR")"
+fi
 
 file_sha256() {
   if command -v sha256sum >/dev/null 2>&1; then
@@ -26,12 +56,57 @@ print(hashlib.sha256(path.read_bytes()).hexdigest())
 PY
 }
 
-echo "Installing backend dependencies into $BACKEND_DIR/.deps"
-(
-  cd "$BACKEND_DIR"
-  python3 -m pip install --upgrade --target .deps -r requirements.txt
-  python3 -m pip install --upgrade --target .deps logicbank
-)
+ensure_frontend_node_modules_path() {
+  local link_path="$FRONTEND_DIR/node_modules"
+  local current_target=""
+
+  if [[ -z "$FRONTEND_NODE_MODULES_DIR" ]]; then
+    return
+  fi
+
+  mkdir -p "$(dirname "$FRONTEND_NODE_MODULES_DIR")"
+  mkdir -p "$FRONTEND_NODE_MODULES_DIR"
+
+  if [[ -L "$link_path" ]]; then
+    current_target="$(normalize_path "$(readlink "$link_path")" "$FRONTEND_DIR")"
+    if [[ "$current_target" == "$FRONTEND_NODE_MODULES_DIR" ]]; then
+      return
+    fi
+
+    echo "frontend/node_modules already points to $current_target." >&2
+    echo "Set FRONTEND_NODE_MODULES_DIR to match it or replace the symlink before running ./install.sh." >&2
+    exit 1
+  fi
+
+  if [[ -e "$link_path" ]]; then
+    echo "frontend/node_modules already exists as a normal directory." >&2
+    echo "Remove or move that directory before using FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR." >&2
+    exit 1
+  fi
+
+  ln -s "$FRONTEND_NODE_MODULES_DIR" "$link_path"
+}
+
+if [[ -n "$BACKEND_VENV" ]]; then
+  if [[ ! -x "$BACKEND_VENV/bin/python" ]]; then
+    echo "Creating backend virtualenv at $BACKEND_VENV"
+    python3 -m venv "$BACKEND_VENV"
+  fi
+
+  echo "Installing backend dependencies into external virtualenv $BACKEND_VENV"
+  (
+    cd "$BACKEND_DIR"
+    "$BACKEND_VENV/bin/python" -m pip install --upgrade pip
+    "$BACKEND_VENV/bin/python" -m pip install --upgrade -r requirements.txt logicbank
+  )
+else
+  echo "Installing backend dependencies into $BACKEND_DIR/.deps"
+  (
+    cd "$BACKEND_DIR"
+    python3 -m pip install --upgrade --target .deps -r requirements.txt
+    python3 -m pip install --upgrade --target .deps logicbank
+  )
+fi
 
 (
   cd "$FRONTEND_DIR"
@@ -46,6 +121,7 @@ echo "Installing backend dependencies into $BACKEND_DIR/.deps"
   if [[ ! -f "$lock_source" ]]; then
     lock_source="package.json"
   fi
+  ensure_frontend_node_modules_path
   lock_hash="$(file_sha256 "$lock_source")"
   lock_stamp="node_modules/.install-lock.sha256"
 

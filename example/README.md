@@ -18,6 +18,7 @@ It also contains a preserved filled architecture example package under:
 - `BUSINESS_RULES.md`: generated-app snapshot of the approved CMDB rules
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local launcher for backend + frontend
+- `.runtime.local.env`: optional local-only dependency-path overrides
 - `Dockerfile`: same-origin container build
 - `docker-compose.yml`: local container orchestration entrypoint
 - `entrypoint.sh` and `nginx.conf`: packaged same-origin runtime files
@@ -51,15 +52,36 @@ Implemented business rules:
 ./install.sh
 ```
 
-`install.sh` installs backend Python packages into `backend/.deps`, installs
-the published `logicbank` package, reuses `frontend/node_modules` when they
-still match the lockfile, and prepares the Playwright Chromium runtime used by
-the smoke suite.
+`install.sh` installs backend Python packages into `backend/.deps` by default,
+installs the published `logicbank` package, reuses `frontend/node_modules`
+when they still match the lockfile, and prepares the Playwright Chromium
+runtime used by the smoke suite.
 
 For faster repeated local runs, keep this example directory in place between
 sessions and, when needed, set `NPM_CONFIG_CACHE` to a stable local-disk path
 such as `$HOME/.npm`. In a clean environment, `install.sh` still performs a
 full install automatically when `node_modules` is absent.
+
+If you want to reuse a prepared backend virtualenv or an external
+`node_modules` tree, create a local-only `.runtime.local.env` file:
+
+```bash
+cat > .runtime.local.env <<'EOF'
+BACKEND_VENV="$HOME/venv"
+FRONTEND_NODE_MODULES_DIR="$HOME/.cache/cmdb/frontend-node_modules"
+EOF
+```
+
+With that file in place:
+
+- `install.sh` installs backend packages into `BACKEND_VENV` instead of
+  `backend/.deps`
+- `install.sh` keeps `frontend/node_modules` as a managed symlink to
+  `FRONTEND_NODE_MODULES_DIR`
+- `run.sh` uses those same local overrides automatically
+
+Do not symlink the whole `backend/` or `frontend/` directories. Only the
+explicit `frontend/node_modules` link is supported for this local reuse path.
 
 ## Backend
 
@@ -124,3 +146,11 @@ no-layout dashboard route.
 
 Use `REMOTE=1 bash ./run.sh` to bind both backend and frontend to `0.0.0.0`
 for review from another machine on the same network.
+
+You can also run with explicit local override variables without creating
+`.runtime.local.env`:
+
+```bash
+BACKEND_VENV="$HOME/venv" bash ./run.sh
+FRONTEND_NODE_MODULES_DIR="$HOME/.cache/cmdb/frontend-node_modules" bash ./run.sh
+```

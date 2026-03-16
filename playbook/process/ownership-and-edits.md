@@ -46,9 +46,9 @@ Rules:
   - `app/README.md` -> Architect
   - `app/frontend/**` -> Frontend
   - `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml` -> Backend
-  - `app/.gitignore`, `app/Dockerfile`, `app/docker-compose.yml`,
-    `app/nginx.conf`, `app/entrypoint.sh`, `app/install.sh`, `app/run.sh` ->
-    DevOps
+  - `app/.gitignore`, `app/.runtime.local.env`, `app/Dockerfile`,
+    `app/docker-compose.yml`, `app/nginx.conf`, `app/entrypoint.sh`,
+    `app/install.sh`, `app/run.sh` -> DevOps
 - during parallel frontend/backend implementation, no role MAY treat a shared
   `app/` file as implicitly co-owned; ownership MUST remain single-role or be
   handed back to Architect for mediation

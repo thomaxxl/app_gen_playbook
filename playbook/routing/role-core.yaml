@@ -105,6 +105,7 @@ devops:
     - runs/current/artifacts/devops/**
     - runs/current/role-state/devops/**
     - app/.gitignore
+    - app/.runtime.local.env
     - app/Dockerfile
     - app/docker-compose.yml
     - app/nginx.conf

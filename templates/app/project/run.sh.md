@@ -13,6 +13,8 @@ The key behavior is:
 - start backend and frontend together
 - fail fast if dependencies were not installed yet
 - print the main URLs
+- honor optional local runtime overrides for a reusable backend virtualenv or
+  external frontend `node_modules`
 - if either child process exits or fails, terminate the other one too
 - clean up on `Ctrl+C`
 
@@ -23,6 +25,25 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
+RUNTIME_ENV_FILE="${RUNTIME_ENV_FILE:-$PROJECT_DIR/.runtime.local.env}"
+
+if [[ -f "$RUNTIME_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  . "$RUNTIME_ENV_FILE"
+fi
+
+normalize_path() {
+  python3 - "$1" "${2:-$PROJECT_DIR}" <<'PY'
+import pathlib
+import sys
+
+raw = pathlib.Path(sys.argv[1]).expanduser()
+base = pathlib.Path(sys.argv[2]).expanduser().resolve()
+if not raw.is_absolute():
+    raw = base / raw
+print(raw.resolve())
+PY
+}
 
 BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
 BACKEND_PORT="${BACKEND_PORT:-5656}"
@@ -30,6 +51,23 @@ FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 FRONTEND_MODE="${FRONTEND_MODE:-preview}"
 REMOTE="${REMOTE:-}"
+BACKEND_VENV="${BACKEND_VENV:-}"
+FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+
+if [[ -n "$BACKEND_VENV" ]]; then
+  BACKEND_VENV="$(normalize_path "$BACKEND_VENV")"
+fi
+
+if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
+  FRONTEND_NODE_MODULES_DIR="$(normalize_path "$FRONTEND_NODE_MODULES_DIR")"
+fi
+
+BACKEND_PYTHON="python3"
+if [[ -n "$BACKEND_VENV" ]]; then
+  BACKEND_PYTHON="$BACKEND_VENV/bin/python"
+elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
+  BACKEND_PYTHON="$BACKEND_DIR/.venv/bin/python"
+fi
 
 if [[ -n "$REMOTE" ]]; then
   BACKEND_HOST="0.0.0.0"
@@ -59,15 +97,49 @@ export VITE_BACKEND_ORIGIN="${VITE_BACKEND_ORIGIN:-http://${PROXY_BACKEND_HOST}:
 backend_pid=""
 frontend_pid=""
 
+frontend_dependencies_ready() {
+  if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]] && [[ ! -L "$FRONTEND_DIR/node_modules" ]]; then
+    return 1
+  fi
+
+  [[ -d "$FRONTEND_DIR/node_modules" ]] && [[ -d "$FRONTEND_DIR/node_modules/vite" ]]
+}
+
+backend_dependencies_ready() {
+  if [[ -n "$BACKEND_VENV" ]]; then
+    if [[ ! -x "$BACKEND_PYTHON" ]]; then
+      return 1
+    fi
+
+    "$BACKEND_PYTHON" - <<'PY' >/dev/null 2>&1
+import fastapi
+import logic_bank
+import safrs
+import uvicorn
+PY
+    return $?
+  fi
+
+  [[ -d "$BACKEND_DIR/.deps" ]] && [[ -d "$BACKEND_DIR/.deps/fastapi" ]] && [[ -d "$BACKEND_DIR/.deps/safrs" ]]
+}
+
 require_installed_dependencies() {
   local missing=()
 
-  if [[ ! -d "$BACKEND_DIR/.deps" ]] || [[ ! -d "$BACKEND_DIR/.deps/fastapi" ]] || [[ ! -d "$BACKEND_DIR/.deps/safrs" ]]; then
-    missing+=("backend Python dependencies in backend/.deps")
+  if ! backend_dependencies_ready; then
+    if [[ -n "$BACKEND_VENV" ]]; then
+      missing+=("backend Python dependencies in BACKEND_VENV=$BACKEND_VENV")
+    else
+      missing+=("backend Python dependencies in backend/.deps")
+    fi
   fi
 
-  if [[ ! -d "$FRONTEND_DIR/node_modules" ]] || [[ ! -d "$FRONTEND_DIR/node_modules/vite" ]]; then
-    missing+=("frontend npm dependencies in frontend/node_modules")
+  if ! frontend_dependencies_ready; then
+    if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
+      missing+=("frontend npm dependencies in FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR (via frontend/node_modules symlink)")
+    else
+      missing+=("frontend npm dependencies in frontend/node_modules")
+    fi
   fi
 
   if [[ ${#missing[@]} -eq 0 ]]; then
@@ -128,12 +200,14 @@ require_installed_dependencies
 
 (
   cd "$BACKEND_DIR"
-  if [[ -f .venv/bin/activate ]]; then
+  if [[ -n "$BACKEND_VENV" ]] && [[ -f "$BACKEND_VENV/bin/activate" ]]; then
+    . "$BACKEND_VENV/bin/activate"
+  elif [[ -f .venv/bin/activate ]]; then
     . .venv/bin/activate
   fi
   export MY_APP_HOST="$BACKEND_HOST"
   export MY_APP_PORT="$BACKEND_PORT"
-  exec python run.py
+  exec "$BACKEND_PYTHON" run.py
 ) &
 backend_pid=$!
 
@@ -201,6 +275,9 @@ Notes:
 - The backend and frontend should still remain runnable independently.
 - `run.sh` MUST fail with a clear `./install.sh` instruction when the backend
   or frontend dependencies have not been installed yet.
+- If the operator wants to reuse a prepared backend virtualenv or external
+  frontend dependency tree, `run.sh` MAY read `BACKEND_VENV` and
+  `FRONTEND_NODE_MODULES_DIR` from a local-only `app/.runtime.local.env` file.
 - The startup guard above is intentional: do not start the frontend and hang on
   a dead backend process.
 - Keep the backend/frontend host and port values configurable so the same
@@ -210,6 +287,9 @@ Notes:
   when explicit dev-server behavior is needed.
 - If `REMOTE` is set, `run.sh` MUST bind both backend and frontend to
   `0.0.0.0` so the app can be reviewed from another machine on the network.
+- When `FRONTEND_NODE_MODULES_DIR` is used, the generated app MUST keep the
+  local `frontend/node_modules` path present because frontend scripts often
+  resolve package binaries through a literal `./node_modules` path.
 - The launcher MUST remain compatible with the stock macOS Bash `3.2`
   environment. Do not use `wait -n` or other Bash-5-only supervision
   features unless the playbook first raises the shell baseline explicitly.

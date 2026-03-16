@@ -15,6 +15,8 @@ in scope.
 - package-manager policy for generated apps
 - lockfile policy and install reproducibility
 - Node and Python runtime enforcement in packaging
+- local runtime normalization for reusable dependency roots such as a shared
+  backend virtualenv or external frontend `node_modules`
 - Docker packaging
 - reverse-proxy layout
 - same-origin serving model
@@ -72,6 +74,7 @@ Use the small stable startup manifest:
 - `../../runs/current/artifacts/devops/**`
 - `../../runs/current/role-state/devops/**`
 - `../../app/.gitignore`
+- `../../app/.runtime.local.env`
 - `../../app/Dockerfile`
 - `../../app/docker-compose.yml`
 - `../../app/nginx.conf`
@@ -110,6 +113,16 @@ packaging input.
 The DevOps role owns advanced packaging work. It MUST NOT treat baseline
 generated-app packaging files such as `Dockerfile` and `docker-compose.yml` as
 optional merely because DevOps activation is absent.
+
+When reusable local dependency roots are needed for implementation or delivery,
+DevOps owns the normalization policy for:
+
+- optional local `app/.runtime.local.env`
+- `BACKEND_VENV`
+- `FRONTEND_NODE_MODULES_DIR`
+
+DevOps MUST prefer those explicit local overrides over symlinking the entire
+backend or frontend directories.
 
 ## Escalation targets
 
