@@ -58,6 +58,21 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('done < <(oldest_role_queue_file inflight "${candidate_dirs[@]}")', script)
         self.assertIn('done < <(oldest_role_queue_file inbox "${candidate_dirs[@]}")', script)
 
+    def test_runner_normalizes_queue_layout_before_liveness_accounting(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("canonical_queue_dirs()", script)
+        self.assertIn("migrate_legacy_deployment_queue()", script)
+        self.assertIn("quarantine_noncanonical_queue_traces()", script)
+        self.assertIn("normalize_queue_state()", script)
+        self.assertNotIn("find \"$STATE_ROOT\" \\( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \\) -type f | wc -l | tr -d ' '", script)
+        self.assertIn("done < <(canonical_queue_dirs)", script)
+        self.assertLess(
+            script.index("if normalize_queue_state; then"),
+            script.index("if completion_detail=\"$(check_completion 2>&1)\"; then"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

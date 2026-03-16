@@ -139,6 +139,25 @@ role_state_dir() {
   esac
 }
 
+canonical_queue_dirs() {
+  printf '%s\n' \
+    "$STATE_ROOT/product_manager" \
+    "$STATE_ROOT/architect" \
+    "$STATE_ROOT/frontend" \
+    "$STATE_ROOT/backend" \
+    "$STATE_ROOT/ceo"
+
+  if [[ -d "$STATE_ROOT/devops" ]]; then
+    printf '%s\n' "$STATE_ROOT/devops"
+  elif [[ -d "$STATE_ROOT/deployment" ]]; then
+    printf '%s\n' "$STATE_ROOT/deployment"
+  fi
+
+  if [[ -d "$STATE_ROOT/orchestrator" ]]; then
+    printf '%s\n' "$STATE_ROOT/orchestrator"
+  fi
+}
+
 append_run_remark() {
   local title="$1"
   local body="$2"
@@ -910,7 +929,20 @@ PY
 }
 
 pending_actionable_count() {
-  find "$STATE_ROOT" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | wc -l | tr -d ' '
+  local count=0
+  local role_dir lane path
+
+  while IFS= read -r role_dir; do
+    [[ -n "$role_dir" ]] || continue
+    for lane in inbox inflight; do
+      for path in "$role_dir/$lane"/*.md; do
+        [[ -f "$path" ]] || continue
+        count=$((count + 1))
+      done
+    done
+  done < <(canonical_queue_dirs)
+
+  printf '%s\n' "$count"
 }
 
 extract_json_string_field() {
@@ -960,6 +992,109 @@ archive_duplicate_queue_trace() {
   archived_path="$processed_dir/${base}.duplicate-${source_lane}-${stamp}.md"
   mv "$duplicate_path" "$archived_path"
   log "queue-duplicate-archived role=$runtime_role source=$source_lane archived=${archived_path#$ROOT/}"
+}
+
+archive_legacy_deployment_duplicate() {
+  local duplicate_path="$1"
+  local lane="$2"
+  local processed_dir="$STATE_ROOT/deployment/processed"
+  local stamp base archived_path
+
+  mkdir -p "$processed_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  base="$(basename "$duplicate_path" .md)"
+  archived_path="$processed_dir/${base}.legacy-duplicate-${lane}-${stamp}.md"
+  mv "$duplicate_path" "$archived_path"
+  log "queue-legacy-deployment-duplicate archived=${archived_path#$ROOT/}"
+}
+
+migrate_legacy_deployment_queue() {
+  local changed=1
+  local lane path basename target
+
+  if [[ ! -d "$STATE_ROOT/devops" || ! -d "$STATE_ROOT/deployment" ]]; then
+    return 1
+  fi
+
+  mkdir -p "$STATE_ROOT/devops/inbox" "$STATE_ROOT/devops/inflight" "$STATE_ROOT/deployment/processed"
+
+  for lane in inbox inflight; do
+    for path in "$STATE_ROOT/deployment/$lane"/*.md; do
+      [[ -f "$path" ]] || continue
+      basename="$(basename "$path")"
+      if [[ -f "$STATE_ROOT/devops/inbox/$basename" || -f "$STATE_ROOT/devops/inflight/$basename" || -f "$STATE_ROOT/devops/processed/$basename" ]]; then
+        archive_legacy_deployment_duplicate "$path" "$lane"
+      else
+        target="$STATE_ROOT/devops/$lane/$basename"
+        mv "$path" "$target"
+        log "queue-legacy-deployment-migrated source=${path#$ROOT/} target=${target#$ROOT/}"
+      fi
+      changed=0
+    done
+  done
+
+  return "$changed"
+}
+
+is_canonical_queue_path() {
+  local path="$1"
+  local rel
+  rel="${path#$STATE_ROOT/}"
+
+  case "$rel" in
+    product_manager/inbox/*.md|product_manager/inflight/*.md|\
+    architect/inbox/*.md|architect/inflight/*.md|\
+    frontend/inbox/*.md|frontend/inflight/*.md|\
+    backend/inbox/*.md|backend/inflight/*.md|\
+    ceo/inbox/*.md|ceo/inflight/*.md)
+      return 0
+      ;;
+    orchestrator/inbox/*.md|orchestrator/inflight/*.md)
+      [[ -d "$STATE_ROOT/orchestrator" ]] && return 0
+      ;;
+    devops/inbox/*.md|devops/inflight/*.md)
+      [[ -d "$STATE_ROOT/devops" ]] && return 0
+      ;;
+    deployment/inbox/*.md|deployment/inflight/*.md)
+      [[ ! -d "$STATE_ROOT/devops" ]] && [[ -d "$STATE_ROOT/deployment" ]] && return 0
+      ;;
+  esac
+  return 1
+}
+
+quarantine_noncanonical_queue_traces() {
+  local changed=1
+  local quarantine_root="$EVIDENCE_ROOT/quarantine/queue"
+  local path rel archived_path
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    if is_canonical_queue_path "$path"; then
+      continue
+    fi
+    rel="${path#$STATE_ROOT/}"
+    archived_path="$quarantine_root/$rel"
+    mkdir -p "$(dirname "$archived_path")"
+    mv "$path" "$archived_path"
+    log "queue-invalid-archived source=${path#$ROOT/} archived=${archived_path#$ROOT/}"
+    changed=0
+  done < <(find "$STATE_ROOT" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f 2>/dev/null | sort)
+
+  return "$changed"
+}
+
+normalize_queue_state() {
+  local changed=1
+
+  if migrate_legacy_deployment_queue; then
+    changed=0
+  fi
+
+  if quarantine_noncanonical_queue_traces; then
+    changed=0
+  fi
+
+  return "$changed"
 }
 
 oldest_role_queue_file() {
@@ -1320,14 +1455,17 @@ main_loop() {
       operator_action_required_exit
     fi
 
+    did_work=0
+    if normalize_queue_state; then
+      did_work=1
+    fi
+
     if completion_detail="$(check_completion 2>&1)"; then
       touch "$RUN_ROOT/APP_DONE"
       set_run_status "complete"
       log "playbook run complete"
       break
     fi
-
-    did_work=0
 
     if process_orchestrator_inbox; then
       did_work=1

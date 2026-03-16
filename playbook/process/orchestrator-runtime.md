@@ -180,6 +180,21 @@ archive it under `runs/current/role-state/orchestrator/processed/` and convert
 it into an explicit CEO intervention note unless a more specific automatic
 recovery path is defined.
 
+Actionable-work accounting MUST be based on canonical direct queue lanes only.
+The orchestrator MUST NOT recursively count any Markdown file under
+`runs/current/role-state/**/inbox/` or `**/inflight/` as live work, because
+nested copied paths or other noncanonical debris can otherwise trigger false
+active-but-idle failures.
+
+Before completion or liveness enforcement, the orchestrator SHOULD normalize
+queue layout by:
+
+- migrating direct top-level legacy `runs/current/role-state/deployment/`
+  inbox and inflight work into `runs/current/role-state/devops/` when the
+  canonical `devops/` lane exists
+- quarantining noncanonical nested queue traces under orchestrator evidence so
+  they no longer count as live work
+
 Before claiming work for any runtime role, the orchestrator MUST quarantine
 duplicate queue traces. If a message basename already exists in `processed/`,
 an `inflight/` or `inbox/` copy of that same basename MUST be archived as a

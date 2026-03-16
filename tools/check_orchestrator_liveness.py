@@ -9,6 +9,23 @@ from pathlib import Path
 from orchestrator_common import resolve_repo_root
 
 
+def canonical_queue_roots(state_root: Path) -> list[Path]:
+    roots = [
+        state_root / "product_manager",
+        state_root / "architect",
+        state_root / "frontend",
+        state_root / "backend",
+        state_root / "ceo",
+    ]
+    if (state_root / "devops").exists():
+        roots.append(state_root / "devops")
+    elif (state_root / "deployment").exists():
+        roots.append(state_root / "deployment")
+    if (state_root / "orchestrator").exists():
+        roots.append(state_root / "orchestrator")
+    return roots
+
+
 def parse_timestamp(value: str) -> datetime | None:
     if not value:
         return None
@@ -57,8 +74,9 @@ def latest_worker_heartbeat(workers_dir: Path) -> tuple[datetime | None, str]:
 
 def actionable_count(state_root: Path) -> int:
     count = 0
-    for lane in ("inbox", "inflight"):
-        count += len(list(state_root.glob(f"*/{lane}/*.md")))
+    for root in canonical_queue_roots(state_root):
+        for lane in ("inbox", "inflight"):
+            count += len(list((root / lane).glob("*.md")))
     return count
 
 
