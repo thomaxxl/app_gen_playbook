@@ -105,6 +105,9 @@ Notes:
 - `Home.tsx.md` is now the primary entry-page scaffold. It MUST implement the
   run-owned `landing-strategy.md` artifact rather than remaining a thin
   placeholder.
+- Delivered `Home`, custom pages, and generated resource routes MUST read as
+  usable product surfaces. They MUST NOT ship as contract/recovery/debug
+  viewers that expose internal integration state to end users.
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It
   defines the Northwind-style foreign-key display, relationship dialog, and
   show-tab behavior that generated pages MUST reuse.

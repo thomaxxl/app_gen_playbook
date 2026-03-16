@@ -22,6 +22,21 @@ React-admin chrome.
 - expose the primary CTA defined by `landing-strategy.md`
 - expose at least one proof, reassurance, or summary region above the fold or
   immediately after the hero
+- answer the user-facing task described in `landing-strategy.md`, not internal
+  implementation status
+
+`Home.tsx` MUST NOT ship as a contract viewer, route inventory page, or
+recovery/debug shell. In particular, the primary entry page MUST NOT use
+developer-facing copy about:
+
+- `admin.yaml`
+- provisional endpoint maps
+- contract recovery
+- schema/bootstrap restoration
+- template or runtime cleanup
+
+unless the run-owned UX artifacts explicitly approve an operator/debug entry
+surface, which is not the baseline app behavior.
 
 ## Default entry behavior
 
@@ -67,6 +82,9 @@ replace or extend the starter `Home.tsx`.
 
 The starter pattern selected in `landing-strategy.md` MUST have direct visible
 effect on the generated `Home.tsx`.
+
+A run-owned `Home as dashboard` decision means the delivered `Home.tsx` MUST be
+the real dashboard, not a temporary scaffold justified by later runtime work.
 
 ## Stable smoke-test hooks
 

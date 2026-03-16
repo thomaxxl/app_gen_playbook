@@ -15,13 +15,16 @@ required_artifacts:
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/architecture/integration-review.md
   - runs/current/evidence/contract-samples.md
+  - runs/current/evidence/frontend-usability.md
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/state-handling.md
 conditional_artifacts:
   custom_pages:
     - runs/current/artifacts/product/custom-pages.md
+    - runs/current/artifacts/ux/custom-view-specs.md
 reference_only:
-  - runs/current/artifacts/ux/navigation.md
-  - runs/current/artifacts/ux/screen-inventory.md
-  - runs/current/artifacts/ux/state-handling.md
   - runs/current/artifacts/backend-design/test-plan.md
 writable_targets:
   - runs/current/artifacts/product/**

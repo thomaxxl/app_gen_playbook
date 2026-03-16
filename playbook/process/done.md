@@ -32,9 +32,21 @@ A feature is done only when all of these are true:
   matching gate-owner `context.md` entries
 - if a run claims backend, frontend, or Playwright success, supporting files
   exist under `evidence/`
+- if a run materially changed visible UI and a browser-capable Playwright
+  environment was available, representative UI preview screenshots exist under
+  `runs/current/evidence/ui-previews/` or the run evidence explains why they
+  were not captured
+- `runs/current/evidence/frontend-usability.md` exists and records the reviewed
+  entry page, custom pages, generated list/show/form flows, and any visible
+  debug-shell leakage decision
 - if a run claims frontend/backend integration success,
   `runs/current/evidence/contract-samples.md` exists and records at least one
   `admin.yaml endpoint` to live-route to sample-record trace
+- the delivered frontend is usable as a product surface, not merely a
+  metadata/debug/recovery shell
+- `Home`, required custom pages, and sampled generated CRUD pages match the
+  run-owned UX artifacts closely enough that Product Manager can accept them in
+  user-facing terms
 - all core-agent inboxes are empty
 - no core-agent inflight items remain
 - the dormant CEO lane is empty unless a stall intervention is still actively

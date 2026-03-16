@@ -129,6 +129,28 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertEqual(len(matching), 1)
             self.assertEqual(matching[0]["path"], "runs/current/role-state/devops/inbox")
 
+    def test_requires_frontend_usability_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "contract sample present\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/frontend-usability.md"]
+            self.assertEqual(len(matching), 1)
+            self.assertEqual(matching[0]["kind"], "missing-required-evidence-output")
+
 
 if __name__ == "__main__":
     unittest.main()

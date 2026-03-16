@@ -14,12 +14,17 @@ required_artifacts:
   - runs/current/artifacts/architecture/runtime-bom.md
   - runs/current/artifacts/ux/navigation.md
   - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/state-handling.md
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/backend-design/test-plan.md
   - runs/current/evidence/contract-samples.md
+conditional_artifacts:
+  custom_pages:
+    - runs/current/artifacts/product/custom-pages.md
+    - runs/current/artifacts/ux/custom-view-specs.md
 reference_only:
   - runs/current/artifacts/backend-design/query-behavior.md
-  - runs/current/artifacts/ux/state-handling.md
 writable_targets:
   - runs/current/artifacts/architecture/**
   - runs/current/role-state/architect/**

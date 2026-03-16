@@ -94,6 +94,47 @@ frontend package template before treating the playbook baseline as current.
   `../../runs/current/artifacts/product/business-rules.md`
 - custom pages use the shared page-shell defaults unless the run-owned UX
   artifacts explicitly define a replacement
+- `Home` matches the task, title, primary CTA, and proof structure described in
+  `landing-strategy.md`
+- required custom pages match `custom-view-specs.md` and `screen-inventory.md`
+  instead of collapsing into generic metadata/status panels
+- at least one generated list, one generated show page, and one generated form
+  are reviewed as usable product pages rather than metadata viewers
+- user-facing pages do not expose internal integration/debug language such as
+  contract recovery, provisional endpoint warnings, route inventory, or
+  template/bootstrap cleanup copy unless the run-owned UX artifacts explicitly
+  approve an operator-facing diagnostics page
+- integration evidence includes `runs/current/evidence/frontend-usability.md`
+  summarizing the actual pages reviewed, the UX artifacts compared, and whether
+  any internal/debug copy leaked into visible UI
+
+## UI preview evidence
+
+When a run materially changes visible frontend behavior and Playwright can run
+in a browser-capable environment, the validation evidence MUST include stable
+UI preview screenshots under `runs/current/evidence/ui-previews/`.
+
+Typical trigger cases:
+
+- new or changed `Home`, `Landing`, or other entry surfaces
+- new or changed custom views, dashboards, or charts
+- relationship dialog or relationship-tab behavior changes
+- meaningful form-layout, responsive-layout, or iconography changes
+
+Backend-only or otherwise non-visible work does not require preview
+screenshots. If preview capture would normally be appropriate but is skipped
+because the environment cannot provide browser execution, record that reason in
+`runs/current/remarks.md` or the relevant validation evidence.
+
+## Usability guardrail script
+
+The generated app SHOULD also pass:
+
+- `python3 tools/check_frontend_usability.py --repo-root .`
+
+This guard is intentionally narrow. It catches obvious contract/debug-shell
+copy drift and missing CTA/title wiring, but it does not replace browser review
+or the required usability evidence.
 
 ## Automated smoke validation
 
@@ -150,6 +191,14 @@ suite with at least this flow:
 18. when the app relies on sparse relationship metadata, verify a `tomany`
     relationship tab still loads rows through fallback inference
 19. retain trace, screenshot, and video on failure
+20. fail if the primary entry page or required custom pages read like
+    developer-facing contract/recovery shells rather than the UX artifacts they
+    were supposed to implement
+
+When the run includes materially changed UI and stable browser execution is
+available, extend the Playwright validation to capture at least one or two
+intentional success-case screenshots for the affected surfaces and store them
+under `runs/current/evidence/ui-previews/`.
 
 The Playwright smoke run is the final pre-delivery validation gate. A
 generated app MUST NOT be treated as delivered before that run completes or a

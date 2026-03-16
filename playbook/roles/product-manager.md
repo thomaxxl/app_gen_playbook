@@ -115,6 +115,11 @@ The Product Manager MUST treat:
 - `../../runs/current/role-state/product_manager/inbox/INPUT.md` as the
   seeded actionable copy
 
+During Phase 7 acceptance, the Product Manager MUST judge the actual user-facing
+app, not only technical gate notes. Product acceptance MUST fail if the visible
+UI still reads like a contract, recovery, route-inventory, or other
+implementation/debug shell instead of the intended product.
+
 For a fresh run, the Product Manager MUST NOT use `../../example/` or
 `../../app/` as product inputs unless the task explicitly requests comparison
 or maintenance.

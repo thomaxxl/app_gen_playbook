@@ -27,9 +27,19 @@ readiness note in:
   `specs/contracts/deployment/` technical contracts when packaging is in scope
 - verify schema/runtime wiring
 - verify frontend behavior against real backend data
+- verify the entry page, required custom pages, and at least one generated
+  CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
+  `screen-inventory.md`, and `custom-view-specs.md` when custom pages exist
+- reject user-facing pages that expose contract/debug/recovery copy instead of
+  the approved task-oriented UX
 - capture at least one contract sample in `runs/current/evidence/contract-samples.md`
   showing the `admin.yaml endpoint`, matching discovered backend route, and a
   representative JSON:API sample record
+- when the run materially changes visible UI and browser execution is
+  available, capture Playwright preview screenshots under
+  `runs/current/evidence/ui-previews/`
+- record the reviewed user-facing surfaces and usability conclusion in
+  `runs/current/evidence/frontend-usability.md`
 - verify rules across create/update/delete/reparent flows
 - verify empty/loading/error states
 - verify packaged route behavior when packaging is in scope
@@ -43,6 +53,9 @@ readiness note in:
 
 - `runs/current/artifacts/architecture/integration-review.md`
 - `runs/current/evidence/contract-samples.md`
+- `runs/current/evidence/ui-previews/` when the run includes materially
+  changed visible UI and screenshot capture is available
+- `runs/current/evidence/frontend-usability.md`
 - updated `runs/current/artifacts/architecture/decision-log.md` when new
   cross-layer decisions are
   required
@@ -59,8 +72,17 @@ readiness note in:
 - documentation matches implementation
 - the final validation action was a real Playwright smoke run or a documented
   blocked-environment fallback
+- if the run materially changed visible UI and browser execution was
+  available, `runs/current/evidence/ui-previews/` contains representative
+  screenshots or the run evidence explains why preview capture was skipped
+- `runs/current/evidence/frontend-usability.md` explicitly states which entry,
+  custom, generated list/show/form pages were reviewed and confirms whether any
+  internal implementation/debug copy leaked into user-visible UI
 - the app is proven to boot and at least one generated list view is proven to
   render correct live data rather than only the initialized shell
+- required entry and custom pages are actual product surfaces, not contract,
+  route, or recovery viewers
+- no developer-facing recovery or implementation copy appears in visible UI
 - `runs/current/evidence/contract-samples.md` exists and includes at least one
   `admin.yaml endpoint` to live-route to sample-record trace
 - the app can be explained without caveats

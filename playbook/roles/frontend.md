@@ -131,6 +131,28 @@ not an override.
 The Frontend agent MUST implement related-item views for generated resources
 unless the run-owned UX artifacts explicitly replace or disable them.
 
+The Frontend agent MUST ship user-facing product pages, not integration,
+contract, bootstrap, or recovery viewers. A delivered frontend MUST NOT expose
+internal implementation state such as:
+
+- `admin.yaml` source details
+- provisional endpoint warnings
+- runtime-BOM or template-recovery notes
+- raw business-rule IDs as page content
+- contract or schema recovery copy
+
+unless the run-owned UX artifacts explicitly approve a dedicated operator-facing
+diagnostics page. Silence or temporary backend uncertainty is not permission to
+turn `Home`, custom views, or generated resource routes into metadata/debug
+surfaces.
+
+When a run materially changes visible UI behavior and a browser-capable
+Playwright environment is available, the Frontend agent MUST capture stable UI
+preview screenshots and place them under `../../runs/current/evidence/ui-previews/`.
+Typical cases include new or changed entry pages, custom views, relationship
+dialogs or tabs, and meaningful form-layout changes. Backend-only or otherwise
+non-visible work does not require preview capture.
+
 ## Escalation targets
 
 - `../../runs/current/role-state/architect/inbox/` for broken route, naming,
@@ -161,6 +183,10 @@ instead of scattering unrelated input-level validators.
 - `runs/current/artifacts/ux/iconography.md` as the required record of the
   visible icon-system choice and icon mapping, even when the default wrapper
   behavior is retained
+- `runs/current/evidence/ui-previews/` screenshots when the run changes
+  visible UI materially and browser capture is available
+- `runs/current/evidence/frontend-usability.md` recording the actual entry,
+  custom, and generated resource surfaces reviewed during integration
 - handoff notes to `../../runs/current/role-state/architect/inbox/` when contracts break
 - coordination notes to `../../runs/current/role-state/backend/inbox/` when backend support is missing
 - readiness or completion notes to `../../runs/current/role-state/architect/inbox/` for integration review

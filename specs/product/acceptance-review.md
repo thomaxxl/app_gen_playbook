@@ -18,3 +18,9 @@ The real artifact MUST record:
 - criteria check
 - evidence references
 - deferred items, if any
+- explicit review of the entry page, required custom pages, and at least one
+  generated resource flow
+- comparison against `landing-strategy.md`, `screen-inventory.md`, and
+  `custom-view-specs.md` when applicable
+- whether any internal implementation/debug/recovery copy leaked into
+  user-visible UI

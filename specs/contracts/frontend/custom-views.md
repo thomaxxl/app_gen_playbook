@@ -70,6 +70,18 @@ Every custom view MUST define:
 - responsive behavior
 - CTA and recovery behavior
 
+Every delivered custom view MUST remain task-oriented and user-facing. A custom
+view MUST NOT degrade into:
+
+- endpoint or route inventory
+- contract or schema-status narration
+- recovery or migration notes
+- placeholder-only BR summaries
+- other internal implementation diagnostics
+
+unless the run-owned UX artifacts explicitly approve a diagnostics surface for
+operators. The baseline generated app does not ship such pages by default.
+
 If the custom view includes a chart:
 
 - provide a textual title or label

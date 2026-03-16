@@ -157,12 +157,16 @@ Notes:
 - Replace or extend that CTA when `navigation.md` defines a better primary
   route and `landing-strategy.md` defines a richer primary action.
 - `Home.tsx` MUST implement the run-owned `landing-strategy.md`.
-- `starterPattern` is a starter placeholder. The generated app SHOULD replace
-  it with the concrete `landing-strategy.md` choice (`hub`, `dashboard`, or
-  `landing`) instead of leaving the template at the default forever.
+- `starterPattern` is bootstrap scaffolding, not shippable product behavior.
+  For any non-starter-compatible run, the generated app MUST replace it with
+  the concrete `landing-strategy.md` choice (`hub`, `dashboard`, or
+  `landing`) instead of leaving the template at the default.
 - `Home.tsx` MAY remain a simple navigation hub or MAY host the main dashboard
   content directly, depending on `landing-strategy.md` and
   `custom-view-specs.md`.
+- `Home.tsx` MUST NOT ship developer-facing contract, recovery, or provisional
+  endpoint copy unless the run explicitly approves an operator-facing debug
+  entry surface.
 - The sidebar icon is supplied by the `Resource` registration in `App.tsx`.
 - `Home.tsx` SHOULD use the shared `PageHero`, `SectionBlock`,
   `QuickActionCard`, and `SummaryCard` starter shell unless the run-owned UX
