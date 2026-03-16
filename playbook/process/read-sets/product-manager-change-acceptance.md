@@ -11,7 +11,7 @@ Required reads:
 - `../phases/phase-I7-change-acceptance.md`
 - `../../../runs/current/remarks.md`
 
-After these reads, load only the current change-packet files, the exact
-product artifacts explicitly affected by the change, and the integration
-evidence required for acceptance. Do not read `runs/current/artifacts/product/`
-as a broad tree.
+After these reads, load only the current change-workspace files, the active
+role-load manifest when it exists, the exact product artifacts explicitly
+affected by the change, and the integration evidence required for acceptance.
+Do not read `runs/current/artifacts/product/` as a broad tree.

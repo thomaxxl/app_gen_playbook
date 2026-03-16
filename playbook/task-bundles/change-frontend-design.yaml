@@ -1,0 +1,16 @@
+name: change-frontend-design
+role: frontend
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/frontend.summary.md
+  - playbook/process/read-sets/frontend-change-delta.md
+required_phase:
+  - playbook/process/phases/phase-I4-design-delta.md
+required_artifacts:
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/architecture/route-and-entry-model.md
+writable_targets:
+  - runs/current/changes/*/candidate/artifacts/ux/**
+  - runs/current/changes/*/verification/**
+  - runs/current/role-state/frontend/**

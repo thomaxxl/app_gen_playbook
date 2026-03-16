@@ -564,24 +564,28 @@ role_add_dirs() {
     product_manager)
       printf '%s\n' \
         "$RUN_ROOT/artifacts/product" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$ROOT/app"
       ;;
     architect)
       printf '%s\n' \
         "$RUN_ROOT/artifacts/architecture" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$ROOT/app"
       ;;
     frontend)
       printf '%s\n' \
         "$RUN_ROOT/artifacts/ux" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$ROOT/app/frontend"
       ;;
     backend)
       printf '%s\n' \
         "$RUN_ROOT/artifacts/backend-design" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$ROOT/app/backend" \
         "$ROOT/app/rules" \
@@ -590,12 +594,14 @@ role_add_dirs() {
     deployment)
       printf '%s\n' \
         "$RUN_ROOT/artifacts/devops" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$ROOT/app"
       ;;
     ceo)
       printf '%s\n' \
         "$RUN_ROOT/artifacts" \
+        "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$RUN_ROOT" \
         "$ROOT/app"
@@ -1393,6 +1399,12 @@ seed_change_run() {
 
   if ! baseline_output="$(python3 "$ROOT/tools/check_baseline_alignment.py" --repo-root "$ROOT" 2>&1)"; then
     fatal_exit "baseline alignment precheck failed" "$baseline_output"
+  fi
+
+  if ! python3 "$ROOT/tools/prepare_iteration_workspace.py" --repo-root "$ROOT" >/dev/null 2>&1; then
+    fatal_exit \
+      "iteration workspace bootstrap failed" \
+      "Could not prepare the accepted portable baseline or change workspace for the requested iteration run."
   fi
 
   cp "$INPUT_SRC" "$RUN_ROOT/input.md"

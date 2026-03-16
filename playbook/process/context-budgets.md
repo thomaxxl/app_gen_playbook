@@ -26,9 +26,10 @@ For a normal task, a role SHOULD need only:
 For a change task, replace broad baseline reads with:
 
 1. the current change packet
-2. the exact affected artifacts
-3. the exact affected app paths
-4. reopened gates only when the packet says they are reopened
+2. the active role-load manifest when it exists
+3. the exact affected artifacts
+4. the exact affected app paths
+5. reopened gates only when the packet says they are reopened
 
 ## Maintenance rule
 

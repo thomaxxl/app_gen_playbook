@@ -5,6 +5,7 @@ import json
 import os
 import re
 from pathlib import Path
+from fnmatch import fnmatch
 from typing import Iterable
 
 
@@ -78,21 +79,38 @@ ROLE_OWNED_PREFIXES = {
     "product_manager": (
         "runs/current/artifacts/product/",
         "runs/current/role-state/product_manager/",
+        "runs/current/changes/*/request.md",
+        "runs/current/changes/*/classification.yaml",
+        "runs/current/changes/*/affected-artifacts.md",
+        "runs/current/changes/*/affected-app-paths.md",
+        "runs/current/changes/*/reopened-gates.md",
+        "runs/current/changes/*/candidate/artifacts/product/**",
+        "runs/current/changes/*/promotion.yaml",
         "app/BUSINESS_RULES.md",
+        "app/docs/playbook-baseline/current/**",
+        "app/docs/change-history/**",
     ),
     "architect": (
         "runs/current/artifacts/architecture/",
         "runs/current/role-state/architect/",
+        "runs/current/changes/*/impact-manifest.yaml",
+        "runs/current/changes/*/role-loads/**",
+        "runs/current/changes/*/candidate/artifacts/architecture/**",
+        "runs/current/changes/*/verification/**",
         "app/README.md",
     ),
     "frontend": (
         "runs/current/artifacts/ux/",
         "runs/current/role-state/frontend/",
+        "runs/current/changes/*/candidate/artifacts/ux/**",
+        "runs/current/changes/*/verification/**",
         "app/frontend/",
     ),
     "backend": (
         "runs/current/artifacts/backend-design/",
         "runs/current/role-state/backend/",
+        "runs/current/changes/*/candidate/artifacts/backend-design/**",
+        "runs/current/changes/*/verification/**",
         "app/backend/",
         "app/rules/",
         "app/reference/admin.yaml",
@@ -101,6 +119,8 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/artifacts/devops/",
         "runs/current/role-state/devops/",
         "runs/current/role-state/deployment/",
+        "runs/current/changes/*/candidate/artifacts/devops/**",
+        "runs/current/changes/*/verification/**",
         "app/.gitignore",
         "app/Dockerfile",
         "app/docker-compose.yml",
@@ -111,6 +131,7 @@ ROLE_OWNED_PREFIXES = {
     ),
     "ceo": (
         "runs/current/artifacts/",
+        "runs/current/changes/",
         "runs/current/role-state/",
         "runs/current/remarks.md",
         "runs/current/orchestrator/operator-action-required.md",
@@ -415,3 +436,11 @@ def owned_prefixes(runtime_role: str) -> tuple[str, ...]:
         return ROLE_OWNED_PREFIXES[runtime_role]
     except KeyError as exc:
         raise SystemExit(f"error: unknown runtime role: {runtime_role}") from exc
+
+
+def path_matches_rule(relative_path: str, rule: str) -> bool:
+    if any(token in rule for token in ("*", "?", "[")):
+        return fnmatch(relative_path, rule)
+
+    normalized = rule.rstrip("/")
+    return relative_path == normalized or relative_path.startswith(f"{normalized}/")

@@ -7,7 +7,16 @@ product_manager:
   writable:
     - runs/current/artifacts/product/**
     - runs/current/role-state/product_manager/**
+    - runs/current/changes/*/request.md
+    - runs/current/changes/*/classification.yaml
+    - runs/current/changes/*/affected-artifacts.md
+    - runs/current/changes/*/affected-app-paths.md
+    - runs/current/changes/*/reopened-gates.md
+    - runs/current/changes/*/candidate/artifacts/product/**
+    - runs/current/changes/*/promotion.yaml
     - app/BUSINESS_RULES.md
+    - app/docs/playbook-baseline/current/**
+    - app/docs/change-history/**
   cannot_write:
     - runs/current/artifacts/architecture/**
     - runs/current/artifacts/ux/**
@@ -26,6 +35,10 @@ architect:
   writable:
     - runs/current/artifacts/architecture/**
     - runs/current/role-state/architect/**
+    - runs/current/changes/*/impact-manifest.yaml
+    - runs/current/changes/*/role-loads/**
+    - runs/current/changes/*/candidate/artifacts/architecture/**
+    - runs/current/changes/*/verification/**
     - app/README.md
   cannot_write:
     - runs/current/artifacts/product/**
@@ -43,6 +56,8 @@ frontend:
   writable:
     - runs/current/artifacts/ux/**
     - runs/current/role-state/frontend/**
+    - runs/current/changes/*/candidate/artifacts/ux/**
+    - runs/current/changes/*/verification/**
     - app/frontend/**
   cannot_write:
     - runs/current/artifacts/product/**
@@ -61,6 +76,8 @@ backend:
   writable:
     - runs/current/artifacts/backend-design/**
     - runs/current/role-state/backend/**
+    - runs/current/changes/*/candidate/artifacts/backend-design/**
+    - runs/current/changes/*/verification/**
     - app/backend/**
     - app/rules/**
     - app/reference/admin.yaml
@@ -80,6 +97,7 @@ ceo:
     - playbook/process/read-sets/ceo-core.md
   writable:
     - runs/current/artifacts/**
+    - runs/current/changes/**
     - runs/current/role-state/**
     - runs/current/remarks.md
     - runs/current/evidence/contract-samples.md
@@ -100,6 +118,8 @@ devops:
   writable:
     - runs/current/artifacts/devops/**
     - runs/current/role-state/devops/**
+    - runs/current/changes/*/candidate/artifacts/devops/**
+    - runs/current/changes/*/verification/**
     - app/.gitignore
     - app/.runtime.local.env
     - app/Dockerfile

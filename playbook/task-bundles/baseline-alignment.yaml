@@ -1,4 +1,4 @@
-name: change-impact-analysis
+name: baseline-alignment
 role: architect
 always_load:
   - playbook/summaries/global-core.md
@@ -7,17 +7,13 @@ always_load:
   - playbook/process/read-sets/architect-change-analysis.md
 required_phase:
   - playbook/process/phases/phase-I0-baseline-alignment.md
-  - playbook/process/phases/phase-I3-architecture-and-contract-delta.md
 required_artifacts:
-  - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
+reference_only:
+  - app/docs/playbook-baseline/current/manifest.yaml
 writable_targets:
-  - runs/current/changes/*/impact-manifest.yaml
-  - runs/current/changes/*/affected-artifacts.md
-  - runs/current/changes/*/affected-app-paths.md
-  - runs/current/changes/*/reopened-gates.md
-  - runs/current/changes/*/role-loads/**
-  - runs/current/changes/*/candidate/artifacts/architecture/**
+  - runs/current/artifacts/architecture/**
+  - runs/current/evidence/baseline/**
   - runs/current/role-state/architect/**
-  - app/README.md
+  - runs/current/remarks.md

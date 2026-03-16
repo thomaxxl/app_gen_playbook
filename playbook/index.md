@@ -88,10 +88,15 @@ Compatibility-only alias:
 - [task-bundles/acceptance-review.yaml](task-bundles/acceptance-review.yaml)
 - [task-bundles/deployment.yaml](task-bundles/deployment.yaml)
 - [task-bundles/ceo-stall-intervention.yaml](task-bundles/ceo-stall-intervention.yaml)
+- [task-bundles/baseline-alignment.yaml](task-bundles/baseline-alignment.yaml)
 - [task-bundles/change-intake.yaml](task-bundles/change-intake.yaml)
+- [task-bundles/change-product-delta.yaml](task-bundles/change-product-delta.yaml)
 - [task-bundles/change-impact-analysis.yaml](task-bundles/change-impact-analysis.yaml)
-- [task-bundles/change-frontend-delta.yaml](task-bundles/change-frontend-delta.yaml)
-- [task-bundles/change-backend-delta.yaml](task-bundles/change-backend-delta.yaml)
+- [task-bundles/change-frontend-design.yaml](task-bundles/change-frontend-design.yaml)
+- [task-bundles/change-frontend-implementation.yaml](task-bundles/change-frontend-implementation.yaml)
+- [task-bundles/change-backend-design.yaml](task-bundles/change-backend-design.yaml)
+- [task-bundles/change-backend-implementation.yaml](task-bundles/change-backend-implementation.yaml)
+- [task-bundles/change-devops-delta.yaml](task-bundles/change-devops-delta.yaml)
 - [task-bundles/change-integration-review.yaml](task-bundles/change-integration-review.yaml)
 - [task-bundles/change-acceptance.yaml](task-bundles/change-acceptance.yaml)
 
@@ -103,6 +108,7 @@ Compatibility-only alias:
 - [process/orchestrator-runtime.md](process/orchestrator-runtime.md)
 - [process/run-modes.md](process/run-modes.md)
 - [process/change-packet-discipline.md](process/change-packet-discipline.md)
+- [process/iteration-workspace.md](process/iteration-workspace.md)
 - [process/interrupted-runs.md](process/interrupted-runs.md)
 
 ## Feature catalog

@@ -114,6 +114,12 @@ For authoritative iteration on an existing app:
 ./scripts/run_playbook.sh --mode iterate path/to/change_request.md
 ```
 
+That iteration lane now uses:
+
+- the portable accepted baseline under `app/docs/playbook-baseline/current/`
+- the live change workspace under `runs/current/changes/<change_id>/`
+- promotion into the accepted baseline only at change acceptance
+
 For interrupted-run continuation:
 
 ```bash

@@ -15,6 +15,10 @@ If the current app no longer matches the requested framing well enough to
 evolve safely, the Product Manager and Architect SHOULD escalate to
 `new-full-run`.
 
+If the current accepted baseline cannot be proven from `runs/current/artifacts/`
+alone, the change lane SHOULD restore or verify it from
+`app/docs/playbook-baseline/current/` before proceeding.
+
 ## Required output
 
 The Product Manager MUST record:

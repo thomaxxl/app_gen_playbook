@@ -14,6 +14,7 @@ Required reads:
 - `../../../runs/current/input.md`
 - `../../../runs/current/remarks.md`
 
-After these reads, load only the current change-packet files and the exact
-product artifacts explicitly referenced by the inbox item or task bundle. Do
-not read `runs/current/artifacts/product/` as a broad tree.
+After these reads, load only the current change-workspace files, the active
+role-load manifest when it exists, and the exact product artifacts explicitly
+referenced by the inbox item or task bundle. Do not read
+`runs/current/artifacts/product/` as a broad tree.

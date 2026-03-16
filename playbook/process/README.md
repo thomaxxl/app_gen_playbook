@@ -48,6 +48,7 @@ Agents SHOULD use this path instead:
 - [run-modes.md](run-modes.md)
 - [change-classification.md](change-classification.md)
 - [change-packet-discipline.md](change-packet-discipline.md)
+- [iteration-workspace.md](iteration-workspace.md)
 - [run-lifecycle.md](run-lifecycle.md)
 - [interrupted-runs.md](interrupted-runs.md)
 - [checkpoints.md](checkpoints.md)
@@ -84,6 +85,9 @@ Agents SHOULD use this path instead:
 The change lane is first-class. Use the change-phase summaries and the change
 packet discipline above instead of widening change work into broad artifact or
 `app/` tree reads.
+
+Use [iteration-workspace.md](iteration-workspace.md) for the accepted-baseline,
+candidate-workspace, and promotion model of change runs.
 
 ## Maintainer reference
 

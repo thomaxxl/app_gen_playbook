@@ -77,8 +77,17 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 ## Writable targets
 
 - `../../runs/current/artifacts/product/**`
+- `../../runs/current/changes/*/request.md`
+- `../../runs/current/changes/*/classification.yaml`
+- `../../runs/current/changes/*/affected-artifacts.md`
+- `../../runs/current/changes/*/affected-app-paths.md`
+- `../../runs/current/changes/*/reopened-gates.md`
+- `../../runs/current/changes/*/candidate/artifacts/product/**`
+- `../../runs/current/changes/*/promotion.yaml`
 - `../../runs/current/role-state/product_manager/**`
 - `../../app/BUSINESS_RULES.md`
+- `../../app/docs/playbook-baseline/current/**`
+- `../../app/docs/change-history/**`
 
 ## Forbidden writes
 
@@ -98,6 +107,9 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 ## Working rules
 
 The Product Manager MUST treat:
+
+- `../../runs/current/artifacts/product/**` as the accepted baseline during
+  iteration until Phase I7 promotion
 
 - `../../runs/current/input.md` as the canonical stored brief
 - `../../runs/current/role-state/product_manager/inbox/INPUT.md` as the

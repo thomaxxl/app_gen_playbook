@@ -6,6 +6,7 @@ from pathlib import Path
 
 from orchestrator_common import (
     owned_prefixes,
+    path_matches_rule,
     read_json,
     relpath,
     resolve_repo_root,
@@ -31,7 +32,7 @@ def is_allowed_change(runtime_role: str, relative_path: str, ignore_runtime_role
             return True
 
     valid_prefixes = allowed_prefixes(runtime_role) + ignored_prefixes(ignore_runtime_roles)
-    return any(relative_path == prefix.rstrip("/") or relative_path.startswith(prefix) for prefix in valid_prefixes)
+    return any(path_matches_rule(relative_path, prefix) for prefix in valid_prefixes)
 
 
 def snapshot_command(repo_root: Path, output_path: Path) -> int:

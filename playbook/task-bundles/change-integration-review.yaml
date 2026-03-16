@@ -18,4 +18,6 @@ reference_only:
   - runs/current/artifacts/backend-design/test-plan.md
 writable_targets:
   - runs/current/artifacts/architecture/**
+  - runs/current/changes/*/verification/**
+  - runs/current/changes/*/promotion.yaml
   - runs/current/role-state/architect/**

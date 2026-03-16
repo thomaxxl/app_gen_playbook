@@ -9,8 +9,9 @@ hotfix, an iterative change, or a full rerun.
 
 ## Outputs
 
-- a product-owned change request packet
-- packet files for `request.md`, `affected-artifacts.md`,
+- a product-owned change workspace under `runs/current/changes/<change_id>/`
+- packet files for `request.md`, `classification.yaml`,
+  `impact-manifest.yaml`, `affected-artifacts.md`,
   `affected-app-paths.md`, and `reopened-gates.md`
 - change classification
 - affected-domain summary

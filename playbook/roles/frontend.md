@@ -71,6 +71,8 @@ This applies in particular to:
 ## Writable targets
 
 - `../../runs/current/artifacts/ux/**`
+- `../../runs/current/changes/*/candidate/artifacts/ux/**`
+- `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/frontend/**`
 - `../../app/frontend/**`
 

@@ -84,6 +84,8 @@ def reset_current_run(repo_root: Path) -> Path:
     for artifact_dir in ARTIFACT_DIRS:
         (artifacts_dir / artifact_dir).mkdir(parents=True, exist_ok=True)
 
+    (current_dir / "changes").mkdir(parents=True, exist_ok=True)
+
     orchestrator_dir = current_dir / "evidence" / "orchestrator"
     (orchestrator_dir / "prompts").mkdir(parents=True, exist_ok=True)
     (orchestrator_dir / "jsonl").mkdir(parents=True, exist_ok=True)

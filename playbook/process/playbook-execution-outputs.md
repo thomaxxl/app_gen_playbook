@@ -34,6 +34,7 @@ A normal run MAY create or update mutable execution files in:
 - `../../runs/current/input.md`
 - `../../runs/current/remarks.md`
 - `../../runs/current/artifacts/`
+- `../../runs/current/changes/`
 - `../../runs/current/role-state/`
 - `../../runs/current/evidence/`
 
@@ -68,12 +69,24 @@ Accepted artifact copies MAY later be placed under:
 
 - local `../../app/docs/`
 
+Accepted baseline export for future change runs MUST live under:
+
+- local `../../app/docs/playbook-baseline/current/`
+- local `../../app/docs/change-history/`
+
 The generated app MUST also contain:
 
 - local `../../app/.gitignore`
 - local `../../app/BUSINESS_RULES.md`
 - local `../../app/Dockerfile`
 - local `../../app/docker-compose.yml`
+
+For a delivered app that supports authoritative iteration, the generated app
+SHOULD also contain:
+
+- local `../../app/docs/playbook-baseline/current/manifest.yaml`
+- local `../../app/docs/playbook-baseline/current/artifacts/**`
+- local `../../app/docs/change-history/`
 
 That file is the generated-app snapshot of the approved
 `runs/current/artifacts/product/business-rules.md` catalog.
@@ -83,6 +96,8 @@ Those files exist so the generated app can:
 - become its own repository without extra ignore-policy work
 - run through the documented same-origin container path without a second
   packaging pass
+- support future `iterative-change-run` work even when the original
+  `runs/current/` snapshot is missing or stale
 
 Implementation work MUST NOT patch the static playbook source while building
 the app unless the task explicitly asks for a playbook update.

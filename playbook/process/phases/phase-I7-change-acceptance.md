@@ -10,5 +10,7 @@ changed artifacts to the new current state.
 ## Outputs
 
 - accepted change result
-- updated release or change notes
+- promotion record under `runs/current/changes/<change_id>/promotion.yaml`
+- refreshed portable baseline under `app/docs/playbook-baseline/current/`
+- updated change history under `app/docs/change-history/`
 - empty core inboxes

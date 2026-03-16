@@ -13,7 +13,7 @@ Required reads:
 - `../../../runs/current/input.md`
 - `../../../runs/current/remarks.md`
 
-After these reads, load only the current change-packet files, the exact
-product or architecture artifacts explicitly affected by the change, and
-app paths named by the inbox item when baseline alignment requires them. Do
-not read artifact or `app/` trees broadly.
+After these reads, load only the current change-workspace files, the active
+role-load manifest when it exists, the exact product or architecture artifacts
+explicitly affected by the change, and app paths named by the inbox item when
+baseline alignment requires them. Do not read artifact or `app/` trees broadly.

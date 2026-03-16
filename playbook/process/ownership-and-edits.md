@@ -10,6 +10,11 @@ Ownership map:
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
 - `runs/current/artifacts/devops/` -> DevOps
+- `runs/current/changes/<change_id>/candidate/artifacts/product/` -> Product Manager
+- `runs/current/changes/<change_id>/candidate/artifacts/architecture/` -> Architect
+- `runs/current/changes/<change_id>/candidate/artifacts/ux/` -> UX/UI + Frontend
+- `runs/current/changes/<change_id>/candidate/artifacts/backend-design/` -> Backend
+- `runs/current/changes/<change_id>/candidate/artifacts/devops/` -> DevOps
 - `CEO` -> no steady-state artifact ownership; stall-only emergency override
   across run-owned artifacts and local `app/`
 - `specs/contracts/frontend/` -> UX/UI + Frontend technical contracts
@@ -23,6 +28,11 @@ Ownership map:
 Rules:
 
 - only the owning role may directly edit files in its artifact area
+- during `iterative-change-run`, `runs/current/artifacts/**` stays the accepted
+  baseline and MUST be treated as read-only design state until Phase I7
+  promotion
+- during `iterative-change-run`, design deltas MUST be written under
+  `runs/current/changes/<change_id>/candidate/artifacts/**`
 - `playbook/routing/role-core.yaml` is the canonical routing manifest for
   role startup and writable targets
 - this file is the canonical ownership and edit-policy reference
@@ -57,6 +67,8 @@ Rules:
   handed back to Architect for mediation
 - `app/BUSINESS_RULES.md` is a generated-app snapshot of the run-owned
   Product artifact, not a second source of truth
+- `app/docs/playbook-baseline/current/` is the portable accepted baseline
+  export for future iteration, not a third editable design workspace
 - implementation work MUST NOT patch the playbook contract files while
   creating the app unless the user explicitly requests a playbook update
 - when the task updates the playbook itself, those playbook changes MUST be

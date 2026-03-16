@@ -59,7 +59,9 @@ Load:
 - `playbook/summaries/roles/product-manager.summary.md`
 - `playbook/process/read-sets/product-manager-change-intake.md`
 - `playbook/task-bundles/change-intake.yaml`
-- the current `runs/current/artifacts/product/changes/<change_id>/` packet files
+- the current `runs/current/changes/<change_id>/` packet files
+- the active `runs/current/changes/<change_id>/role-loads/product_manager.yaml`
+  file when it exists
 - only the exact product artifacts named by the inbox item or task bundle
 
 Do not load the whole product artifact tree just because the run is iterative.

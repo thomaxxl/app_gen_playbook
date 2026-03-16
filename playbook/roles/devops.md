@@ -72,6 +72,8 @@ Use the small stable startup manifest:
 ## Writable targets
 
 - `../../runs/current/artifacts/devops/**`
+- `../../runs/current/changes/*/candidate/artifacts/devops/**`
+- `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/devops/**`
 - `../../app/.gitignore`
 - `../../app/.runtime.local.env`

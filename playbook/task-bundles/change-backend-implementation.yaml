@@ -1,0 +1,18 @@
+name: change-backend-implementation
+role: backend
+always_load:
+  - playbook/summaries/global-core.md
+  - playbook/summaries/process-core.md
+  - playbook/summaries/roles/backend.summary.md
+  - playbook/process/read-sets/backend-change-delta.md
+required_phase:
+  - playbook/process/phases/phase-I5-implementation-delta.md
+required_artifacts:
+  - runs/current/artifacts/backend-design/model-design.md
+  - runs/current/artifacts/architecture/resource-naming.md
+writable_targets:
+  - runs/current/changes/*/verification/**
+  - runs/current/role-state/backend/**
+  - app/backend/**
+  - app/rules/**
+  - app/reference/admin.yaml

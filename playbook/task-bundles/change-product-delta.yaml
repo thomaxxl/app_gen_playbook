@@ -1,4 +1,4 @@
-name: change-intake
+name: change-product-delta
 role: product_manager
 always_load:
   - playbook/summaries/global-core.md
@@ -6,16 +6,14 @@ always_load:
   - playbook/summaries/roles/product-manager.summary.md
   - playbook/process/read-sets/product-manager-change-intake.md
 required_phase:
-  - playbook/process/phases/phase-I1-change-intake-and-triage.md
   - playbook/process/phases/phase-I2-product-and-scope-delta.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/business-rules.md
 writable_targets:
-  - runs/current/changes/*/request.md
   - runs/current/changes/*/classification.yaml
-  - runs/current/changes/*/impact-manifest.yaml
   - runs/current/changes/*/affected-artifacts.md
   - runs/current/changes/*/affected-app-paths.md
   - runs/current/changes/*/reopened-gates.md
+  - runs/current/changes/*/candidate/artifacts/product/**
   - runs/current/role-state/product_manager/**

@@ -11,6 +11,9 @@ required_artifacts:
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/business-rules.md
 writable_targets:
-  - runs/current/artifacts/product/**
+  - runs/current/artifacts/**
+  - runs/current/changes/*/promotion.yaml
   - runs/current/role-state/product_manager/**
   - app/BUSINESS_RULES.md
+  - app/docs/playbook-baseline/current/**
+  - app/docs/change-history/**

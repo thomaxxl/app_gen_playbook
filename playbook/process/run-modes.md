@@ -36,9 +36,12 @@ Use this mode when a client request changes:
 Behavior:
 
 - existing `app/` is the implementation baseline
-- current accepted artifacts under `runs/current/artifacts/` are the design
-  baseline
-- the run updates both the implementation and the authoritative artifacts
+- current accepted artifacts under `runs/current/artifacts/` are the local
+  design baseline
+- `app/docs/playbook-baseline/current/` is the portable accepted baseline for
+  later iteration bootstrap
+- candidate design changes live under `runs/current/changes/<change_id>/candidate/artifacts/**`
+- the accepted baseline does not change until Phase I7 promotion
 
 ## `app-only-hotfix`
 
@@ -57,3 +60,4 @@ Behavior:
 - `runs/current/` MAY remain historical or neutral
 - this mode MUST NOT be used to pretend the authoritative design state was
   updated
+- `app/docs/playbook-baseline/current/` remains the last accepted baseline

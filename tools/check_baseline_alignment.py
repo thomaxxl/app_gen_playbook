@@ -21,8 +21,12 @@ def main() -> int:
     if not (repo_root / "runs" / "current").exists():
         blockers.append("runs/current/ does not exist")
 
-    if not (repo_root / "runs" / "current" / "artifacts" / "product").exists():
-        blockers.append("runs/current/artifacts/product/ does not exist")
+    run_artifacts_product = repo_root / "runs" / "current" / "artifacts" / "product"
+    app_baseline_manifest = repo_root / "app" / "docs" / "playbook-baseline" / "current" / "manifest.yaml"
+    if not run_artifacts_product.exists() and not app_baseline_manifest.exists():
+        blockers.append(
+            "no accepted design baseline available under runs/current/artifacts/product/ or app/docs/playbook-baseline/current/"
+        )
 
     if blockers:
         print("baseline alignment failed:")

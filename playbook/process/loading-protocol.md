@@ -25,10 +25,11 @@ reading assignment.
 For `iterative-change-run` and `app-only-hotfix`, insert this rule after the
 task bundle:
 
-- load the current change packet under
-  `runs/current/artifacts/product/changes/<change_id>/`
+- load the current change workspace under `runs/current/changes/<change_id>/`
+- load the active role-load manifest under
+  `runs/current/changes/<change_id>/role-loads/<role>.yaml` when it exists
 - then load only the affected artifacts and app paths explicitly named by the
-  inbox item or task bundle
+  inbox item, task bundle, or role-load manifest
 
 ## Negative rules
 
@@ -40,6 +41,8 @@ task bundle:
 - do not load disabled or undecided feature packs
 - do not treat `example/` as a baseline source
 - do not ignore the context-budget rules in `playbook/process/context-budgets.md`
+- do not treat `runs/current/changes/<change_id>/candidate/artifacts/**` as
+  accepted baseline
 
 ## Expansion rule
 

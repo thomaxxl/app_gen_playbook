@@ -29,6 +29,8 @@ Path rule:
 - `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
   approved business-rules catalog
 - accepted artifacts MAY later be copied into local `../app/docs/`
+- authoritative iteration baselines SHOULD be exported under
+  `../app/docs/playbook-baseline/current/`
 - local generated-app implementation output lives under gitignored `../app/`
 - a dormant CEO recovery role MAY intervene only when the orchestrator detects
   a stalled run or when the operator explicitly steers execution through the
@@ -99,8 +101,8 @@ Agents SHOULD start in this order:
 7. the minimum run-owned artifacts and enabled feature packs required by that
    task
 
-For change runs, the delta packet under
-`../runs/current/artifacts/product/changes/<change_id>/` is part of that
+For change runs, the delta workspace under
+`../runs/current/changes/<change_id>/` is part of that
 minimum load set. Change work MUST expand from the packet plus explicitly
 affected artifacts or app paths, not from whole trees.
 

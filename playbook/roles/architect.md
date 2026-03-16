@@ -62,6 +62,10 @@ used as design input.
 ## Writable targets
 
 - `../../runs/current/artifacts/architecture/**`
+- `../../runs/current/changes/*/impact-manifest.yaml`
+- `../../runs/current/changes/*/role-loads/**`
+- `../../runs/current/changes/*/candidate/artifacts/architecture/**`
+- `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/architect/**`
 - `../../app/README.md`
 
@@ -88,6 +92,7 @@ The Architect owns and MUST maintain:
 
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
+- role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
 The Architect MUST replace starter-placeholder content in those gating
 artifacts before Phase 2 is handed off for implementation.

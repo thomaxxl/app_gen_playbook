@@ -36,7 +36,7 @@ phase_7_product_acceptance:
 
 phase_I0_baseline_alignment:
   summary: playbook/summaries/phases/phase-I0.summary.md
-  architect: playbook/task-bundles/change-impact-analysis.yaml
+  architect: playbook/task-bundles/baseline-alignment.yaml
 
 phase_I1_change_intake_and_triage:
   summary: playbook/summaries/phases/phase-I1.summary.md
@@ -44,7 +44,7 @@ phase_I1_change_intake_and_triage:
 
 phase_I2_product_and_scope_delta:
   summary: playbook/summaries/phases/phase-I2.summary.md
-  product_manager: playbook/task-bundles/change-intake.yaml
+  product_manager: playbook/task-bundles/change-product-delta.yaml
 
 phase_I3_architecture_and_contract_delta:
   summary: playbook/summaries/phases/phase-I3.summary.md
@@ -52,19 +52,23 @@ phase_I3_architecture_and_contract_delta:
 
 phase_I4_frontend_design_delta:
   summary: playbook/summaries/phases/phase-I4.summary.md
-  frontend: playbook/task-bundles/change-frontend-delta.yaml
+  frontend: playbook/task-bundles/change-frontend-design.yaml
 
 phase_I4_backend_design_delta:
   summary: playbook/summaries/phases/phase-I4.summary.md
-  backend: playbook/task-bundles/change-backend-delta.yaml
+  backend: playbook/task-bundles/change-backend-design.yaml
+
+phase_I4_devops_delta:
+  summary: playbook/summaries/phases/phase-I4.summary.md
+  devops: playbook/task-bundles/change-devops-delta.yaml
 
 phase_I5_frontend_implementation_delta:
   summary: playbook/summaries/phases/phase-I5.summary.md
-  frontend: playbook/task-bundles/change-frontend-delta.yaml
+  frontend: playbook/task-bundles/change-frontend-implementation.yaml
 
 phase_I5_backend_implementation_delta:
   summary: playbook/summaries/phases/phase-I5.summary.md
-  backend: playbook/task-bundles/change-backend-delta.yaml
+  backend: playbook/task-bundles/change-backend-implementation.yaml
 
 phase_I6_integration_and_regression_review:
   summary: playbook/summaries/phases/phase-I6.summary.md

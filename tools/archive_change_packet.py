@@ -14,7 +14,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = resolve_repo_root(args.repo_root)
-    change_root = repo_root / "runs" / "current" / "artifacts" / "product" / "changes" / args.change_id
+    change_root = repo_root / "runs" / "current" / "changes" / args.change_id
     if not change_root.exists():
         raise SystemExit(f"error: change packet not found: {change_root}")
 

@@ -13,5 +13,6 @@ It does not replace implementation or regression review.
 Load next if needed:
 
 - `../../process/phases/phase-I4-design-delta.md`
-- `../../task-bundles/change-frontend-delta.yaml`
-- `../../task-bundles/change-backend-delta.yaml`
+- `../../task-bundles/change-frontend-design.yaml`
+- `../../task-bundles/change-backend-design.yaml`
+- `../../task-bundles/change-devops-delta.yaml`

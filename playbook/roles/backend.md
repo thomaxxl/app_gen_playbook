@@ -55,6 +55,8 @@ undecided feature packs MUST NOT be loaded, summarized, or copied.
 ## Writable targets
 
 - `../../runs/current/artifacts/backend-design/**`
+- `../../runs/current/changes/*/candidate/artifacts/backend-design/**`
+- `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/backend/**`
 - `../../app/backend/**`
 - `../../app/rules/**`
