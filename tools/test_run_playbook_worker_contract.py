@@ -22,6 +22,10 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if run_role_once "ceo"; then', script)
         self.assertIn("orchestrator generated invalid recovery note", script)
         self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
+        self.assertLess(
+            script.index('if run_role_once "ceo"; then'),
+            script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
+        )
 
     def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

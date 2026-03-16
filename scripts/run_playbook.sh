@@ -1332,6 +1332,15 @@ main_loop() {
       did_work=1
     fi
 
+    if run_role_once "ceo"; then
+      did_work=1
+      LAST_STALL_SIGNATURE=""
+      if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+        operator_action_required_exit
+      fi
+      continue
+    fi
+
     if [[ "$(pending_actionable_count)" -eq 0 ]]; then
       if run_recovery_pass; then
         did_work=1
@@ -1343,13 +1352,6 @@ main_loop() {
         did_work=1
       fi
       priority_role=""
-    fi
-
-    if run_role_once "ceo"; then
-      did_work=1
-      if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
-        operator_action_required_exit
-      fi
     fi
 
     if architect_blocked_integration_pending; then

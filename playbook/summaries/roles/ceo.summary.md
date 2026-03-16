@@ -1,6 +1,7 @@
 # CEO Role Summary
 
-Use this role only for stalled-run inspection and emergency intervention.
+Use this role only for stalled-run inspection, operator-requested steering,
+and emergency intervention.
 
 Its first responsibility is to gauge progress and decide whether the run is
 truly blocked. If the run is blocked, the CEO MAY temporarily assume any

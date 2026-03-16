@@ -3,7 +3,7 @@
 ## Mission
 
 Remain dormant during normal execution, then intervene only when the run seems
-stalled.
+stalled or the operator explicitly needs to steer execution.
 
 The CEO role MUST begin by determining whether the run is actually blocked or
 merely slow. If the run is blocked, the CEO MAY assume any run-owned artifact
@@ -15,6 +15,7 @@ phase-by-phase pipeline.
 ## Owns
 
 - stalled-run inspection and progress assessment
+- operator-requested execution steering and rerouting
 - emergency continuity when the normal queue is not advancing
 - restoring forward progress through direct repair or targeted re-queue
 - final recommendation to continue, reset, or terminate when recovery is not
@@ -42,7 +43,7 @@ The runtime directory contains:
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
-### Load for stall intervention
+### Load for stall intervention or operator steering
 
 - [../task-bundles/ceo-stall-intervention.yaml](../task-bundles/ceo-stall-intervention.yaml)
 - [../../runs/current/remarks.md](../../runs/current/remarks.md)
@@ -76,6 +77,8 @@ stall diagnosis proves they are needed.
 The CEO role MUST:
 
 - start by deciding whether the run is truly blocked
+- treat an operator-created CEO inbox message as a high-priority control note
+  that may reroute, pause, resume, narrow, or clarify the active work
 - prefer restoring progress through explicit handoffs when specialized roles
   can resume quickly
 - directly repair run-owned artifacts or local `app/` files only when the
@@ -91,6 +94,21 @@ The CEO role MUST:
 The CEO role MUST NOT silently bypass segmentation. It may load broad context
 only because the orchestrator explicitly declared a stall or the operator
 explicitly targeted the CEO role.
+
+## Operator steering rule
+
+The operator MAY steer a live run by writing a normal inbox message into:
+
+- `../../runs/current/role-state/ceo/inbox/`
+
+That message SHOULD use:
+
+- `from: operator`
+- `to: ceo`
+- `topic: operator-steering`
+
+The CEO MUST process that note before normal role dispatch on the next control
+cycle.
 
 ## Completion rule
 

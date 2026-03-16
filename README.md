@@ -140,9 +140,10 @@ The normal runtime roles are:
   Optional packaging/runtime lane for install/run packaging, Docker files,
   delivery environment checks, and deployment-oriented verification.
 - `ceo`
-  Dormant stall-recovery role. It does not participate in normal phased work;
-  it activates only when the orchestrator detects a stalled run or when an
-  operator explicitly targets it.
+  Dormant exception role. It does not participate in normal phased work; it
+  activates only when the orchestrator detects a stalled run or when an
+  operator explicitly steers execution through
+  `runs/current/role-state/ceo/inbox/`.
 
 The usual flow is:
 

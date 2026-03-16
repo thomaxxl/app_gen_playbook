@@ -229,6 +229,14 @@ After Phase 5:
 - Frontend and Backend workers MUST process only their own oldest actionable
   inbox item per turn
 
+Any actionable file already present in `runs/current/role-state/ceo/inbox/`
+MUST be treated as a high-priority control note. After exception-lane routing,
+the orchestrator MUST run CEO before recovery synthesis, Product Manager,
+Architect, Deployment, or Phase-5 background-worker checks.
+
+That rule allows an operator to steer a live run by writing a normal inbox
+message directly into the CEO lane without modifying the runner process itself.
+
 The orchestrator MUST NOT start a long-lived background worker through command
 substitution or any other construct that runs the starter in a subshell and
 captures its stdout. In Bash, that pattern can cause the shell to wait on the

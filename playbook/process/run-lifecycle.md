@@ -171,3 +171,6 @@ When a run is complete:
 - the dormant `ceo` lane SHOULD normally remain empty and MAY contain work
   only when the orchestrator detected a stall or the operator explicitly
   invoked CEO recovery
+- if the operator writes an explicit steering note into
+  `../../runs/current/role-state/ceo/inbox/`, the orchestrator SHOULD let CEO
+  handle it before continuing normal dispatch

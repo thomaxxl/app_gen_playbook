@@ -2,7 +2,7 @@
 
 Use this as the Tier 1 startup read set for the CEO role.
 
-This read set is stall-only. Do not load it during normal phase execution.
+This read set is exception-only. Do not load it during normal phase execution.
 
 Required startup reads:
 

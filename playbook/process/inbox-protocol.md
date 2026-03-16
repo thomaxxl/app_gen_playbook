@@ -76,6 +76,20 @@ Standard orchestrator-created message topics:
 - `handoff-correction`
 - `stall-intervention`
 
+Supported operator-created CEO control topic:
+
+- `operator-steering`
+
+An operator MAY steer a live run by writing a normal inbox message to:
+
+- `runs/current/role-state/ceo/inbox/`
+
+That message SHOULD use:
+
+- `from: operator`
+- `to: ceo`
+- `topic: operator-steering`
+
 ## Gate status values
 
 Use one of:
