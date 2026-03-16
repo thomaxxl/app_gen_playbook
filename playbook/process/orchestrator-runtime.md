@@ -296,6 +296,10 @@ Those recovery notes MUST:
 - request downstream handoffs when the repaired artifact should reopen the next
   gate
 
+Generic `orchestrator` recovery notes MUST NOT be treated as normal blocked
+Architect integration or drift work when deciding whether to skip Product
+Manager dispatch or when reporting blocked integration lanes.
+
 ## Handoff validation
 
 Before dispatching a claimed inbox item, the orchestrator MUST validate the

@@ -45,6 +45,39 @@ class CheckCompletionTests(unittest.TestCase):
             kinds = {blocker["kind"] for blocker in blockers}
             self.assertIn("architect-blocked-integration-work", kinds)
 
+    def test_ignores_orchestrator_recovery_note_for_architect_blocked_integration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/role-state/architect/inbox/recovery.md",
+                "\n".join(
+                    [
+                        "from: orchestrator",
+                        "to: architect",
+                        "topic: recovery",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Notes",
+                        "- phase-6-integration-review remains blocked until contract samples are restored",
+                    ]
+                ),
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["kind"] == "architect-blocked-integration-work"]
+            self.assertEqual(matching, [])
+
     def test_reports_blocked_required_artifact_and_missing_app_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

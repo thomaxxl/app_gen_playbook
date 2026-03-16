@@ -102,7 +102,10 @@ def architect_blocked_integration_work(repo_root: Path) -> list[str]:
     flagged: list[str] = []
     for lane in ("inbox", "inflight"):
         for path in sorted((architect_root / lane).glob("*.md")):
-            text = path.read_text(encoding="utf-8").lower()
+            raw_text = path.read_text(encoding="utf-8")
+            if re.search(r"(?im)^(from|sender):\s*orchestrator\s*$", raw_text):
+                continue
+            text = raw_text.lower()
             if "blocked" not in text:
                 continue
             if not re.search(r"\b(integration|drift)\b", text + " " + path.name.lower()):

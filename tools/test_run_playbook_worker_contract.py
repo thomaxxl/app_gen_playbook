@@ -21,6 +21,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if process_orchestrator_inbox; then', script)
         self.assertIn('if run_role_once "ceo"; then', script)
         self.assertIn("orchestrator generated invalid recovery note", script)
+        self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
 
 
 if __name__ == "__main__":

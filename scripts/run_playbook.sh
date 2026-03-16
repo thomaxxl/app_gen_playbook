@@ -368,10 +368,14 @@ start_dashboard_sidecar() {
 
 architect_blocked_integration_pending() {
   local architect_root="$STATE_ROOT/architect"
-  local path
+  local path text
   for path in "$architect_root"/inbox/*.md "$architect_root"/inflight/*.md; do
     [[ -f "$path" ]] || continue
-    if grep -qi "blocked" "$path" && grep -Eqi "(integration|drift)" "$path"; then
+    if grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' "$path"; then
+      continue
+    fi
+    text="$(tr '[:upper:]' '[:lower:]' < "$path")"
+    if [[ "$text" == *blocked* ]] && grep -Eqi '\b(integration|drift)\b' <<<"$text $(basename "$path")"; then
       return 0
     fi
   done
