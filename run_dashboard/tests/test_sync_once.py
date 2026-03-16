@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+SYNC_ONCE = Path(__file__).resolve().parents[1] / "src" / "run_dashboard" / "sync_once.py"
+
 
 class SyncOnceTests(unittest.TestCase):
     def test_no_active_run_dumps_snapshot_without_failing(self) -> None:
@@ -15,7 +17,7 @@ class SyncOnceTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     "python3",
-                    "/home/t/lab/SAFRS/run_dashboard/src/run_dashboard/sync_once.py",
+                    str(SYNC_ONCE),
                     "--playbook-root",
                     str(root),
                     "--skip-db",

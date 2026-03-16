@@ -3,19 +3,32 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from check_completion import collect_blockers
-from check_orchestrator_liveness import latest_log_activity, latest_worker_heartbeat
+from check_orchestrator_liveness import collect_liveness, latest_log_activity, latest_worker_heartbeat
 from check_phase5_ready import collect_phase5_blockers
 from orchestrator_common import (
     RUN_ARTIFACT_TEMPLATE_DIRS,
     iter_required_artifact_templates,
     parse_metadata_block,
     resolve_repo_root,
+)
+
+RUN_DASHBOARD_SRC = Path(__file__).resolve().parents[1] / "run_dashboard" / "src"
+if str(RUN_DASHBOARD_SRC) not in sys.path:
+    sys.path.insert(0, str(RUN_DASHBOARD_SRC))
+
+from run_dashboard.status_contract import (
+    compute_overall_progress,
+    normalize_status_report_payload,
+    readiness_ratio,
+    should_include_artifact_file,
+    summarize_package_status,
 )
 
 
@@ -212,8 +225,8 @@ def artifact_area_summary(repo_root: Path) -> dict[str, dict[str, Any]]:
         counter: Counter[str] = Counter()
         files: list[str] = []
         if area_root.exists():
-            for candidate in sorted(area_root.glob("*.md")):
-                if candidate.name == "README.md":
+            for candidate in sorted(area_root.rglob("*.md")):
+                if not should_include_artifact_file(candidate.relative_to(area_root)):
                     continue
                 files.append(candidate.relative_to(repo_root).as_posix())
                 counter[artifact_status(repo_root, candidate.relative_to(repo_root).as_posix())] += 1
@@ -221,6 +234,8 @@ def artifact_area_summary(repo_root: Path) -> dict[str, dict[str, Any]]:
             "exists": area_root.exists(),
             "file_count": len(files),
             "counts": dict(counter),
+            "overall_status": summarize_package_status(counter),
+            "readiness_ratio": readiness_ratio(counter),
             "latest_mtime": latest_file_mtime(area_root),
         }
     return summaries
@@ -331,17 +346,17 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
     phases = phase_summary(repo_root)
     phase5_blockers = collect_phase5_blockers(repo_root)
     completion_blockers = collect_blockers(repo_root)
-    completion_blockers = collect_blockers(repo_root)
     current_phase = compute_current_phase(run_status, phases, not completion_blockers)
-
-    return {
+    payload = {
         "generated_at": utc_now(),
         "repo_root": str(repo_root),
         "run_status": run_status,
+        "current_phase_code": current_phase,
         "current_phase": {
             "key": current_phase,
             "label": PHASE_LABELS.get(current_phase, current_phase),
         },
+        "overall_progress": compute_overall_progress(phases, not completion_blockers),
         "phase5_ready": not phase5_blockers,
         "phase5_blockers": phase5_blockers,
         "completion": {
@@ -354,11 +369,13 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
         "phases": phases,
         "stages": stage_progress(phases, not phase5_blockers),
         "evidence": evidence_summary(repo_root),
+        "liveness": collect_liveness(repo_root),
         "app": {
             "exists": (repo_root / "app").exists(),
             "latest_mtime": latest_file_mtime(repo_root / "app"),
         },
     }
+    return normalize_status_report_payload(payload)
 
 
 def format_markdown(payload: dict[str, Any]) -> str:

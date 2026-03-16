@@ -12,6 +12,12 @@ from pathlib import Path
 from typing import Any
 
 from .markdown import markdown_title, parse_frontmatter, parse_handoff_message
+from .status_contract import (
+    normalize_status_report_payload,
+    readiness_ratio,
+    should_include_artifact_file,
+    summarize_package_status,
+)
 
 
 ROLE_ALIASES = {
@@ -155,6 +161,42 @@ def has_active_run(playbook_root: Path) -> bool:
     return (playbook_root / "runs" / "current" / "orchestrator" / "run-status.json").exists()
 
 
+def as_string_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def package_summary_from_rows(packages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {
+        row["family"]: {
+            "overall_status": row["overall_status"],
+            "total_count": row["total_count"],
+            "stub_count": row["stub_count"],
+            "draft_count": row["draft_count"],
+            "ready_count": row["ready_count"],
+            "approved_count": row["approved_count"],
+            "blocked_count": row["blocked_count"],
+            "superseded_count": row["superseded_count"],
+            "updated_at": row["updated_at"],
+            "readiness_ratio": readiness_ratio(
+                {
+                    "stub": row["stub_count"],
+                    "draft": row["draft_count"],
+                    "ready_for_handoff": row["ready_count"],
+                    "approved": row["approved_count"],
+                    "blocked": row["blocked_count"],
+                    "superseded": row["superseded_count"],
+                }
+            ),
+        }
+        for row in packages
+    }
+
+
 def collect_artifacts(playbook_root: Path, run_db_id: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     artifacts_root = playbook_root / "runs" / "current" / "artifacts"
     packages: list[dict[str, Any]] = []
@@ -168,7 +210,7 @@ def collect_artifacts(playbook_root: Path, run_db_id: str) -> tuple[list[dict[st
         counts: Counter[str] = Counter()
         area_artifacts: list[dict[str, Any]] = []
 
-        for file_path in sorted(family_dir.glob("*.md")):
+        for file_path in sorted(candidate for candidate in family_dir.rglob("*.md") if should_include_artifact_file(candidate.relative_to(family_dir))):
             if file_path.name == "README.md":
                 continue
             metadata = parse_frontmatter(file_path)
@@ -178,12 +220,8 @@ def collect_artifacts(playbook_root: Path, run_db_id: str) -> tuple[list[dict[st
             phase_code = str(metadata.get("phase", "")).strip() or "phase-0-intake-and-framing"
             artifact_path = file_path.relative_to(playbook_root).as_posix()
             artifact_id = stable_uuid(run_db_id, "artifact", artifact_path)
-            unresolved = metadata.get("unresolved", [])
-            if isinstance(unresolved, str):
-                unresolved = [unresolved]
-            depends_on = metadata.get("depends_on", [])
-            if isinstance(depends_on, str):
-                depends_on = [depends_on]
+            unresolved = as_string_list(metadata.get("unresolved", []))
+            depends_on = as_string_list(metadata.get("depends_on", []))
 
             artifact_row = {
                 "id": artifact_id,
@@ -218,7 +256,7 @@ def collect_artifacts(playbook_root: Path, run_db_id: str) -> tuple[list[dict[st
                 "run_id": run_db_id,
                 "family": family,
                 "root_path": family_dir.relative_to(playbook_root).as_posix(),
-                "overall_status": "blocked" if counts["blocked"] else ("approved" if counts["approved"] and sum(counts.values()) == counts["approved"] else "in_progress"),
+                "overall_status": summarize_package_status(counts),
                 "total_count": sum(counts.values()),
                 "stub_count": counts["stub"],
                 "draft_count": counts["draft"],
@@ -237,6 +275,7 @@ def collect_artifacts(playbook_root: Path, run_db_id: str) -> tuple[list[dict[st
 def collect_handoffs(playbook_root: Path, run_db_id: str) -> list[dict[str, Any]]:
     role_state_root = playbook_root / "runs" / "current" / "role-state"
     rows: list[dict[str, Any]] = []
+    resolution_index: dict[str, str] = {}
     for role_dir in sorted(path for path in role_state_root.iterdir() if path.is_dir()):
         role_code = normalize_role(role_dir.name) or role_dir.name
         for state_dir_name, message_state in (("inbox", "inbox"), ("inflight", "processing"), ("processed", "processed")):
@@ -247,14 +286,21 @@ def collect_handoffs(playbook_root: Path, run_db_id: str) -> list[dict[str, Any]
                 if path.name == "README.md":
                     continue
                 payload = parse_handoff_message(path)
+                rel_path = path.relative_to(playbook_root).as_posix()
                 created_at = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                 gate_status_raw = str(payload.get("gate status", "unspecified")).strip().lower().replace(" ", "_")
                 if gate_status_raw not in {"pass", "pass_with_assumptions", "blocked", "unspecified"}:
                     gate_status_raw = "unspecified"
+                message_id = stable_uuid(run_db_id, "handoff", rel_path)
+                supersedes_raw = str(payload.get("supersedes", "")).strip() or None
                 row = {
-                    "id": stable_uuid(run_db_id, "handoff", path.name),
+                    "id": message_id,
                     "run_id": run_db_id,
                     "filename": path.name,
+                    "path": rel_path,
+                    "role_lane": role_dir.name,
+                    "state_dir": state_dir_name,
+                    "message_key": stable_uuid(run_db_id, "handoff-key", role_dir.name, path.name),
                     "created_at": created_at,
                     "from_role_code": normalize_role(str(payload.get("from", "")).strip()),
                     "to_role_code": normalize_role(str(payload.get("to", "")).strip()) or role_code,
@@ -262,17 +308,27 @@ def collect_handoffs(playbook_root: Path, run_db_id: str) -> list[dict[str, Any]
                     "purpose": str(payload.get("purpose", "")).strip() or None,
                     "gate_status": gate_status_raw,
                     "message_state": message_state,
-                    "inbox_path": path.relative_to(playbook_root).as_posix(),
-                    "processed_path": path.relative_to(playbook_root).as_posix() if message_state == "processed" else None,
+                    "inbox_path": rel_path,
+                    "processed_path": rel_path if message_state == "processed" else None,
                     "supersedes_message_id": None,
-                    "required_reads": payload.get("required reads", []),
-                    "requested_outputs": payload.get("requested outputs", []),
-                    "dependencies": payload.get("dependencies", []),
-                    "blocking_issues": payload.get("blocking issues", []),
+                    "supersedes_raw": supersedes_raw,
+                    "required_reads": as_string_list(payload.get("required reads", [])),
+                    "requested_outputs": as_string_list(payload.get("requested outputs", [])),
+                    "dependencies": as_string_list(payload.get("dependencies", [])),
+                    "blocking_issues": as_string_list(payload.get("blocking issues", [])),
                     "notes": "\n".join(payload.get("notes", [])) if isinstance(payload.get("notes"), list) else None,
                     "processed_at": created_at if message_state == "processed" else None,
                 }
                 rows.append(row)
+                resolution_index[rel_path] = message_id
+                resolution_index[path.name] = message_id
+                resolution_index[f"{role_dir.name}/{path.name}"] = message_id
+
+    for row in rows:
+        supersedes_raw = row.get("supersedes_raw")
+        if not supersedes_raw:
+            continue
+        row["supersedes_message_id"] = resolution_index.get(str(supersedes_raw))
     return rows
 
 
@@ -408,17 +464,103 @@ def collect_evidence(playbook_root: Path, run_db_id: str) -> list[dict[str, Any]
     return rows
 
 
-def collect_verification_checks(run_db_id: str, status_payload: dict[str, Any]) -> list[dict[str, Any]]:
+def evidence_id_by_path(evidence_items: list[dict[str, Any]]) -> dict[str, str]:
+    return {row["path"]: row["id"] for row in evidence_items}
+
+
+def first_evidence_id_by_type(evidence_items: list[dict[str, Any]], evidence_type: str) -> str | None:
+    for row in evidence_items:
+        if row["evidence_type"] == evidence_type:
+            return row["id"]
+    return None
+
+
+def artifact_by_suffix(artifacts: list[dict[str, Any]], suffix: str) -> dict[str, Any] | None:
+    for row in artifacts:
+        if row["path"].endswith(suffix):
+            return row
+    return None
+
+
+def collect_verification_checks(
+    run_db_id: str,
+    status_payload: dict[str, Any],
+    evidence_items: list[dict[str, Any]],
+    artifacts: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     evidence = status_payload.get("evidence", {})
     completion = status_payload.get("completion", {})
+    evidence_paths = evidence_id_by_path(evidence_items)
+    integration_review = artifact_by_suffix(artifacts, "runs/current/artifacts/architecture/integration-review.md")
+    acceptance_review = artifact_by_suffix(artifacts, "runs/current/artifacts/product/acceptance-review.md")
+
     checks = [
-        ("completion_gate", CHECK_STATUS_MAP.get(completion.get("complete")), None, json.dumps(completion)),
-        ("phase5_ready", CHECK_STATUS_MAP.get(status_payload.get("phase5_ready")), "phase-5-parallel-implementation", None),
-        ("contract_samples_present", CHECK_STATUS_MAP.get(evidence.get("contract_samples_exists")), "phase-6-integration-review", None),
-        ("recovery_log_present", "pass" if evidence.get("recovery_log_exists") else "warning", None, None),
+        (
+            "completion_gate",
+            CHECK_STATUS_MAP.get(completion.get("complete")),
+            None,
+            None,
+            json.dumps(completion),
+        ),
+        (
+            "phase5_ready",
+            CHECK_STATUS_MAP.get(status_payload.get("phase5_ready")),
+            "phase-5-parallel-implementation",
+            None,
+            json.dumps(status_payload.get("phase5_blockers", [])),
+        ),
+        (
+            "contract_samples_present",
+            CHECK_STATUS_MAP.get(evidence.get("contract_samples_exists")),
+            "phase-6-integration-review",
+            evidence_paths.get("runs/current/evidence/contract-samples.md"),
+            None,
+        ),
+        (
+            "recovery_log_present",
+            "pass" if evidence.get("recovery_log_exists") else "warning",
+            None,
+            evidence_paths.get("runs/current/evidence/orchestrator/recovery-log.md"),
+            None,
+        ),
+        (
+            "backend_tests_evidence",
+            "pass" if first_evidence_id_by_type(evidence_items, "backend_tests") else "warning",
+            "phase-6-integration-review",
+            first_evidence_id_by_type(evidence_items, "backend_tests"),
+            None,
+        ),
+        (
+            "frontend_tests_evidence",
+            "pass" if first_evidence_id_by_type(evidence_items, "frontend_tests") else "warning",
+            "phase-6-integration-review",
+            first_evidence_id_by_type(evidence_items, "frontend_tests"),
+            None,
+        ),
+        (
+            "e2e_tests_evidence",
+            "pass" if first_evidence_id_by_type(evidence_items, "e2e_tests") else "warning",
+            "phase-6-integration-review",
+            first_evidence_id_by_type(evidence_items, "e2e_tests"),
+            None,
+        ),
+        (
+            "integration_review_artifact",
+            "pass" if integration_review and integration_review["status"] in {"ready_for_handoff", "approved"} else "warning",
+            "phase-6-integration-review",
+            None,
+            integration_review["status"] if integration_review else "missing",
+        ),
+        (
+            "acceptance_review_gate",
+            "pass" if acceptance_review and acceptance_review["status"] == "approved" else "fail",
+            "phase-7-product-acceptance",
+            None,
+            acceptance_review["status"] if acceptance_review else "missing",
+        ),
     ]
     rows: list[dict[str, Any]] = []
-    for name, status, phase_code, details in checks:
+    for name, status, phase_code, evidence_item_id, details in checks:
         rows.append(
             {
                 "id": stable_uuid(run_db_id, "verification", name),
@@ -427,7 +569,7 @@ def collect_verification_checks(run_db_id: str, status_payload: dict[str, Any]) 
                 "role_code": None,
                 "check_name": name,
                 "status": status or "unknown",
-                "evidence_item_id": None,
+                "evidence_item_id": evidence_item_id,
                 "details": details,
                 "started_at": None,
                 "finished_at": utcnow(),
@@ -436,25 +578,30 @@ def collect_verification_checks(run_db_id: str, status_payload: dict[str, Any]) 
     return rows
 
 
-def collect_dashboard_snapshot(run_db_id: str, status_payload: dict[str, Any]) -> dict[str, Any]:
+def collect_dashboard_snapshot(
+    run_db_id: str,
+    status_payload: dict[str, Any],
+    blockers: list[dict[str, Any]],
+    package_summary: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     completion = status_payload.get("completion", {})
     evidence = status_payload.get("evidence", {})
-    current_phase_code = status_payload.get("current_phase_code") or status_payload.get("current_phase", {}).get("key")
     return {
         "id": str(uuid.uuid4()),
         "run_id": run_db_id,
         "captured_at": utcnow(),
-        "current_phase_code": current_phase_code,
+        "current_phase_code": status_payload.get("current_phase_code"),
         "overall_progress": float(status_payload.get("overall_progress", 0.0)),
-        "current_focus": evidence.get("latest_activity_source"),
-        "open_blockers": len(completion.get("blockers", [])),
+        "current_focus": evidence.get("latest_activity_source") or status_payload.get("liveness", {}).get("latest_activity_source"),
+        "open_blockers": len(blockers),
         "inbox_depth_by_role": {role: details.get("inbox_count", 0) for role, details in status_payload.get("roles", {}).items()},
-        "package_summary": status_payload.get("artifact_areas", {}),
+        "package_summary": package_summary,
         "verification_summary": {
             "phase5_ready": status_payload.get("phase5_ready"),
             "completion_complete": completion.get("complete"),
             "contract_samples_exists": evidence.get("contract_samples_exists"),
             "recovery_log_exists": evidence.get("recovery_log_exists"),
+            "stale": status_payload.get("liveness", {}).get("stale", False),
         },
         "acceptance_summary": status_payload.get("phases", {}).get("phase-7-product-acceptance", {}),
     }
@@ -481,25 +628,123 @@ def build_phase_rows(run_db_id: str, status_payload: dict[str, Any]) -> list[dic
     return rows
 
 
-def build_blockers(run_db_id: str, status_payload: dict[str, Any]) -> list[dict[str, Any]]:
+def build_blockers(
+    run_db_id: str,
+    status_payload: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+    handoffs: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for blocker in status_payload.get("completion", {}).get("blockers", []):
-        path = blocker.get("path", "")
+    seen: set[tuple[str, str, str]] = set()
+
+    def append_blocker(
+        source_type: str,
+        source_id: str,
+        title: str,
+        *,
+        phase_code: str | None = None,
+        role_code: str | None = None,
+        severity: str = "medium",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        key = (source_type, source_id, title)
+        if key in seen:
+            return
+        seen.add(key)
         rows.append(
             {
-                "id": stable_uuid(run_db_id, "blocker", blocker.get("kind", ""), path),
+                "id": stable_uuid(run_db_id, "blocker", source_type, source_id, title),
                 "run_id": run_db_id,
-                "phase_code": blocker.get("phase") or None,
-                "role_code": normalize_role(blocker.get("owner")) if blocker.get("owner") else None,
-                "source_type": blocker.get("kind", "unknown"),
-                "source_id": path or None,
-                "severity": "high" if "blocked" in blocker.get("reason", "") else "medium",
-                "title": blocker.get("reason", "blocker"),
-                "details": json.dumps(blocker, sort_keys=True),
+                "phase_code": phase_code,
+                "role_code": role_code,
+                "source_type": source_type,
+                "source_id": source_id or None,
+                "severity": severity,
+                "title": title,
+                "details": json.dumps(details or {}, sort_keys=True) if details is not None else None,
                 "opened_at": utcnow(),
                 "resolved_at": None,
                 "state": "open",
             }
+        )
+
+    for blocker in status_payload.get("completion", {}).get("blockers", []):
+        path = blocker.get("path", "")
+        append_blocker(
+            blocker.get("kind", "completion"),
+            path,
+            blocker.get("reason", "blocker"),
+            phase_code=blocker.get("phase") or None,
+            role_code=normalize_role(blocker.get("owner")) if blocker.get("owner") else None,
+            severity="high" if "blocked" in blocker.get("reason", "") else "medium",
+            details=blocker,
+        )
+
+    for blocker in status_payload.get("phase5_blockers", []):
+        append_blocker(
+            blocker.get("kind", "phase5"),
+            blocker.get("path", ""),
+            blocker.get("reason", "phase-5 blocker"),
+            phase_code=blocker.get("phase") or None,
+            role_code=normalize_role(blocker.get("owner")) if blocker.get("owner") else None,
+            severity="high",
+            details=blocker,
+        )
+
+    for artifact in artifacts:
+        if artifact["status"] == "blocked":
+            append_blocker(
+                "artifact-blocked",
+                artifact["path"],
+                "artifact status is blocked",
+                phase_code=artifact["phase_code"],
+                role_code=artifact["owner_role_code"],
+                severity="high",
+                details=artifact,
+            )
+        for index, issue in enumerate(artifact.get("unresolved", [])):
+            append_blocker(
+                "artifact-unresolved",
+                f"{artifact['path']}#{index}",
+                str(issue),
+                phase_code=artifact["phase_code"],
+                role_code=artifact["owner_role_code"],
+                severity="medium",
+                details={"artifact_path": artifact["path"], "issue": issue},
+            )
+
+    for handoff in handoffs:
+        if handoff["gate_status"] != "blocked":
+            continue
+        append_blocker(
+            "handoff-blocked",
+            handoff["path"],
+            handoff.get("topic") or handoff.get("purpose") or "blocked handoff",
+            role_code=handoff.get("to_role_code"),
+            severity="high",
+            details=handoff,
+        )
+
+    for phase_code, details in status_payload.get("phases", {}).items():
+        if details.get("state") != "blocked":
+            continue
+        append_blocker(
+            "phase-blocked",
+            phase_code,
+            f"{phase_code} is blocked",
+            phase_code=phase_code,
+            severity="high",
+            details=details,
+        )
+
+    liveness = status_payload.get("liveness", {})
+    if liveness.get("stale"):
+        append_blocker(
+            "stale-run",
+            liveness.get("latest_activity_at", "stale"),
+            "orchestrator is stale with actionable work pending",
+            severity="high",
+            details=liveness,
         )
     return rows
 
@@ -524,6 +769,23 @@ def collect_run_snapshot(playbook_root: Path, project_slug: str, project_name: s
     ]
 
     if not has_active_run(playbook_root):
+        empty_status_payload = normalize_status_report_payload(
+            {
+                "generated_at": utcnow(),
+                "current_phase": {"key": None, "label": ""},
+                "current_phase_code": None,
+                "overall_progress": 0.0,
+                "roles": {},
+                "artifact_areas": {},
+                "artifacts": {},
+                "completion": {"complete": False, "blockers": []},
+                "phases": {},
+                "phase5_ready": False,
+                "phase5_blockers": [],
+                "evidence": {},
+                "liveness": {},
+            }
+        )
         return {
             "captured_at": utcnow(),
             "playbook_root": str(playbook_root),
@@ -532,14 +794,7 @@ def collect_run_snapshot(playbook_root: Path, project_slug: str, project_name: s
             "run": None,
             "roles": roles,
             "phases_catalog": phases,
-            "status_payload": {
-                "generated_at": utcnow(),
-                "current_phase_code": None,
-                "overall_progress": 0.0,
-                "roles": {},
-                "artifact_areas": {},
-                "completion": {"complete": False, "blockers": []},
-            },
+            "status_payload": empty_status_payload,
         }
 
     status_payload = run_tool_json(
@@ -553,20 +808,21 @@ def collect_run_snapshot(playbook_root: Path, project_slug: str, project_name: s
         ["--repo-root", str(playbook_root), "--json"],
     )
     status_payload["completion"] = completion_payload
+    status_payload = normalize_status_report_payload(status_payload)
 
     run_status_path = playbook_root / "runs" / "current" / "orchestrator" / "run-status.json"
     run_status = json.loads(run_status_path.read_text(encoding="utf-8"))
     run_id_raw = str(run_status.get("run_id", "")).strip() or "RUN-UNKNOWN"
     run_db_id = stable_uuid(project_slug, run_id_raw)
-    current_phase_code = status_payload.get("current_phase_code") or status_payload.get("current_phase", {}).get("key")
+    current_phase_code = status_payload.get("current_phase_code")
 
     packages, artifacts, dependencies = collect_artifacts(playbook_root, run_db_id)
     handoffs = collect_handoffs(playbook_root, run_db_id)
     evidence_items = collect_evidence(playbook_root, run_db_id)
     agent_turns = collect_agent_turns(playbook_root, run_db_id)
-    verification_checks = collect_verification_checks(run_db_id, status_payload)
-    dashboard_snapshot = collect_dashboard_snapshot(run_db_id, status_payload)
-    blockers = build_blockers(run_db_id, status_payload)
+    verification_checks = collect_verification_checks(run_db_id, status_payload, evidence_items, artifacts)
+    blockers = build_blockers(run_db_id, status_payload, artifacts, handoffs)
+    dashboard_snapshot = collect_dashboard_snapshot(run_db_id, status_payload, blockers, package_summary_from_rows(packages))
     phase_rows = build_phase_rows(run_db_id, status_payload)
 
     run_number = int(re.sub(r"\D", "", run_id_raw) or "1")

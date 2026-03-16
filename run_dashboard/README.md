@@ -33,6 +33,18 @@ for multiple runs; a later sync replaces only the rows for the same run ID.
 
 ## Environment
 
+Install the local dashboard dependencies first:
+
+```bash
+python3 -m pip install -r run_dashboard/requirements.txt
+```
+
+Validated baseline:
+
+- Python `3.12+`
+- SQLite via the standard library
+- SQLAlchemy from `run_dashboard/requirements.txt`
+
 The scripts use:
 
 - `RUN_DASHBOARD_DATABASE_URL`
@@ -68,6 +80,9 @@ Watch the current run continuously:
 bash run_dashboard/scripts/watch_current_run.sh
 ```
 
+`watch_current_run.sh` is a polling watcher. It re-syncs on a fixed interval
+controlled by `RUN_DASHBOARD_POLL_SECONDS` and is meant to remain non-fatal.
+
 When `app_gen_playbook/scripts/run_playbook.sh` is used from this workspace, it
 now initializes the dashboard database, performs an immediate sync, and starts
 the watcher as a non-fatal sidecar automatically.
@@ -80,6 +95,17 @@ python3 run_dashboard/src/run_dashboard/sync_once.py \
   --dump-json \
   --skip-db
 ```
+
+Run the tests:
+
+```bash
+python3 -m unittest discover -s run_dashboard/tests -v
+```
+
+If the schema changes incompatibly, `init_db.py` / `ensure_database()` resets
+the derived SQLite database to the current schema version. This is acceptable
+because the dashboard database is a rebuildable mirror of file-driven run
+state, not the source of truth.
 
 ## Scope boundary
 

@@ -62,14 +62,7 @@ def actionable_count(state_root: Path) -> int:
     return count
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--repo-root", required=True)
-    parser.add_argument("--idle-threshold-seconds", type=int, default=300)
-    parser.add_argument("--json")
-    args = parser.parse_args()
-
-    repo_root = resolve_repo_root(args.repo_root)
+def collect_liveness(repo_root: Path, idle_threshold_seconds: int = 300) -> dict[str, object]:
     run_root = repo_root / "runs" / "current"
     log_time, log_source = latest_log_activity(run_root / "evidence" / "orchestrator" / "logs" / "orchestrator.log")
     heartbeat_time, heartbeat_source = latest_worker_heartbeat(run_root / "orchestrator" / "workers")
@@ -86,9 +79,9 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     age_seconds = int((now - latest).total_seconds()) if latest else None
     pending = actionable_count(run_root / "role-state")
-    stale = bool(pending > 0 and age_seconds is not None and age_seconds >= args.idle_threshold_seconds)
+    stale = bool(pending > 0 and age_seconds is not None and age_seconds >= idle_threshold_seconds)
 
-    payload = {
+    return {
         "stale": stale,
         "actionable_count": pending,
         "latest_activity_at": latest.strftime("%Y-%m-%dT%H:%M:%SZ") if latest else "",
@@ -96,12 +89,23 @@ def main() -> int:
         "latest_activity_source": source,
     }
 
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-root", required=True)
+    parser.add_argument("--idle-threshold-seconds", type=int, default=300)
+    parser.add_argument("--json")
+    args = parser.parse_args()
+
+    repo_root = resolve_repo_root(args.repo_root)
+    payload = collect_liveness(repo_root, idle_threshold_seconds=args.idle_threshold_seconds)
+
     if args.json:
         Path(args.json).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     else:
         print(json.dumps(payload, indent=2, sort_keys=True))
 
-    return 1 if stale else 0
+    return 1 if payload["stale"] else 0
 
 
 if __name__ == "__main__":

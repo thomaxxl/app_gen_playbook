@@ -4,11 +4,19 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Float, Integer, JSON, MetaData, String, Table, Text, UniqueConstraint, create_engine, delete, select
+from sqlalchemy import Boolean, Column, Float, Integer, JSON, MetaData, String, Table, Text, UniqueConstraint, create_engine, delete, inspect, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 
 metadata = MetaData()
+SCHEMA_VERSION = 2
+
+schema_state = Table(
+    "schema_state",
+    metadata,
+    Column("singleton", Integer, primary_key=True),
+    Column("version", Integer, nullable=False),
+)
 
 projects = Table(
     "projects",
@@ -131,6 +139,10 @@ handoff_messages = Table(
     Column("id", String(36), primary_key=True),
     Column("run_id", String(36), nullable=False),
     Column("filename", String, nullable=False),
+    Column("path", String, nullable=False),
+    Column("role_lane", String, nullable=False),
+    Column("state_dir", String, nullable=False),
+    Column("message_key", String(36), nullable=False),
     Column("created_at", String, nullable=False),
     Column("from_role_code", String),
     Column("to_role_code", String, nullable=False),
@@ -145,9 +157,10 @@ handoff_messages = Table(
     Column("requested_outputs", JSON, nullable=False),
     Column("dependencies", JSON, nullable=False),
     Column("blocking_issues", JSON, nullable=False),
+    Column("supersedes_raw", String),
     Column("notes", Text),
     Column("processed_at", String),
-    UniqueConstraint("run_id", "filename"),
+    UniqueConstraint("run_id", "path"),
 )
 
 blockers = Table(
@@ -261,10 +274,40 @@ def create_db_engine(db_url: str):
     return create_engine(db_url, future=True)
 
 
+def reset_schema(engine) -> None:
+    metadata.drop_all(engine)
+    metadata.create_all(engine)
+    with engine.begin() as conn:
+        conn.execute(schema_state.insert().values(singleton=1, version=SCHEMA_VERSION))
+
+
+def schema_is_current(engine) -> bool:
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "schema_state" not in tables:
+        return False
+    with engine.connect() as conn:
+        version = conn.execute(select(schema_state.c.version).where(schema_state.c.singleton == 1)).scalar_one_or_none()
+    if version != SCHEMA_VERSION:
+        return False
+
+    for table in metadata.sorted_tables:
+        if table.name not in tables:
+            return False
+        existing_columns = {column["name"] for column in inspector.get_columns(table.name)}
+        expected_columns = {column.name for column in table.columns}
+        if not expected_columns.issubset(existing_columns):
+            return False
+    return True
+
+
 def ensure_database(db_url: str) -> None:
     engine = create_db_engine(db_url)
     try:
-        metadata.create_all(engine)
+        if schema_is_current(engine):
+            metadata.create_all(engine)
+        else:
+            reset_schema(engine)
     finally:
         engine.dispose()
 

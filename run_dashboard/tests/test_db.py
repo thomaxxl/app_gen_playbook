@@ -4,15 +4,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from sqlalchemy import inspect
-
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from run_dashboard.db import create_db_engine, ensure_database, write_snapshot
+try:
+    from sqlalchemy import inspect
+    from run_dashboard.db import create_db_engine, ensure_database, write_snapshot
+    HAVE_SQLALCHEMY = True
+except ModuleNotFoundError:
+    inspect = None
+    create_db_engine = ensure_database = write_snapshot = None
+    HAVE_SQLALCHEMY = False
 
 
+@unittest.skipUnless(HAVE_SQLALCHEMY, "install run_dashboard/requirements.txt")
 class DatabaseTests(unittest.TestCase):
     def test_ensure_database_creates_sqlite_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -29,6 +35,7 @@ class DatabaseTests(unittest.TestCase):
             self.assertIn("projects", table_names)
             self.assertIn("runs", table_names)
             self.assertIn("dashboard_snapshots", table_names)
+            self.assertIn("schema_state", table_names)
 
     def test_write_snapshot_keeps_multiple_runs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

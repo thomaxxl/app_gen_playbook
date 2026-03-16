@@ -12,3 +12,7 @@ Default file path:
 
 This directory is documentation-only. The active schema source of truth is the
 SQLAlchemy model layer so the collector and the database stay aligned.
+
+The schema is versioned in `db.py`. Because this database is a derived mirror
+instead of an authoring surface, incompatible schema changes reset and rebuild
+the local SQLite file rather than running a complex migration chain.
