@@ -76,6 +76,10 @@ def reset_current_run(repo_root: Path) -> Path:
         if context_file.exists():
             context_file.unlink()
 
+    orchestrator_dir = role_state_dir / "orchestrator"
+    (orchestrator_dir / "inbox").mkdir(parents=True, exist_ok=True)
+    (orchestrator_dir / "processed").mkdir(parents=True, exist_ok=True)
+
     artifacts_dir = current_dir / "artifacts"
     for artifact_dir in ARTIFACT_DIRS:
         (artifacts_dir / artifact_dir).mkdir(parents=True, exist_ok=True)

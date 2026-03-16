@@ -166,6 +166,12 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
     bundle_required, bundle_phases = collect_bundle_requirements(repo_root, required_reads)
     for artifact_path in bundle_required:
         candidate = repo_root / artifact_path
+        if (
+            gate_status == "blocked"
+            and sender_runtime_role in {"orchestrator", "ceo"}
+            and artifact_path in allowed_missing
+        ):
+            continue
         if not candidate.exists():
             blockers.append(
                 {

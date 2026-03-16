@@ -212,6 +212,100 @@ change_id: ${ACTIVE_CHANGE_ID}
 EOF
 }
 
+runtime_role_from_label() {
+  case "$1" in
+    product_manager|product-manager) printf '%s\n' "product_manager" ;;
+    architect) printf '%s\n' "architect" ;;
+    frontend) printf '%s\n' "frontend" ;;
+    backend) printf '%s\n' "backend" ;;
+    deployment|devops) printf '%s\n' "deployment" ;;
+    ceo) printf '%s\n' "ceo" ;;
+    *) return 1 ;;
+  esac
+}
+
+message_field() {
+  local field_name="$1"
+  local message_path="$2"
+  awk -F':[[:space:]]*' -v key="$field_name" '$1 == key { print $2; exit }' "$message_path"
+}
+
+emit_ceo_escalation_note() {
+  local processed_message_path="$1"
+  local original_sender="$2"
+  local original_topic="$3"
+  local reason="$4"
+  local stamp note_path relative_processed_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  note_path="$STATE_ROOT/ceo/inbox/${stamp}-from-orchestrator-to-ceo-escalation.md"
+  relative_processed_path="${processed_message_path#$ROOT/}"
+  mkdir -p "$STATE_ROOT/ceo/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: ceo
+topic: orchestrator-escalation
+purpose: inspect an orchestrator-routed blocked-run escalation and decide how the run should continue
+change_id: ${ACTIVE_CHANGE_ID}
+
+## Required Reads
+- runs/current/remarks.md
+- runs/current/orchestrator/run-status.json
+- runs/current/evidence/orchestrator/logs/orchestrator.log
+- playbook/task-bundles/ceo-stall-intervention.yaml
+- playbook/roles/ceo.md
+- ${relative_processed_path}
+
+## Requested Outputs
+- record the stalled-run assessment in runs/current/remarks.md
+- restore progress through an explicit reroute, recovery handoff, or blocked-run decision
+
+## Dependencies
+- none
+
+## Gate Status
+- blocked
+
+## Blocking Issues
+- ${reason}
+
+## Notes
+- original sender: ${original_sender:-unknown}
+- original topic: ${original_topic:-unspecified}
+- the original orchestrator escalation note has been archived for reference
+EOF
+  printf '%s\n' "$note_path"
+}
+
+process_orchestrator_inbox() {
+  local orchestrator_dir="$STATE_ROOT/orchestrator"
+  local inbox_dir="$orchestrator_dir/inbox"
+  local processed_dir="$orchestrator_dir/processed"
+  local oldest processed_path sender topic ceo_note reason
+
+  oldest="$(find "$inbox_dir" -maxdepth 1 -type f -name '*.md' | sort | head -n 1 || true)"
+  if [[ -z "$oldest" ]]; then
+    return 1
+  fi
+
+  mkdir -p "$processed_dir"
+  processed_path="$processed_dir/$(basename "$oldest")"
+  mv "$oldest" "$processed_path"
+
+  sender="$(message_field from "$processed_path")"
+  topic="$(message_field topic "$processed_path")"
+  reason="orchestrator-routed escalation requires CEO triage: ${processed_path#$ROOT/}"
+  ceo_note="$(emit_ceo_escalation_note "$processed_path" "$sender" "$topic" "$reason")"
+
+  log "orchestrator-escalated message=$(basename "$processed_path") ceo_note=$ceo_note"
+  append_recovery_log \
+    "Orchestrator Escalation Routed To CEO" \
+    "Original note:\n- ${processed_path#$ROOT/}\n\nCEO note:\n- ${ceo_note#$ROOT/}"
+  append_run_remark \
+    "Orchestrator Escalation Routed To CEO" \
+    "Archived orchestrator escalation:\n- ${processed_path#$ROOT/}\n\nQueued CEO intervention:\n- ${ceo_note#$ROOT/}"
+  return 0
+}
+
 log() {
   local line
   line="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"
@@ -535,6 +629,37 @@ recover_run_queue() {
     --change-id "$ACTIVE_CHANGE_ID"
 }
 
+validate_generated_handoff() {
+  local note_path="$1"
+  local receiver_label receiver_runtime validation_json blocker_summary processed_path
+  receiver_label="$(message_field to "$note_path")"
+  receiver_runtime="$(runtime_role_from_label "$receiver_label")" || {
+    fatal_exit \
+      "orchestrator generated a recovery note with an unknown receiver" \
+      "Recovery note:\n- $note_path\n\nReceiver label:\n- ${receiver_label:-missing}"
+  }
+
+  validation_json="$EVIDENCE_ROOT/$(basename "$note_path" .md).recovery-validation.json"
+  if python3 "$ROOT/tools/validate_handoff_inputs.py" \
+    --repo-root "$ROOT" \
+    --runtime-role "$receiver_runtime" \
+    --message "$note_path" \
+    --json "$validation_json" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  blocker_summary="$(format_handoff_validation_blockers "$validation_json")"
+  processed_path="$(role_state_dir "$receiver_runtime")/processed/$(basename "$note_path")"
+  mkdir -p "$(dirname "$processed_path")"
+  mv "$note_path" "$processed_path"
+  append_recovery_log \
+    "Invalid Recovery Note" \
+    "Recovery note:\n- ${processed_path#$ROOT/}\n\nReceiver:\n- $receiver_runtime\n\nBlockers:\n$blocker_summary"
+  fatal_exit \
+    "orchestrator generated invalid recovery note" \
+    "Recovery note:\n- ${processed_path#$ROOT/}\n\nReceiver:\n- $receiver_runtime\n\nValidation blockers:\n$blocker_summary"
+}
+
 run_recovery_pass() {
   local output
   output="$(recover_run_queue 2>/dev/null || true)"
@@ -544,6 +669,7 @@ run_recovery_pass() {
 
   while IFS= read -r line; do
     [[ -n "$line" ]] || continue
+    validate_generated_handoff "$line"
     log "recovery-queued note=$line"
     append_recovery_log \
       "Recovery Note Emitted" \
@@ -1076,6 +1202,10 @@ main_loop() {
 
     did_work=0
 
+    if process_orchestrator_inbox; then
+      did_work=1
+    fi
+
     if run_recovery_pass; then
       did_work=1
     fi
@@ -1085,6 +1215,10 @@ main_loop() {
         did_work=1
       fi
       priority_role=""
+    fi
+
+    if run_role_once "ceo"; then
+      did_work=1
     fi
 
     if architect_blocked_integration_pending; then

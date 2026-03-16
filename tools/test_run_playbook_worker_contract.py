@@ -13,6 +13,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertNotIn('backend_pid="$(ensure_worker_running', script)
         self.assertIn("ENSURE_WORKER_PID_RESULT", script)
 
+    def test_runner_processes_ceo_and_orchestrator_exception_lanes(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("process_orchestrator_inbox()", script)
+        self.assertIn('if process_orchestrator_inbox; then', script)
+        self.assertIn('if run_role_once "ceo"; then', script)
+        self.assertIn("orchestrator generated invalid recovery note", script)
+
 
 if __name__ == "__main__":
     unittest.main()

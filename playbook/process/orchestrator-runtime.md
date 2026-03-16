@@ -165,6 +165,16 @@ artifact, that queued note MUST count as useful progress for the current
 control cycle. The orchestrator MUST NOT declare a stall in the same cycle
 that it successfully re-queued recovery work.
 
+The repository MAY also use `runs/current/role-state/orchestrator/inbox/` for
+exception-routing notes that are not normal role handoffs. The orchestrator
+runtime itself MUST process that inbox. It MUST NOT leave those notes counted
+as actionable work without routing them onward.
+
+When an orchestrator exception note is received, the orchestrator SHOULD
+archive it under `runs/current/role-state/orchestrator/processed/` and convert
+it into an explicit CEO intervention note unless a more specific automatic
+recovery path is defined.
+
 ## Writable-root rule
 
 When the orchestrator starts Codex from a role-local runtime directory under
@@ -208,6 +218,7 @@ After Phase 5:
 
 - Frontend and Backend SHOULD run as long-lived background workers
 - Product Manager and Architect MUST remain in the main control lane
+- CEO MUST run immediately when a CEO inbox note already exists
 - Frontend and Backend workers MUST process only their own oldest actionable
   inbox item per turn
 
@@ -253,12 +264,21 @@ The recovery pass MUST:
 - remain dormant while the initial Product Manager intake item
   `runs/current/role-state/product_manager/{inbox,inflight}/INPUT.md` still
   exists
+- pre-validate every synthesized recovery note before counting it as useful
+  progress
+- stop immediately with a clear orchestrator error if it generates an invalid
+  recovery note, instead of re-queuing the same bad note indefinitely
 - use the exact canonical artifact filenames required by completion, not
   semantically similar alternates
 - requeue only into a role whose inbox and inflight lanes are currently empty
 - avoid creating late-phase acceptance or integration-review work before the
   earlier phase-0 through phase-4 canonical artifact set is complete
 - prefer recovery notes in the owning role inbox over silent automatic edits
+
+Blocked recovery notes emitted by `orchestrator` or `ceo` MAY reference
+task-bundle prerequisites that are themselves the declared missing recovery
+targets. The handoff validator MUST allow that exact pattern, because the
+recovery note exists to restore those prerequisites.
 
 Recovery queue synthesis is a required orchestrator responsibility. When
 completion still fails and no inflight work can legally advance the run, the

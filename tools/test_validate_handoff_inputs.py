@@ -14,6 +14,90 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_blocked_recovery_note_allows_missing_task_bundle_prerequisite(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(repo_root / "runs/current/remarks.md", "# remarks\n")
+            write_file(
+                repo_root / "runs/current/artifacts/product/brief.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/business-rules.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/overview.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/runtime-bom.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/ux/navigation.md",
+                "owner: frontend\nphase: phase-3-ux-and-interaction-design\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "owner: frontend\nphase: phase-3-ux-and-interaction-design\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/model-design.md",
+                "owner: backend\nphase: phase-4-backend-design-and-rules-mapping\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/test-plan.md",
+                "owner: backend\nphase: phase-4-backend-design-and-rules-mapping\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "playbook/task-bundles/integration-review.yaml",
+                "\n".join(
+                    [
+                        "name: integration-review",
+                        "role: architect",
+                        "required_artifacts:",
+                        "  - runs/current/artifacts/product/brief.md",
+                        "  - runs/current/artifacts/product/business-rules.md",
+                        "  - runs/current/artifacts/architecture/overview.md",
+                        "  - runs/current/artifacts/architecture/runtime-bom.md",
+                        "  - runs/current/artifacts/ux/navigation.md",
+                        "  - runs/current/artifacts/ux/landing-strategy.md",
+                        "  - runs/current/artifacts/backend-design/model-design.md",
+                        "  - runs/current/artifacts/backend-design/test-plan.md",
+                        "  - runs/current/evidence/contract-samples.md",
+                    ]
+                ),
+            )
+            message_path = repo_root / "runs/current/role-state/architect/inflight/recovery.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: orchestrator",
+                        "to: architect",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/remarks.md",
+                        "- playbook/task-bundles/integration-review.yaml",
+                        "- runs/current/evidence/contract-samples.md",
+                        "",
+                        "## Requested Outputs",
+                        "- create or replace runs/current/evidence/contract-samples.md",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Blocking Issues",
+                        "- missing: runs/current/evidence/contract-samples.md",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "architect", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_recovery_note_allows_missing_declared_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
