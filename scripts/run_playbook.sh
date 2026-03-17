@@ -704,6 +704,10 @@ check_orchestrator_liveness() {
     --idle-threshold-seconds "$IDLE_THRESHOLD_SECONDS"
 }
 
+dependency_provisioning_preflight() {
+  python3 "$ROOT/tools/check_dependency_provisioning.py" --repo-root "$ROOT"
+}
+
 recover_run_queue() {
   python3 "$ROOT/tools/recover_run_queue.py" \
     --repo-root "$ROOT" \
@@ -758,6 +762,77 @@ run_recovery_pass() {
   done <<< "$output"
 
   return 0
+}
+
+role_requires_dependency_preflight() {
+  case "$1" in
+    frontend|backend|deployment) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+role_actionable_count() {
+  local runtime_role="$1"
+  local count=0
+  local candidate_dirs=() role_dir lane path
+
+  case "$runtime_role" in
+    deployment)
+      if [[ -d "$STATE_ROOT/devops" ]]; then
+        candidate_dirs+=("$STATE_ROOT/devops")
+      fi
+      if [[ -d "$STATE_ROOT/deployment" ]]; then
+        candidate_dirs+=("$STATE_ROOT/deployment")
+      fi
+      if [[ "${#candidate_dirs[@]}" -eq 0 ]]; then
+        candidate_dirs+=("$STATE_ROOT/devops" "$STATE_ROOT/deployment")
+      fi
+      ;;
+    *)
+      candidate_dirs+=("$(role_state_dir "$runtime_role")")
+      ;;
+  esac
+
+  for role_dir in "${candidate_dirs[@]}"; do
+    for lane in inbox inflight; do
+      for path in "$role_dir/$lane"/*.md; do
+        [[ -f "$path" ]] || continue
+        count=$((count + 1))
+      done
+    done
+  done
+
+  printf '%s\n' "$count"
+}
+
+maybe_enforce_dependency_provisioning_preflight() {
+  local runtime_role="$1"
+  local detail
+
+  if ! role_requires_dependency_preflight "$runtime_role"; then
+    return 0
+  fi
+
+  if [[ "$(role_actionable_count "$runtime_role")" -eq 0 ]]; then
+    return 0
+  fi
+
+  if detail="$(dependency_provisioning_preflight 2>&1)"; then
+    return 0
+  fi
+
+  mkdir -p "$ORCH_ROOT"
+  cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
+# Operator Action Required
+
+Dependency provisioning preflight failed before role dispatch.
+
+Affected role:
+- $runtime_role
+
+$detail
+EOF
+  operator_action_required_exit
 }
 
 validate_role_turn() {
@@ -1356,6 +1431,8 @@ worker_loop() {
       continue
     fi
 
+    maybe_enforce_dependency_provisioning_preflight "$runtime_role"
+
     if ! run_role_once "$runtime_role" "${ignore_roles[@]}"; then
       sleep "$POLL_SECONDS"
     fi
@@ -1510,6 +1587,7 @@ main_loop() {
     fi
 
     if [[ -n "$priority_role" ]]; then
+      maybe_enforce_dependency_provisioning_preflight "$priority_role"
       if run_role_once "$priority_role"; then
         did_work=1
       fi
@@ -1528,15 +1606,18 @@ main_loop() {
       did_work=1
     fi
 
+    maybe_enforce_dependency_provisioning_preflight "deployment"
     if run_role_once "deployment"; then
       did_work=1
     fi
 
     if [[ "$parallel_started" -eq 0 ]]; then
+      maybe_enforce_dependency_provisioning_preflight "frontend"
       if run_role_once "frontend"; then
         did_work=1
       fi
 
+      maybe_enforce_dependency_provisioning_preflight "backend"
       if run_role_once "backend"; then
         did_work=1
       fi

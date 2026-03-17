@@ -9,6 +9,7 @@ required_phase:
   - playbook/process/packaging-lanes.md
 required_artifacts:
   - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
@@ -25,3 +26,5 @@ writable_targets:
   - app/docker-compose.yml
   - app/nginx.conf
   - app/entrypoint.sh
+  - app/install.sh
+  - app/run.sh

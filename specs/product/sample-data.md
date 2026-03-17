@@ -22,3 +22,27 @@ The real artifact MUST define:
 - workflow-specific records
 - rule-specific records
 - search or reporting test records
+- delivery seed policy
+
+The real artifact MUST include a machine-readable policy block like:
+
+```yaml
+delivery_seed_policy:
+  mode: none | approved-demo | required-reference
+  allowed_visible_resources:
+    - ...
+  forbidden_visible_markers:
+    - mock
+    - demo
+    - sample
+    - starter
+  notes: ...
+```
+
+Interpretation:
+
+- `none`: no seeded or demo data should remain visible in the delivered app
+- `approved-demo`: approved demo data may remain visible, but it must be
+  listed explicitly
+- `required-reference`: reference data such as statuses or categories may
+  remain, but transactional demo rows should not

@@ -42,6 +42,8 @@ on this file for execution rules.
   The local ignored generated-app working tree for the active run.
 - `scripts/run_playbook.sh`
   The top-level orchestrator entrypoint for a new run.
+- `scripts/run_playbook_interactive.sh`
+  Interactive wrapper for run configuration and dispatch.
 - `scripts/clean.sh`
   Cleans local `runs/current/` and `app/` without touching tracked starter or
   example content.
@@ -78,6 +80,12 @@ For a new run:
 
 ```bash
 ./scripts/run_playbook.sh path/to/input.md
+```
+
+Or launch interactively:
+
+```bash
+./scripts/run_playbook_interactive.sh
 ```
 
 3. The orchestrator creates local `runs/current/`, seeds the Product Manager

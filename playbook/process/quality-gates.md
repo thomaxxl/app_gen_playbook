@@ -1,0 +1,58 @@
+# Quality Gates
+
+This file defines the canonical release blockers for the playbook.
+
+These blockers apply before integration review can pass, before product
+acceptance can pass, and before the orchestrator can treat the run as complete.
+
+## Hard blockers
+
+The run is blocked if any of these are true:
+
+- a required CRUD path is broken on a must-support resource
+- the app only proves shell loading and does not prove real live-data rendering
+- a visible user-facing page reads like metadata, route inventory, contract
+  recovery, runtime diagnostics, or template cleanup copy
+- leftover mock, demo, or starter data remains visible without explicit
+  approval in `runs/current/artifacts/product/sample-data.md`
+- a required custom page is still a metadata, status, or contract placeholder
+- required relationship labels, tabs, or dialogs are missing where the
+  approved UX and frontend contracts require them
+- approved rule IDs do not have the required backend test coverage
+- the final Playwright smoke validation is missing without a documented
+  blocked-environment path
+- the required quality evidence pack is missing, still placeholder, blocked
+  without explanation, or contradictory
+
+## Required quality evidence pack
+
+The canonical quality evidence pack lives under:
+
+- `runs/current/evidence/quality/`
+
+Required files:
+
+- `crud-matrix.md`
+- `seed-data-audit.md`
+- `ui-copy-audit.md`
+- `test-results.md`
+- `quality-summary.md`
+
+Phase 6 also depends on:
+
+- `runs/current/evidence/contract-samples.md`
+- `runs/current/evidence/frontend-usability.md`
+
+## Ownership
+
+- Frontend owns implementation and frontend-oriented validation outputs
+- Backend owns implementation and backend-oriented validation outputs
+- Architect owns the Phase 6 quality evidence pack and the integration gate
+- Product Manager consumes that evidence and owns the final acceptance gate
+
+## Gate rule
+
+The quality evidence pack is not optional review narrative.
+
+If the evidence is missing, still placeholder, or contradicts the claimed gate
+status, the gate fails closed.

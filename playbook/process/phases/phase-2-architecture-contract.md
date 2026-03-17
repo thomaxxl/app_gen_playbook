@@ -20,6 +20,8 @@ Convert product requirements into a stable cross-layer contract.
 - define `admin.yaml` ownership and contract
 - define query/search expectations the frontend relies on
 - define test obligations by layer
+- define whether dependency handling is `clean-install` or
+  `preprovisioned-reuse-only`
 
 If the run differs from the starter trio, the Architect MUST read
 `playbook/process/rename-starter-trio-checklist.md` during this phase.
@@ -35,6 +37,7 @@ If the run differs from the starter trio, the Architect MUST read
 - `runs/current/artifacts/architecture/route-and-entry-model.md`
 - `runs/current/artifacts/architecture/generated-vs-custom.md`
 - `runs/current/artifacts/architecture/runtime-bom.md`
+- `runs/current/artifacts/architecture/dependency-provisioning.md`
 - `runs/current/artifacts/architecture/test-obligations.md`
 - `runs/current/artifacts/architecture/decision-log.md`
 - `runs/current/artifacts/architecture/capability-profile.md`
@@ -47,6 +50,8 @@ If the run differs from the starter trio, the Architect MUST read
 - runtime dependencies are explicit
 - runtime-bom is authored and freezes frontend/backend package sources before
   implementation
+- dependency-provisioning is authored and makes dependency creation versus
+  reuse explicit before implementation
 - capability-profile and load-plan are authored and no longer treated as stub
   placeholders
 - the lane choice `starter`, `rename-only`, or `non-starter` is explicit

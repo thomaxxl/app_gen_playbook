@@ -26,10 +26,23 @@ details that need more precision than the global summary.
 - DevOps owns package-management policy, runtime or toolchain packaging, and
   deployment packaging. DevOps MUST NOT silently change application semantics,
   API behavior, UX behavior, or business-rule enforcement.
+- The authoritative run policy for dependency creation versus reuse lives in
+  `runs/current/artifacts/architecture/dependency-provisioning.md`.
 - CEO is a dormant exception role. It MUST run only for orchestrator-declared
   stall intervention or an explicit operator request.
 - During normal execution, CEO MUST NOT be treated as an additional default
   participant in the phase pipeline.
+
+When `dependency_provisioning.mode = preprovisioned-reuse-only`:
+
+- no role may create a new virtualenv
+- no role may run `pip install`, `pip wheel`, `npm install`, `npm ci`,
+  `pnpm install`, `yarn install`, `playwright install`, or equivalent
+  dependency-mutating commands
+- no role may auto-install tools through implicit package-manager behavior
+- roles may only verify, reuse, and normalize the approved dependency roots
+- missing dependencies are an operator or environment block, not a role-owned
+  repair task
 
 ## Artifact discipline
 

@@ -51,6 +51,7 @@ FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 FRONTEND_MODE="${FRONTEND_MODE:-preview}"
 REMOTE="${REMOTE:-}"
+DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
 BACKEND_VENV_DIR=""
@@ -148,11 +149,20 @@ require_installed_dependencies() {
   fi
 
   {
-    echo "Dependencies are not installed."
+    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+      echo "Pre-provisioned dependencies are missing or incomplete."
+    else
+      echo "Dependencies are not installed."
+    fi
     for item in "${missing[@]}"; do
       echo "- Missing $item"
     done
-    echo "Run ./install.sh from $PROJECT_DIR before starting ./run.sh."
+    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+      echo "Check BACKEND_VENV / FRONTEND_NODE_MODULES_DIR or the prepared backend/.venv / frontend/node_modules paths."
+      echo "In preprovisioned-reuse-only mode, the playbook does not install missing packages."
+    else
+      echo "Run ./install.sh from $PROJECT_DIR before starting ./run.sh."
+    fi
   } >&2
   exit 1
 }
@@ -276,6 +286,9 @@ Notes:
 - The backend and frontend should still remain runnable independently.
 - `run.sh` MUST fail with a clear `./install.sh` instruction when the backend
   or frontend dependencies have not been installed yet.
+- When `DEPENDENCY_PROVISIONING_MODE=preprovisioned-reuse-only`, `run.sh`
+  MUST fail with a dependency-reuse message instead of implying that package
+  installation is expected.
 - If `backend/.venv` exists, including as a symlink to a prepared venv,
   `run.sh` SHOULD treat it as the installed backend environment.
 - If the operator wants to reuse a prepared backend virtualenv or external

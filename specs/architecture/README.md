@@ -22,6 +22,7 @@ Template files:
 - `resource-naming.md`
 - `route-and-entry-model.md`
 - `runtime-bom.md`
+- `dependency-provisioning.md`
 - `generated-vs-custom.md`
 - `test-obligations.md`
 - `decision-log.md`

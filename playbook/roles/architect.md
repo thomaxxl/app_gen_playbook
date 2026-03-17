@@ -11,6 +11,7 @@ backend, and rules can implement without guessing.
 - naming and route contracts
 - generated-versus-custom boundaries
 - runtime BOM and package freeze decisions
+- dependency provisioning policy
 - capability profile and load plan
 - resource classification
 - integration boundary decisions
@@ -92,6 +93,7 @@ The Architect owns and MUST maintain:
 
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
+- `../../runs/current/artifacts/architecture/dependency-provisioning.md`
 - role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
 The Architect MUST replace starter-placeholder content in those gating

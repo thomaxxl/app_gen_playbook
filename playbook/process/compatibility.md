@@ -49,8 +49,11 @@ unnecessarily. That local workspace is gitignored specifically so dependency
 trees such as `frontend/node_modules/` can be reused.
 
 When the operator wants to reuse a prepared backend virtual environment or an
-external frontend dependency tree across repeated runs, the generated app MAY
-support the local convenience layout:
+external frontend dependency tree across repeated runs, the active run should
+declare that explicitly in
+`runs/current/artifacts/architecture/dependency-provisioning.md`.
+
+The generated app MAY support the local convenience layout:
 
 - `backend/.venv` as a real venv or a symlink to a prepared venv
 - `frontend/node_modules` as a real directory or a symlink to a prepared
@@ -66,6 +69,7 @@ environment variables.
 
 Preferred override keys:
 
+- `DEPENDENCY_PROVISIONING_MODE=clean-install|preprovisioned-reuse-only`
 - `BACKEND_VENV=/absolute/or/project-relative/path/to/venv`
 - `FRONTEND_NODE_MODULES_DIR=/absolute/or/project-relative/path/to/node_modules`
 
@@ -77,10 +81,12 @@ dependency reuse. If the operator prefers not to create that link manually, the
 generated `install.sh` MAY realize `FRONTEND_NODE_MODULES_DIR` as a single
 managed symlink at `frontend/node_modules -> $FRONTEND_NODE_MODULES_DIR`.
 
-The generated `app/install.sh` SHOULD skip `npm install` when
-`frontend/node_modules/` still matches the current lockfile and MUST still
-perform a full install automatically in a clean environment where
-`node_modules/` is absent.
+The generated `app/install.sh` SHOULD follow the declared provisioning mode:
+
+- in `clean-install` mode, it MAY create local dependency roots and install
+  missing packages
+- in `preprovisioned-reuse-only` mode, it MUST behave as a preflight
+  validator, not an installer
 
 If frontend package extraction is slow on the target filesystem, the operator
 SHOULD point `NPM_CONFIG_CACHE` at a persistent local-disk path such as

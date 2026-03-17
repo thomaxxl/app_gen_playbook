@@ -128,6 +128,25 @@ DevOps owns the normalization policy for:
 DevOps MUST prefer those explicit local overrides over symlinking the entire
 backend or frontend directories.
 
+When
+`runs/current/artifacts/architecture/dependency-provisioning.md` declares
+`mode: preprovisioned-reuse-only`, DevOps becomes a validator and path
+normalizer, not an installer.
+
+In that mode:
+
+- DevOps MAY use `BACKEND_VENV` directly or an already-existing
+  `app/backend/.venv`
+- DevOps MAY create only the single approved `app/frontend/node_modules`
+  symlink when `FRONTEND_NODE_MODULES_DIR` is set and the target already
+  exists
+- DevOps MUST NOT create the external node_modules target directory
+- DevOps MUST NOT create a backend virtualenv when the chosen backend venv is
+  absent
+- DevOps MUST NOT run package installation commands
+- DevOps MUST stop immediately with a clear block if the prepared dependency
+  roots are missing or incomplete
+
 ## Escalation targets
 
 - `../../runs/current/role-state/architect/inbox/` when packaging requires a

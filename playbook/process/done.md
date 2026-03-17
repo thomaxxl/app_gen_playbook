@@ -42,6 +42,13 @@ A feature is done only when all of these are true:
 - if a run claims frontend/backend integration success,
   `runs/current/evidence/contract-samples.md` exists and records at least one
   `admin.yaml endpoint` to live-route to sample-record trace
+- the canonical quality evidence pack exists under
+  `runs/current/evidence/quality/`
+- the quality evidence pack does not remain in starter-placeholder form
+- `runs/current/artifacts/product/sample-data.md` explicitly defines the
+  delivery seed policy
+- visible seeded, demo, or starter data matches the approved delivery seed
+  policy
 - the delivered frontend is usable as a product surface, not merely a
   metadata/debug/recovery shell
 - `Home`, required custom pages, and sampled generated CRUD pages match the

@@ -9,6 +9,7 @@ required_phase:
   - playbook/process/phases/phase-I4-design-delta.md
 required_artifacts:
   - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
 writable_targets:
   - runs/current/changes/*/candidate/artifacts/devops/**

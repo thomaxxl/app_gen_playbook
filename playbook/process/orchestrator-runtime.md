@@ -19,6 +19,8 @@ The orchestrator MUST:
 - use Codex session resume only as a speed and continuity layer
 - log visible start and finish lines for every agent turn
 - stop and surface a clear reason when the run becomes non-progressing
+- treat missing or placeholder quality evidence as a gate blocker, not as an
+  optional review detail
 - keep the CEO role dormant unless a stall candidate is detected or the
   operator explicitly targets the CEO role
 - validate handoff inputs before dispatching the receiver
@@ -27,6 +29,9 @@ The orchestrator MUST:
 - refuse to declare completion while required run-owned artifacts remain
   missing, stub, or blocked, or while required generated-app outputs under
   `app/` are still absent
+- stop early with an operator-action block when the active run requires
+  pre-provisioned dependency reuse but the declared dependency roots are
+  missing or incomplete
 
 ## Logging
 
@@ -208,6 +213,25 @@ an `inflight/` or `inbox/` copy of that same basename MUST be archived as a
 duplicate trace instead of being re-run. The orchestrator MUST preserve the
 duplicate file as evidence and MUST NOT misclassify that condition as a role
 implementation failure.
+
+Before Phase 6, the orchestrator SHOULD refuse to treat integration review as
+passing if the required implementation evidence inputs are missing or still
+placeholder.
+
+Before Phase 7, the orchestrator MUST refuse to dispatch or accept Product
+Manager acceptance work unless the full integration-review evidence pack
+exists, is no longer placeholder, and integration is not blocked.
+
+Missing or placeholder quality evidence MUST be treated the same way as any
+other required gate blocker.
+
+When
+`runs/current/artifacts/architecture/dependency-provisioning.md` declares
+`mode: preprovisioned-reuse-only`, the orchestrator MUST run a dependency
+preflight before dispatching DevOps, Frontend, or Backend work. If the
+declared prepared dependency roots are missing or incomplete, the orchestrator
+MUST write `runs/current/orchestrator/operator-action-required.md` and stop
+instead of invoking installer behavior indirectly through the roles.
 
 ## Writable-root rule
 

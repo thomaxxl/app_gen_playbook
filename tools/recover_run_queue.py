@@ -202,6 +202,65 @@ REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
             "playbook/process/phases/phase-6-integration-review.md",
         ),
     ),
+    (
+        "architect",
+        "runs/current/evidence/frontend-usability.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/crud-matrix.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/seed-data-audit.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/ui-copy-audit.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/test-results.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/quality-summary.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
 )
 
 PHASE_REQUIRED_READS = {

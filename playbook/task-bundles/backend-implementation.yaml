@@ -13,6 +13,7 @@ required_artifacts:
   - runs/current/artifacts/product/sample-data.md
   - runs/current/artifacts/architecture/resource-naming.md
   - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/backend-design/relationship-map.md
   - runs/current/artifacts/backend-design/rule-mapping.md

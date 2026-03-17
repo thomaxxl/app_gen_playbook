@@ -37,7 +37,13 @@ REQUIRED_APP_OUTPUTS = (
 REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/contract-samples.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/frontend-usability.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/crud-matrix.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/seed-data-audit.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/ui-copy-audit.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/test-results.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/quality-summary.md", "architect", "phase-6-integration-review"),
 )
+EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 
 
 def required_run_artifact_paths(repo_root: Path) -> list[tuple[Path, dict[str, object]]]:
@@ -304,6 +310,18 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                     "owner": owner,
                     "phase": phase,
                     "reason": "required evidence output is missing",
+                }
+            )
+            continue
+        text = path.read_text(encoding="utf-8")
+        if EVIDENCE_PLACEHOLDER_MARKER in text:
+            blockers.append(
+                {
+                    "kind": "required-evidence-output-placeholder",
+                    "path": relative_path,
+                    "owner": owner,
+                    "phase": phase,
+                    "reason": "required evidence output is still a starter placeholder",
                 }
             )
 

@@ -10,17 +10,13 @@ frontend dependency trees but should remain easy to bootstrap with one command.
 
 The key behavior is:
 
-- install backend Python dependencies into `backend/.deps` by default
-- install backend dependencies into `BACKEND_VENV` instead when an external
-  virtualenv override is configured
-- install published `logicbank` into the selected backend dependency path
-- reuse existing frontend `node_modules` when they still match the lockfile
+- honor `DEPENDENCY_PROVISIONING_MODE`
+- in `clean-install` mode, install backend and frontend dependencies locally
+- in `preprovisioned-reuse-only` mode, validate the prepared dependency roots
+  without creating environments or installing packages
 - optionally realize `FRONTEND_NODE_MODULES_DIR` as a managed
-  `frontend/node_modules` symlink
-- run `npm install` for the frontend only when `node_modules` is missing or
-  stale
-- verify Playwright is available for the frontend smoke suite
-- install the Chromium browser runtime for Playwright if it is missing
+  `frontend/node_modules` symlink only when the external target already exists
+- never symlink whole `backend/` or `frontend/` trees
 
 ```sh
 #!/usr/bin/env bash
@@ -49,6 +45,7 @@ print(raw.resolve())
 PY
 }
 
+DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
 BACKEND_VENV_DIR=""
@@ -92,8 +89,16 @@ ensure_frontend_node_modules_path() {
     return
   fi
 
-  mkdir -p "$(dirname "$FRONTEND_NODE_MODULES_DIR")"
-  mkdir -p "$FRONTEND_NODE_MODULES_DIR"
+  if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+    if [[ ! -d "$FRONTEND_NODE_MODULES_DIR" ]]; then
+      echo "FRONTEND_NODE_MODULES_DIR target is missing: $FRONTEND_NODE_MODULES_DIR" >&2
+      echo "In preprovisioned-reuse-only mode, ./install.sh will not create it." >&2
+      exit 1
+    fi
+  else
+    mkdir -p "$(dirname "$FRONTEND_NODE_MODULES_DIR")"
+    mkdir -p "$FRONTEND_NODE_MODULES_DIR"
+  fi
 
   if [[ -L "$link_path" ]]; then
     current_target="$(normalize_path "$(readlink "$link_path")" "$FRONTEND_DIR")"
@@ -114,6 +119,58 @@ ensure_frontend_node_modules_path() {
 
   ln -s "$FRONTEND_NODE_MODULES_DIR" "$link_path"
 }
+
+backend_dependencies_ready() {
+  local backend_python="$1"
+  "$backend_python" - <<'PY' >/dev/null 2>&1
+import fastapi
+import logic_bank
+import safrs
+import uvicorn
+PY
+}
+
+frontend_dependencies_ready() {
+  local node_modules_dir="$1"
+  [[ -d "$node_modules_dir" ]] &&
+  [[ -d "$node_modules_dir/vite" ]] &&
+  [[ -d "$node_modules_dir/react" ]] &&
+  [[ -d "$node_modules_dir/react-dom" ]] &&
+  [[ -d "$node_modules_dir/@playwright/test" ]]
+}
+
+if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+  ensure_frontend_node_modules_path
+
+  if [[ -z "$BACKEND_VENV_DIR" ]]; then
+    echo "Missing backend dependency root." >&2
+    echo "Set BACKEND_VENV in .runtime.local.env or provide backend/.venv." >&2
+    echo "In preprovisioned-reuse-only mode, ./install.sh will not create a virtualenv." >&2
+    exit 1
+  fi
+
+  if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
+    echo "Missing backend interpreter: $BACKEND_VENV_DIR/bin/python" >&2
+    echo "In preprovisioned-reuse-only mode, ./install.sh will not create or repair the backend venv." >&2
+    exit 1
+  fi
+
+  if ! backend_dependencies_ready "$BACKEND_VENV_DIR/bin/python"; then
+    echo "Backend dependencies are incomplete in $BACKEND_VENV_DIR." >&2
+    echo "Expected fastapi, logic_bank, safrs, and uvicorn to already be installed." >&2
+    exit 1
+  fi
+
+  if ! frontend_dependencies_ready "$FRONTEND_DIR/node_modules"; then
+    echo "Frontend dependencies are incomplete in $FRONTEND_DIR/node_modules." >&2
+    echo "Expected vite, react, react-dom, and @playwright/test to already exist." >&2
+    echo "In preprovisioned-reuse-only mode, ./install.sh will not run npm or Playwright installers." >&2
+    exit 1
+  fi
+
+  echo "Dependency validation completed for preprovisioned-reuse-only mode."
+  exit 0
+fi
 
 if [[ -n "$BACKEND_VENV_DIR" ]]; then
   if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
@@ -168,7 +225,7 @@ fi
     printf '%s\n' "$lock_hash" > "$lock_stamp"
   fi
 
-  if ! npx playwright --version >/dev/null 2>&1; then
+  if ! npx --no-install playwright --version >/dev/null 2>&1; then
     echo "Playwright CLI not found after npm install. Installing @playwright/test."
     npm install --save-dev @playwright/test
   fi
@@ -183,25 +240,26 @@ echo "Dependency installation completed."
 Notes:
 
 - Keep this at the project root, next to `run.sh`.
-- By default, keep backend packages isolated under `backend/.deps` so the
-  generated app does not require a user-managed virtualenv just to start.
-- If `backend/.venv` already exists, including as a symlink to a prepared venv,
-  `install.sh` SHOULD install backend packages there instead of `backend/.deps`.
-- If repeated local runs should reuse another virtualenv path, the generated
-  app MAY read `BACKEND_VENV` from a local-only `app/.runtime.local.env` file
-  and install into that virtualenv instead.
+- `install.sh` MUST honor `DEPENDENCY_PROVISIONING_MODE`.
+- In `clean-install` mode, the backend may still use `backend/.deps` by
+  default or install into a declared `backend/.venv` or `BACKEND_VENV`.
+- In `preprovisioned-reuse-only` mode, `install.sh` becomes a validator. It
+  MUST NOT create a virtualenv, run pip, run npm, or install Playwright.
 - `install.sh` SHOULD be idempotent for the frontend. If `frontend/node_modules`
   already matches `package-lock.json`, it SHOULD skip `npm install` rather than
   reinstalling packages on every run.
-- In a clean environment, missing `node_modules` MUST still trigger a full
+- In `clean-install` mode, missing `node_modules` MUST still trigger a full
   frontend install automatically.
 - If repeated local runs should reuse a dependency tree stored outside the app
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to
   that external directory.
+- In `preprovisioned-reuse-only` mode, the generated app MUST NOT create the
+  external `FRONTEND_NODE_MODULES_DIR` target directory.
 - Do not symlink whole `backend/` or `frontend/` directories. Only the
   explicit `frontend/node_modules` link is allowed in this local override path.
 - If repeated installs are slow on a mounted or ephemeral filesystem, prefer a
   persistent local-disk npm cache such as `NPM_CONFIG_CACHE="$HOME/.npm"`.
-- `install.sh` SHOULD prepare the Playwright delivery gate so `npm run test:e2e`
-  does not fail later just because the browser runtime was never installed.
+- `install.sh` SHOULD prepare the Playwright delivery gate only in
+  `clean-install` mode. In `preprovisioned-reuse-only` mode, missing
+  Playwright packages or browser runtimes are an operator block.

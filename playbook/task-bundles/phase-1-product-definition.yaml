@@ -16,6 +16,7 @@ conditional_artifacts:
     - example/README.md
 reference_only:
   - specs/product/README.md
+  - specs/product/sample-data.md
 writable_targets:
   - runs/current/artifacts/product/**
   - runs/current/role-state/product_manager/**

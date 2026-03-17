@@ -48,6 +48,9 @@ readiness note in:
 - verify Playwright is installed for the generated app and install it if the
   delivery environment does not already have it
 - run the basic Playwright smoke suite as the final pre-delivery step
+- populate the full quality evidence pack under `runs/current/evidence/quality/`
+- cite the exact evidence files used when writing the final
+  `integration-review.md`
 
 ## Outputs
 
@@ -56,6 +59,11 @@ readiness note in:
 - `runs/current/evidence/ui-previews/` when the run includes materially
   changed visible UI and screenshot capture is available
 - `runs/current/evidence/frontend-usability.md`
+- `runs/current/evidence/quality/crud-matrix.md`
+- `runs/current/evidence/quality/seed-data-audit.md`
+- `runs/current/evidence/quality/ui-copy-audit.md`
+- `runs/current/evidence/quality/test-results.md`
+- `runs/current/evidence/quality/quality-summary.md`
 - updated `runs/current/artifacts/architecture/decision-log.md` when new
   cross-layer decisions are
   required
@@ -82,10 +90,29 @@ readiness note in:
   render correct live data rather than only the initialized shell
 - required entry and custom pages are actual product surfaces, not contract,
   route, or recovery viewers
+- no required CRUD path remains unproven
+- the app is not accepted on shell loading alone; live backend data rendering
+  is proven
+- no unapproved starter, mock, or demo rows remain visible
+- required custom pages are not metadata or status placeholders
+- the quality evidence pack exists and is internally consistent
 - no developer-facing recovery or implementation copy appears in visible UI
 - `runs/current/evidence/contract-samples.md` exists and includes at least one
   `admin.yaml endpoint` to live-route to sample-record trace
+- `runs/current/evidence/quality/quality-summary.md` states whether the app
+  can or cannot enter Product acceptance and names the open blockers
 - the app can be explained without caveats
 - follow-up inbox notes are sent if more work is required
 - Product Manager acceptance is not started while blocked integration or drift
   findings remain open in the Architect lane
+
+## Explicit fail conditions
+
+Integration review fails when:
+
+- a required CRUD path was not proven
+- the app only proved shell loading and not live data rendering
+- visible pages still read like internal shells
+- leftover unapproved demo, mock, or starter data is visible
+- required custom pages are still metadata or status placeholders
+- the quality evidence pack is missing or contradictory

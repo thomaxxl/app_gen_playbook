@@ -15,6 +15,7 @@ Required startup reads:
 - `../../../specs/contracts/frontend/relationship-ui.md`
 - `../../../specs/contracts/frontend/ui-principles.md`
 - `../../../specs/contracts/frontend/accessibility.md`
+- `../../../specs/contracts/frontend/validation.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 

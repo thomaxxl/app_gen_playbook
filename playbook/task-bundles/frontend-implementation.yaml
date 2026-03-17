@@ -13,6 +13,7 @@ required_artifacts:
   - runs/current/artifacts/architecture/overview.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/ux/navigation.md
   - runs/current/artifacts/ux/screen-inventory.md
   - runs/current/artifacts/ux/landing-strategy.md

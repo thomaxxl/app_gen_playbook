@@ -12,6 +12,7 @@ required_artifacts:
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/overview.md
   - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/evidence/contract-samples.md
 reference_only:
   - runs/current/artifacts/ux/navigation.md

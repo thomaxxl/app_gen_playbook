@@ -13,6 +13,7 @@ Required startup reads:
 - `../../../specs/contracts/deployment/README.md`
 - `../../../specs/contracts/deployment/package-management.md`
 - `../../../runs/current/artifacts/architecture/runtime-bom.md`
+- `../../../runs/current/artifacts/architecture/dependency-provisioning.md`
 - `../../../runs/current/artifacts/architecture/route-and-entry-model.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`

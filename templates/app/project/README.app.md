@@ -25,7 +25,8 @@ from the SAFRS app-development playbook.
 - `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
-- `.runtime.local.env`: optional local-only dependency-path overrides
+- `.runtime.local.env`: optional local-only runtime and dependency-path
+  overrides
 - `Dockerfile`: same-origin container build
 - `docker-compose.yml`: local container orchestration entrypoint
 
@@ -35,10 +36,12 @@ from the SAFRS app-development playbook.
 ./install.sh
 ```
 
-`install.sh` installs backend Python packages into `backend/.deps` by default,
-installs the published `logicbank` package, reuses `frontend/node_modules`
-when they still match the lockfile, and prepares the Playwright Chromium
-runtime used by the delivery smoke suite.
+`install.sh` follows `DEPENDENCY_PROVISIONING_MODE`.
+
+- In `clean-install` mode, it installs backend and frontend dependencies
+  locally and prepares the Playwright delivery gate.
+- In `preprovisioned-reuse-only` mode, it validates the prepared dependency
+  roots and stops if anything is missing.
 
 If frontend installs are slow in your environment, keep the generated `app/`
 directory local and persistent between sessions and, when needed, set
@@ -58,6 +61,7 @@ If you prefer not to create those links manually, you can also use a local-only
 
 ```bash
 cat > .runtime.local.env <<'EOF'
+DEPENDENCY_PROVISIONING_MODE=preprovisioned-reuse-only
 BACKEND_VENV="$HOME/venv"
 FRONTEND_NODE_MODULES_DIR="$HOME/.cache/my-app/frontend-node_modules"
 EOF
@@ -65,11 +69,13 @@ EOF
 
 With that file in place:
 
-- `install.sh` installs backend packages into `BACKEND_VENV` instead of
-  `backend/.deps`
+- `install.sh` validates `BACKEND_VENV` instead of creating a fallback
+  environment
 - `install.sh` keeps `frontend/node_modules` as a managed symlink to
-  `FRONTEND_NODE_MODULES_DIR`
+  `FRONTEND_NODE_MODULES_DIR` when the target already exists
 - `run.sh` uses those same local overrides automatically
+- the playbook does not install missing Python, npm, or Playwright packages in
+  that mode
 
 Do not symlink the whole `backend/` or `frontend/` directories. Only the
 explicit `frontend/node_modules` link is supported for this local reuse path.
@@ -113,8 +119,11 @@ After `./install.sh` completes:
 `run.sh` starts both processes together. If either process exits or fails, the
 other one is terminated too.
 
-If dependencies were not installed yet, `run.sh` must stop immediately and
-print a clear instruction to run `./install.sh`.
+If dependencies are missing, `run.sh` must stop immediately.
+
+- In `clean-install` mode, it should tell you to run `./install.sh`.
+- In `preprovisioned-reuse-only` mode, it should tell you to fix the prepared
+  dependency roots instead of implying that installs are allowed.
 
 `run.sh` is expected to work with the stock macOS Bash `3.2` shell as well as
 newer Linux Bash environments.
@@ -145,9 +154,9 @@ Notes:
 - Keep this README short and runnable.
 - The generated app root SHOULD be ready to become its own repository without
   restructuring first.
-- Prefer documenting `./install.sh` as the default setup step.
-- Make it explicit that `./install.sh` also prepares the Playwright delivery
-  gate.
+- Prefer documenting the active `DEPENDENCY_PROVISIONING_MODE` explicitly.
+- Make it explicit that `./install.sh` prepares Playwright only in
+  `clean-install` mode.
 - Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
 - Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
@@ -162,7 +171,7 @@ Notes:
   dependency as the default generated-app path.
 - Document the root container files unconditionally because every generated app
   MUST ship `Dockerfile` and `docker-compose.yml`.
-- Document `.runtime.local.env` only as an optional local convenience file, not
+- Document `.runtime.local.env` only as a local runtime-normalization file, not
   as a required committed artifact.
 - Keep the launcher portable. Do not document or generate a `run.sh` that
   requires Bash-5-only features such as `wait -n` unless the app explicitly

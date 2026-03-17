@@ -20,19 +20,26 @@ DevOps owns:
 
 DevOps MUST NOT silently redesign the application dependency graph.
 
-## Local reusable dependency roots
+## Dependency provisioning modes
 
-Generated apps MAY support operator-local dependency reuse for repeated runs
-without changing the clean-environment default install path.
+The active run MUST freeze dependency provisioning policy in:
 
-If that support exists, it MUST remain optional and local-only:
+- `../../runs/current/artifacts/architecture/dependency-provisioning.md`
 
-- the generated app must still work in a clean environment with no local
-  override file
-- the override file MUST be gitignored and MUST NOT become a required delivery
-  artifact
-- the default backend fallback remains `backend/.deps`
-- the default frontend fallback remains `frontend/node_modules`
+Allowed modes:
+
+- `clean-install`
+- `preprovisioned-reuse-only`
+
+`clean-install` means the generated app may create or install local dependency
+roots when they are absent.
+
+`preprovisioned-reuse-only` means dependencies are expected to exist before the
+playbook tries to use them. In that mode, roles may verify and normalize the
+approved roots, but MUST NOT create or install them.
+
+The accepted artifact records policy only. Host-specific absolute paths MUST
+remain local-only.
 
 Preferred local override keys:
 
@@ -52,6 +59,19 @@ through a literal local `./node_modules` path.
 
 The generated app MUST NOT rely on symlinking the entire `backend/` or
 `frontend/` trees as the package-management strategy.
+
+In `preprovisioned-reuse-only` mode specifically:
+
+- the operator is responsible for preparing the Python and JavaScript
+  dependency roots before `scripts/run_playbook.sh` starts
+- the approved backend roots are `BACKEND_VENV` or an existing `backend/.venv`
+- the approved frontend roots are `FRONTEND_NODE_MODULES_DIR` or an existing
+  `frontend/node_modules`
+- DevOps MAY create only the explicit `frontend/node_modules` symlink when the
+  target already exists
+- generated scripts MUST NOT create a backend virtualenv, create an external
+  node_modules target directory, or install missing packages
+- missing dependencies are an operator or environment block, not a repair task
 
 ## Frontend policy
 
@@ -107,6 +127,12 @@ Before packaging is treated as viable, DevOps MUST verify:
 - container or packaging builds do not rely on undeclared ambient toolchains
 - any optional local dependency-root override still degrades cleanly to the
   normal clean-environment install path when the override is absent
+
+If the active provisioning mode is `preprovisioned-reuse-only`, the
+orchestrator and DevOps MUST perform a dependency preflight before DevOps,
+Frontend, or Backend continue implementation work. If the declared dependency
+roots are missing or incomplete, the run MUST stop with an operator-action
+block instead of trying to install packages.
 
 ## Change proposal rule
 

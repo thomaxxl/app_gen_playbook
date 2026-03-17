@@ -25,6 +25,7 @@ Required steps:
    - backend/frontend/e2e verification notes
    - `contract-samples.md` for the route-to-record trace
    - `frontend-usability.md` for the reviewed user-facing surfaces
+   - `quality/` for the canonical quality evidence pack
    - `ui-previews/` for Playwright-captured UI screenshots when the run
      materially changes visible frontend behavior
 8. seed `../../runs/current/role-state/product_manager/inbox/INPUT.md` from

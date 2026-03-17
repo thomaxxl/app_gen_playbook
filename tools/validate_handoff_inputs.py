@@ -28,6 +28,16 @@ SECTION_TITLES = (
     "blocking issues",
     "notes",
 )
+EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
+QUALITY_EVIDENCE_PATHS = {
+    "runs/current/evidence/contract-samples.md",
+    "runs/current/evidence/frontend-usability.md",
+    "runs/current/evidence/quality/crud-matrix.md",
+    "runs/current/evidence/quality/seed-data-audit.md",
+    "runs/current/evidence/quality/ui-copy-audit.md",
+    "runs/current/evidence/quality/test-results.md",
+    "runs/current/evidence/quality/quality-summary.md",
+}
 
 
 PROCEDURE_REQUIRED_ARTIFACTS: dict[str, tuple[str, ...]] = {
@@ -202,6 +212,17 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                 }
             )
             continue
+        if runtime_role == "product_manager" and artifact_path in QUALITY_EVIDENCE_PATHS:
+            if EVIDENCE_PLACEHOLDER_MARKER in candidate.read_text(encoding="utf-8"):
+                blockers.append(
+                    {
+                        "type": "placeholder-task-bundle-artifact",
+                        "path": artifact_path,
+                        "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                        "message": f"task-bundle prerequisite is still placeholder evidence: {artifact_path}",
+                    }
+                )
+                continue
         status = run_artifact_status(candidate)
         if status == "stub":
             blockers.append(
