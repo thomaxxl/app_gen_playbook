@@ -13,6 +13,7 @@ MODE="new"
 RESUME=0
 TARGET_ROLE=""
 INPUT_FILE=""
+CEO_YOLO=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -23,6 +24,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --resume)
       RESUME=1
+      shift
+      ;;
+    --yolo)
+      CEO_YOLO=1
       shift
       ;;
     --role)
@@ -52,8 +57,8 @@ if [[ "$RESUME" -eq 1 ]]; then
   fi
 else
   if [[ -z "$INPUT_FILE" ]]; then
-    echo "usage: $0 [--mode new|iterate|hotfix] path/to/input.md" >&2
-    echo "       $0 --resume [--role runtime_role]" >&2
+    echo "usage: $0 [--mode new|iterate|hotfix] [--yolo] path/to/input.md" >&2
+    echo "       $0 --resume [--role runtime_role] [--yolo]" >&2
     exit 2
   fi
   if [[ "$INPUT_FILE" != *.md ]]; then
@@ -873,6 +878,9 @@ run_codex_fresh() {
     --output-last-message "$result_file"
     -
   )
+  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+    cmd+=(--yolo)
+  fi
   for add_dir in "${add_dirs[@]}"; do
     cmd+=(--add-dir "$add_dir")
   done
@@ -895,6 +903,9 @@ run_codex_resume() {
     "$resume_id"
     -
   )
+  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+    cmd+=(--yolo)
+  fi
   run_codex_command "$runtime_role" "$role_cwd" "$model" "$prompt_file" "$result_file" "$jsonl_file" "${cmd[@]}"
 }
 

@@ -138,6 +138,19 @@ For interrupted-run continuation:
 ./scripts/run_playbook.sh --resume
 ```
 
+If you want only CEO recovery/intervention turns to use Codex `--yolo`, start
+the runner with:
+
+```bash
+./scripts/run_playbook.sh --resume --yolo
+```
+
+or:
+
+```bash
+./scripts/run_playbook.sh --mode new --yolo path/to/input.md
+```
+
 ## Roles
 
 The normal runtime roles are:

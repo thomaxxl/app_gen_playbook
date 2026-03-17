@@ -28,6 +28,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
+    def test_runner_supports_ceo_only_yolo_flag(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("CEO_YOLO=0", script)
+        self.assertIn("    --yolo)", script)
+        self.assertIn('if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then', script)
+        self.assertIn('cmd+=(--yolo)', script)
+
     def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
