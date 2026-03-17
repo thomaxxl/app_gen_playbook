@@ -35,7 +35,9 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("CEO_YOLO=0", script)
         self.assertIn("    --yolo)", script)
         self.assertIn('if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then', script)
-        self.assertIn('cmd+=(--yolo)', script)
+        self.assertIn('cmd+=(--dangerously-bypass-approvals-and-sandbox)', script)
+        self.assertIn('cmd+=(--full-auto)', script)
+        self.assertNotIn('cmd+=(--yolo)', script)
 
     def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

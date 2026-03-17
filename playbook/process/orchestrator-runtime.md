@@ -116,9 +116,11 @@ the persisted session context instead.
 The orchestrator SHOULD default to the local Codex CLI model/account default.
 
 If the operator starts `scripts/run_playbook.sh` with `--yolo`, the
-orchestrator MUST append `--yolo` only to CEO `codex exec` and `codex exec
-resume` invocations. It MUST NOT apply `--yolo` to Product Manager,
-Architect, Frontend, Backend, or DevOps turns.
+orchestrator MUST translate that operator flag into
+`--dangerously-bypass-approvals-and-sandbox` only for CEO `codex exec` and
+`codex exec resume` invocations. It MUST NOT apply that mode to Product
+Manager, Architect, Frontend, Backend, or DevOps turns, and it MUST NOT
+combine CEO yolo mode with `--full-auto`.
 
 It MAY accept explicit model overrides through environment variables such as:
 

@@ -947,15 +947,18 @@ run_codex_fresh() {
 
   local cmd=(
     codex exec
-    --full-auto
+  )
+  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+    cmd+=(--dangerously-bypass-approvals-and-sandbox)
+  else
+    cmd+=(--full-auto)
+  fi
+  cmd+=(
     --json
     --cd "$role_cwd"
     --output-last-message "$result_file"
     -
   )
-  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
-    cmd+=(--yolo)
-  fi
   for add_dir in "${add_dirs[@]}"; do
     cmd+=(--add-dir "$add_dir")
   done
@@ -972,15 +975,18 @@ run_codex_resume() {
   local jsonl_file="$7"
   local cmd=(
     codex exec resume
-    --full-auto
+  )
+  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+    cmd+=(--dangerously-bypass-approvals-and-sandbox)
+  else
+    cmd+=(--full-auto)
+  fi
+  cmd+=(
     --json
     --output-last-message "$result_file"
     "$resume_id"
     -
   )
-  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
-    cmd+=(--yolo)
-  fi
   run_codex_command "$runtime_role" "$role_cwd" "$model" "$prompt_file" "$result_file" "$jsonl_file" "${cmd[@]}"
 }
 
