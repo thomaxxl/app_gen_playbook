@@ -15,6 +15,10 @@ server {
         return 302 /admin-app/;
     }
 
+    location = /index.html {
+        return 302 /admin-app/;
+    }
+
     location = /admin-app {
         return 302 /admin-app/;
     }
@@ -62,7 +66,7 @@ server {
 Notes:
 
 - Keep `/admin-app/` and `/api` on one origin.
-- Root `/` redirects to `/admin-app/`.
+- Root `/` and `/index.html` redirect to `/admin-app/`.
 - If the backend docs use extra assets, proxy those too.
 - Use the `/_protected_media/` block only when the backend is configured for
   nginx media serving through `X-Accel-Redirect`.

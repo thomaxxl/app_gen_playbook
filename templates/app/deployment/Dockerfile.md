@@ -19,6 +19,7 @@ FROM python:3.12-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends bash nginx \
+    && rm -f /etc/nginx/sites-enabled/default \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -43,6 +44,8 @@ Notes:
 - Build the frontend in a Node `24.x` stage so the runtime Node version is not
   left to distro package defaults.
 - Install `nginx.conf` into nginx's active config path, not just `/app/`.
+- Remove distro default nginx sites so the generated app config owns `/`
+  instead of the stock welcome page.
 - For dev mode, use a compose override instead of changing the default image.
 - If the app supports uploaded files, create or mount a persistent media root
   in the runtime image instead of keeping uploaded bytes in an ephemeral layer.

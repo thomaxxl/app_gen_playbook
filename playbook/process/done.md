@@ -59,6 +59,9 @@ If packaging was explicitly in scope:
 - the optional DevOps inbox must also be empty
 - `runs/current/artifacts/devops/verification.md` must exist
 - packaged route verification must be recorded
+- packaged route verification must include concrete status/header evidence for
+  `/`, `/index.html`, `/admin-app/`, at least one `/admin-app/assets/...`
+  response, and `/ui/admin/admin.yaml`
 
 If fallback verification was used, the fallback path and justification must be
 documented.

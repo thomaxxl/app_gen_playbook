@@ -157,7 +157,8 @@ For development packaging:
 
 nginx should:
 
-- redirect or serve a small page at `/`
+- redirect or forward `/` to the generated SPA entry
+- redirect or forward `/index.html` to the generated SPA entry
 - serve the SPA only under `/admin-app/`
 - proxy `/api`
 - proxy `/docs`
@@ -170,6 +171,11 @@ or protected-media behavior.
 
 The image must also install that nginx config into nginx's active config path,
 not just copy it into an arbitrary application directory.
+
+If the base image enables a distro default site such as
+`/etc/nginx/sites-enabled/default`, the image MUST disable or remove it so the
+generated app config is the active public site instead of the stock nginx
+welcome page.
 
 For reproducibility, prefer a multi-stage build with a pinned Node image for
 the frontend build step rather than relying on distro `nodejs` packages in the
@@ -201,13 +207,22 @@ When DevOps is active, it MUST write or update:
 
 ## Docker validation checks
 
-- `GET /` or landing page loads
-- `GET /admin-app/` loads the SPA
-- built asset URLs resolve under `/admin-app/assets/`
+- `GET /` returns a redirect or direct HTML response for the generated app, not
+  the stock nginx page
+- `GET /index.html` returns a redirect or direct HTML response for the
+  generated app, not the stock nginx page
+- `GET /admin-app/` returns the SPA HTML entrypoint
+- at least one built asset URL under `/admin-app/assets/` returns `200`
+- JavaScript asset responses under `/admin-app/assets/` return a JavaScript
+  MIME type instead of HTML
 - `GET /docs` loads FastAPI docs
-- `GET /ui/admin/admin.yaml` works
+- `GET /ui/admin/admin.yaml` returns `200` and a non-HTML response
 - frontend CRUD works through the proxied API
 - container restart preserves SQLite data if a volume is used
+
+The packaged verification evidence MUST record concrete HTTP response details
+for the checks above, for example `curl -i` output or an equivalent capture
+that preserves status, headers, and content type.
 
 If uploads are enabled, the deployment validation MUST also include the
 uploads feature-pack checks before the app is considered complete.

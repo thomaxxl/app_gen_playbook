@@ -23,10 +23,8 @@ Do not describe root-based SPA routing as an equal alternative.
 
 The root URL `/` is not the SPA.
 
-It may:
-
-- serve a simple landing page with links
-- or redirect to `/admin-app/`
+For packaged same-origin delivery, `/` and `/index.html` SHOULD redirect or
+forward to `/admin-app/`.
 
 But the SPA itself lives under `/admin-app/`.
 

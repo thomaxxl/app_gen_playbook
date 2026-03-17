@@ -44,6 +44,8 @@ The server MUST:
 
 - serve the SPA entrypoint at `/admin-app/`
 - serve emitted assets from `/admin-app/assets/`
+- redirect or forward `/` to `/admin-app/`
+- redirect or forward `/index.html` to `/admin-app/`
 - proxy `/api`
 - proxy `/ui`
 - proxy `/jsonapi.json`
@@ -58,10 +60,9 @@ Because routing is hash-based, hard-refresh behavior is simple:
 
 ## Root page
 
-Root `/` MUST either:
-
-- redirect to `/admin-app/`
-- or serve a small landing page that links to `/admin-app/` and `/docs`
+For packaged same-origin delivery, root `/` and `/index.html` MUST redirect or
+forward to `/admin-app/`. The default packaged starter MUST NOT ship the stock
+nginx welcome page or a separate generic landing page in front of the admin app.
 
 ## Minimum automated checks
 

@@ -18,6 +18,8 @@ packaging refinements, packaging verification, and the optional helpers such as
 
 Recommended public routes:
 
+- `/`
+- `/index.html`
 - `/admin-app/`
 - `/api`
 - `/docs`
@@ -37,3 +39,5 @@ The DevOps role SHOULD also verify:
 - package-install behavior remains reproducible
 - Docker, Compose, nginx, and entrypoint files remain consistent with the
   approved route model
+- `/` and `/index.html` land on the generated app instead of a distro default
+  page
