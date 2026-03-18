@@ -103,7 +103,7 @@ def write_browser_proof(output_path: Path, status: str, base_url: str, captured:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", required=True)
-    parser.add_argument("--base-url", default="http://127.0.0.1:4173")
+    parser.add_argument("--base-url", default="http://127.0.0.1:5173")
     parser.add_argument("--route", action="append", default=[])
     parser.add_argument("--output", default="runs/current/evidence/frontend-browser-proof.md")
     parser.add_argument("--manifest", default="runs/current/evidence/ui-previews/manifest.md")

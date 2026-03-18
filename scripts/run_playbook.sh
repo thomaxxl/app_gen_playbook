@@ -15,6 +15,7 @@ TARGET_ROLE=""
 INPUT_FILE=""
 PLAYBOOK_YOLO=0
 PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-sandbox}"
+PLAYBOOK_AUTO_START_APP="${PLAYBOOK_AUTO_START_APP:-1}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -136,6 +137,7 @@ LONG_MODEL="${LONG_MODEL:-}"
 frontend_pid=""
 backend_pid=""
 dashboard_pid=""
+app_runtime_pid=""
 ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
 ENSURE_WORKER_PID_RESULT=""
@@ -243,7 +245,7 @@ EOF
 }
 
 host_runtime_frontend_port() {
-  printf '%s\n' "${FRONTEND_PORT:-4173}"
+  printf '%s\n' "${FRONTEND_PORT:-5173}"
 }
 
 host_runtime_frontend_host() {
@@ -257,6 +259,87 @@ host_runtime_frontend_host() {
 
 host_runtime_frontend_base_url() {
   printf 'http://%s:%s\n' "$(host_runtime_frontend_host)" "$(host_runtime_frontend_port)"
+}
+
+host_runtime_backend_port() {
+  printf '%s\n' "${BACKEND_PORT:-5656}"
+}
+
+host_runtime_backend_host() {
+  local backend_host
+  backend_host="${BACKEND_HOST:-127.0.0.1}"
+  if [[ "$backend_host" == "0.0.0.0" ]]; then
+    backend_host="127.0.0.1"
+  fi
+  printf '%s\n' "$backend_host"
+}
+
+host_runtime_listener_ready() {
+  local host="$1"
+  local port="$2"
+  python3 - "$host" "$port" <<'PY' >/dev/null 2>&1
+from __future__ import annotations
+import socket
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+sock = socket.socket()
+sock.settimeout(0.5)
+try:
+    sock.connect((host, port))
+except OSError:
+    raise SystemExit(1)
+finally:
+    sock.close()
+PY
+}
+
+ensure_host_runtime_app_started() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+  [[ "$PLAYBOOK_AUTO_START_APP" == "1" ]] || return 1
+  [[ -x "$ROOT/app/run.sh" ]] || return 1
+
+  local frontend_host frontend_port backend_host backend_port app_runtime_log
+  frontend_host="$(host_runtime_frontend_host)"
+  frontend_port="$(host_runtime_frontend_port)"
+  backend_host="$(host_runtime_backend_host)"
+  backend_port="$(host_runtime_backend_port)"
+
+  if host_runtime_listener_ready "$frontend_host" "$frontend_port"; then
+    return 0
+  fi
+
+  app_runtime_log="$EVIDENCE_ROOT/logs/app-runtime.log"
+  mkdir -p "$(dirname "$app_runtime_log")"
+  log "host-app-runtime-starting frontend=http://${frontend_host}:${frontend_port} backend=http://${backend_host}:${backend_port}"
+  (
+    cd "$ROOT/app"
+    BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}" \
+    BACKEND_PORT="$backend_port" \
+    FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}" \
+    FRONTEND_PORT="$frontend_port" \
+    ./run.sh
+  ) >>"$app_runtime_log" 2>&1 &
+  app_runtime_pid="$!"
+
+  local attempt
+  for attempt in {1..60}; do
+    if [[ -n "$app_runtime_pid" ]] && ! kill -0 "$app_runtime_pid" 2>/dev/null; then
+      wait "$app_runtime_pid" || true
+      app_runtime_pid=""
+      log "host-app-runtime-start-failed log=${app_runtime_log#$ROOT/}"
+      return 1
+    fi
+    if host_runtime_listener_ready "$frontend_host" "$frontend_port"; then
+      log "host-app-runtime-ready pid=$app_runtime_pid frontend=http://${frontend_host}:${frontend_port}"
+      return 0
+    fi
+    sleep 1
+  done
+
+  log "host-app-runtime-timeout log=${app_runtime_log#$ROOT/}"
+  return 1
 }
 
 perform_host_runtime_preflight() {
@@ -322,6 +405,8 @@ attempt_host_browser_proof_capture() {
   if [[ -f "$output_path" ]] && grep -Eq '^- capture_status:[[:space:]]*captured$' "$output_path"; then
     return 1
   fi
+
+  ensure_host_runtime_app_started || true
 
   if python3 "$ROOT/tools/capture_frontend_browser_proof.py" \
     --repo-root "$ROOT" \
@@ -533,6 +618,10 @@ stop_dashboard_sidecar() {
 
 cleanup_background_processes() {
   stop_dashboard_sidecar
+  if [[ -n "$app_runtime_pid" ]] && kill -0 "$app_runtime_pid" 2>/dev/null; then
+    kill "$app_runtime_pid" 2>/dev/null || true
+    wait "$app_runtime_pid" 2>/dev/null || true
+  fi
   if [[ -n "$frontend_pid" ]] && kill -0 "$frontend_pid" 2>/dev/null; then
     kill "$frontend_pid" 2>/dev/null || true
     wait "$frontend_pid" 2>/dev/null || true
