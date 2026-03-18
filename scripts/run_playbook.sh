@@ -684,7 +684,26 @@ Prerequisite artifact:
 
 $detail
 EOF
-  operator_action_required_exit
+  local ceo_review_status=0
+  if attempt_ceo_termination_review \
+    "execution environment preflight failed before run startup" \
+    "$detail"; then
+    if record_execution_prereqs; then
+      return 0
+    fi
+    if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+      operator_action_required_exit
+    fi
+  else
+    ceo_review_status=$?
+    if [[ "$ceo_review_status" -eq 2 ]]; then
+      operator_action_required_exit
+    fi
+  fi
+
+  fatal_exit \
+    "ceo did not approve or resolve startup termination" \
+    "Execution environment preflight still fails, but CEO did not approve a blocked exit via operator-action-required.md and did not restore forward progress."
 }
 
 emit_ceo_stall_note() {
@@ -925,6 +944,53 @@ change_id: ${ACTIVE_CHANGE_ID}
   repair paths are exhausted, the CEO must write
   runs/current/orchestrator/operator-action-required.md instead of re-queuing
   the same unresolved blocker
+EOF
+  printf '%s\n' "$note_path"
+}
+
+emit_ceo_termination_review_note() {
+  local reason="$1"
+  local detail="$2"
+  local stamp note_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  note_path="$STATE_ROOT/ceo/inbox/${stamp}-from-orchestrator-to-ceo-termination-review.md"
+  mkdir -p "$STATE_ROOT/ceo/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: ceo
+topic: termination-review
+purpose: approve or reject a pending non-success playbook termination before the orchestrator exits
+change_id: ${ACTIVE_CHANGE_ID}
+
+## Required Reads
+- runs/current/remarks.md
+- runs/current/orchestrator/run-status.json
+- runs/current/evidence/orchestrator/logs/orchestrator.log
+- playbook/task-bundles/ceo-stall-intervention.yaml
+- playbook/roles/ceo.md
+
+## Requested Outputs
+- record the termination review in runs/current/remarks.md
+- either restore forward progress directly or emit the reroute/recovery work needed to continue
+- runs/current/orchestrator/operator-action-required.md if CEO approves a blocked termination
+- runs/current/orchestrator/pause-requested.md if CEO approves a clean pause instead of continuing
+- do not leave the run in a terminating state without an explicit CEO decision
+
+## Dependencies
+- none
+
+## Gate Status
+- blocked
+
+## Blocking Issues
+- ${reason}
+
+## Notes
+- orchestrator is preparing to terminate the current run non-successfully
+- the CEO must approve or reject that termination before the runner exits
+- if the blocker is local to the playbook runtime, CEO should repair it instead of approving termination
+- terminating detail:
+${detail}
 EOF
   printf '%s\n' "$note_path"
 }
@@ -1326,6 +1392,37 @@ attempt_ceo_intervention() {
   fi
 }
 
+attempt_ceo_termination_review() {
+  local reason="$1"
+  local detail="$2"
+  local ceo_pending note_path
+
+  [[ -d "$STATE_ROOT/ceo" ]] || return 2
+  ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
+
+  if [[ -z "$ceo_pending" ]]; then
+    note_path="$(emit_ceo_termination_review_note "$reason" "$detail")"
+    append_recovery_log \
+      "CEO Termination Review Queued" \
+      "Reason:\n- $reason\n\nQueued note:\n- ${note_path#$ROOT/}\n\nTermination detail:\n$detail"
+    append_run_remark \
+      "CEO Termination Review Queued" \
+      "Reason:\n- $reason\n\nQueued note:\n- ${note_path#$ROOT/}\n\nTermination detail:\n$detail"
+  fi
+
+  log "termination-review-ceo-intervention reason=$reason"
+  if ! run_role_once "ceo"; then
+    return 1
+  fi
+  if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+    pause_requested_exit
+  fi
+  if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+    operator_action_required_exit
+  fi
+  return 0
+}
+
 role_model() {
   case "$1" in
     product_manager) printf '%s\n' "$PRODUCT_MANAGER_MODEL" ;;
@@ -1659,7 +1756,26 @@ Affected role:
 
 $detail
 EOF
-  operator_action_required_exit
+  local ceo_review_status=0
+  if attempt_ceo_termination_review \
+    "dependency provisioning preflight failed before role dispatch" \
+    "$detail"; then
+    if dependency_provisioning_preflight >/dev/null 2>&1; then
+      return 0
+    fi
+    if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+      operator_action_required_exit
+    fi
+  else
+    ceo_review_status=$?
+    if [[ "$ceo_review_status" -eq 2 ]]; then
+      operator_action_required_exit
+    fi
+  fi
+
+  fatal_exit \
+    "ceo did not approve or resolve dependency-preflight termination" \
+    "Dependency provisioning preflight still fails for role $runtime_role, but CEO did not approve a blocked exit via operator-action-required.md and did not restore forward progress."
 }
 
 validate_role_turn() {
@@ -2590,14 +2706,6 @@ main_loop() {
       fi
     fi
 
-    if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
-      pause_requested_exit
-    fi
-
-    if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
-      operator_action_required_exit
-    fi
-
     if normalize_queue_state; then
       did_work=1
     fi
@@ -2623,6 +2731,14 @@ main_loop() {
         operator_action_required_exit
       fi
       continue
+    fi
+
+    if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+      pause_requested_exit
+    fi
+
+    if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+      operator_action_required_exit
     fi
 
     if [[ "$(pending_actionable_count)" -eq 0 ]]; then
@@ -2713,9 +2829,15 @@ main_loop() {
         append_recovery_log \
           "Active But Idle Failure" \
           "The orchestrator remained alive but stopped making visible progress while actionable work still existed.\n\nLiveness detail:\n$liveness_output"
-        fatal_exit \
+        if attempt_ceo_termination_review \
           "orchestrator active-but-idle while actionable work remains" \
-          "The orchestrator remained alive but exceeded the idle threshold while actionable work still existed."$'\n'"Liveness detail:"$'\n'"$liveness_output"
+          "$liveness_output"; then
+          LAST_STALL_SIGNATURE=""
+          continue
+        fi
+        fatal_exit \
+          "ceo did not approve or resolve active-but-idle termination" \
+          "The orchestrator remained alive but exceeded the idle threshold while actionable work still existed, and CEO neither restored forward progress nor approved a termination artifact."
       fi
       sleep "$POLL_SECONDS"
     fi

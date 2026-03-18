@@ -81,6 +81,27 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('blocked_exit "run requires operator action" "$body"', script)
         self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
         self.assertIn('if run_recovery_pass; then', script)
+        main_loop_index = script.index("while true; do")
+        self.assertLess(
+            script.index('if run_role_once "ceo"; then', main_loop_index),
+            script.index('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', main_loop_index),
+        )
+        self.assertLess(
+            script.index('if run_role_once "ceo"; then', main_loop_index),
+            script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
+        )
+
+    def test_runner_routes_runner_owned_termination_through_ceo_review(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("emit_ceo_termination_review_note()", script)
+        self.assertIn("attempt_ceo_termination_review()", script)
+        self.assertIn("purpose: approve or reject a pending non-success playbook termination before the orchestrator exits", script)
+        self.assertIn('if attempt_ceo_termination_review \\', script)
+        self.assertIn("ceo did not approve or resolve startup termination", script)
+        self.assertIn("ceo did not approve or resolve dependency-preflight termination", script)
+        self.assertIn("ceo did not approve or resolve active-but-idle termination", script)
 
     def test_operator_notes_outrank_generic_recovery_and_can_clear_stale_operator_action(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

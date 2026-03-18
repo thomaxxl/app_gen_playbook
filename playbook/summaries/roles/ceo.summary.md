@@ -17,6 +17,10 @@ loop.
 If the operator wants to pause and resume later, CEO must write
 `runs/current/orchestrator/pause-requested.md` so the runner exits cleanly and
 the next `scripts/run_playbook.sh --resume` can continue.
+Before the orchestrator exits non-successfully, CEO must approve that
+termination by either restoring progress, writing
+`runs/current/orchestrator/operator-action-required.md`, or writing
+`runs/current/orchestrator/pause-requested.md`.
 Every CEO unblock intervention MUST be recorded in `runs/current/remarks.md`.
 
 Always load:

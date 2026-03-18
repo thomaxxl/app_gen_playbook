@@ -203,6 +203,15 @@ constraints are satisfied, the orchestrator MUST treat any older
 `operator-action-required.md` file based only on those constraints as stale,
 archive it, and continue routing work instead of blocking immediately.
 
+Before the orchestrator exits non-successfully for a runner-owned blocked,
+stall, or active-but-idle condition, it MUST give CEO a chance to review that
+termination unless the terminating artifact was already produced by CEO.
+CEO approval of termination is expressed by either:
+
+- restoring progress so the run continues
+- writing `runs/current/orchestrator/operator-action-required.md`
+- writing `runs/current/orchestrator/pause-requested.md`
+
 It MAY accept explicit model overrides through environment variables such as:
 
 - `FAST_MODEL`
@@ -531,6 +540,8 @@ The CEO intervention path MUST:
 - directly repair local playbook-runtime defects under `playbook/`,
   `scripts/`, or `tools/` when those defects are the blocker keeping the run
   stalled
+- approve or reject any pending non-success playbook termination before the
+  orchestrator exits
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator action, environment
   provisioning, credentials, or a policy decision the agents cannot make

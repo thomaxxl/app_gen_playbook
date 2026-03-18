@@ -106,6 +106,10 @@ The CEO role MUST:
   provisioning, credentials, network access, or a policy decision the agents
   cannot make after local playbook, runner, artifact, and `app/` repair paths
   have been exhausted
+- approve or reject any pending non-success playbook termination before the
+  orchestrator exits by either restoring progress, writing
+  `runs/current/orchestrator/operator-action-required.md`, or writing
+  `runs/current/orchestrator/pause-requested.md`
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared
@@ -147,5 +151,6 @@ update `runs/current/remarks.md`, restore forward progress if possible, write
 any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
 the same unresolved blocker when only the operator can unblock the run after
-local repair paths have been exhausted, then
+local repair paths have been exhausted, approve or reject any pending
+orchestrator termination before exit, then
 archive processed inbox files.
