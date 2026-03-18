@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 CAPTURE_TIMEOUT_SECONDS = 30
+CAPTURE_SETTLE_MILLISECONDS = 1000
 
 
 DEFAULT_ROUTES = (
@@ -30,16 +31,30 @@ def normalize_url(base_url: str, route: str) -> str:
 
 def run_capture(frontend_root: Path, url: str, output_path: Path) -> tuple[bool, str]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    script = f"""
+import {{ chromium }} from "playwright";
+
+const [url, outputPath] = process.argv.slice(1);
+const browser = await chromium.launch({{ headless: true }});
+const page = await browser.newPage();
+
+try {{
+  await page.goto(url, {{ waitUntil: "domcontentloaded", timeout: {CAPTURE_TIMEOUT_SECONDS * 1000} }});
+  await page.waitForTimeout({CAPTURE_SETTLE_MILLISECONDS});
+  await page.screenshot({{ path: outputPath, fullPage: true }});
+  const title = await page.title();
+  console.log(`captured ${{outputPath}} title=${{title}}`);
+}} finally {{
+  await browser.close();
+}}
+""".strip()
     try:
         proc = subprocess.run(
             [
-                "npm",
-                "exec",
-                "--",
-                "playwright",
-                "screenshot",
-                "--browser",
-                "chromium",
+                "node",
+                "--input-type=module",
+                "-e",
+                script,
                 url,
                 str(output_path),
             ],
@@ -134,7 +149,7 @@ def main() -> int:
             route = item
         routes.append((label, route))
 
-    command = "npm exec -- playwright screenshot --browser chromium <url> <file>"
+    command = "node --input-type=module -e <playwright_capture_script> <url> <file>"
     captured: list[tuple[str, str, str]] = []
     failures: list[tuple[str, str, str]] = []
 

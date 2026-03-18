@@ -45,6 +45,28 @@ print(raw.resolve())
 PY
 }
 
+first_available_loopback_port() {
+  python3 - "$1" <<'PY'
+from __future__ import annotations
+import socket
+import sys
+
+start = int(sys.argv[1])
+for port in range(start, start + 50):
+    sock = socket.socket()
+    try:
+        sock.bind(("127.0.0.1", port))
+    except OSError:
+        sock.close()
+        continue
+    sock.close()
+    print(port)
+    raise SystemExit(0)
+
+raise SystemExit(1)
+PY
+}
+
 BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
 BACKEND_PORT="${BACKEND_PORT:-5656}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
@@ -75,6 +97,10 @@ if [[ -n "$REMOTE" ]]; then
   BACKEND_HOST="0.0.0.0"
   FRONTEND_HOST="0.0.0.0"
 fi
+
+FRONTEND_UPSTREAM_HOST="127.0.0.1"
+FRONTEND_UPSTREAM_PORT="${FRONTEND_UPSTREAM_PORT:-$((FRONTEND_PORT + 1000))}"
+FRONTEND_UPSTREAM_PORT="$(first_available_loopback_port "$FRONTEND_UPSTREAM_PORT")"
 
 DISPLAY_BACKEND_HOST="$BACKEND_HOST"
 DISPLAY_FRONTEND_HOST="$FRONTEND_HOST"

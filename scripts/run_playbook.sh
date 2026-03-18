@@ -313,14 +313,19 @@ ensure_host_runtime_app_started() {
   app_runtime_log="$EVIDENCE_ROOT/logs/app-runtime.log"
   mkdir -p "$(dirname "$app_runtime_log")"
   log "host-app-runtime-starting frontend=http://${frontend_host}:${frontend_port} backend=http://${backend_host}:${backend_port}"
-  (
-    cd "$ROOT/app"
-    BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}" \
-    BACKEND_PORT="$backend_port" \
-    FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}" \
-    FRONTEND_PORT="$frontend_port" \
-    ./run.sh
-  ) >>"$app_runtime_log" 2>&1 &
+  setsid bash -lc '
+    cd "$1"
+    BACKEND_HOST="$2" \
+    BACKEND_PORT="$3" \
+    FRONTEND_HOST="$4" \
+    FRONTEND_PORT="$5" \
+    exec ./run.sh
+  ' bash \
+    "$ROOT/app" \
+    "${BACKEND_HOST:-127.0.0.1}" \
+    "$backend_port" \
+    "${FRONTEND_HOST:-127.0.0.1}" \
+    "$frontend_port" >>"$app_runtime_log" 2>&1 &
   app_runtime_pid="$!"
 
   local attempt
@@ -619,7 +624,7 @@ stop_dashboard_sidecar() {
 cleanup_background_processes() {
   stop_dashboard_sidecar
   if [[ -n "$app_runtime_pid" ]] && kill -0 "$app_runtime_pid" 2>/dev/null; then
-    kill "$app_runtime_pid" 2>/dev/null || true
+    kill -- "-$app_runtime_pid" 2>/dev/null || kill "$app_runtime_pid" 2>/dev/null || true
     wait "$app_runtime_pid" 2>/dev/null || true
   fi
   if [[ -n "$frontend_pid" ]] && kill -0 "$frontend_pid" 2>/dev/null; then
