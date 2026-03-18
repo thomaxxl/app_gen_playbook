@@ -242,11 +242,28 @@ runtime_env: host
 EOF
 }
 
+host_runtime_frontend_port() {
+  printf '%s\n' "${FRONTEND_PORT:-4173}"
+}
+
+host_runtime_frontend_host() {
+  local frontend_host
+  frontend_host="${FRONTEND_HOST:-127.0.0.1}"
+  if [[ "$frontend_host" == "0.0.0.0" ]]; then
+    frontend_host="127.0.0.1"
+  fi
+  printf '%s\n' "$frontend_host"
+}
+
+host_runtime_frontend_base_url() {
+  printf 'http://%s:%s\n' "$(host_runtime_frontend_host)" "$(host_runtime_frontend_port)"
+}
+
 perform_host_runtime_preflight() {
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
 
   local frontend_port backend_port backend_python frontend_status backend_status
-  frontend_port="${FRONTEND_PORT:-5173}"
+  frontend_port="$(host_runtime_frontend_port)"
   backend_port="${BACKEND_PORT:-5656}"
   backend_python="${BACKEND_VENV:-$ROOT/app/backend/.venv/bin/python}"
   if [[ -d "$backend_python" ]]; then
@@ -299,9 +316,8 @@ attempt_host_browser_proof_capture() {
   local output_path="$RUN_ROOT/evidence/frontend-browser-proof.md"
   local manifest_path="$RUN_ROOT/evidence/ui-previews/manifest.md"
   local screenshots_dir="$RUN_ROOT/evidence/ui-previews"
-  local base_url frontend_port
-  frontend_port="${FRONTEND_PORT:-4173}"
-  base_url="http://127.0.0.1:${frontend_port}"
+  local base_url
+  base_url="$(host_runtime_frontend_base_url)"
 
   if [[ -f "$output_path" ]] && grep -Eq '^- capture_status:[[:space:]]*captured$' "$output_path"; then
     return 1
