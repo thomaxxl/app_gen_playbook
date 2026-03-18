@@ -72,7 +72,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
 
-        self.assertIn('PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-sandbox}"', script)
+        self.assertIn('PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-host}"', script)
         self.assertIn('RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"', script)
         self.assertIn('HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"', script)
         self.assertIn("write_runtime_environment_metadata()", script)

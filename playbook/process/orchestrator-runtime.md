@@ -135,6 +135,11 @@ The orchestrator SHOULD also honor:
 
 It MUST record that setting in `runs/current/orchestrator/runtime-environment.json`.
 
+If the operator does not set `PLAYBOOK_RUNTIME_ENV`, the orchestrator SHOULD
+default to `host`. `sandbox` remains an explicit opt-out for environments
+where host-side bind, app startup, or browser capture is intentionally
+unavailable.
+
 When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST write a host-runtime
 preflight artifact under:
 
