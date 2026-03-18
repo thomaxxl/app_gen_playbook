@@ -564,7 +564,8 @@ record_execution_prereqs() {
     return 0
   fi
   mkdir -p "$(dirname "$output_path")"
-  if python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path" >/dev/null 2>&1; then
+  if BACKEND_VENV="${BACKEND_VENV}" FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR}" \
+    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path" >/dev/null 2>&1; then
     log "execution-prereqs-ready artifact=${output_path#$ROOT/}"
     return 0
   else
@@ -1041,20 +1042,21 @@ host_runtime_verification_field_ok() {
   grep -Eq "^- ${field}:[[:space:]]*ok$" "$HOST_RUNTIME_VERIFICATION_MD"
 }
 
-execution_prereqs_required_checks_ok() {
-  local prereqs_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
-  [[ -f "$prereqs_path" ]] || return 1
-  grep -Eq '^status:[[:space:]]*ready-for-handoff$' "$prereqs_path" || return 1
-  ! grep -q '`blocked` (required)' "$prereqs_path"
-}
-
-clear_execution_prereq_operator_action_required() {
+clear_execution_prereqs_operator_action_required() {
   [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
-  grep -Fq 'Execution environment preflight failed before run startup.' "$OPERATOR_ACTION_REQUIRED_MD" || return 1
-  execution_prereqs_required_checks_ok || return 1
+  [[ -f "$RUN_ROOT/artifacts/devops/execution-prereqs.md" ]] || return 1
 
-  local archive_dir="$EVIDENCE_ROOT/operator-action-archive"
-  local stamp archived_path
+  grep -q "Execution environment preflight failed before run startup." "$OPERATOR_ACTION_REQUIRED_MD" || return 1
+  if ! grep -q '^status: ready-for-handoff' "$RUN_ROOT/artifacts/devops/execution-prereqs.md"; then
+    return 1
+  fi
+  if grep -q '`blocked` (required)' "$RUN_ROOT/artifacts/devops/execution-prereqs.md"; then
+    return 1
+  fi
+
+  local archive_dir archived_path stamp execution_prereq_path
+  archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  execution_prereq_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
   mkdir -p "$archive_dir"
   stamp="$(date -u +%Y%m%d-%H%M%S)"
   archived_path="$archive_dir/operator-action-required.execution-prereqs-cleared.${stamp}.md"
@@ -1062,10 +1064,10 @@ clear_execution_prereq_operator_action_required() {
   log "operator-action-required-execution-prereqs-cleared archived=${archived_path#$ROOT/}"
   append_recovery_log \
     "Execution Prereqs Cleared Stale Block" \
-    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nPrerequisite artifact:\n- runs/current/artifacts/devops/execution-prereqs.md"
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nExecution prereqs artifact now ready:\n- ${execution_prereq_path#$ROOT/}"
   append_run_remark \
     "Execution Prereqs Cleared Stale Block" \
-    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nPrerequisite artifact:\n- runs/current/artifacts/devops/execution-prereqs.md"
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nExecution prereqs artifact now ready:\n- ${execution_prereq_path#$ROOT/}"
   return 0
 }
 
@@ -2355,7 +2357,7 @@ PY
   write_runtime_environment_metadata
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
-  clear_execution_prereq_operator_action_required || true
+  clear_execution_prereqs_operator_action_required || true
   clear_superseded_operator_action_required || true
   clear_host_verified_operator_action_required || true
   clear_browser_fallback_operator_action_required || true
@@ -2376,8 +2378,7 @@ main_loop() {
     if clear_superseded_operator_action_required; then
       did_work=1
     fi
-
-    if clear_execution_prereq_operator_action_required; then
+    if clear_execution_prereqs_operator_action_required; then
       did_work=1
     fi
 

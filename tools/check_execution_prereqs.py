@@ -28,10 +28,21 @@ class CheckResult:
 
 
 def backend_python_path(repo_root: Path) -> Path:
-    candidate = Path(os.environ.get("BACKEND_VENV", repo_root / "app" / "backend" / ".venv"))
+    raw_candidate = os.environ.get("BACKEND_VENV", "").strip()
+    if raw_candidate:
+        candidate = Path(raw_candidate)
+    else:
+        candidate = repo_root / "app" / "backend" / ".venv"
     if candidate.is_dir():
         return candidate / "bin" / "python"
     return candidate
+
+
+def frontend_node_modules_path(repo_root: Path) -> Path:
+    raw_candidate = os.environ.get("FRONTEND_NODE_MODULES_DIR", "").strip()
+    if raw_candidate:
+        return Path(raw_candidate)
+    return repo_root / "app" / "frontend" / "node_modules"
 
 
 def check_backend_venv(repo_root: Path) -> CheckResult:
@@ -59,7 +70,7 @@ def check_backend_venv(repo_root: Path) -> CheckResult:
 
 def check_node_modules(repo_root: Path) -> CheckResult:
     frontend_root = repo_root / "app" / "frontend"
-    node_modules = frontend_root / "node_modules"
+    node_modules = frontend_node_modules_path(repo_root)
     if not node_modules.exists():
         return CheckResult("node_packages", "blocked", f"missing node_modules: {node_modules}")
 
