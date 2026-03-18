@@ -11,13 +11,16 @@ __pycache__/
 .coverage.*
 htmlcov/
 
+# Local
+.env
+tmp/
+
 # Local Python environments and install targets
 .venv/
 .venv*/
 venv/
 env/
 .deps/
-tmp/
 # Frontend/runtime artifacts
 node_modules/
 dist/
@@ -32,7 +35,6 @@ test-results/
 /app.cmdb/
 /runs/current/
 /saved/
-/tmp/
 # Local databases and temp files
 *.sqlite
 *.sqlite3
