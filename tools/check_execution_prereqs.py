@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import os
 import shutil
@@ -8,8 +9,14 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+
+PORT_BIND_RETRY_ATTEMPTS = 5
+PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 
 
 @dataclass
@@ -96,19 +103,64 @@ def check_frontend_preview(repo_root: Path) -> CheckResult:
     return CheckResult("frontend_preview", "ok", f"preview script declared: {preview_script.strip()}")
 
 
-def check_port_bind() -> CheckResult:
+def http_probe(url: str, *, expect_html: bool = False) -> bool:
+    try:
+        with urllib.request.urlopen(url, timeout=2) as response:
+            status = getattr(response, "status", 200)
+            body = response.read(512).decode("utf-8", errors="ignore")
+    except (OSError, urllib.error.URLError, urllib.error.HTTPError):
+        return False
+    if status < 200 or status >= 400:
+        return False
+    if expect_html and "<html" not in body.lower() and "<!doctype html" not in body.lower():
+        return False
+    return True
+
+
+def expected_runtime_listeners_ready(frontend_port: int, backend_port: int) -> bool:
+    frontend_ok = http_probe(f"http://127.0.0.1:{frontend_port}/admin-app/", expect_html=True)
+    backend_ok = (
+        http_probe(f"http://127.0.0.1:{backend_port}/docs", expect_html=True)
+        or http_probe(f"http://127.0.0.1:{backend_port}/healthz")
+    )
+    return frontend_ok and backend_ok
+
+
+def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
     frontend_port = int(os.environ.get("FRONTEND_PORT", "5173"))
     backend_port = int(os.environ.get("BACKEND_PORT", "5656"))
-    try:
+    last_error: Exception | None = None
+
+    for attempt in range(PORT_BIND_RETRY_ATTEMPTS):
+        errors: list[OSError] = []
         for port in (frontend_port, backend_port):
             sock = socket.socket()
             try:
                 sock.bind(("127.0.0.1", port))
+            except OSError as exc:
+                errors.append(exc)
             finally:
                 sock.close()
-    except Exception as exc:  # noqa: BLE001
-        return CheckResult("port_bind", "blocked", f"bind failed for localhost ports {frontend_port}/{backend_port}: {exc}")
-    return CheckResult("port_bind", "ok", f"localhost bind succeeded for {frontend_port} and {backend_port}")
+
+        if not errors:
+            return CheckResult("port_bind", "ok", f"localhost bind succeeded for {frontend_port} and {backend_port}")
+
+        last_error = errors[0]
+        errnos = {exc.errno for exc in errors}
+        if errnos == {errno.EADDRINUSE} and expected_runtime_listeners_ready(frontend_port, backend_port):
+            return CheckResult(
+                "port_bind",
+                "ok",
+                f"expected app listeners already active on localhost ports {frontend_port}/{backend_port}",
+            )
+
+        if attempt < PORT_BIND_RETRY_ATTEMPTS - 1 and errnos <= {errno.EADDRINUSE}:
+            time.sleep(PORT_BIND_RETRY_DELAY_SECONDS)
+            continue
+        break
+
+    detail = str(last_error) if last_error is not None else "unknown bind failure"
+    return CheckResult("port_bind", "blocked", f"bind failed for localhost ports {frontend_port}/{backend_port}: {detail}")
 
 
 def check_playwright_screenshot(repo_root: Path) -> CheckResult:
@@ -191,7 +243,7 @@ def main() -> int:
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),
-        check_port_bind(),
+        check_port_bind(repo_root),
         check_playwright_screenshot(repo_root),
         check_docker(),
     ]
