@@ -121,8 +121,10 @@ ceo:
     - runs/current/orchestrator/operator-action-required.md
     - runs/current/evidence/contract-samples.md
     - app/**
-  cannot_write:
     - playbook/**
+    - scripts/**
+    - tools/**
+  cannot_write:
     - specs/**
     - templates/**
     - example/**

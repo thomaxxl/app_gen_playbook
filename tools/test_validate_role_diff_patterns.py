@@ -24,6 +24,24 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_allows_ceo_runtime_repair_in_tools(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                "ceo",
+                "tools/check_completion.py",
+                [],
+            )
+        )
+
+    def test_rejects_ceo_change_in_specs(self) -> None:
+        self.assertFalse(
+            is_allowed_change(
+                "ceo",
+                "specs/product/acceptance-review.md",
+                [],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

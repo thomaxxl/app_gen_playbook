@@ -341,6 +341,13 @@ At minimum, the orchestrator MUST grant:
 - the role-owned `app/` subtree or root-owned app files
 - the shared `runs/current/role-state/` tree for inbox handoffs
 
+For CEO stall intervention, when the blocker is inside the local playbook
+runtime itself, the orchestrator MUST also grant writable access to:
+
+- `playbook/`
+- `scripts/`
+- `tools/`
+
 The orchestrator MUST NOT assume that starting Codex inside
 `runs/current/role-state/<role>/` automatically grants write access to sibling
 artifact or inbox paths.
@@ -521,9 +528,14 @@ The CEO intervention path MUST:
 - load broad context only because the orchestrator explicitly declared a stall
 - either restore forward progress directly or emit the handoffs needed to
   restore progress
+- directly repair local playbook-runtime defects under `playbook/`,
+  `scripts/`, or `tools/` when those defects are the blocker keeping the run
+  stalled
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator action, environment
   provisioning, credentials, or a policy decision the agents cannot make
+  after local repair paths have been exhausted
+- record every CEO unblock intervention in `runs/current/remarks.md`
 - avoid becoming a normal always-on review role
 
 When `runs/current/orchestrator/operator-action-required.md` exists, the

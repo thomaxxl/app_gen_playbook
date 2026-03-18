@@ -45,11 +45,15 @@ Rules:
 - exception: during an orchestrator-declared stall intervention, the CEO MAY
   temporarily edit any file under `runs/current/artifacts/`, any role lane
   under `runs/current/role-state/`, `runs/current/remarks.md`,
-  `runs/current/notes.md`, and any local `app/` subtree needed to restore
-  progress
+  `runs/current/notes.md`, any local `app/` subtree, and local playbook
+  runtime surfaces under `playbook/`, `scripts/`, and `tools/` when those
+  files are needed to restore progress
+- when CEO uses that stall-only override to unblock the run, CEO MUST append
+  the diagnosis and repair summary to `runs/current/remarks.md`
 - the CEO emergency override MUST NOT be used during normal phase execution
-- the CEO emergency override MUST NOT edit playbook source, `specs/`, or
-  `templates/` unless the task is explicitly playbook maintenance
+- the CEO emergency override MUST NOT edit `specs/`, `templates/`, or
+  unrelated playbook source beyond the local runtime repair needed to unblock
+  the current run unless the task is explicitly playbook maintenance
 - after a successful stall intervention, the CEO SHOULD hand ownership back to
   the normal role through inbox notes or direct completion of the blocked
   artifact

@@ -97,9 +97,14 @@ Exception rule:
 - during an orchestrator-declared stall, CEO MAY temporarily assume any
   run-owned artifact or local `app/` responsibility required to restore
   progress
+- during that same stall-only exception path, CEO MAY also repair local
+  playbook-runtime defects under `playbook/`, `scripts/`, and `tools/` when
+  those defects are the blocker preventing the current run from advancing
 - CEO MUST return control to the normal owner as soon as the stall is cleared
-- CEO MUST NOT use this exception to edit playbook source unless the task
-  explicitly became playbook maintenance
+- CEO MUST record every unblock intervention in `runs/current/remarks.md`
+- CEO MUST NOT use this exception to edit `specs/`, `templates/`, or unrelated
+  playbook source beyond the local runtime repair needed to unblock the
+  current run unless the task explicitly became playbook maintenance
 
 ## Artifact metadata
 

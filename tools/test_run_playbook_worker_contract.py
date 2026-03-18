@@ -28,6 +28,25 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
+    def test_ceo_runtime_can_patch_local_playbook_runtime_surfaces(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        ceo_section = script.split('    ceo)\n', 1)[1].split('      ;;\n', 1)[0]
+        self.assertIn('"$ROOT/playbook"', ceo_section)
+        self.assertIn('"$ROOT/scripts"', ceo_section)
+        self.assertIn('"$ROOT/tools"', ceo_section)
+
+    def test_ceo_turn_must_update_remarks(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn('if [[ "$runtime_role" == "ceo" ]]; then', script)
+        self.assertIn('remarks_before_fingerprint="$(file_fingerprint "$RUN_ROOT/remarks.md")"', script)
+        self.assertIn('fatal_exit \\', script)
+        self.assertIn('role $runtime_role did not update remarks.md', script)
+        self.assertIn('Expected the CEO intervention to append a diagnosis or unblock note to runs/current/remarks.md.', script)
+
     def test_runner_supports_playbook_wide_yolo_flag(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")

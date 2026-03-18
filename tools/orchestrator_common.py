@@ -149,6 +149,9 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/orchestrator/pause-requested.md",
         "runs/current/evidence/contract-samples.md",
         "app/",
+        "playbook/",
+        "scripts/",
+        "tools/",
     ),
 }
 

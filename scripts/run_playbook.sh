@@ -711,6 +711,8 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Requested Outputs
 - updated stalled-run assessment in runs/current/remarks.md
 - any required recovery or re-queue handoff notes
+- direct local playbook-runtime repairs under playbook/, scripts/, or tools/
+  if those files are the blocker keeping the run stalled
 - runs/current/orchestrator/operator-action-required.md if the remaining blocker
   requires external operator, environment, or policy intervention
 - direct artifact or app repairs only if the normal owners cannot move the run forward quickly enough
@@ -730,9 +732,13 @@ change_id: ${ACTIVE_CHANGE_ID}
 - the CEO role MAY assume any run-owned artifact or app responsibility needed
   to restore progress, but MUST return control to the normal owners as soon as
   the stall is cleared
-- if the remaining blocker cannot be resolved by the agents alone, the CEO
-  must write runs/current/orchestrator/operator-action-required.md instead of
-  re-queuing the same unresolved blocker
+- if the blocker is a local playbook or runner defect, the CEO must attempt
+  that repair before escalating externally
+- every CEO unblock intervention must be recorded in runs/current/remarks.md
+- if the remaining blocker cannot be resolved by the agents alone after local
+  repair paths are exhausted, the CEO must write
+  runs/current/orchestrator/operator-action-required.md instead of re-queuing
+  the same unresolved blocker
 EOF
 }
 
@@ -894,6 +900,8 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Requested Outputs
 - record the stalled-run assessment in runs/current/remarks.md
 - restore progress through an explicit reroute, recovery handoff, or blocked-run decision
+- direct local playbook-runtime repairs under playbook/, scripts/, or tools/
+  if those files are the blocker keeping the run stalled
 - runs/current/orchestrator/operator-action-required.md if only the operator
   can unblock the run
 
@@ -910,9 +918,13 @@ change_id: ${ACTIVE_CHANGE_ID}
 - original sender: ${original_sender:-unknown}
 - original topic: ${original_topic:-unspecified}
 - the original orchestrator escalation note has been archived for reference
-- if the remaining blocker cannot be resolved by the agents alone, the CEO
-  must write runs/current/orchestrator/operator-action-required.md instead of
-  re-queuing the same unresolved blocker
+- every CEO unblock intervention must be recorded in runs/current/remarks.md
+- if the blocker is a local playbook or runner defect, the CEO must attempt
+  that repair before escalating externally
+- if the remaining blocker cannot be resolved by the agents alone after local
+  repair paths are exhausted, the CEO must write
+  runs/current/orchestrator/operator-action-required.md instead of re-queuing
+  the same unresolved blocker
 EOF
   printf '%s\n' "$note_path"
 }
@@ -1403,9 +1415,28 @@ role_add_dirs() {
         "$RUN_ROOT/changes" \
         "$STATE_ROOT" \
         "$RUN_ROOT" \
-        "$ROOT/app"
+        "$ROOT/app" \
+        "$ROOT/playbook" \
+        "$ROOT/scripts" \
+        "$ROOT/tools"
       ;;
   esac
+}
+
+file_fingerprint() {
+  python3 - "$1" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+if not path.exists():
+    print("__missing__")
+else:
+    print(hashlib.sha256(path.read_bytes()).hexdigest())
+PY
 }
 
 session_get() {
@@ -2230,8 +2261,13 @@ run_role_once() {
   local handoff_validation_json="$EVIDENCE_ROOT/${turn_key}.handoff-validation.json"
 
   local model resume_id role_summary codex_error
+  local remarks_before_fingerprint=""
   model="$(role_model "$runtime_role")"
   resume_id="$(session_get "$runtime_role")"
+
+  if [[ "$runtime_role" == "ceo" ]]; then
+    remarks_before_fingerprint="$(file_fingerprint "$RUN_ROOT/remarks.md")"
+  fi
 
   if ! python3 "$ROOT/tools/validate_handoff_inputs.py" \
     --repo-root "$ROOT" \
@@ -2334,6 +2370,20 @@ run_role_once() {
     fatal_exit \
       "role $runtime_role did not update context.md" \
       "Expected context file is missing:"$'\n'"- $role_dir/context.md"
+  fi
+
+  if [[ "$runtime_role" == "ceo" ]]; then
+    local remarks_after_fingerprint
+    remarks_after_fingerprint="$(file_fingerprint "$RUN_ROOT/remarks.md")"
+    if [[ "$remarks_after_fingerprint" == "$remarks_before_fingerprint" ]]; then
+      python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
+        --repo-root "$ROOT" \
+        --role "$runtime_role" \
+        --status interrupted >/dev/null
+      fatal_exit \
+        "role $runtime_role did not update remarks.md" \
+        "Expected the CEO intervention to append a diagnosis or unblock note to runs/current/remarks.md."
+    fi
   fi
 
   python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \

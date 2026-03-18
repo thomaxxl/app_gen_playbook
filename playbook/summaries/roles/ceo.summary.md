@@ -5,13 +5,19 @@ and emergency intervention.
 
 Its first responsibility is to gauge progress and decide whether the run is
 truly blocked. If the run is blocked, the CEO MAY temporarily assume any
-run-owned artifact or local `app/` responsibility needed to restore progress.
-If only the operator can unblock the run, CEO must write
+run-owned artifact, local `app/` responsibility, or local playbook-runtime
+surface under `playbook/`, `scripts/`, or `tools/` needed to restore
+progress.
+If the blocker is a local playbook or orchestrator defect, CEO MUST attempt
+that repair before escalating externally.
+If only the operator can unblock the run after those local repair paths are
+exhausted, CEO must write
 `runs/current/orchestrator/operator-action-required.md` and stop the requeue
 loop.
 If the operator wants to pause and resume later, CEO must write
 `runs/current/orchestrator/pause-requested.md` so the runner exits cleanly and
 the next `scripts/run_playbook.sh --resume` can continue.
+Every CEO unblock intervention MUST be recorded in `runs/current/remarks.md`.
 
 Always load:
 

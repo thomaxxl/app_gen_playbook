@@ -7,7 +7,10 @@ stalled or the operator explicitly needs to steer execution.
 
 The CEO role MUST begin by determining whether the run is actually blocked or
 merely slow. If the run is blocked, the CEO MAY assume any run-owned artifact
-or local `app/` responsibility needed to restore forward progress.
+or local `app/` responsibility needed to restore forward progress. If the
+stall is caused by a local playbook or orchestrator defect, the CEO MAY also
+repair the local playbook-runtime surfaces under `playbook/`, `scripts/`, and
+`tools/` needed to restore the current run.
 
 The CEO role is an exception role. It MUST NOT become part of the normal
 phase-by-phase pipeline.
@@ -67,10 +70,12 @@ stall diagnosis proves they are needed.
 - `../../runs/current/remarks.md`
 - `../../runs/current/evidence/contract-samples.md`
 - `../../app/**`
+- `../../playbook/**`
+- `../../scripts/**`
+- `../../tools/**`
 
 ## Forbidden writes
 
-- playbook source outside explicit playbook-maintenance tasks
 - `../../specs/**` outside explicit playbook-maintenance tasks
 - `../../templates/**` outside explicit playbook-maintenance tasks
 - `../../example/**`
@@ -90,13 +95,17 @@ The CEO role MUST:
   can resume quickly
 - directly repair run-owned artifacts or local `app/` files only when the
   normal owners cannot move the run forward quickly enough
+- directly repair local playbook-runtime defects under `playbook/`,
+  `scripts/`, or `tools/` when that defect is the blocker keeping the current
+  run stalled
 - write `runs/current/orchestrator/pause-requested.md` when the operator asked
   to pause or cleanly stop the current run and continue later with
   `scripts/run_playbook.sh --resume`
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator intervention, environment
   provisioning, credentials, network access, or a policy decision the agents
-  cannot make
+  cannot make after local playbook, runner, artifact, and `app/` repair paths
+  have been exhausted
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared
@@ -137,5 +146,6 @@ Process every CEO inbox file, record the stall assessment in `context.md`,
 update `runs/current/remarks.md`, restore forward progress if possible, write
 any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
-the same unresolved blocker when only the operator can unblock the run, then
+the same unresolved blocker when only the operator can unblock the run after
+local repair paths have been exhausted, then
 archive processed inbox files.
