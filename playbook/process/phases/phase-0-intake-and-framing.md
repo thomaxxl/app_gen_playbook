@@ -55,4 +55,5 @@ Classify that input using `../input-policy.md`.
 - critical workflows are identified
 - sparse input has been actively interpreted rather than merely classified
 - assumptions caused by sparse input are written down
-- the proposed framing is stable enough for handoff
+- the proposed framing is stable enough to continue into Phase 1 without
+  downstream guessing

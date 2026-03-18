@@ -8,12 +8,13 @@ Always load:
 
 - `global-core.md`
 - `process-core.md`
-- `../../process/read-sets/product-manager-core.md` for fresh-run intake and
-  Phase 1
-- `../../process/read-sets/product-manager-change-intake.md` for change-run
-  intake and scope delta
-- `../../process/read-sets/product-manager-change-acceptance.md` for
-  change-run acceptance
+- one stage-specific Product Manager read path:
+  - `../../process/read-sets/product-manager-core.md` for fresh-run intake,
+    Phase 1, and Phase 7 acceptance
+  - `../../process/read-sets/product-manager-change-intake.md` for change-run
+    intake and scope delta
+  - `../../process/read-sets/product-manager-change-acceptance.md` for
+    I6/I7 change acceptance
 
 This role controls product artifacts only. It does not decide technical
 runtime, route semantics, backend enforcement, or packaging behavior.

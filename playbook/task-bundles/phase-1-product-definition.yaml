@@ -11,7 +11,10 @@ required_artifacts:
   - runs/current/input.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
+  - runs/current/artifacts/product/research-notes.md
 conditional_artifacts:
+  sparse_input:
+    - runs/current/artifacts/product/input-interpretation.md
   example_comparison:
     - example/README.md
 reference_only:

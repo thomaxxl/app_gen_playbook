@@ -25,5 +25,4 @@ reference_only:
 writable_targets:
   - runs/current/artifacts/architecture/**
   - runs/current/changes/*/verification/**
-  - runs/current/changes/*/promotion.yaml
   - runs/current/role-state/architect/**

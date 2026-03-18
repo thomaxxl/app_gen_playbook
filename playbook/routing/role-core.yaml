@@ -38,8 +38,16 @@ architect:
     - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/architecture/**
+    - runs/current/evidence/contract-samples.md
+    - runs/current/evidence/frontend-browser-proof.md
+    - runs/current/evidence/frontend-usability.md
+    - runs/current/evidence/ui-previews/**
+    - runs/current/evidence/quality/**
     - runs/current/role-state/architect/**
     - runs/current/changes/*/impact-manifest.yaml
+    - runs/current/changes/*/affected-artifacts.md
+    - runs/current/changes/*/affected-app-paths.md
+    - runs/current/changes/*/reopened-gates.md
     - runs/current/changes/*/role-loads/**
     - runs/current/changes/*/candidate/artifacts/architecture/**
     - runs/current/changes/*/verification/**

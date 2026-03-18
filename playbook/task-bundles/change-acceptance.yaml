@@ -13,7 +13,7 @@ required_artifacts:
   - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/evidence/quality/data-sourcing-audit.md
 writable_targets:
-  - runs/current/artifacts/**
+  - runs/current/artifacts/product/**
   - runs/current/changes/*/promotion.yaml
   - runs/current/role-state/product_manager/**
   - app/BUSINESS_RULES.md

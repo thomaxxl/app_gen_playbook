@@ -29,6 +29,7 @@ The runtime directory contains:
 
 - `context.md`
 - `inbox/`
+- `inflight/`
 - `processed/`
 
 ## Loading policy
@@ -42,6 +43,9 @@ The runtime directory contains:
 - [../process/read-sets/product-manager-core.md](../process/read-sets/product-manager-core.md)
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
+
+Choose exactly one task-specific load path below for the current turn. Do not
+preload intake, Phase 1, change-run, and acceptance materials together.
 
 ### Load for intake
 
@@ -76,6 +80,8 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 
 ## Writable targets
 
+- `../../runs/current/remarks.md`
+- `../../runs/current/notes.md`
 - `../../runs/current/artifacts/product/**`
 - `../../runs/current/changes/*/request.md`
 - `../../runs/current/changes/*/classification.yaml`
@@ -95,6 +101,9 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 - `../../runs/current/artifacts/ux/**`
 - `../../runs/current/artifacts/backend-design/**`
 - `../../runs/current/artifacts/devops/**`
+- `../../app/frontend/**`
+- `../../app/backend/**`
+- `../../app/rules/**`
 - playbook source outside explicit playbook-maintenance tasks
 
 ## Escalation targets
@@ -136,10 +145,11 @@ For a fresh run, the Product Manager MUST NOT use `../../example/` or
 `../../app/` as product inputs unless the task explicitly requests comparison
 or maintenance.
 
-For a new run, the Product Manager SHOULD ensure local gitignored `../../app/`
-exists before handoff so later roles have a stable output root. That directory
-creation step MUST NOT be treated as product evidence or committed playbook
-content.
+For a new run, the Product Manager MAY verify that local gitignored
+`../../app/` exists before handoff, but normal run setup SHOULD already create
+it. If the workspace root is missing, treat that as run-setup drift rather
+than product evidence. Any local directory creation step MUST NOT be treated as
+product evidence or committed playbook content.
 
 Research and framing artifacts MUST separate:
 

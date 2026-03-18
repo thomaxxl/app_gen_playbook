@@ -26,6 +26,7 @@ The runtime directory contains:
 
 - `context.md`
 - `inbox/`
+- `inflight/`
 - `processed/`
 
 ## Loading policy
@@ -39,17 +40,27 @@ The runtime directory contains:
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
-### Load for phase 2 and change authoring
+Choose exactly one stage-specific load path below for the current turn. Do not
+preload Phase 2 authoring, change analysis, and integration-review bundles
+together unless the inbox item explicitly spans those stages.
+
+### Load for phase 2 authoring
 
 - [../process/read-sets/architect-authoring-core.md](../process/read-sets/architect-authoring-core.md)
 - [../task-bundles/phase-2-architecture-contract.yaml](../task-bundles/phase-2-architecture-contract.yaml)
+
+### Load for change analysis
+
 - [../process/read-sets/architect-change-analysis.md](../process/read-sets/architect-change-analysis.md)
+- [../task-bundles/change-impact-analysis.yaml](../task-bundles/change-impact-analysis.yaml)
 
 ### Load for phase 6
 
 - [../process/read-sets/architect-review-core.md](../process/read-sets/architect-review-core.md)
 - [../task-bundles/integration-review.yaml](../task-bundles/integration-review.yaml)
+  for full-run Gate C review
 - [../task-bundles/change-integration-review.yaml](../task-bundles/change-integration-review.yaml)
+  for I6 change-run review
 
 ### Load when starter adaptation is needed
 
@@ -63,12 +74,22 @@ used as design input.
 
 ## Writable targets
 
+- `../../runs/current/remarks.md`
+- `../../runs/current/notes.md`
 - `../../runs/current/artifacts/architecture/**`
 - `../../runs/current/changes/*/impact-manifest.yaml`
+- `../../runs/current/changes/*/affected-artifacts.md`
+- `../../runs/current/changes/*/affected-app-paths.md`
+- `../../runs/current/changes/*/reopened-gates.md`
 - `../../runs/current/changes/*/role-loads/**`
 - `../../runs/current/changes/*/candidate/artifacts/architecture/**`
 - `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/architect/**`
+- `../../runs/current/evidence/contract-samples.md`
+- `../../runs/current/evidence/frontend-browser-proof.md`
+- `../../runs/current/evidence/frontend-usability.md`
+- `../../runs/current/evidence/ui-previews/**`
+- `../../runs/current/evidence/quality/**`
 - `../../app/README.md`
 
 ## Forbidden writes
@@ -155,6 +176,9 @@ change users, scope, workflows, or required custom pages as product behavior.
 - run-owned architecture artifacts
 - maintained capability profile and load plan
 - integration-review artifact for Phase 6
+- integration evidence under `../../runs/current/evidence/` for Gate C,
+  including contract samples, browser proof, UI previews, usability notes, and
+  the quality evidence pack
 - handoff notes to frontend and backend
 - correction requests back to Product Manager when product intent is still
   ambiguous

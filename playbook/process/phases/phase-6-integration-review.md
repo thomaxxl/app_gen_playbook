@@ -67,8 +67,8 @@ readiness note in:
 - verify packaged route behavior when packaging is in scope
 - verify docs match what was built
 - reject undocumented business-rule drift
-- verify Playwright is installed for the generated app and install it if the
-  delivery environment does not already have it
+- verify Playwright is installed for the generated app and install it only
+  when the active dependency-provisioning policy allows dependency creation
 - run the basic Playwright smoke suite as the final pre-delivery step
 - populate the full quality evidence pack under `runs/current/evidence/quality/`
 - write `runs/current/evidence/quality/data-sourcing-audit.md` and explicitly
