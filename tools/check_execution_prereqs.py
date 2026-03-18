@@ -27,10 +27,17 @@ class CheckResult:
     optional: bool = False
 
 
+def resolve_app_relative_path(repo_root: Path, raw_path: str) -> Path:
+    candidate = Path(raw_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = repo_root / "app" / candidate
+    return candidate.resolve()
+
+
 def backend_python_path(repo_root: Path) -> Path:
     raw_candidate = os.environ.get("BACKEND_VENV", "").strip()
     if raw_candidate:
-        candidate = Path(raw_candidate)
+        candidate = resolve_app_relative_path(repo_root, raw_candidate)
     else:
         candidate = repo_root / "app" / "backend" / ".venv"
     if candidate.is_dir():
@@ -41,8 +48,12 @@ def backend_python_path(repo_root: Path) -> Path:
 def frontend_node_modules_path(repo_root: Path) -> Path:
     raw_candidate = os.environ.get("FRONTEND_NODE_MODULES_DIR", "").strip()
     if raw_candidate:
-        return Path(raw_candidate)
+        return resolve_app_relative_path(repo_root, raw_candidate)
     return repo_root / "app" / "frontend" / "node_modules"
+
+
+def frontend_tool_path(repo_root: Path, name: str) -> Path:
+    return frontend_node_modules_path(repo_root) / ".bin" / name
 
 
 def check_backend_venv(repo_root: Path) -> CheckResult:
@@ -69,27 +80,25 @@ def check_backend_venv(repo_root: Path) -> CheckResult:
 
 
 def check_node_modules(repo_root: Path) -> CheckResult:
-    frontend_root = repo_root / "app" / "frontend"
     node_modules = frontend_node_modules_path(repo_root)
     if not node_modules.exists():
         return CheckResult("node_packages", "blocked", f"missing node_modules: {node_modules}")
 
-    npm_path = shutil.which("npm")
-    if npm_path is None:
-        return CheckResult("node_packages", "blocked", "npm is not available in PATH")
+    vite_path = frontend_tool_path(repo_root, "vite")
+    if not vite_path.exists():
+        return CheckResult("node_packages", "blocked", f"missing vite executable: {vite_path}")
 
     proc = subprocess.run(
-        [npm_path, "exec", "--", "vite", "--version"],
-        cwd=frontend_root,
+        [str(vite_path), "--version"],
         capture_output=True,
         text=True,
     )
     if proc.returncode == 0:
-        return CheckResult("node_packages", "ok", proc.stdout.strip() or "vite resolved from local node_modules")
+        return CheckResult("node_packages", "ok", proc.stdout.strip() or f"vite resolved from {node_modules}")
     return CheckResult(
         "node_packages",
         "blocked",
-        (proc.stderr or proc.stdout).strip() or "failed to resolve vite from local node_modules",
+        (proc.stderr or proc.stdout).strip() or f"failed to run vite from {vite_path}",
     )
 
 
@@ -176,26 +185,21 @@ def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
 
 
 def check_playwright_screenshot(repo_root: Path) -> CheckResult:
-    frontend_root = repo_root / "app" / "frontend"
-    npm_path = shutil.which("npm")
-    if npm_path is None:
-        return CheckResult("playwright_screenshot", "blocked", "npm is not available in PATH")
+    playwright_path = frontend_tool_path(repo_root, "playwright")
+    if not playwright_path.exists():
+        return CheckResult("playwright_screenshot", "blocked", f"missing playwright executable: {playwright_path}")
 
     with tempfile.TemporaryDirectory(prefix="playwright-check-") as tmpdir:
         screenshot_path = Path(tmpdir) / "smoke.png"
         proc = subprocess.run(
             [
-                npm_path,
-                "exec",
-                "--",
-                "playwright",
+                str(playwright_path),
                 "screenshot",
                 "--browser",
                 "chromium",
                 "data:text/html,<html><body><h1>playbook-check</h1></body></html>",
                 str(screenshot_path),
             ],
-            cwd=frontend_root,
             capture_output=True,
             text=True,
         )
@@ -239,7 +243,8 @@ def render_markdown(results: list[CheckResult]) -> str:
     ]
     for result in results:
         label = "optional" if result.optional else "required"
-        lines.append(f"- `{result.name}`: `{result.status}` ({label})")
+        icon = "[x]" if result.status == "ok" else "[ ]"
+        lines.append(f"- {icon} `{result.name}`: `{result.status}` ({label})")
         lines.append(f"  - {result.detail}")
     return "\n".join(lines) + "\n"
 
@@ -265,8 +270,7 @@ def main() -> int:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(markdown, encoding="utf-8")
-    else:
-        sys.stdout.write(markdown)
+    sys.stdout.write(markdown)
 
     return 0 if all(result.status == "ok" for result in results if not result.optional) else 1
 

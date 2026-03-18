@@ -173,7 +173,12 @@ def execution_prereqs_playwright_ok(repo_root: Path) -> bool:
     if not prereq_path.exists():
         return False
     text = prereq_path.read_text(encoding="utf-8")
-    return bool(re.search(r"(?im)^-\s*`playwright_screenshot`:\s*`ok`\s*\(required\)\s*$", text))
+    return bool(
+        re.search(
+            r"(?im)^-\s*(?:\[[xX ]\]\s+)?`playwright_screenshot`:\s*`ok`\s*\(required\)\s*$",
+            text,
+        )
+    )
 
 
 def app_declares_ui_preview_capture(repo_root: Path) -> bool:

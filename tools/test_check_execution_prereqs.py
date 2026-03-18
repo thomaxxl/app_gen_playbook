@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import threading
 import unittest
 import unittest.mock
@@ -85,6 +86,65 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             check_execution_prereqs.expected_runtime_listeners_ready = original_expected_runtime_listeners_ready
             check_execution_prereqs.PORT_BIND_RETRY_ATTEMPTS = original_attempts
             check_execution_prereqs.PORT_BIND_RETRY_DELAY_SECONDS = original_delay
+
+    def test_render_markdown_uses_checkbox_style(self) -> None:
+        result_ok = CheckResult("python_venv", "ok", "all good")
+        result_blocked = CheckResult("node_packages", "blocked", "missing node_modules")
+        output = check_execution_prereqs.render_markdown([result_ok, result_blocked])
+        self.assertIn("- [x] `python_venv`: `ok` (required)", output)
+        self.assertIn("- [ ] `node_packages`: `blocked` (required)", output)
+
+    def test_backend_python_path_resolves_relative_override_from_app_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            venv_dir = repo_root / "app" / "shared" / "backend-venv"
+            venv_dir.mkdir(parents=True, exist_ok=True)
+            with unittest.mock.patch.dict("os.environ", {"BACKEND_VENV": "shared/backend-venv"}, clear=False):
+                python_path = check_execution_prereqs.backend_python_path(repo_root)
+            self.assertEqual(python_path, venv_dir / "bin" / "python")
+
+    def test_frontend_node_modules_path_resolves_relative_override_from_app_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            node_modules = repo_root / "app" / "shared" / "node_modules"
+            node_modules.mkdir(parents=True, exist_ok=True)
+            with unittest.mock.patch.dict("os.environ", {"FRONTEND_NODE_MODULES_DIR": "shared/node_modules"}, clear=False):
+                resolved_path = check_execution_prereqs.frontend_node_modules_path(repo_root)
+            self.assertEqual(resolved_path, node_modules)
+
+    def test_check_node_modules_uses_configured_node_modules_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            vite_path = repo_root / "app" / "shared" / "node_modules" / ".bin" / "vite"
+            vite_path.parent.mkdir(parents=True, exist_ok=True)
+            vite_path.write_text("#!/usr/bin/env bash\necho vite/9.9.9 test\n", encoding="utf-8")
+            vite_path.chmod(0o755)
+
+            with unittest.mock.patch.dict("os.environ", {"FRONTEND_NODE_MODULES_DIR": "shared/node_modules"}, clear=False):
+                result = check_execution_prereqs.check_node_modules(repo_root)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("vite/9.9.9 test", result.detail)
+
+    def test_check_playwright_screenshot_uses_configured_node_modules_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            playwright_path = repo_root / "app" / "shared" / "node_modules" / ".bin" / "playwright"
+            playwright_path.parent.mkdir(parents=True, exist_ok=True)
+            playwright_path.write_text(
+                "#!/usr/bin/env bash\n"
+                "output=\"${@: -1}\"\n"
+                "mkdir -p \"$(dirname \"$output\")\"\n"
+                "printf test > \"$output\"\n",
+                encoding="utf-8",
+            )
+            playwright_path.chmod(0o755)
+
+            with unittest.mock.patch.dict("os.environ", {"FRONTEND_NODE_MODULES_DIR": "shared/node_modules"}, clear=False):
+                result = check_execution_prereqs.check_playwright_screenshot(repo_root)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("captured screenshot", result.detail)
 
 
 if __name__ == "__main__":

@@ -618,7 +618,7 @@ record_execution_prereqs() {
   fi
   mkdir -p "$(dirname "$output_path")"
   if BACKEND_VENV="${BACKEND_VENV}" FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR}" \
-    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path" >/dev/null 2>&1; then
+    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path"; then
     log "execution-prereqs-ready artifact=${output_path#$ROOT/}"
     return 0
   else
