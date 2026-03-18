@@ -97,9 +97,10 @@ Or launch interactively:
    inbox, and advances the run through the defined roles.
    If the run appears stalled, the orchestrator may invoke the dormant CEO
    recovery role to inspect progress and restore forward motion. If the
-   CEO cannot unblock the run within reasonable time and reasonable effort, or
-   if the remaining blocker needs external operator or environment
-   intervention, the run stops non-zero and points at
+   CEO cannot unblock the run within reasonable time and reasonable effort,
+   where "reasonable time" means up to 20 minutes of wall-clock CEO
+   intervention, or if the remaining blocker needs external operator or
+   environment intervention, the run stops non-zero and points at
    `runs/current/orchestrator/operator-action-required.md`.
 4. The generated app is built locally under `app/`.
 5. A preserved runnable reference remains available under `example/`.

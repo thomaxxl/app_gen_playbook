@@ -548,7 +548,8 @@ When a stall is detected, the orchestrator MUST:
 - create a CEO inbox note describing the stall
 - invoke the CEO role once before deciding the run is irrecoverable
 - terminate non-zero only if the CEO intervention does not restore forward
-  progress within reasonable time and reasonable effort
+  progress within reasonable time and reasonable effort; "reasonable time"
+  means up to 20 minutes of wall-clock CEO intervention on the active stall
 
 The CEO intervention path MUST:
 
@@ -560,7 +561,8 @@ The CEO intervention path MUST:
   `scripts/`, or `tools/` when those defects are the blocker keeping the run
   stalled
 - avoid open-ended CEO repair churn; if a serious but bounded unblock attempt
-  does not restore progress, prefer an explicit blocked or paused exit
+  does not restore progress within that 20-minute window, prefer an explicit
+  blocked or paused exit
 - approve or reject any pending non-success playbook termination before the
   orchestrator exits
 - validate successful delivery by running `app/run.sh` through the wrapper
