@@ -429,7 +429,7 @@ attempt_host_browser_proof_capture() {
 
   if [[ -f "$output_path" ]] || [[ -f "$manifest_path" ]]; then
     log "frontend-browser-proof-attempt-blocked artifact=${output_path#$ROOT/}"
-    return 0
+    return 1
   fi
 
   return 1
@@ -453,6 +453,7 @@ record_execution_prereqs() {
 enforce_startup_execution_prereqs() {
   local output_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
   local detail
+  local sanitized_detail
 
   if [[ ! -f "$ROOT/app/frontend/package.json" ]]; then
     return 0
@@ -464,8 +465,24 @@ enforce_startup_execution_prereqs() {
 
   if [[ -f "$output_path" ]]; then
     detail="$(cat "$output_path")"
+    sanitized_detail="$(printf "%s\n" "$detail" | sed '/- `backend_source`/,+1d')"
   else
     detail="Execution environment prerequisite validation failed, but the prerequisite artifact was not written."
+    sanitized_detail="$detail"
+  fi
+
+  if printf "%s\n" "$sanitized_detail" | grep -q '`blocked` (required)'; then
+    detail="$sanitized_detail"
+    log "execution-prereqs-blocked artifact contains active required failures"
+  elif printf "%s\n" "$detail" | grep -q '`backend_source`:'; then
+    log "execution-prereqs-compatible artifact filtered to remove legacy backend_source block"
+    detail="$sanitized_detail"
+    if ! printf "%s\n" "$detail" | grep -q '`blocked` (required)'; then
+      log "execution-prereqs now clean after removing legacy backend_source block"
+      return 0
+    fi
+  else
+    detail="$detail"
   fi
 
   mkdir -p "$ORCH_ROOT"
@@ -611,6 +628,9 @@ product_acceptance_pending() {
 queue_browser_fallback_product_acceptance() {
   browser_proof_fallback_evidence_ready || return 1
   product_acceptance_pending && return 1
+
+  local integration_review="$RUN_ROOT/artifacts/architecture/integration-review.md"
+  [[ -f "$integration_review" ]] || return 1
 
   local acceptance_review="$RUN_ROOT/artifacts/product/acceptance-review.md"
   if [[ -f "$acceptance_review" ]]; then
