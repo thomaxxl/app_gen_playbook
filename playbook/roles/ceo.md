@@ -67,7 +67,9 @@ stall diagnosis proves they are needed.
 - `../../runs/current/role-state/**`
 - `../../runs/current/orchestrator/pause-requested.md`
 - `../../runs/current/orchestrator/operator-action-required.md`
+- `../../runs/current/orchestrator/delivery-approved.md`
 - `../../runs/current/remarks.md`
+- `../../runs/current/evidence/ceo-delivery-validation.md`
 - `../../runs/current/evidence/contract-samples.md`
 - `../../app/**`
 - `../../playbook/**`
@@ -110,6 +112,10 @@ The CEO role MUST:
   orchestrator exits by either restoring progress, writing
   `runs/current/orchestrator/operator-action-required.md`, or writing
   `runs/current/orchestrator/pause-requested.md`
+- before approving successful delivery, run
+  `scripts/run_playbook.sh --ceo-delivery-validate`, inspect
+  `runs/current/evidence/ceo-delivery-validation.md`, and write
+  `runs/current/orchestrator/delivery-approved.md`
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared
@@ -152,5 +158,7 @@ any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
 the same unresolved blocker when only the operator can unblock the run after
 local repair paths have been exhausted, approve or reject any pending
-orchestrator termination before exit, then
+orchestrator termination before exit, validate successful delivery through
+`scripts/run_playbook.sh --ceo-delivery-validate` before writing
+`runs/current/orchestrator/delivery-approved.md`, then
 archive processed inbox files.

@@ -33,6 +33,22 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_allows_ceo_delivery_validation_artifacts(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                "ceo",
+                "runs/current/orchestrator/delivery-approved.md",
+                [],
+            )
+        )
+        self.assertTrue(
+            is_allowed_change(
+                "ceo",
+                "runs/current/evidence/ceo-delivery-validation.md",
+                [],
+            )
+        )
+
     def test_rejects_ceo_change_in_specs(self) -> None:
         self.assertFalse(
             is_allowed_change(

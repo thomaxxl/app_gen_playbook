@@ -2,6 +2,16 @@
 
 This file defines the expected runtime behavior of `scripts/run_playbook.sh`.
 
+The top-level `scripts/run_playbook.sh` entrypoint is a resilient wrapper.
+The main orchestration logic lives in `scripts/run_playbook_core.sh`.
+The wrapper MUST remain small enough to:
+
+- delegate normal execution into `run_playbook_core.sh`
+- detect shell-syntax failure in `run_playbook_core.sh`
+- give CEO an emergency repair path even when the core script cannot start
+- host CEO-only delivery validation helpers such as
+  `scripts/run_playbook.sh --ceo-delivery-validate`
+
 ## Purpose
 
 The orchestrator MUST:
@@ -211,6 +221,15 @@ CEO approval of termination is expressed by either:
 - restoring progress so the run continues
 - writing `runs/current/orchestrator/operator-action-required.md`
 - writing `runs/current/orchestrator/pause-requested.md`
+
+Before the orchestrator marks the run complete, it MUST require explicit CEO
+delivery approval. That approval MUST include:
+
+- a real `app/run.sh` validation run through
+  `scripts/run_playbook.sh --ceo-delivery-validate`
+- a delivery-validation artifact under
+  `runs/current/evidence/ceo-delivery-validation.md`
+- a CEO approval file at `runs/current/orchestrator/delivery-approved.md`
 
 It MAY accept explicit model overrides through environment variables such as:
 
@@ -542,6 +561,8 @@ The CEO intervention path MUST:
   stalled
 - approve or reject any pending non-success playbook termination before the
   orchestrator exits
+- validate successful delivery by running `app/run.sh` through the wrapper
+  helper before the run is marked complete
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator action, environment
   provisioning, credentials, or a policy decision the agents cannot make

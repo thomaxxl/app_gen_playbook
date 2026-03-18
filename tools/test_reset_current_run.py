@@ -31,6 +31,7 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertTrue((repo_root / "runs" / "current" / "notes.md").is_file())
             ceo_agents = (repo_root / "runs" / "current" / "role-state" / "ceo" / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("repair the current blocker even in local playbook runtime files when necessary", ceo_agents)
+            self.assertIn("validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval", ceo_agents)
             self.assertIn("record every unblock intervention in runs/current/remarks.md", ceo_agents)
 
 

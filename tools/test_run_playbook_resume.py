@@ -15,6 +15,26 @@ def write_executable(path: Path, content: str) -> None:
     path.chmod(0o755)
 
 
+def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
+    scripts_dir = repo_root / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    for script_name in ("run_playbook.sh", "run_playbook_core.sh"):
+        shutil.copy2(source_repo / "scripts" / script_name, scripts_dir / script_name)
+
+
+def seed_delivery_approval(repo_root: Path) -> None:
+    (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+    (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
+    (repo_root / "runs" / "current" / "orchestrator" / "delivery-approved.md").write_text(
+        "status: approved\n",
+        encoding="utf-8",
+    )
+    (repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md").write_text(
+        "status: ready-for-handoff\n",
+        encoding="utf-8",
+    )
+
+
 class RunPlaybookResumeTests(unittest.TestCase):
     def test_resume_does_not_exit_when_recovery_pass_emits_nothing(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
@@ -24,13 +44,12 @@ class RunPlaybookResumeTests(unittest.TestCase):
             repo_root.mkdir()
             subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
 
-            script_target = repo_root / "scripts" / "run_playbook.sh"
-            script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+            copy_runner_scripts(source_repo, repo_root)
 
             (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
             (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
                 '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
                 encoding="utf-8",
@@ -105,13 +124,12 @@ class RunPlaybookResumeTests(unittest.TestCase):
             repo_root.mkdir()
             subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
 
-            script_target = repo_root / "scripts" / "run_playbook.sh"
-            script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+            copy_runner_scripts(source_repo, repo_root)
 
             (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
             (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
                 '{"status":"interrupted","mode":"iterative-change-run","current_phase":"","change_id":"CR-test"}\n',
                 encoding="utf-8",
@@ -203,13 +221,12 @@ class RunPlaybookResumeTests(unittest.TestCase):
             repo_root.mkdir()
             subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
 
-            script_target = repo_root / "scripts" / "run_playbook.sh"
-            script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+            copy_runner_scripts(source_repo, repo_root)
 
             (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
             (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
                 '{"status":"interrupted","mode":"iterative-change-run","current_phase":"","change_id":"CR-test"}\n',
                 encoding="utf-8",
@@ -343,13 +360,12 @@ class RunPlaybookResumeTests(unittest.TestCase):
             repo_root.mkdir()
             subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
 
-            script_target = repo_root / "scripts" / "run_playbook.sh"
-            script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+            copy_runner_scripts(source_repo, repo_root)
 
             (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
             (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
                 '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
                 encoding="utf-8",
@@ -421,13 +437,12 @@ class RunPlaybookResumeTests(unittest.TestCase):
             repo_root.mkdir()
             subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
 
-            script_target = repo_root / "scripts" / "run_playbook.sh"
-            script_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+            copy_runner_scripts(source_repo, repo_root)
 
             (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
             (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
                 '{"status":"blocked","mode":"new-full-run","current_phase":"","change_id":""}\n',
                 encoding="utf-8",

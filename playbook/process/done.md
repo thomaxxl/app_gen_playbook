@@ -15,6 +15,11 @@ A feature is done only when all of these are true:
 - the final pre-delivery step was an actual Playwright smoke run against the
   app, not just a claim that the tests should pass
 - the app is proven to boot without bootstrap/runtime failure
+- CEO has run `app/run.sh` through
+  `scripts/run_playbook.sh --ceo-delivery-validate`
+- `runs/current/evidence/ceo-delivery-validation.md` exists and records a
+  successful delivery validation
+- `runs/current/orchestrator/delivery-approved.md` exists
 - at least one generated resource list is proven to render correct live data,
   not only a shell, spinner, or empty scaffold
 - docs and templates match the implementation
