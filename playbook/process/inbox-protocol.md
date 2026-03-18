@@ -87,6 +87,13 @@ An operator MAY steer a live run by writing a normal inbox message to:
 
 - `runs/current/role-state/ceo/inbox/`
 
+The helper script:
+
+- `scripts/steer.sh`
+
+creates these CEO steering notes and supports `--pause` for clean operator
+pause requests.
+
 That message SHOULD use:
 
 - `from: operator`

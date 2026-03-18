@@ -29,6 +29,8 @@ Other supported paths:
 ./scripts/run_playbook.sh --mode hotfix path/to/hotfix.md
 ./scripts/run_playbook.sh --resume
 ./scripts/run_playbook.sh --resume --role backend
+./scripts/steer.sh "Adjust the current run through the CEO lane"
+./scripts/steer.sh --pause "Pause now and resume later"
 ```
 
 That runner resets local `runs/current/` from `template/` before seeding the

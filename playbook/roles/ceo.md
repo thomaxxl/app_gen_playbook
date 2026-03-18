@@ -47,6 +47,7 @@ The runtime directory contains:
 
 - [../task-bundles/ceo-stall-intervention.yaml](../task-bundles/ceo-stall-intervention.yaml)
 - [../../runs/current/remarks.md](../../runs/current/remarks.md)
+- [../../runs/current/notes.md](../../runs/current/notes.md)
 - [../../runs/current/orchestrator/run-status.json](../../runs/current/orchestrator/run-status.json)
 - [../../runs/current/evidence/orchestrator/logs/orchestrator.log](../../runs/current/evidence/orchestrator/logs/orchestrator.log)
 
@@ -61,6 +62,8 @@ stall diagnosis proves they are needed.
 
 - `../../runs/current/artifacts/**`
 - `../../runs/current/role-state/**`
+- `../../runs/current/orchestrator/pause-requested.md`
+- `../../runs/current/orchestrator/operator-action-required.md`
 - `../../runs/current/remarks.md`
 - `../../runs/current/evidence/contract-samples.md`
 - `../../app/**`
@@ -79,10 +82,17 @@ The CEO role MUST:
 - start by deciding whether the run is truly blocked
 - treat an operator-created CEO inbox message as a high-priority control note
   that may reroute, pause, resume, narrow, or clarify the active work
+- treat a steering note that asks for a restart-from-phase-0 as authority to
+  archive invalid downstream queue work, reopen the run from the earliest
+  required phase, and hand control back to Product Manager with explicit
+  recovery notes
 - prefer restoring progress through explicit handoffs when specialized roles
   can resume quickly
 - directly repair run-owned artifacts or local `app/` files only when the
   normal owners cannot move the run forward quickly enough
+- write `runs/current/orchestrator/pause-requested.md` when the operator asked
+  to pause or cleanly stop the current run and continue later with
+  `scripts/run_playbook.sh --resume`
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator intervention, environment
   provisioning, credentials, network access, or a policy decision the agents
@@ -109,6 +119,17 @@ That message SHOULD use:
 
 The CEO MUST process that note before normal role dispatch on the next control
 cycle.
+
+If the steering request is "pause" or "stop for now", the CEO MUST:
+
+- write `runs/current/orchestrator/pause-requested.md`
+- explain why the run was paused and what should happen next
+- avoid writing `operator-action-required.md` unless the pause request also
+  depends on a true external blocker
+
+The orchestrator will exit cleanly when `pause-requested.md` exists, and the
+next `scripts/run_playbook.sh --resume` will archive that pause file and
+continue from the current run state.
 
 ## Completion rule
 

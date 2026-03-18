@@ -53,6 +53,10 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
 
         self.assertIn('OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"', script)
+        self.assertIn('PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"', script)
+        self.assertIn('pause_requested_exit()', script)
+        self.assertIn('clear_pause_requested_on_resume()', script)
+        self.assertIn('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', script)
         self.assertIn('operator_action_required_exit()', script)
         self.assertIn('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', script)
         self.assertIn('blocked_exit "run requires operator action" "$body"', script)

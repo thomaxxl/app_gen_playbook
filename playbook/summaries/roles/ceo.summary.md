@@ -9,6 +9,9 @@ run-owned artifact or local `app/` responsibility needed to restore progress.
 If only the operator can unblock the run, CEO must write
 `runs/current/orchestrator/operator-action-required.md` and stop the requeue
 loop.
+If the operator wants to pause and resume later, CEO must write
+`runs/current/orchestrator/pause-requested.md` so the runner exits cleanly and
+the next `scripts/run_playbook.sh --resume` can continue.
 
 Always load:
 

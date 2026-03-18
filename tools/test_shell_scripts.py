@@ -12,6 +12,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         repo_root = Path(__file__).resolve().parents[1]
         scripts = (
             repo_root / "scripts" / "run_playbook.sh",
+            repo_root / "scripts" / "steer.sh",
             repo_root / "scripts" / "clean.sh",
             repo_root / "scripts" / "save_run.sh",
             repo_root / "scripts" / "monitor.sh",
@@ -84,6 +85,41 @@ class ShellScriptSyntaxTests(unittest.TestCase):
 
             self.assertFalse((repo_root / "runs" / "current").exists())
             self.assertTrue((repo_root / "app").is_dir())
+
+    def test_steer_script_writes_pause_note_to_ceo_inbox(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            scripts_dir = repo_root / "scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_repo_root / "scripts" / "steer.sh", scripts_dir / "steer.sh")
+            (scripts_dir / "steer.sh").chmod(0o755)
+
+            (repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").mkdir(parents=True, exist_ok=True)
+
+            result = subprocess.run(
+                ["bash", str(scripts_dir / "steer.sh"), "--pause", "Pause for operator review."],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"steer.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+            )
+
+            note_path = Path(result.stdout.strip())
+            self.assertTrue(note_path.is_file())
+            note_text = note_path.read_text(encoding="utf-8")
+            self.assertIn("from: operator", note_text)
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("steering_mode: pause-run", note_text)
+            self.assertIn("write runs/current/orchestrator/pause-requested.md", note_text)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ Required startup reads:
 - `../ownership-and-edits.md`
 - `../../roles/shared-responsibilities.md`
 - `../../../runs/current/remarks.md`
+- `../../../runs/current/notes.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 - `../../../runs/current/orchestrator/run-status.json`

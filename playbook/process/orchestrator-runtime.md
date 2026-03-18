@@ -383,6 +383,11 @@ Architect, Deployment, or Phase-5 background-worker checks.
 That rule allows an operator to steer a live run by writing a normal inbox
 message directly into the CEO lane without modifying the runner process itself.
 
+If CEO writes `runs/current/orchestrator/pause-requested.md`, the orchestrator
+MUST stop the run cleanly instead of continuing normal dispatch. A later
+`scripts/run_playbook.sh --resume` MUST archive that pause file and continue
+from the current run state.
+
 The orchestrator MUST NOT start a long-lived background worker through command
 substitution or any other construct that runs the starter in a subshell and
 captures its stdout. In Bash, that pattern can cause the shell to wait on the
@@ -406,6 +411,8 @@ When `--resume` is used, the orchestrator MUST:
 - resume a stored Codex session only when the inflight state is still
   consistent
 - rebuild from repo state when session continuity is missing or unsafe
+- archive `runs/current/orchestrator/pause-requested.md` if it exists, because
+  `--resume` is an explicit operator decision to continue
 - run a queue-recovery pass before continuing normal scheduling when
   completion still fails
 

@@ -7,6 +7,7 @@ always_load:
   - playbook/process/read-sets/ceo-core.md
 required_artifacts:
   - runs/current/remarks.md
+  - runs/current/notes.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
 reference_only:

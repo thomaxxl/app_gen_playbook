@@ -133,6 +133,7 @@ LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
+PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"
 RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
 FRONTEND_BROWSER_PROOF_MD="$RUN_ROOT/evidence/frontend-browser-proof.md"
@@ -1068,6 +1069,17 @@ blocked_exit() {
   exit 1
 }
 
+pause_exit() {
+  local title="$1"
+  local body="$2"
+  log "paused: $title"
+  append_run_remark "$title" "$body"
+  set_run_status "interrupted"
+  echo "paused: $title" >&2
+  echo "$body" >&2
+  exit 0
+}
+
 operator_action_required_exit() {
   local body
   if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
@@ -1087,6 +1099,30 @@ EOF
     body="The run requires operator action, but no operator-action-required file was present."
   fi
   blocked_exit "run requires operator action" "$body"
+}
+
+pause_requested_exit() {
+  local body
+  if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+    body=$(
+      cat <<EOF
+The run was paused by an operator steering request and terminated automatically.
+
+Pause file:
+- ${PAUSE_REQUESTED_MD#$ROOT/}
+
+Resume later with:
+- bash scripts/run_playbook.sh --resume
+
+The next resume automatically archives the pause request and continues.
+
+$(cat "$PAUSE_REQUESTED_MD")
+EOF
+    )
+  else
+    body="The run was paused, but no pause-requested file was present."
+  fi
+  pause_exit "run paused by operator request" "$body"
 }
 
 host_runtime_verification_field_ok() {
@@ -1186,6 +1222,25 @@ clear_browser_fallback_operator_action_required() {
   append_run_remark \
     "Browser Fallback Cleared Stale Block" \
     "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nEvidence:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}\n- ${FRONTEND_BROWSER_PROOF_MD#$ROOT/}"
+  return 0
+}
+
+clear_pause_requested_on_resume() {
+  [[ -f "$PAUSE_REQUESTED_MD" ]] || return 1
+
+  local archive_dir="$EVIDENCE_ROOT/pause-archive"
+  local stamp archived_path
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/pause-requested.resume-cleared.${stamp}.md"
+  mv "$PAUSE_REQUESTED_MD" "$archived_path"
+  log "pause-requested-cleared-on-resume archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Pause Request Cleared On Resume" \
+    "Archived pause request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+  append_run_remark \
+    "Pause Request Cleared On Resume" \
+    "Archived pause request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
   return 0
 }
 
@@ -2409,6 +2464,7 @@ PY
   clear_superseded_operator_action_required || true
   clear_host_verified_operator_action_required || true
   clear_browser_fallback_operator_action_required || true
+  clear_pause_requested_on_resume || true
 
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true
@@ -2459,6 +2515,10 @@ main_loop() {
       fi
     fi
 
+    if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+      pause_requested_exit
+    fi
+
     if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
       operator_action_required_exit
     fi
@@ -2481,6 +2541,9 @@ main_loop() {
     if run_role_once "ceo"; then
       did_work=1
       LAST_STALL_SIGNATURE=""
+      if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+        pause_requested_exit
+      fi
       if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
         operator_action_required_exit
       fi

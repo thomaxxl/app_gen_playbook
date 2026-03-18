@@ -52,6 +52,9 @@ on this file for execution rules.
 - `scripts/save_run.sh`
   Archives local `runs/current/` and `app/` under `saved/`, with an optional
   `--clean` step to reset the workspace after the snapshot succeeds.
+- `scripts/steer.sh`
+  Writes an operator steering note into the CEO inbox so a live run can be
+  rerouted, narrowed, restarted from an earlier phase, or paused cleanly.
 - `scripts/monitor.sh`
   Tails the raw per-turn Codex event streams under
   `runs/current/evidence/orchestrator/jsonl/`.
@@ -136,6 +139,17 @@ resetting the workspace:
 ```
 
 That stores a local snapshot under `saved/` and then runs the normal cleanup.
+
+If you want to steer a live run through the CEO control lane:
+
+```bash
+./scripts/steer.sh "Narrow scope to the blocker detail page and restart from the earliest required phase if needed."
+./scripts/steer.sh --pause "Pause after the current control cycle; we will resume later."
+```
+
+The pause form causes CEO to request a clean stop. A later
+`./scripts/run_playbook.sh --resume` automatically clears that pause marker and
+continues from the current run state.
 
 If you only want to clean the workspace, `./scripts/clean.sh` now saves a
 pre-clean snapshot automatically under `saved/` first, excluding local

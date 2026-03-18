@@ -146,6 +146,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/orchestrator/operator-action-required.md",
+        "runs/current/orchestrator/pause-requested.md",
         "runs/current/evidence/contract-samples.md",
         "app/",
     ),
