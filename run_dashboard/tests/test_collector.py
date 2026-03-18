@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from run_dashboard.collector import collect_artifacts, collect_handoffs, normalize_role
+from run_dashboard.collector import collect_artifacts, collect_handoffs, collect_run_files, normalize_role
 from run_dashboard.markdown import parse_frontmatter, parse_handoff_message
 
 
@@ -87,11 +87,13 @@ class CollectorTests(unittest.TestCase):
                     ]
                 ),
             )
-            rows = collect_handoffs(root, "run-1")
+            run_files, _, _ = collect_run_files(root, "run-1")
+            rows, relationships = collect_handoffs(root, "run-1", run_files)
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["to_role_code"], "devops")
             self.assertEqual(rows[0]["message_state"], "inbox")
             self.assertEqual(rows[0]["path"], "runs/current/role-state/devops/inbox/msg.md")
+            self.assertTrue(any(rel["relation_type"] == "blocking_issue_ref" for rel in relationships) is False)
 
     def test_collect_handoffs_preserves_duplicate_states_by_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -104,7 +106,8 @@ class CollectorTests(unittest.TestCase):
             )
             write_file(root / "runs/current/role-state/backend/inbox/msg.md", content)
             write_file(root / "runs/current/role-state/backend/processed/msg.md", content)
-            rows = collect_handoffs(root, "run-1")
+            run_files, _, _ = collect_run_files(root, "run-1")
+            rows, _ = collect_handoffs(root, "run-1", run_files)
             self.assertEqual(len(rows), 2)
             self.assertEqual({row["state_dir"] for row in rows}, {"inbox", "processed"})
             self.assertEqual(len({row["id"] for row in rows}), 2)
@@ -126,13 +129,15 @@ class CollectorTests(unittest.TestCase):
                     ]
                 ),
             )
-            packages, artifacts, dependencies = collect_artifacts(root, "run-1")
+            run_files, markdown_documents, _ = collect_run_files(root, "run-1")
+            packages, artifacts, dependencies, relationships = collect_artifacts(root, "run-1", run_files, markdown_documents)
             self.assertEqual(len(packages), 1)
             self.assertEqual(packages[0]["family"], "ux")
             self.assertEqual(packages[0]["overall_status"], "ready_for_handoff")
             self.assertEqual(len(artifacts), 1)
             self.assertTrue(artifacts[0]["path"].endswith("runs/current/artifacts/ux/nested/navigation.md"))
             self.assertEqual(dependencies, [])
+            self.assertEqual(relationships, [])
 
     def test_normalize_role(self) -> None:
         self.assertEqual(normalize_role("deployment"), "devops")

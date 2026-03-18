@@ -36,6 +36,9 @@ class DatabaseTests(unittest.TestCase):
             self.assertIn("runs", table_names)
             self.assertIn("dashboard_snapshots", table_names)
             self.assertIn("schema_state", table_names)
+            self.assertIn("run_files", table_names)
+            self.assertIn("change_requests", table_names)
+            self.assertIn("orchestrator_events", table_names)
 
     def test_write_snapshot_keeps_multiple_runs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

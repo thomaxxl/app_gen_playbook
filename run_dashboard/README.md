@@ -1,7 +1,6 @@
 # Run Dashboard
 
-This directory contains a standalone database mirror for
-`runs/current/`.
+This directory contains a standalone database mirror for `runs/current/`.
 
 It is intentionally separate from the playbook itself:
 
@@ -16,9 +15,22 @@ The intended model is:
 3. the collector writes a derived operational view into SQLite through SQLAlchemy
 4. dashboards and reporting query SQLite, not the playbook workspace
 
+The schema is now organized in two layers:
+
+- a generic file catalog for the current run
+- normalized domain projections for artifacts, handoffs, change packets,
+  worker/session state, evidence, blockers, verification, and timeline events
+
 Each synced run is stored under its unique playbook run ID from
 `runs/current/orchestrator/run-status.json`. The database keeps historical rows
 for multiple runs; a later sync replaces only the rows for the same run ID.
+
+The dashboard DB is metadata-first:
+
+- file identity, hashes, render hints, parsed markdown structure, and links are
+  stored in SQLite
+- the source filesystem remains authoritative
+- file bodies are still read from disk on demand when the UI needs them
 
 ## Layout
 
@@ -27,9 +39,22 @@ for multiple runs; a later sync replaces only the rows for the same run ID.
 - `scripts/`
   shell wrappers for schema init and sync
 - `src/run_dashboard/`
-  collector and SQLite/SQLAlchemy writer
+  collector, parsers, and SQLite/SQLAlchemy writer
 - `tests/`
   unit tests for parsing and collection
+
+Key table families now include:
+
+- `run_files`, `file_relationships`, `markdown_documents`,
+  `markdown_sections`
+- `artifact_specs`, `run_artifact_expectations`, `artifacts`,
+  `artifact_packages`
+- `change_requests`, `change_request_items`,
+  `change_request_role_loads`, `baseline_snapshots`
+- `orchestrator_worker_states`, `orchestrator_session_states`,
+  `orchestrator_events`, `agent_turns`
+- `evidence_items`, `verification_checks`, `operator_actions`,
+  `run_status_snapshots`, `dashboard_snapshots`
 
 ## Environment
 
@@ -106,6 +131,16 @@ If the schema changes incompatibly, `init_db.py` / `ensure_database()` resets
 the derived SQLite database to the current schema version. This is acceptable
 because the dashboard database is a rebuildable mirror of file-driven run
 state, not the source of truth.
+
+Before a deliberate schema reset on a live workspace, back up the current DB
+file if you want to preserve the old projection for comparison. A simple local
+pattern is:
+
+```bash
+mkdir -p run_dashboard/backups
+cp -p run_dashboard/run_dashboard.sqlite3 \
+  run_dashboard/backups/run_dashboard-$(date -u +%Y%m%dT%H%M%SZ).sqlite3
+```
 
 ## Scope boundary
 
