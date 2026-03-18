@@ -17,7 +17,7 @@ htmlcov/
 venv/
 env/
 .deps/
-
+tmp/
 # Frontend/runtime artifacts
 node_modules/
 dist/
