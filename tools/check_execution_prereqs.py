@@ -15,7 +15,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-PORT_BIND_RETRY_ATTEMPTS = 5
+PORT_BIND_RETRY_ATTEMPTS = 20
 PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 
 
@@ -136,6 +136,7 @@ def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
         for port in (frontend_port, backend_port):
             sock = socket.socket()
             try:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind(("127.0.0.1", port))
             except OSError as exc:
                 errors.append(exc)
