@@ -177,6 +177,78 @@ class ValidateHandoffInputsTests(unittest.TestCase):
             report = validate_message(repo_root, "architect", message_path)
             self.assertTrue(report["valid"], json.dumps(report, indent=2))
 
+    def test_blocked_product_recovery_note_allows_upstream_stub_bundle_prerequisite(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(repo_root / "runs/current/remarks.md", "# remarks\n")
+            write_file(
+                repo_root / "specs/architecture/capability-profile.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "specs/architecture/load-plan.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "specs/product/research-notes.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/capability-profile.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/load-plan.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/research-notes.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "playbook/task-bundles/phase-1-product-definition.yaml",
+                "\n".join(
+                    [
+                        "name: phase-1-product-definition",
+                        "role: product_manager",
+                        "required_artifacts:",
+                        "  - runs/current/input.md",
+                        "  - runs/current/artifacts/architecture/capability-profile.md",
+                        "  - runs/current/artifacts/architecture/load-plan.md",
+                        "  - runs/current/artifacts/product/research-notes.md",
+                    ]
+                ),
+            )
+            write_file(repo_root / "runs/current/input.md", "# input\n")
+            message_path = repo_root / "runs/current/role-state/product_manager/inflight/recovery.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: orchestrator",
+                        "to: product_manager",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/remarks.md",
+                        "- playbook/task-bundles/phase-1-product-definition.yaml",
+                        "- runs/current/artifacts/product/resource-behavior-matrix.md",
+                        "",
+                        "## Requested Outputs",
+                        "- create runs/current/artifacts/product/resource-behavior-matrix.md",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Blocking Issues",
+                        "- missing: runs/current/artifacts/product/resource-behavior-matrix.md",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "product_manager", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_recovery_note_allows_missing_declared_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

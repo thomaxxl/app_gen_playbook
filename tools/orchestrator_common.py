@@ -432,9 +432,11 @@ def template_for_run_artifact(repo_root: Path, run_path: Path) -> Path | None:
 
 def owner_for_run_artifact(repo_root: Path, run_path: Path) -> str | None:
     template_path = template_for_run_artifact(repo_root, run_path)
-    if template_path is None:
-        return None
-    owner = str(parse_metadata_block(template_path).get("owner", "")).strip()
+    owner = ""
+    if template_path is not None:
+        owner = str(parse_metadata_block(template_path).get("owner", "")).strip()
+    if not owner and run_path.exists():
+        owner = str(parse_metadata_block(run_path).get("owner", "")).strip()
     return owner or None
 
 

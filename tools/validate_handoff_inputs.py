@@ -198,10 +198,14 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
     bundle_required, bundle_phases = collect_bundle_requirements(repo_root, required_reads)
     for artifact_path in bundle_required:
         candidate = repo_root / artifact_path
+        artifact_owner = owner_for_run_artifact(repo_root, candidate) or ""
         if (
             gate_status == "blocked"
             and sender_runtime_role in {"orchestrator", "ceo"}
-            and artifact_path in allowed_missing
+            and (
+                artifact_path in allowed_missing
+                or (artifact_owner and artifact_owner != runtime_role)
+            )
         ):
             continue
         if not candidate.exists():
@@ -209,7 +213,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                 {
                     "type": "missing-task-bundle-artifact",
                     "path": artifact_path,
-                    "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                    "owner": artifact_owner,
                     "message": f"task-bundle prerequisite is missing: {artifact_path}",
                 }
             )
@@ -220,7 +224,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                     {
                         "type": "placeholder-task-bundle-artifact",
                         "path": artifact_path,
-                        "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                        "owner": artifact_owner,
                         "message": f"task-bundle prerequisite is still placeholder evidence: {artifact_path}",
                     }
                 )
@@ -231,7 +235,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                 {
                     "type": "stub-task-bundle-artifact",
                     "path": artifact_path,
-                    "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                    "owner": artifact_owner,
                     "message": f"task-bundle prerequisite is still stub: {artifact_path}",
                 }
             )
@@ -240,7 +244,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                 {
                     "type": "task-bundle-artifact-not-ready",
                     "path": artifact_path,
-                    "owner": owner_for_run_artifact(repo_root, candidate) or "",
+                    "owner": artifact_owner,
                     "message": f"task-bundle prerequisite is not ready: {artifact_path} (status={status!r})",
                 }
             )
