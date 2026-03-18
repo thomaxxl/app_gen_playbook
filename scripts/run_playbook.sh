@@ -286,6 +286,61 @@ PY
   write_host_runtime_verification "$frontend_status" "$backend_status" "$frontend_port" "$backend_port" "$backend_python"
 }
 
+host_runtime_capture_enabled() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+  host_runtime_verification_field_ok frontend_bind || return 1
+  [[ -f "$ROOT/app/frontend/package.json" ]] || return 1
+  return 0
+}
+
+attempt_host_browser_proof_capture() {
+  host_runtime_capture_enabled || return 1
+
+  local output_path="$RUN_ROOT/evidence/frontend-browser-proof.md"
+  local manifest_path="$RUN_ROOT/evidence/ui-previews/manifest.md"
+  local screenshots_dir="$RUN_ROOT/evidence/ui-previews"
+  local base_url frontend_port
+  frontend_port="${FRONTEND_PORT:-4173}"
+  base_url="http://127.0.0.1:${frontend_port}"
+
+  if [[ -f "$output_path" ]] && grep -Eq '^- capture_status:[[:space:]]*captured$' "$output_path"; then
+    return 1
+  fi
+
+  if python3 "$ROOT/tools/capture_frontend_browser_proof.py" \
+    --repo-root "$ROOT" \
+    --base-url "$base_url" \
+    --output "${output_path#$ROOT/}" \
+    --manifest "${manifest_path#$ROOT/}" \
+    --screenshots-dir "${screenshots_dir#$ROOT/}" >/dev/null 2>&1; then
+    log "frontend-browser-proof-captured artifact=${output_path#$ROOT/}"
+    append_run_remark \
+      "Frontend Browser Proof Captured" \
+      "Host-mode browser proof was captured automatically.\n\nArtifacts:\n- ${output_path#$ROOT/}\n- ${manifest_path#$ROOT/}"
+    return 0
+  fi
+
+  if [[ -f "$output_path" ]] || [[ -f "$manifest_path" ]]; then
+    log "frontend-browser-proof-attempt-blocked artifact=${output_path#$ROOT/}"
+    return 0
+  fi
+
+  return 1
+}
+
+record_execution_prereqs() {
+  local output_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
+  if [[ ! -f "$ROOT/app/frontend/package.json" ]]; then
+    return 0
+  fi
+  mkdir -p "$(dirname "$output_path")"
+  if python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path" >/dev/null 2>&1; then
+    log "execution-prereqs-ready artifact=${output_path#$ROOT/}"
+  else
+    log "execution-prereqs-blocked artifact=${output_path#$ROOT/}"
+  fi
+}
+
 emit_ceo_stall_note() {
   local reason="$1"
   local detail="$2"
@@ -1787,6 +1842,7 @@ seed_new_run() {
     --mode "$RUN_MODE_NAME" >/dev/null
   write_runtime_environment_metadata
   perform_host_runtime_preflight
+  record_execution_prereqs
 }
 
 seed_change_run() {
@@ -1825,6 +1881,7 @@ seed_change_run() {
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
   write_runtime_environment_metadata
   perform_host_runtime_preflight
+  record_execution_prereqs
 }
 
 prepare_resume() {
@@ -1851,6 +1908,7 @@ PY
   set_run_status "active"
   write_runtime_environment_metadata
   perform_host_runtime_preflight
+  record_execution_prereqs
 
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true
@@ -1870,6 +1928,10 @@ main_loop() {
     fi
 
     if clear_host_verified_operator_action_required; then
+      did_work=1
+    fi
+
+    if attempt_host_browser_proof_capture; then
       did_work=1
     fi
 

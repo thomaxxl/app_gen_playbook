@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+
+DEFAULT_ROUTES = (
+    ("admin-entry", "/admin/"),
+    ("dashboard", "/admin/#/dashboard"),
+    ("customer-history", "/admin/#/customers/1/purchase-history"),
+    ("playlist-edit", "/admin/#/playlists/1/edit"),
+)
+
+
+def normalize_url(base_url: str, route: str) -> str:
+    if route.startswith(("http://", "https://", "data:")):
+        return route
+    if route.startswith("/"):
+        if base_url.endswith("/"):
+            return f"{base_url.rstrip('/')}{route}"
+        origin = base_url.split("/admin", 1)[0].rstrip("/")
+        return f"{origin}{route}"
+    return f"{base_url.rstrip('/')}/{route.lstrip('/')}"
+
+
+def run_capture(frontend_root: Path, url: str, output_path: Path) -> tuple[bool, str]:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.run(
+        [
+            "npm",
+            "exec",
+            "--",
+            "playwright",
+            "screenshot",
+            "--browser",
+            "chromium",
+            url,
+            str(output_path),
+        ],
+        cwd=frontend_root,
+        capture_output=True,
+        text=True,
+    )
+    detail = (proc.stderr or proc.stdout).strip()
+    if proc.returncode == 0 and output_path.exists():
+        return True, detail or f"captured {output_path.name}"
+    return False, detail or "playwright screenshot failed"
+
+
+def write_manifest(manifest_path: Path, status: str, command: str, captured: list[tuple[str, str, str]], failures: list[tuple[str, str, str]]) -> None:
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# UI Preview Manifest",
+        "",
+        f"capture_status: {status}",
+        f"command: {command}",
+    ]
+    if captured:
+        lines.extend(["", "captured_routes:"])
+        for label, url, filename in captured:
+            lines.append(f"- {label}: {url}")
+            lines.append(f"  file: {filename}")
+    if failures:
+        lines.extend(["", "capture_failures:"])
+        for label, url, detail in failures:
+            lines.append(f"- {label}: {url}")
+            lines.append(f"  detail: {detail}")
+    manifest_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_browser_proof(output_path: Path, status: str, base_url: str, captured: list[tuple[str, str, str]], failures: list[tuple[str, str, str]], manifest_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "---",
+        "owner: architect",
+        "phase: phase-6-integration-review",
+        f"status: {'ready-for-handoff' if status == 'captured' else 'blocked'}",
+        "last_updated_by: architect",
+        "---",
+        "",
+        "# Frontend Browser Proof",
+        "",
+        f"- base_url: {base_url}",
+        f"- capture_status: {status}",
+        f"- ui_preview_manifest: {manifest_path}",
+    ]
+    if captured:
+        lines.extend(["", "## Captured Routes"])
+        for label, url, filename in captured:
+            lines.append(f"- `{label}`: {url}")
+            lines.append(f"  - screenshot: {filename}")
+    if failures:
+        lines.extend(["", "## Capture Failures"])
+        for label, url, detail in failures:
+            lines.append(f"- `{label}`: {url}")
+            lines.append(f"  - detail: {detail}")
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-root", required=True)
+    parser.add_argument("--base-url", default="http://127.0.0.1:4173")
+    parser.add_argument("--route", action="append", default=[])
+    parser.add_argument("--output", default="runs/current/evidence/frontend-browser-proof.md")
+    parser.add_argument("--manifest", default="runs/current/evidence/ui-previews/manifest.md")
+    parser.add_argument("--screenshots-dir", default="runs/current/evidence/ui-previews")
+    args = parser.parse_args()
+
+    repo_root = Path(args.repo_root).resolve()
+    frontend_root = repo_root / "app" / "frontend"
+    output_path = repo_root / args.output
+    manifest_path = repo_root / args.manifest
+    screenshots_dir = repo_root / args.screenshots_dir
+
+    routes: list[tuple[str, str]] = list(DEFAULT_ROUTES)
+    for item in args.route:
+        if "=" in item:
+            label, route = item.split("=", 1)
+        else:
+            label = f"route-{len(routes) + 1}"
+            route = item
+        routes.append((label, route))
+
+    command = "npm exec -- playwright screenshot --browser chromium <url> <file>"
+    captured: list[tuple[str, str, str]] = []
+    failures: list[tuple[str, str, str]] = []
+
+    for label, route in routes:
+        url = normalize_url(args.base_url, route)
+        filename = f"{label}.png"
+        ok, detail = run_capture(frontend_root, url, screenshots_dir / filename)
+        if ok:
+            captured.append((label, url, filename))
+        else:
+            failures.append((label, url, detail))
+
+    status = "captured" if captured and not failures else "environment-blocked"
+    write_manifest(manifest_path, status, command, captured, failures)
+    write_browser_proof(output_path, status, args.base_url, captured, failures, manifest_path.relative_to(repo_root).as_posix())
+    return 0 if status == "captured" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -150,6 +150,9 @@ class CheckCompletionTests(unittest.TestCase):
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/frontend-usability.md"]
             self.assertEqual(len(matching), 1)
             self.assertEqual(matching[0]["kind"], "missing-required-evidence-output")
+            browser_matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/frontend-browser-proof.md"]
+            self.assertEqual(len(browser_matching), 1)
+            self.assertEqual(browser_matching[0]["kind"], "missing-required-evidence-output")
 
     def test_requires_ui_preview_manifest_to_declare_capture_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -165,6 +168,7 @@ class CheckCompletionTests(unittest.TestCase):
             )
             write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
             write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
             write_file(repo_root / "runs/current/evidence/ui-previews/manifest.md", "# UI Preview Manifest\n")
 
             blockers = collect_blockers(repo_root)
@@ -185,6 +189,7 @@ class CheckCompletionTests(unittest.TestCase):
             )
             write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
             write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
             write_file(
                 repo_root / "runs/current/evidence/ui-previews/manifest.md",
                 "# UI Preview Manifest\n\ncapture_status: captured\n",

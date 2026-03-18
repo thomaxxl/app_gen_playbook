@@ -15,6 +15,7 @@ in scope.
 - package-manager policy for generated apps
 - lockfile policy and install reproducibility
 - Node and Python runtime enforcement in packaging
+- execution-environment prerequisite verification for local runtime validation
 - local runtime normalization for reusable dependency roots such as a shared
   backend virtualenv or external frontend `node_modules`
 - Docker packaging
@@ -127,6 +128,24 @@ DevOps owns the normalization policy for:
 
 DevOps MUST prefer those explicit local overrides over symlinking the entire
 backend or frontend directories.
+
+On first activation for a run, DevOps MUST verify execution-environment
+prerequisites from inside the active execution context before concluding that
+runtime validation is blocked by the environment.
+
+That prerequisite check MUST cover:
+
+- a usable backend Python venv
+- local frontend `node_modules`
+- localhost port bind capability
+- Playwright screenshot capture capability
+- Docker availability as an optional check
+
+DevOps SHOULD run:
+
+- `../../tools/check_execution_prereqs.py --repo-root ../../ --output ../../runs/current/artifacts/devops/execution-prereqs.md`
+
+and fold the result into `verification.md`.
 
 When
 `runs/current/artifacts/architecture/dependency-provisioning.md` declares

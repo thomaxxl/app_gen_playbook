@@ -37,6 +37,7 @@ REQUIRED_APP_OUTPUTS = (
 REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/contract-samples.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/frontend-usability.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/frontend-browser-proof.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/ui-previews/manifest.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/crud-matrix.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/seed-data-audit.md", "architect", "phase-6-integration-review"),

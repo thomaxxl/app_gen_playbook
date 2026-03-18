@@ -137,6 +137,35 @@ That artifact SHOULD at minimum capture:
 - whether the approved backend runtime path can import the required FastAPI
   stack
 
+The playbook SHOULD also maintain a DevOps-owned execution-environment
+prerequisite artifact under:
+
+- `runs/current/artifacts/devops/execution-prereqs.md`
+
+That prerequisite check SHOULD be produced by
+`tools/check_execution_prereqs.py` from inside the current execution context
+and SHOULD cover:
+
+- backend venv availability
+- frontend `node_modules` availability
+- localhost port bind capability
+- Playwright screenshot capture capability
+- Docker availability as an optional check
+
+For browser-level launcher proof, the playbook SHOULD maintain:
+
+- `runs/current/evidence/frontend-browser-proof.md`
+
+The repository SHOULD provide a host-capable capture helper such as:
+
+- `tools/capture_frontend_browser_proof.py`
+
+That helper SHOULD populate:
+
+- `runs/current/evidence/frontend-browser-proof.md`
+- `runs/current/evidence/ui-previews/manifest.md`
+- `runs/current/evidence/ui-previews/*.png`
+
 If host-runtime preflight proves the previously cited bind and backend-runtime
 constraints are satisfied, the orchestrator MUST treat any older
 `operator-action-required.md` file based only on those constraints as stale,

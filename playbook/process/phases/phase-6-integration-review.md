@@ -38,6 +38,8 @@ readiness note in:
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
+- write `runs/current/evidence/frontend-browser-proof.md` as the canonical
+  browser-level proof record for the live launcher path
 - maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
   absence is explicitly classified as `captured`, `not-required`, or
   `environment-blocked`
@@ -59,6 +61,7 @@ readiness note in:
 
 - `runs/current/artifacts/architecture/integration-review.md`
 - `runs/current/evidence/contract-samples.md`
+- `runs/current/evidence/frontend-browser-proof.md`
 - `runs/current/evidence/ui-previews/` when the run includes materially
   changed visible UI and screenshot capture is available
 - `runs/current/evidence/ui-previews/manifest.md`
@@ -89,6 +92,9 @@ readiness note in:
   screenshots and `runs/current/evidence/ui-previews/manifest.md` tells
   Product exactly what to review, or the run evidence explains why preview
   capture was skipped
+- `runs/current/evidence/frontend-browser-proof.md` records the browser-level
+  launcher proof for `/admin`, dashboard, customer history, and playlist
+  editing, or records the exact environment-blocked fallback
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
