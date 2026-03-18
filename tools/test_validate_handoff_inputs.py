@@ -14,6 +14,46 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_requested_outputs_completed_alias_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/ux/navigation.md",
+                "owner: frontend\nphase: phase-3-ux-and-interaction-design\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/overview.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            message_path = repo_root / "runs/current/role-state/architect/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: frontend",
+                        "to: architect",
+                        "gate status: pass with assumptions",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/artifacts/ux/navigation.md",
+                        "- runs/current/artifacts/architecture/overview.md",
+                        "",
+                        "## Requested Outputs Completed",
+                        "- confirm the frontend implementation handoff is ready for architect review",
+                        "",
+                        "## Implementation Evidence",
+                        "- app/frontend/src/App.tsx",
+                        "",
+                        "## Blocking Issues",
+                        "- none",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "architect", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_phase2_bundle_inherits_procedure_required_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

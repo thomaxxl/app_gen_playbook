@@ -32,9 +32,20 @@ SECTION_TITLES = (
     "requested outputs",
     "dependencies",
     "gate status",
+    "implementation evidence",
     "blocking issues",
     "notes",
 )
+
+SECTION_ALIASES = {
+    "requested outputs completed": "requested outputs",
+}
+
+
+def canonical_section_title(normalized: str) -> str | None:
+    if normalized in SECTION_TITLES:
+        return normalized
+    return SECTION_ALIASES.get(normalized)
 
 
 def parse_message_sections(message_text: str) -> dict[str, list[str] | str]:
@@ -45,9 +56,12 @@ def parse_message_sections(message_text: str) -> dict[str, list[str] | str]:
     for raw_line in lines:
         line = raw_line.strip()
         normalized = re.sub(r"^[#\-\*\s]+", "", line).rstrip(":").strip().lower()
-
-        if normalized in SECTION_TITLES:
-            current_section = normalized
+        section_title = canonical_section_title(normalized)
+        if section_title is not None:
+            current_section = section_title
+            continue
+        if line.startswith("#"):
+            current_section = None
             continue
 
         if current_section is None:

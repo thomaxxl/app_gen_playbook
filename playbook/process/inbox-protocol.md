@@ -75,6 +75,10 @@ Any non-`INPUT.md` inbox message should include:
 - `blocking issues`
 - `notes`
 
+The markdown section headings for these fields SHOULD use the exact canonical
+titles above. Do not rename `Requested Outputs` to variants such as
+`Requested Outputs Completed`.
+
 Standard orchestrator-created message topics:
 
 - `recovery`
