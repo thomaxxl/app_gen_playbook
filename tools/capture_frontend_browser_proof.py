@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+CAPTURE_TIMEOUT_SECONDS = 30
+
 
 DEFAULT_ROUTES = (
     ("admin-entry", "/admin/"),
@@ -28,22 +30,29 @@ def normalize_url(base_url: str, route: str) -> str:
 
 def run_capture(frontend_root: Path, url: str, output_path: Path) -> tuple[bool, str]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    proc = subprocess.run(
-        [
-            "npm",
-            "exec",
-            "--",
-            "playwright",
-            "screenshot",
-            "--browser",
-            "chromium",
-            url,
-            str(output_path),
-        ],
-        cwd=frontend_root,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [
+                "npm",
+                "exec",
+                "--",
+                "playwright",
+                "screenshot",
+                "--browser",
+                "chromium",
+                url,
+                str(output_path),
+            ],
+            cwd=frontend_root,
+            capture_output=True,
+            text=True,
+            timeout=CAPTURE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        detail = (exc.stderr or exc.stdout or "").strip()
+        if detail:
+            return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s: {detail}"
+        return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s"
     detail = (proc.stderr or proc.stdout).strip()
     if proc.returncode == 0 and output_path.exists():
         return True, detail or f"captured {output_path.name}"
