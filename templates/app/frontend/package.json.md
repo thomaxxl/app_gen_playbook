@@ -22,7 +22,8 @@ rather than an external package.
     "check": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test smoke.e2e.spec.ts",
+    "capture:ui-previews": "playwright test ui-previews.e2e.spec.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

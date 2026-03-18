@@ -57,6 +57,7 @@ frontend/
     uploadAwareDataProvider.test.ts   # required only if the app supports uploads
     vite.config.test.ts
     smoke.e2e.spec.ts
+    ui-previews.e2e.spec.ts
 ```
 
 ## Template source
@@ -107,6 +108,7 @@ These files are shipped under `templates/app/frontend/`:
 - `tests/uploadAwareDataProvider.test.ts.md`
 - `tests/vite.config.test.ts.md`
 - `tests/smoke.e2e.spec.ts.md`
+- `tests/ui-previews.e2e.spec.ts.md`
 
 Optional upload-related template:
 
@@ -120,6 +122,7 @@ The starter frontend must support:
 - `npm run check`
 - `npm run test`
 - `npm run test:e2e`
+- `npm run capture:ui-previews`
 - `npm run build`
 
 `npm run build` should run type-checking before the Vite production build.

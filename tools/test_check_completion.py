@@ -151,6 +151,49 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertEqual(len(matching), 1)
             self.assertEqual(matching[0]["kind"], "missing-required-evidence-output")
 
+    def test_requires_ui_preview_manifest_to_declare_capture_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/ui-previews/manifest.md", "# UI Preview Manifest\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
+            self.assertTrue(any(blocker["kind"] == "ui-preview-manifest-unstructured" for blocker in matching))
+
+    def test_requires_ui_preview_images_when_manifest_says_captured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: captured\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
+            self.assertTrue(any(blocker["kind"] == "ui-preview-images-missing" for blocker in matching))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,7 +11,8 @@
     "check": "node ./node_modules/typescript/bin/tsc -b",
     "test": "node ./scripts/run-with-esbuild.mjs ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node ./scripts/run-with-esbuild.mjs ./node_modules/vitest/vitest.mjs",
-    "test:e2e": "node ./node_modules/playwright/cli.js test",
+    "test:e2e": "node ./node_modules/playwright/cli.js test smoke.e2e.spec.ts",
+    "capture:ui-previews": "node ./node_modules/playwright/cli.js test ui-previews.e2e.spec.ts",
     "build": "node ./node_modules/typescript/bin/tsc -b && node ./scripts/run-with-esbuild.mjs ./node_modules/vite/bin/vite.js build",
     "preview": "node ./scripts/run-with-esbuild.mjs ./node_modules/vite/bin/vite.js preview"
   },

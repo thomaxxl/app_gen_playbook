@@ -122,12 +122,14 @@ cd frontend
 npm run check
 npm run test
 npm run build
+npm run capture:ui-previews
 ```
 
 Optional browser smoke test:
 
 ```bash
 npm run test:e2e
+npm run capture:ui-previews
 ```
 
 Default frontend URLs:

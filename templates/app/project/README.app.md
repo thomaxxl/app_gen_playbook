@@ -99,6 +99,7 @@ Default backend URLs:
 cd frontend
 npm run test
 npm run test:e2e
+npm run capture:ui-previews
 npm run dev
 ```
 
@@ -107,6 +108,19 @@ Default frontend URLs:
 - `http://127.0.0.1:5173/admin-app/`
 - `http://127.0.0.1:5173/admin-app/#/Home`
 - `http://127.0.0.1:5173/admin-app/#/Landing`
+
+Browser-capable review flow:
+
+```bash
+cd frontend
+npm run test:e2e
+npm run capture:ui-previews
+```
+
+`npm run capture:ui-previews` saves intentional success-case screenshots for
+product review. When the app still lives inside the playbook repo, the default
+output path is `../runs/current/evidence/ui-previews/`. In a standalone app
+repo, it may fall back to a local `evidence/ui-previews/` directory.
 
 ## Run both
 

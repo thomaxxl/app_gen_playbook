@@ -114,6 +114,12 @@ When a run materially changes visible frontend behavior and Playwright can run
 in a browser-capable environment, the validation evidence MUST include stable
 UI preview screenshots under `runs/current/evidence/ui-previews/`.
 
+That directory MUST also include `runs/current/evidence/ui-previews/manifest.md`
+with `capture_status: captured`, `not-required`, or `environment-blocked`.
+Acceptance review uses that manifest to decide whether screenshots were
+deliberately reviewed, legitimately unnecessary, or skipped because the
+environment blocked browser execution.
+
 Typical trigger cases:
 
 - new or changed `Home`, `Landing`, or other entry surfaces
@@ -124,7 +130,8 @@ Typical trigger cases:
 Backend-only or otherwise non-visible work does not require preview
 screenshots. If preview capture would normally be appropriate but is skipped
 because the environment cannot provide browser execution, record that reason in
-`runs/current/remarks.md` or the relevant validation evidence.
+`runs/current/remarks.md`, `runs/current/evidence/frontend-usability.md`, and
+`runs/current/evidence/ui-previews/manifest.md`.
 
 ## Usability guardrail script
 
@@ -198,7 +205,9 @@ suite with at least this flow:
 When the run includes materially changed UI and stable browser execution is
 available, extend the Playwright validation to capture at least one or two
 intentional success-case screenshots for the affected surfaces and store them
-under `runs/current/evidence/ui-previews/`.
+under `runs/current/evidence/ui-previews/`. The default generated frontend
+SHOULD provide `npm run capture:ui-previews` as the reviewable screenshot
+capture entrypoint.
 
 The Playwright smoke run is the final pre-delivery validation gate. A
 generated app MUST NOT be treated as delivered before that run completes or a

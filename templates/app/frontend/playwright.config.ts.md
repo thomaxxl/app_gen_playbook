@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["smoke.e2e.spec.ts"],
+  testMatch: ["*.e2e.spec.ts"],
   timeout: 30_000,
   expect: {
     timeout: 10_000,
@@ -53,3 +53,6 @@ Notes:
 - The canonical browser base path for the starter app is `/admin-app/`.
 - Keep trace, screenshot, and video on failure so delivery regressions are
   diagnosable.
+- `npm run capture:ui-previews` SHOULD write intentional success-case preview
+  screenshots to `UI_PREVIEW_OUTPUT_DIR` when set, or to the playbook
+  `runs/current/evidence/ui-previews/` directory when that layout is present.

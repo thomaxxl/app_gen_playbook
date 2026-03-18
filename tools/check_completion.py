@@ -37,6 +37,7 @@ REQUIRED_APP_OUTPUTS = (
 REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/contract-samples.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/frontend-usability.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/ui-previews/manifest.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/crud-matrix.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/seed-data-audit.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/ui-copy-audit.md", "architect", "phase-6-integration-review"),
@@ -44,6 +45,8 @@ REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/quality/quality-summary.md", "architect", "phase-6-integration-review"),
 )
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
+UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
+UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
 
 def required_run_artifact_paths(repo_root: Path) -> list[tuple[Path, dict[str, object]]]:
@@ -324,6 +327,40 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                     "reason": "required evidence output is still a starter placeholder",
                 }
             )
+            continue
+        if relative_path == "runs/current/evidence/ui-previews/manifest.md":
+            capture_state_match = re.search(
+                r"(?im)^capture_status:\s*([a-z0-9_-]+)\s*$",
+                text,
+            )
+            capture_state = capture_state_match.group(1).strip().lower() if capture_state_match else ""
+            if capture_state not in UI_PREVIEW_CAPTURE_STATES:
+                blockers.append(
+                    {
+                        "kind": "ui-preview-manifest-unstructured",
+                        "path": relative_path,
+                        "owner": owner,
+                        "phase": phase,
+                        "reason": "ui preview manifest must declare capture_status as captured, not-required, or environment-blocked",
+                    }
+                )
+                continue
+            if capture_state == "captured":
+                image_files = [
+                    preview
+                    for preview in path.parent.iterdir()
+                    if preview.is_file() and preview.suffix.lower() in UI_PREVIEW_IMAGE_SUFFIXES
+                ]
+                if not image_files:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-images-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "ui preview manifest says screenshots were captured, but no reviewable image files exist",
+                        }
+                    )
 
     return blockers
 

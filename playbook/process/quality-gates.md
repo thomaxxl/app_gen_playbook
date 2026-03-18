@@ -42,6 +42,7 @@ Phase 6 also depends on:
 
 - `runs/current/evidence/contract-samples.md`
 - `runs/current/evidence/frontend-usability.md`
+- `runs/current/evidence/ui-previews/manifest.md`
 
 ## Ownership
 

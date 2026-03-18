@@ -9,7 +9,7 @@ const playwrightDbPath = path.join("/tmp", `cmdb-app-playwright-${process.pid}.s
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["smoke.e2e.spec.ts"],
+  testMatch: ["*.e2e.spec.ts"],
   timeout: 30_000,
   expect: {
     timeout: 10_000,

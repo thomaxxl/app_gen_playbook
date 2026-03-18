@@ -38,6 +38,9 @@ readiness note in:
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
+- maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
+  absence is explicitly classified as `captured`, `not-required`, or
+  `environment-blocked`
 - record the reviewed user-facing surfaces and usability conclusion in
   `runs/current/evidence/frontend-usability.md`
 - verify rules across create/update/delete/reparent flows
@@ -58,6 +61,7 @@ readiness note in:
 - `runs/current/evidence/contract-samples.md`
 - `runs/current/evidence/ui-previews/` when the run includes materially
   changed visible UI and screenshot capture is available
+- `runs/current/evidence/ui-previews/manifest.md`
 - `runs/current/evidence/frontend-usability.md`
 - `runs/current/evidence/quality/crud-matrix.md`
 - `runs/current/evidence/quality/seed-data-audit.md`
@@ -82,7 +86,9 @@ readiness note in:
   blocked-environment fallback
 - if the run materially changed visible UI and browser execution was
   available, `runs/current/evidence/ui-previews/` contains representative
-  screenshots or the run evidence explains why preview capture was skipped
+  screenshots and `runs/current/evidence/ui-previews/manifest.md` tells
+  Product exactly what to review, or the run evidence explains why preview
+  capture was skipped
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI

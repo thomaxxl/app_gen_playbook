@@ -3,6 +3,13 @@
 Use local `runs/current/evidence/ui-previews/` for Playwright-captured preview
 screenshots when a run materially changes visible UI.
 
+Keep a sibling `manifest.md` here so acceptance can tell whether screenshot
+absence means:
+
+- `captured`
+- `not-required`
+- `environment-blocked`
+
 Typical examples:
 
 - `home.png`

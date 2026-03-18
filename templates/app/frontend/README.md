@@ -70,8 +70,9 @@ Suggested copy order:
 47. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
 48. `tests/vite.config.test.ts.md`
 49. `tests/smoke.e2e.spec.ts.md`
-50. `../project/run.sh.md`
-51. `../project/README.app.md`
+50. `tests/ui-previews.e2e.spec.ts.md`
+51. `../project/run.sh.md`
+52. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -125,6 +126,9 @@ Notes:
 - `tests/dataProvider.integration.test.ts.md` is part of the baseline data
   loading contract because the frontend MUST prove more than bootstrap: it
   MUST show that the real provider path preserves row data.
+- `tests/ui-previews.e2e.spec.ts.md` is the reviewable screenshot companion to
+  the smoke gate. It SHOULD save success-case PNG files that Product can
+  inspect after browser-capable runs.
 - For non-starter domains, `CustomDashboard.tsx.md` SHOULD be the default
   custom-page starting point. `Landing.tsx.md` remains the starter-domain
   example.
