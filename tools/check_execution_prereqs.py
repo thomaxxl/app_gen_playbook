@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import socket
@@ -72,6 +73,27 @@ def check_node_modules(repo_root: Path) -> CheckResult:
         "blocked",
         (proc.stderr or proc.stdout).strip() or "failed to resolve vite from local node_modules",
     )
+
+
+def check_frontend_preview(repo_root: Path) -> CheckResult:
+    package_json = repo_root / "app" / "frontend" / "package.json"
+    if not package_json.exists():
+        return CheckResult("frontend_preview", "blocked", f"missing frontend package.json: {package_json}")
+
+    try:
+        payload = json.loads(package_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return CheckResult("frontend_preview", "blocked", f"invalid frontend package.json: {exc}")
+
+    scripts = payload.get("scripts")
+    if not isinstance(scripts, dict):
+        return CheckResult("frontend_preview", "blocked", "frontend package.json is missing a scripts block")
+
+    preview_script = scripts.get("preview")
+    if not isinstance(preview_script, str) or not preview_script.strip():
+        return CheckResult("frontend_preview", "blocked", "frontend package.json is missing a preview script")
+
+    return CheckResult("frontend_preview", "ok", f"preview script declared: {preview_script.strip()}")
 
 
 def check_port_bind() -> CheckResult:
@@ -168,6 +190,7 @@ def main() -> int:
     results = [
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
+        check_frontend_preview(repo_root),
         check_port_bind(),
         check_playwright_screenshot(repo_root),
         check_docker(),

@@ -78,10 +78,12 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("write_runtime_environment_metadata()", script)
         self.assertIn("perform_host_runtime_preflight()", script)
         self.assertIn("record_execution_prereqs()", script)
+        self.assertIn("enforce_startup_execution_prereqs()", script)
         self.assertIn("clear_host_verified_operator_action_required()", script)
         self.assertIn("attempt_host_browser_proof_capture()", script)
         self.assertIn('if clear_host_verified_operator_action_required; then', script)
         self.assertIn('if attempt_host_browser_proof_capture; then', script)
+        self.assertIn('Execution environment preflight failed before run startup.', script)
 
     def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

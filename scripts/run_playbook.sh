@@ -442,9 +442,53 @@ record_execution_prereqs() {
   mkdir -p "$(dirname "$output_path")"
   if python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path" >/dev/null 2>&1; then
     log "execution-prereqs-ready artifact=${output_path#$ROOT/}"
+    return 0
   else
     log "execution-prereqs-blocked artifact=${output_path#$ROOT/}"
+    return 1
   fi
+}
+
+enforce_startup_execution_prereqs() {
+  local output_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
+  local detail
+
+  if [[ ! -f "$ROOT/app/frontend/package.json" ]]; then
+    return 0
+  fi
+
+  if record_execution_prereqs; then
+    return 0
+  fi
+
+  if [[ -f "$output_path" ]]; then
+    detail="$(cat "$output_path")"
+  else
+    detail="Execution environment prerequisite validation failed, but the prerequisite artifact was not written."
+  fi
+
+  mkdir -p "$ORCH_ROOT"
+  cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
+# Operator Action Required
+
+Execution environment preflight failed before run startup.
+
+The playbook checked the current execution context before dispatching any role
+work and found that the generated app is not runnable in this environment.
+
+Required checks:
+- backend dependency/runtime availability
+- frontend dependency availability
+- frontend preview entrypoint presence
+- localhost port binding in the current execution context
+- Playwright screenshot capability
+
+Prerequisite artifact:
+- ${output_path#$ROOT/}
+
+$detail
+EOF
+  operator_action_required_exit
 }
 
 emit_ceo_stall_note() {
@@ -1910,7 +1954,7 @@ seed_new_run() {
     --mode "$RUN_MODE_NAME" >/dev/null
   write_runtime_environment_metadata
   perform_host_runtime_preflight
-  record_execution_prereqs
+  enforce_startup_execution_prereqs
 }
 
 seed_change_run() {
@@ -1949,7 +1993,7 @@ seed_change_run() {
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
   write_runtime_environment_metadata
   perform_host_runtime_preflight
-  record_execution_prereqs
+  enforce_startup_execution_prereqs
 }
 
 prepare_resume() {
@@ -1976,7 +2020,7 @@ PY
   set_run_status "active"
   write_runtime_environment_metadata
   perform_host_runtime_preflight
-  record_execution_prereqs
+  enforce_startup_execution_prereqs
 
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true

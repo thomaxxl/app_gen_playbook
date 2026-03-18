@@ -32,6 +32,9 @@ The orchestrator MUST:
 - stop early with an operator-action block when the active run requires
   pre-provisioned dependency reuse but the declared dependency roots are
   missing or incomplete
+- stop before dispatching or resuming role work when the current app-backed
+  run fails execution-environment preflight for dependencies, preview
+  entrypoint availability, port binding, or Playwright capture
 
 ## Logging
 
@@ -157,6 +160,13 @@ and SHOULD cover:
 - localhost port bind capability
 - Playwright screenshot capture capability
 - Docker availability as an optional check
+
+Before entering the main control loop for a run that already has
+`app/frontend/package.json`, the orchestrator MUST run that execution
+prerequisite check and stop immediately with `operator-action-required.md` if
+any required check fails. Recording a blocked prerequisite artifact is not
+enough; the run MUST NOT proceed into role dispatch until the current
+execution context validates.
 
 For browser-level launcher proof, the playbook SHOULD maintain:
 
