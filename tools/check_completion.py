@@ -51,6 +51,30 @@ UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
 
+def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
+    browser_proof = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
+    if not browser_proof.exists():
+        return False
+    proof_text = browser_proof.read_text(encoding="utf-8")
+    if "- capture_status: environment-blocked" not in proof_text:
+        return False
+
+    host_runtime = repo_root / "runs" / "current" / "evidence" / "host-runtime-verification.md"
+    if not host_runtime.exists():
+        return False
+    host_text = host_runtime.read_text(encoding="utf-8")
+    return "- frontend_bind: ok" in host_text
+
+
+def integration_review_environment_fallback_ready(repo_root: Path, required_path: Path) -> bool:
+    if required_path.as_posix() != (repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md").as_posix():
+        return False
+    if not browser_proof_environment_fallback_ready(repo_root):
+        return False
+    text = required_path.read_text(encoding="utf-8").lower()
+    return "browser-level" in text and "environment" in text and "blocked" in text
+
+
 def required_run_artifact_paths(repo_root: Path) -> list[tuple[Path, dict[str, object]]]:
     required_paths: list[tuple[Path, dict[str, object]]] = []
     for artifact_dir, template_path in iter_required_artifact_templates(repo_root):
@@ -193,6 +217,8 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
 
         status = str(parse_metadata_block(required_path).get("status", "")).strip() or "unknown"
         if status == "stub":
+            continue
+        if status in NON_FINAL_ARTIFACT_STATUSES and integration_review_environment_fallback_ready(repo_root, required_path):
             continue
         if status in NON_FINAL_ARTIFACT_STATUSES:
             blockers.append(

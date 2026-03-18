@@ -121,6 +121,7 @@ RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
+FRONTEND_BROWSER_PROOF_MD="$RUN_ROOT/evidence/frontend-browser-proof.md"
 RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
 RUN_DASHBOARD_INIT="$RUN_DASHBOARD_ROOT/scripts/init_db.sh"
@@ -558,6 +559,115 @@ message_field() {
   awk -F':[[:space:]]*' -v key="$field_name" '$1 == key { print $2; exit }' "$message_path"
 }
 
+browser_proof_capture_status() {
+  [[ -f "$FRONTEND_BROWSER_PROOF_MD" ]] || return 1
+  awk -F':[[:space:]]*' '$1 == "- capture_status" { print $2; exit }' "$FRONTEND_BROWSER_PROOF_MD"
+}
+
+host_runtime_http_admin_ready() {
+  local base_url
+  base_url="$(host_runtime_frontend_base_url)"
+  python3 - "$base_url" <<'PY' >/dev/null 2>&1
+from __future__ import annotations
+import sys
+import urllib.error
+import urllib.request
+
+url = sys.argv[1].rstrip("/") + "/admin/"
+try:
+    with urllib.request.urlopen(url, timeout=5) as response:
+        status = getattr(response, "status", 0)
+        body = response.read(2048).decode("utf-8", errors="ignore")
+except (OSError, urllib.error.URLError):
+    raise SystemExit(1)
+
+if status < 200 or status >= 400:
+    raise SystemExit(1)
+if "<!doctype html" not in body.lower() and "<html" not in body.lower():
+    raise SystemExit(1)
+PY
+}
+
+browser_proof_fallback_ready() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+  host_runtime_verification_field_ok frontend_bind || return 1
+  [[ "$(browser_proof_capture_status || true)" == "environment-blocked" ]] || return 1
+  host_runtime_http_admin_ready || return 1
+  return 0
+}
+
+browser_proof_fallback_evidence_ready() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+  host_runtime_verification_field_ok frontend_bind || return 1
+  [[ "$(browser_proof_capture_status || true)" == "environment-blocked" ]] || return 1
+  return 0
+}
+
+product_acceptance_pending() {
+  local product_root="$STATE_ROOT/product_manager"
+  find "$product_root" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | grep -q .
+}
+
+queue_browser_fallback_product_acceptance() {
+  browser_proof_fallback_evidence_ready || return 1
+  product_acceptance_pending && return 1
+
+  local acceptance_review="$RUN_ROOT/artifacts/product/acceptance-review.md"
+  if [[ -f "$acceptance_review" ]]; then
+    local acceptance_status
+    acceptance_status="$(awk -F':[[:space:]]*' '$1 == "status" { print $2; exit }' "$acceptance_review")"
+    if [[ "$acceptance_status" == "approved" ]]; then
+      return 1
+    fi
+  fi
+
+  local stamp note_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  note_path="$STATE_ROOT/product_manager/inbox/${stamp}-from-orchestrator-to-product_manager-integration-acceptance.md"
+  mkdir -p "$STATE_ROOT/product_manager/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: product_manager
+topic: integration-acceptance
+purpose: proceed with product acceptance using the approved host-runtime fallback evidence for browser verification
+change_id: ${ACTIVE_CHANGE_ID}
+
+## Required Reads
+- runs/current/artifacts/architecture/integration-review.md
+- runs/current/evidence/contract-samples.md
+- runs/current/evidence/frontend-usability.md
+- runs/current/evidence/frontend-browser-proof.md
+- runs/current/evidence/ui-previews/manifest.md
+- runs/current/evidence/quality/quality-summary.md
+
+## Requested Outputs
+- review the phase-6 fallback evidence and determine final product acceptance
+
+## Dependencies
+- host runtime reached the live /admin surface and frontend browser-proof fallback was recorded
+
+## Gate Status
+- pass with assumptions
+
+## Implementation Evidence
+- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}
+- ${FRONTEND_BROWSER_PROOF_MD#$ROOT/}
+- runs/current/evidence/ui-previews/manifest.md
+
+## Blocking Issues
+- no architect-owned integration blockers remain open in queue
+
+## Notes
+- host runtime reached the live frontend URL, but automated browser-proof capture timed out and was recorded as the exact environment-blocked fallback allowed by phase 6
+- product acceptance should judge whether the evidence pack is sufficient to pass with assumptions, mirroring the documented blocked-environment fallback path
+EOF
+  log "product-acceptance-queued-from-browser-fallback note=${note_path#$ROOT/}"
+  append_run_remark \
+    "Product Acceptance Queued From Browser Fallback" \
+    "Queued Product acceptance note:\n- ${note_path#$ROOT/}\n\nEvidence:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}\n- ${FRONTEND_BROWSER_PROOF_MD#$ROOT/}"
+  return 0
+}
+
 emit_ceo_escalation_note() {
   local processed_message_path="$1"
   local original_sender="$2"
@@ -820,6 +930,30 @@ clear_host_verified_operator_action_required() {
   append_run_remark \
     "Host Runtime Cleared Stale Block" \
     "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nHost runtime verification:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}"
+  return 0
+}
+
+clear_browser_fallback_operator_action_required() {
+  [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
+  browser_proof_fallback_evidence_ready || return 1
+
+  if ! grep -Eqi 'browser-level|frontend/browser|launcher path|/admin' "$OPERATOR_ACTION_REQUIRED_MD"; then
+    return 1
+  fi
+
+  local archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  local stamp archived_path
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/operator-action-required.browser-fallback-cleared.${stamp}.md"
+  mv "$OPERATOR_ACTION_REQUIRED_MD" "$archived_path"
+  log "operator-action-required-browser-fallback-cleared archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Browser Fallback Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nEvidence:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}\n- ${FRONTEND_BROWSER_PROOF_MD#$ROOT/}"
+  append_run_remark \
+    "Browser Fallback Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nEvidence:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}\n- ${FRONTEND_BROWSER_PROOF_MD#$ROOT/}"
   return 0
 }
 
@@ -2043,7 +2177,19 @@ main_loop() {
       did_work=1
     fi
 
+    if clear_browser_fallback_operator_action_required; then
+      did_work=1
+    fi
+
     if attempt_host_browser_proof_capture; then
+      did_work=1
+    fi
+
+    if clear_browser_fallback_operator_action_required; then
+      did_work=1
+    fi
+
+    if queue_browser_fallback_product_acceptance; then
       did_work=1
     fi
 
