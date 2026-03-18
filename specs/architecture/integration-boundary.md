@@ -25,6 +25,19 @@ The real artifact MUST define:
 - what `safrs-jsonapi-client` owns
 - what the local app must define explicitly
 
+For persisted database-backed tables and relationships that the frontend or
+operator UX needs to browse, filter, include, or inspect, the default boundary
+is:
+
+- SAFRS owns the resource and relationship exposure
+- JSON:API owns the wire contract for those resources and relationships
+- custom FastAPI or `/api/ops/` endpoints supplement that lane only for
+  aggregates, dashboards, operational summaries, or other approved exceptions
+
+The real artifact MUST explicitly name any exception where a DB-backed concept
+does not use ordinary SAFRS exposure and MUST record the replacement contract
+and reason.
+
 ## Runtime validation notes
 
 The real artifact MUST record any boundaries that depend on runtime discovery

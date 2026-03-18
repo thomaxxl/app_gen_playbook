@@ -16,7 +16,10 @@ required_artifacts:
   - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/architecture/integration-review.md
+  - runs/current/artifacts/architecture/integration-boundary.md
   - runs/current/artifacts/architecture/data-sourcing-contract.md
+  - runs/current/artifacts/backend-design/resource-exposure-policy.md
+  - runs/current/artifacts/backend-design/relationship-map.md
   - runs/current/evidence/contract-samples.md
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/ui-previews/manifest.md

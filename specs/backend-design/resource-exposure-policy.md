@@ -32,3 +32,17 @@ The real artifact MUST also define:
 - which concepts are singleton/settings-like and how they are exposed
 - which workflow-heavy resources are technically exposed but not ordinary CRUD
 - any custom endpoint or non-SAFRS handling required by the backend
+
+## Default rule
+
+Persisted database-backed tables or mirrored records that the approved product,
+architecture, UX, or operator flows need to browse, inspect, filter, include,
+or drill into MUST default to `Exposed through SAFRS = yes`.
+
+Any row that uses `no`, `internal`, `singleton`, or `deferred` for a
+DB-backed concept MUST also explain:
+
+- why ordinary SAFRS exposure is not appropriate
+- which replacement contract supplies the data instead
+- whether the exception applies only to primary navigation or also to related
+  resource/relationship drill-down

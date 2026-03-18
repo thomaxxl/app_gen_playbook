@@ -12,4 +12,6 @@ Required content:
   bundle
 - any violations found, including hardcoded dynamic or ephemeral frontend data
 - the architecture contract entries or API endpoints used as evidence
+- whether any DB-backed table or relationship that should have been a SAFRS
+  resource was incorrectly replaced by a custom summary endpoint
 - the final conclusion: pass, blocked, or follow-up required

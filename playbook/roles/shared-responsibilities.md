@@ -56,6 +56,22 @@ database-backed, workflow-backed, or environment-backed data:
 - if the contract is missing or the backend does not expose the needed data,
   roles MUST escalate the gap instead of hardcoding substitute values
 
+When a user-visible or operator-visible concept maps cleanly to a persisted
+database-backed table or relationship:
+
+- the default delivery lane is a SAFRS JSON:API resource or relationship
+- Architecture MUST treat that as the default unless the run-owned artifacts
+  record an explicit exception and replacement contract
+- Backend MUST NOT replace that default with a custom `/api/ops/` or ad hoc
+  JSON endpoint merely because a custom summary page also exists
+- Frontend MUST treat custom read-model endpoints as supplements for
+  dashboards, aggregates, or operational summaries, not as justification to
+  bypass the underlying SAFRS resource/relationship lane
+- approved exceptions are limited to internal-only concepts,
+  singleton/settings-like concepts, pure aggregate/read-model payloads, and
+  documented security/performance cases where direct resource exposure is not
+  appropriate
+
 ## Artifact discipline
 
 - Update the files owned by the current role.

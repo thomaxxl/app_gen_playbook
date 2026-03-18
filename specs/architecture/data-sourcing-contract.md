@@ -47,6 +47,14 @@ user, permissions, environment health, queue depth, verification status,
 history, or backend-derived calculations MUST NOT be classified as
 `frontend-static-config`.
 
+If a user-visible or operator-visible datum is naturally owned by a persisted
+database-backed table row or relationship, the default classification is
+`api-resource`.
+
+The Architect MAY classify such data as `api-read-model` or `api-meta` only
+when the run-owned artifacts record why ordinary SAFRS resource exposure is not
+the right primary contract for that surface.
+
 ## Required table
 
 The real artifact MUST include a table with at least these columns:
@@ -62,6 +70,8 @@ The real artifact MUST define:
 - which surfaces are backed only by CRUD resources
 - which surfaces require backend-computed read models, aggregate endpoints, or
   API metadata
+- which DB-backed tables and relationships default to SAFRS resource exposure
+  and which documented exceptions are allowed to bypass that default
 - when SAFRS-native mechanisms such as `jsonapi_attr` or `jsonapi_rpc` are the
   preferred way to expose dynamic non-column or operational data
 - which values MAY stay static in the frontend bundle

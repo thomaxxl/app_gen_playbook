@@ -9,6 +9,9 @@ required_phase:
   - playbook/process/phases/phase-I4-design-delta.md
 required_artifacts:
   - runs/current/artifacts/backend-design/model-design.md
+  - runs/current/artifacts/backend-design/resource-exposure-policy.md
+  - runs/current/artifacts/backend-design/relationship-map.md
+  - runs/current/artifacts/architecture/integration-boundary.md
   - runs/current/artifacts/architecture/resource-naming.md
   - runs/current/artifacts/architecture/data-sourcing-contract.md
 writable_targets:

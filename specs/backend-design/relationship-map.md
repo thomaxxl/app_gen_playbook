@@ -31,6 +31,14 @@ The real artifact MUST also define:
 - exact delete behavior and enforcement layer
 - any internal relationship that exists for rules/bootstrap but is not exposed
 
+If both source and target are SAFRS-exposed resources and the approved UI or
+review flows need the relationship for list/show/include/filter/drill-down
+behavior, the default is `Exposed relationship = yes`.
+
+Any `Exposed relationship = no` decision for such a relationship MUST include
+an explicit reason and the replacement retrieval contract if the UI still needs
+that connection.
+
 If a resource references the same target type more than once, the artifact
 MUST document each semantic relationship separately. For a worked example, see
 `../architecture/nonstarter-worked-example.md`.

@@ -61,3 +61,9 @@ The backend MUST enforce every approved rule ID listed in:
 - `../../../runs/current/artifacts/product/business-rules.md`
 
 even when the same rule is mirrored in the frontend.
+
+For appropriate persisted DB-backed tables and relationships, the backend
+default is true SAFRS JSON:API exposure. Custom read-model or operational
+endpoints supplement that surface; they do not replace it unless the
+run-owned architecture and backend-design artifacts explicitly document an
+exception.

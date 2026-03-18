@@ -16,16 +16,28 @@ This file defines the minimum backend validation checklist.
   `app.routes`, `app.openapi()`, `/jsonapi.json`, or an equivalent approved
   source after model exposure and before `reference/admin.yaml` is treated as
   frozen
+- every resource marked `Exposed through SAFRS = yes` in
+  `../../../runs/current/artifacts/backend-design/resource-exposure-policy.md`
+  appears in live `/jsonapi.json` discovery and in the actual exposed model set
+- every relationship marked `Exposed relationship = yes` in
+  `../../../runs/current/artifacts/backend-design/relationship-map.md` is
+  proven through live SAFRS resource payloads or related routes
 - collection endpoints discovered from the running app and matched to
   `admin.yaml endpoint` values return JSON:API list data
 - at least one discovered collection endpoint returns a non-empty seeded list
   payload rather than only an empty shell response
 - one discovered single-record endpoint returns JSON:API single-record data
 - one relationship endpoint returns JSON:API related data
+- `runs/current/evidence/contract-samples.md` proves representative live SAFRS
+  samples for the exposed resource and relationship surface, not only that
+  `/jsonapi.json` exists
 - collection route paths are validated after startup and match `admin.yaml
   endpoint` values
 - mutation payload `type` values are discovered from live SAFRS responses, not
   inferred from naming theory
+- custom `/api/ops/` or other read-model endpoints MAY supplement the resource
+  contract, but MUST NOT replace SAFRS exposure for appropriate DB-backed
+  tables or relationships
 - one happy-path API create works
 - one happy-path API update works
 - one happy-path API delete works

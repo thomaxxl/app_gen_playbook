@@ -115,6 +115,23 @@ as API-backed, the Backend agent MUST implement or clarify the required
 resource, read-model, or metadata lane instead of leaving the frontend to
 hardcode substitute values.
 
+For persisted database-backed tables and relationships that the approved
+product, architecture, UX, or operator contracts need to list, show, filter,
+include, or drill into, the Backend agent MUST default to SAFRS JSON:API
+resource and relationship exposure.
+
+If `resource-exposure-policy.md` marks a resource as exposed through SAFRS, the
+Backend agent MUST:
+
+- implement it as a true SAFRS model rather than a hand-built JSON route
+- include it in `EXPOSED_MODELS`
+- ensure route discovery shows it in the live `/jsonapi.json` contract
+- expose the documented relationships needed for list/show/include behavior
+
+Custom `/api/ops/` or other read-model endpoints MAY supplement those
+resources, but they MUST NOT replace the required SAFRS exposure for
+appropriate DB-backed tables and relationships.
+
 When the backend is SAFRS-based and the required dynamic data does not map
 directly to stored model columns, the Backend agent MUST review the SAFRS
 documentation and available local examples for `jsonapi_attr` and
@@ -155,6 +172,10 @@ agent MUST explicitly resolve and record:
 8. route-discovery reconciliation
    - how live collection paths will be discovered and reconciled against
      `reference/admin.yaml` before frontend and delivery validation
+9. SAFRS exposure reconciliation
+   - which DB-backed tables and relationships are exposed through SAFRS by
+     default, which are approved exceptions, and how live `/jsonapi.json`
+     evidence will prove that implementation matches the run-owned design
 
 The Backend agent MUST map every approved rule ID from
 `../../runs/current/artifacts/product/business-rules.md` to:

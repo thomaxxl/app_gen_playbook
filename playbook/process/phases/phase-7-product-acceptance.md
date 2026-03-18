@@ -38,6 +38,9 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - review business-rule outcomes
 - review field visibility and editability
 - review search/filter/report behavior
+- fail acceptance if DB-backed operator-visible or user-visible data that
+  should be ordinary resource data is available only through custom summary
+  endpoints instead of the approved SAFRS resource/relationship lane
 - verify that first-version scope did not drift upward without justification
 - fail acceptance if the visible UI still reads like a contract/debug/recovery
   shell instead of the intended product
@@ -77,3 +80,5 @@ Acceptance fails when:
 - required custom pages are still metadata viewers
 - user-facing pages still expose implementation or debug language
 - the evidence pack proves unresolved core behavior defects
+- required DB-backed resources or relationships are missing from the approved
+  SAFRS JSON:API surface

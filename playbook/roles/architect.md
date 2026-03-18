@@ -98,6 +98,12 @@ The Architect owns and MUST maintain:
 - `../../runs/current/artifacts/architecture/data-sourcing-contract.md`
 - role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
+For persisted database-backed tables and relationships that are visible to the
+product or operator UX, the Architect MUST default the integration boundary to
+SAFRS JSON:API resource and relationship exposure. The Architect MAY approve a
+different lane only when the run-owned architecture and backend-design
+artifacts record a concrete reason and a replacement contract.
+
 During change analysis, if the change packet marks a baseline challenge or
 review-driven delta, the Architect MUST NOT collapse the packet to a no-op
 solely because the current app still matches the accepted baseline. No-op is
@@ -129,6 +135,14 @@ The Architect MAY decide:
 - singleton-versus-resource treatment
 - generated-versus-custom implementation lanes
 - cross-layer test obligations
+
+The Architect MUST ensure `data-sourcing-contract.md`,
+`integration-boundary.md`, and `resource-classification.md` stay aligned on
+this rule:
+
+- DB-backed entity and relationship delivery defaults to SAFRS resources
+- `/api/ops/` or other custom endpoints supplement but do not replace those
+  resources unless an explicit exception is documented
 
 The Architect MUST hand work back to Product Manager when a decision would
 change users, scope, workflows, or required custom pages as product behavior.

@@ -7,6 +7,8 @@ The backend contract controls:
 
 - SAFRS/FastAPI startup order
 - model naming and exposure rules
+- the default rule that appropriate DB-backed tables and relationships are
+  exposed through SAFRS JSON:API resources
 - route discovery
 - API-backed dynamic data delivery and read-model obligations
 - SAFRS-native dynamic-data lanes such as `jsonapi_attr` and `jsonapi_rpc`

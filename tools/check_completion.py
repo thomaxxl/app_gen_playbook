@@ -49,6 +49,24 @@ REQUIRED_EVIDENCE_OUTPUTS = (
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+CONTRACT_SAMPLES_REQUIRED_PATTERNS = (
+    (
+        re.compile(r"(?im)^##\s+SAFRS resource coverage\s*$"),
+        "contract samples must include a SAFRS resource coverage section",
+    ),
+    (
+        re.compile(r"(?im)^##\s+Relationship coverage\s*$"),
+        "contract samples must include a relationship coverage section",
+    ),
+    (
+        re.compile(r"(?im)^##\s+Approved non-SAFRS exceptions\s*$"),
+        "contract samples must include an approved non-SAFRS exceptions section",
+    ),
+    (
+        re.compile(r"/jsonapi\.json", re.IGNORECASE),
+        "contract samples must cite live /jsonapi.json discovery",
+    ),
+)
 
 
 def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
@@ -372,6 +390,23 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 }
             )
             continue
+        if relative_path == "runs/current/evidence/contract-samples.md":
+            missing_requirements = [
+                reason
+                for pattern, reason in CONTRACT_SAMPLES_REQUIRED_PATTERNS
+                if not pattern.search(text)
+            ]
+            if missing_requirements:
+                blockers.append(
+                    {
+                        "kind": "contract-samples-unstructured",
+                        "path": relative_path,
+                        "owner": owner,
+                        "phase": phase,
+                        "reason": "; ".join(missing_requirements),
+                    }
+                )
+                continue
         if relative_path == "runs/current/evidence/ui-previews/manifest.md":
             capture_state_match = re.search(
                 r"(?im)^capture_status:\s*([a-z0-9_-]+)\s*$",

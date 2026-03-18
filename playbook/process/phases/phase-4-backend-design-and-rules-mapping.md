@@ -12,9 +12,13 @@ and tests.
 - start from the Product Manager resource inventory and resource behavior
   matrix, not only the glossary and rule narrative
 - classify which product concepts become exposed SAFRS resources
+- treat persisted database-backed product or operator concepts as SAFRS
+  resources by default unless an explicit documented exception applies
 - define which concepts remain internal, singleton/settings-style, deferred,
   or explicitly omitted
 - design SQLAlchemy models and relationships
+- define which relationships must be exposed through SAFRS for
+  list/show/include/filter/drill-down behavior
 - define per-resource readonly and mutability policy
 - map approved rule IDs to LogicBank patterns, backend enforcement, and tests
 - define derived vs stored fields
@@ -48,6 +52,8 @@ and tests.
   of scope
 - every approved API-backed UI surface has a backend delivery lane instead of
   a frontend hardcoded-data fallback
+- every appropriate DB-backed table and relationship has a SAFRS exposure
+  decision, and any non-SAFRS exception is explicitly justified
 - no ambiguous lifecycle behavior remains
 - every required non-starter template replacement is identified before
   implementation starts

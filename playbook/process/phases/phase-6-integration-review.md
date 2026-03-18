@@ -37,6 +37,11 @@ readiness note in:
 - capture at least one contract sample in `runs/current/evidence/contract-samples.md`
   showing the `admin.yaml endpoint`, matching discovered backend route, and a
   representative JSON:API sample record
+- verify that DB-backed resources marked as SAFRS-exposed in
+  `resource-exposure-policy.md` are actually present in live `/jsonapi.json`
+  route discovery and are not replaced by hand-built substitute endpoints
+- verify that documented exposed relationships from
+  `relationship-map.md` are actually navigable in live SAFRS payloads
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
@@ -119,6 +124,9 @@ readiness note in:
   is proven
 - user-visible dynamic or ephemeral data follows the approved
   `data-sourcing-contract.md` and is not hardcoded in frontend delivery code
+- DB-backed resources and relationships that the design marks as SAFRS-exposed
+  are proven through live `/jsonapi.json` discovery and representative live
+  resource and relationship samples
 - no unapproved starter, mock, or demo rows remain visible
 - required custom pages are not metadata or status placeholders
 - the quality evidence pack exists and is internally consistent
@@ -144,3 +152,5 @@ Integration review fails when:
 - the quality evidence pack is missing or contradictory
 - a required dynamic surface is implemented with hardcoded frontend data
   instead of the approved API-backed contract
+- the backend replaced required SAFRS resource or relationship exposure with
+  custom summary endpoints or hand-built JSON routes

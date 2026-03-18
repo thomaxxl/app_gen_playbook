@@ -20,6 +20,12 @@ The backend MAY satisfy UI data needs through one of these approved lanes:
 - dedicated operational endpoints when the data is not a good fit for CRUD
   resources
 
+For persisted database-backed tables and relationships that are user-visible or
+operator-visible, the default approved lane is the standard JSON:API resource
+and relationship surface exposed through SAFRS. Read-model or operational
+endpoints supplement that lane when needed, but MUST NOT silently replace it
+without an explicit architecture exception.
+
 In SAFRS-based backends, teams SHOULD also review the SAFRS documentation and
 examples for dynamic-data exposure patterns before inventing ad hoc APIs. In
 particular:

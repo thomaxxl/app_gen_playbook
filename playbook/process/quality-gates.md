@@ -15,6 +15,9 @@ The run is blocked if any of these are true:
   recovery, runtime diagnostics, or template cleanup copy
 - user-visible dynamic or ephemeral data is hardcoded in frontend source where
   the approved contract requires API-backed retrieval
+- DB-backed tables or relationships that should be ordinary SAFRS resources are
+  replaced by custom summary endpoints or hand-built JSON routes without an
+  approved architecture exception
 - leftover mock, demo, or starter data remains visible without explicit
   approval in `runs/current/artifacts/product/sample-data.md`
 - a required custom page is still a metadata, status, or contract placeholder

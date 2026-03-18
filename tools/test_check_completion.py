@@ -154,6 +154,83 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertEqual(len(browser_matching), 1)
             self.assertEqual(browser_matching[0]["kind"], "missing-required-evidence-output")
 
+    def test_requires_structured_contract_samples(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: not-required\n",
+            )
+            write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/quality-summary.md", "present\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/contract-samples.md"]
+            self.assertTrue(any(blocker["kind"] == "contract-samples-unstructured" for blocker in matching))
+
+    def test_accepts_structured_contract_samples(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "\n".join(
+                    [
+                        "# Contract Samples",
+                        "",
+                        "## SAFRS resource coverage",
+                        "- discovered from /jsonapi.json",
+                        "",
+                        "## Relationship coverage",
+                        "- relationship proof present",
+                        "",
+                        "## Approved non-SAFRS exceptions",
+                        "- none",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: not-required\n",
+            )
+            write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/quality-summary.md", "present\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/contract-samples.md"]
+            self.assertFalse(any(blocker["kind"] == "contract-samples-unstructured" for blocker in matching))
+
     def test_requires_ui_preview_manifest_to_declare_capture_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

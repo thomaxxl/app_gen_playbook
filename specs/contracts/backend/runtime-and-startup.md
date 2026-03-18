@@ -92,6 +92,12 @@ That reconciliation MUST:
 
 - derive live collection paths from `app.openapi()`, `/jsonapi.json`, or both
 - compare those live paths with every `admin.yaml endpoint` value
+- compare the live discovered resources with the run-owned
+  `resource-exposure-policy.md` so every resource marked SAFRS-exposed is
+  actually present in `EXPOSED_MODELS` and `/jsonapi.json`
+- compare the live relationship surface with the run-owned
+  `relationship-map.md` so every relationship marked exposed is actually
+  reachable through live SAFRS payloads or related routes
 - fail the run or force an `admin.yaml` update if any exposed collection path
   disagrees with the checked-in contract
 
