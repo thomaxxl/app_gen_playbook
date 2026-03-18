@@ -9,6 +9,20 @@ if [[ "$ROOT" != "$EXPECTED_ROOT" ]]; then
   exit 2
 fi
 
+load_env_file() {
+  local env_path="$ROOT/.env"
+  if [[ ! -f "$env_path" ]]; then
+    return 0
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  . "$env_path"
+  set +a
+}
+
+load_env_file
+
 MODE="new"
 RESUME=0
 TARGET_ROLE=""
@@ -134,6 +148,15 @@ IDLE_THRESHOLD_SECONDS="${IDLE_THRESHOLD_SECONDS:-300}"
 FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 LONG_MODEL="${LONG_MODEL:-}"
+REASONING_EFFORT="${REASONING_EFFORT:-high}"
+
+PRODUCT_MANAGER_MODEL="${PRODUCT_MANAGER_MODEL:-${FAST_MODEL:-gpt-5.4}}"
+ARCHITECT_MODEL="${ARCHITECT_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
+FRONTEND_MODEL="${FRONTEND_MODEL:-${LONG_MODEL:-gpt-5.3-codex-spark}}"
+BACKEND_MODEL="${BACKEND_MODEL:-$FRONTEND_MODEL}"
+DEVOPS_MODEL="${DEVOPS_MODEL:-$FRONTEND_MODEL}"
+CEO_MODEL="${CEO_MODEL:-$ARCHITECT_MODEL}"
+DEPLOYMENT_MODEL="${DEPLOYMENT_MODEL:-$DEVOPS_MODEL}"
 
 frontend_pid=""
 backend_pid=""
@@ -1029,12 +1052,12 @@ attempt_ceo_intervention() {
 
 role_model() {
   case "$1" in
-    product_manager) printf '%s\n' "$FAST_MODEL" ;;
-    architect) printf '%s\n' "$MAIN_MODEL" ;;
-    frontend) printf '%s\n' "$LONG_MODEL" ;;
-    backend) printf '%s\n' "$LONG_MODEL" ;;
-    deployment) printf '%s\n' "$MAIN_MODEL" ;;
-    ceo) printf '%s\n' "$MAIN_MODEL" ;;
+    product_manager) printf '%s\n' "$PRODUCT_MANAGER_MODEL" ;;
+    architect) printf '%s\n' "$ARCHITECT_MODEL" ;;
+    frontend) printf '%s\n' "$FRONTEND_MODEL" ;;
+    backend) printf '%s\n' "$BACKEND_MODEL" ;;
+    deployment) printf '%s\n' "$DEPLOYMENT_MODEL" ;;
+    ceo) printf '%s\n' "$CEO_MODEL" ;;
     *) printf '%s\n' "$FAST_MODEL" ;;
   esac
 }
@@ -1385,6 +1408,9 @@ run_codex_command() {
     local full_cmd=( "${cmd[@]}" )
     if [[ -n "$model" ]]; then
       full_cmd+=(--model "$model")
+    fi
+    if [[ -n "$REASONING_EFFORT" ]]; then
+      full_cmd+=(--reasoning-effort "$REASONING_EFFORT")
     fi
     "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
   ) &
