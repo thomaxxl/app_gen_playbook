@@ -276,6 +276,7 @@ class ValidateHandoffInputsTests(unittest.TestCase):
             note_text = note_path.read_text(encoding="utf-8")
             self.assertIn("repair the missing or incomplete prerequisites", note_text)
             self.assertIn("runs/current/artifacts/ux/navigation.md", note_text)
+            self.assertIn("runs/current/role-state/frontend/processed/handoff.md", note_text)
 
     def test_devops_sender_correction_note_uses_devops_runtime_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -432,9 +432,16 @@ The recovery pass MUST:
 - use the exact canonical artifact filenames required by completion, not
   semantically similar alternates
 - requeue only into a role whose inbox and inflight lanes are currently empty
+- reopen only the earliest unmet early-phase frontier:
+  Product first, then Architect, then Phase 3 and Phase 4 in parallel
 - avoid creating late-phase acceptance or integration-review work before the
   earlier phase-0 through phase-4 canonical artifact set is complete
 - prefer recovery notes in the owning role inbox over silent automatic edits
+
+When the orchestrator rejects a downstream handoff and writes a correction note
+back to the sender, that correction note MUST point at the archived rejected
+handoff under the receiver `processed/` lane, not the transient `inflight/`
+path that existed before rejection.
 
 Blocked recovery notes emitted by `orchestrator` or `ceo` MAY reference
 task-bundle prerequisites that are themselves the declared missing recovery

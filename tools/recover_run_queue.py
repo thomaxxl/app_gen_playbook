@@ -37,6 +37,12 @@ EARLY_PHASES = {
     "phase-3-ux-and-interaction-design",
     "phase-4-backend-design-and-rules-mapping",
 }
+EARLY_PHASE_FRONTIERS: tuple[tuple[str, ...], ...] = (
+    ("phase-0-intake-and-framing",),
+    ("phase-1-product-definition",),
+    ("phase-2-architecture-contract",),
+    ("phase-3-ux-and-interaction-design", "phase-4-backend-design-and-rules-mapping"),
+)
 
 ROLE_LABELS = {
     "product_manager": "product_manager",
@@ -459,7 +465,10 @@ def template_path_for_need(repo_root: Path, need: ArtifactNeed) -> Path | None:
 
 def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNeed], role: str) -> bool:
     if phase in EARLY_PHASES:
-        return True
+        for frontier in EARLY_PHASE_FRONTIERS:
+            if any(need.phase in frontier for need in all_needs):
+                return phase in frontier
+        return False
 
     early_needs = [need for need in all_needs if need.phase in EARLY_PHASES]
     if early_needs:

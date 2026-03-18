@@ -83,6 +83,21 @@ def write_app_baseline(repo_root: Path) -> None:
         write_file(repo_root / relative, "generated\n")
 
 
+def write_required_phase6_evidence(repo_root: Path) -> None:
+    for relative in (
+        "runs/current/evidence/contract-samples.md",
+        "runs/current/evidence/frontend-usability.md",
+        "runs/current/evidence/ui-previews/manifest.md",
+        "runs/current/evidence/quality/crud-matrix.md",
+        "runs/current/evidence/quality/data-sourcing-audit.md",
+        "runs/current/evidence/quality/seed-data-audit.md",
+        "runs/current/evidence/quality/ui-copy-audit.md",
+        "runs/current/evidence/quality/test-results.md",
+        "runs/current/evidence/quality/quality-summary.md",
+    ):
+        write_file(repo_root / relative, "# evidence\n")
+
+
 class RecoverRunQueueTests(unittest.TestCase):
     def test_does_not_recover_while_initial_input_is_pending(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -112,7 +127,7 @@ class RecoverRunQueueTests(unittest.TestCase):
             targets = select_recovery_targets(repo_root)
 
             self.assertIn("product_manager", targets)
-            self.assertIn("frontend", targets)
+            self.assertNotIn("frontend", targets)
             self.assertNotIn("architect", targets)
 
             product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
@@ -131,13 +146,35 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_run_artifact(repo_root / "runs/current/artifacts/product/brief.md")
             write_run_artifact(repo_root / "runs/current/artifacts/ux/iconography.md")
             write_app_baseline(repo_root)
-            write_file(repo_root / "runs/current/evidence/contract-samples.md", "# samples\n")
+            write_required_phase6_evidence(repo_root)
 
             targets = select_recovery_targets(repo_root)
 
             self.assertEqual(set(targets), {"architect"})
             architect_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["architect"]}
             self.assertEqual(architect_paths, {"runs/current/artifacts/architecture/integration-review.md"})
+
+    def test_recovery_waits_for_phase1_and_phase2_before_phase3_and_phase4(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_template(repo_root / "specs/product/brief.md", "product_manager", "phase-1-product-definition")
+            write_template(repo_root / "specs/architecture/overview.md", "architect", "phase-2-architecture-contract")
+            write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
+            write_template(repo_root / "specs/backend-design/model-design.md", "backend", "phase-4-backend-design-and-rules-mapping")
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            targets = select_recovery_targets(repo_root)
+            self.assertEqual(set(targets), {"product_manager"})
+
+            write_run_artifact(repo_root / "runs/current/artifacts/product/brief.md")
+            targets = select_recovery_targets(repo_root)
+            self.assertEqual(set(targets), {"architect"})
+
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/overview.md")
+            targets = select_recovery_targets(repo_root)
+            self.assertEqual(set(targets), {"frontend", "backend"})
 
     def test_acceptance_review_is_only_requeued_after_other_core_roles_are_quiescent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -150,7 +187,7 @@ class RecoverRunQueueTests(unittest.TestCase):
 
             write_run_artifact(repo_root / "runs/current/artifacts/architecture/integration-review.md")
             write_app_baseline(repo_root)
-            write_file(repo_root / "runs/current/evidence/contract-samples.md", "# samples\n")
+            write_required_phase6_evidence(repo_root)
             (repo_root / "runs/current/role-state/backend/inflight/todo.md").write_text("busy\n", encoding="utf-8")
 
             targets = select_recovery_targets(repo_root)

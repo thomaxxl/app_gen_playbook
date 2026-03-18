@@ -323,7 +323,9 @@ def write_correction_note(
         "purpose: repair an invalid handoff before the downstream role is dispatched",
         "",
         "## Required Reads",
-        f"- {message_path.relative_to(repo_root).as_posix()}",
+        (
+            f"- {(preferred_role_state_dir(repo_root, receiver_runtime_role) / 'processed' / message_path.name).relative_to(repo_root).as_posix()}"
+        ),
         "",
         "## Requested Outputs",
         "- repair the missing or incomplete prerequisites below",
