@@ -39,15 +39,14 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('cmd+=(--full-auto)', script)
         self.assertNotIn('cmd+=(--yolo)', script)
 
-    def test_runner_only_passes_reasoning_effort_when_cli_supports_it(self) -> None:
+    def test_runner_passes_reasoning_effort_via_codex_config(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
 
-        self.assertIn('CODEX_SUPPORTS_REASONING_EFFORT=""', script)
-        self.assertIn("codex_supports_reasoning_effort()", script)
-        self.assertIn("codex exec --help 2>/dev/null | grep -q -- '--reasoning-effort'", script)
-        self.assertIn('if [[ -n "$REASONING_EFFORT" ]] && codex_supports_reasoning_effort; then', script)
-        self.assertIn('log "codex-reasoning-effort-unsupported value=$REASONING_EFFORT"', script)
+        self.assertIn('if [[ -n "$REASONING_EFFORT" ]]; then', script)
+        self.assertIn('full_cmd+=(--config "model_reasoning_effort=$REASONING_EFFORT")', script)
+        self.assertNotIn("codex_supports_reasoning_effort()", script)
+        self.assertNotIn("codex-reasoning-effort-unsupported", script)
 
     def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

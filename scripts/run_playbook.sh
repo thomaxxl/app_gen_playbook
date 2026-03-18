@@ -153,8 +153,6 @@ CODEX_COMMAND_TIMEOUT_SECONDS="${CODEX_COMMAND_TIMEOUT_SECONDS:-900}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
 DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-}"
-CODEX_SUPPORTS_REASONING_EFFORT=""
-REASONING_EFFORT_WARNED=0
 
 PRODUCT_MANAGER_MODEL="${PRODUCT_MANAGER_MODEL:-${FAST_MODEL:-gpt-5.4}}"
 ARCHITECT_MODEL="${ARCHITECT_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
@@ -1532,21 +1530,6 @@ assert_codex_success() {
   python3 "$ROOT/tools/assert_codex_success.py" "$jsonl_file" "$result_file"
 }
 
-codex_supports_reasoning_effort() {
-  if [[ -n "$CODEX_SUPPORTS_REASONING_EFFORT" ]]; then
-    [[ "$CODEX_SUPPORTS_REASONING_EFFORT" == "1" ]]
-    return
-  fi
-
-  if codex exec --help 2>/dev/null | grep -q -- '--reasoning-effort'; then
-    CODEX_SUPPORTS_REASONING_EFFORT="1"
-    return 0
-  fi
-
-  CODEX_SUPPORTS_REASONING_EFFORT="0"
-  return 1
-}
-
 run_codex_command() {
   local runtime_role="$1"
   local role_cwd="$2"
@@ -1565,11 +1548,8 @@ run_codex_command() {
     if [[ -n "$model" ]]; then
       full_cmd+=(--model "$model")
     fi
-    if [[ -n "$REASONING_EFFORT" ]] && codex_supports_reasoning_effort; then
-      full_cmd+=(--reasoning-effort "$REASONING_EFFORT")
-    elif [[ -n "$REASONING_EFFORT" ]] && [[ "$REASONING_EFFORT_WARNED" -eq 0 ]]; then
-      log "codex-reasoning-effort-unsupported value=$REASONING_EFFORT"
-      REASONING_EFFORT_WARNED=1
+    if [[ -n "$REASONING_EFFORT" ]]; then
+      full_cmd+=(--config "model_reasoning_effort=$REASONING_EFFORT")
     fi
     if [[ "$timeout_seconds" =~ ^[0-9]+$ && "$timeout_seconds" -gt 0 ]]; then
       timeout "${timeout_seconds}s" "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
