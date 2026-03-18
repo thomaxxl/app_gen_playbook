@@ -110,6 +110,11 @@ type SchemaDrivenAdminAppProps = {
     states, and error states
 19. preserve a shared theme baseline across Home and custom pages
 
+The shared runtime is also the canonical API access boundary for the frontend.
+Delivery components MUST obtain backend/API data through the React-admin
+dataProvider exposed by this runtime, not through ad hoc direct fetch calls in
+page components.
+
 The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
 layer and MUST remain functional when `schema.resources[...].relationships` is
 partial. The runtime MUST combine:
@@ -126,6 +131,9 @@ That `children` slot is the official extension point for:
 - `CustomRoutes noLayout`
 - custom landing pages
 - extra dashboard routes
+
+Custom pages rendered through that extension point MUST remain inside the same
+dataProvider context and use it for API-backed data retrieval.
 
 It MUST NOT be left implicit.
 

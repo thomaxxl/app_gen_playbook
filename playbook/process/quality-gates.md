@@ -15,6 +15,8 @@ The run is blocked if any of these are true:
   recovery, runtime diagnostics, or template cleanup copy
 - user-visible dynamic or ephemeral data is hardcoded in frontend source where
   the approved contract requires API-backed retrieval
+- delivered frontend pages bypass the approved React-admin dataProvider layer
+  for API-backed retrieval
 - DB-backed tables or relationships that should be ordinary SAFRS resources are
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception

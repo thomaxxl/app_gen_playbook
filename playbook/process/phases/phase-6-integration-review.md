@@ -28,6 +28,8 @@ readiness note in:
 - verify schema/runtime wiring
 - verify that user-visible dynamic and ephemeral data comes from the approved
   backend/API contracts instead of hardcoded frontend literals
+- verify that API-backed frontend data retrieval uses the approved React-admin
+  dataProvider layer instead of direct component-level fetch paths
 - verify frontend behavior against real backend data
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
@@ -131,6 +133,9 @@ readiness note in:
   is proven
 - user-visible dynamic or ephemeral data follows the approved
   `data-sourcing-contract.md` and is not hardcoded in frontend delivery code
+- API-backed frontend data retrieval follows the approved React-admin
+  dataProvider boundary and is not bypassed by direct component-level fetch
+  code
 - DB-backed resources and relationships that the design marks as SAFRS-exposed
   are proven through live `/jsonapi.json` discovery and representative live
   resource and relationship samples
@@ -163,6 +168,8 @@ Integration review fails when:
 - the quality evidence pack is missing or contradictory
 - a required dynamic surface is implemented with hardcoded frontend data
   instead of the approved API-backed contract
+- delivery page code bypasses the approved React-admin dataProvider boundary
+  for API-backed data retrieval
 - the backend replaced required SAFRS resource or relationship exposure with
   custom summary endpoints or hand-built JSON routes
 - the backend replaced required ORM-backed resource implementation with

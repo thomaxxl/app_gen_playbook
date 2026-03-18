@@ -51,6 +51,24 @@ At minimum:
   error states
 - custom pages MUST define a mobile fallback when their desktop layout would
   otherwise become unreadable
+- custom pages MUST stay inside the React-admin dataProvider context for any
+  backend/API retrieval
+
+## Data retrieval rule for custom views
+
+Custom pages, dashboards, landing surfaces, and no-layout routes MUST use the
+approved React-admin dataProvider layer for API-backed data retrieval.
+
+That means:
+
+- use `useDataProvider()` or an equivalent approved dataProvider consumer
+- use dataProvider methods for resource reads and approved custom methods for
+  non-CRUD read models
+- do not call `fetch(...)` directly from delivery page components for backend
+  API reads
+
+If a required API call does not fit the current dataProvider surface, the
+frontend MUST extend that dataProvider contract or escalate the missing shape.
 
 ## D3 pattern
 

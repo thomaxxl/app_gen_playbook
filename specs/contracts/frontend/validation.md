@@ -45,6 +45,8 @@ frontend package template before treating the playbook baseline as current.
   data-provider path, fetches one live or mocked collection payload through
   that provider, and proves a representative scalar field survives into row
   records
+- API-backed frontend surfaces use the React-admin dataProvider path rather
+  than direct component-level `fetch(...)` calls
 - `runs/current/artifacts/ux/landing-strategy.md` exists and is not left as
   placeholder text
 - the app declares exactly one primary entry route across
@@ -98,6 +100,8 @@ frontend package template before treating the playbook baseline as current.
   `../../runs/current/artifacts/product/business-rules.md`
 - custom pages use the shared page-shell defaults unless the run-owned UX
   artifacts explicitly define a replacement
+- custom pages, dashboards, and landing surfaces retrieve API-backed data
+  through the React-admin dataProvider rather than direct fetches
 - `Home` matches the task, title, primary CTA, and proof structure described in
   `landing-strategy.md`
 - required custom pages match `custom-view-specs.md` and `screen-inventory.md`
@@ -110,6 +114,8 @@ frontend package template before treating the playbook baseline as current.
   contract recovery, provisional endpoint warnings, route inventory, or
   template/bootstrap cleanup copy unless the run-owned UX artifacts explicitly
   approve an operator-facing diagnostics page
+- user-facing frontend code does not bypass the approved dataProvider layer for
+  API-backed data retrieval
 - integration evidence includes `runs/current/evidence/frontend-usability.md`
   summarizing the actual pages reviewed, the UX artifacts compared, and whether
   any internal/debug copy leaked into visible UI
@@ -209,6 +215,8 @@ suite with at least this flow:
 21. fail if the primary entry page or required custom pages read like
     developer-facing contract/recovery shells rather than the UX artifacts they
     were supposed to implement
+22. fail if delivery page code bypasses the approved React-admin dataProvider
+    layer for API-backed data retrieval
 
 When the run includes materially changed UI and stable browser execution is
 available, extend the Playwright validation to capture at least one or two

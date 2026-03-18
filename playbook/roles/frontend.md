@@ -68,6 +68,12 @@ The Frontend agent MUST treat
 authoritative boundary for what data may stay static in the bundle versus what
 must be fetched from the backend.
 
+The Frontend agent MUST use the React-admin dataProvider as the canonical
+frontend API access layer. If a page, dashboard, landing surface, or custom
+view needs backend data, it MUST retrieve that data through the approved
+dataProvider contract rather than calling backend APIs directly from component
+code.
+
 This applies in particular to:
 
 - `font-awesome-icons`
@@ -172,6 +178,11 @@ data such as dashboard metrics, blockers, history rows, queue rows, verification
 state, or environment-derived summaries. If the approved UX needs that data
 and the backend does not yet expose it, the Frontend agent MUST escalate the
 contract gap instead of embedding substitute literals.
+
+The Frontend agent MUST NOT bypass the approved dataProvider layer with direct
+component-level `fetch(...)` calls for delivered backend/API reads. If the
+existing dataProvider shape is insufficient, the Frontend agent must extend or
+handoff that contract gap instead of working around it locally.
 
 ## Escalation targets
 

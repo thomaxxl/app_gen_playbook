@@ -47,12 +47,30 @@ the same as production delivery surfaces.
 
 ## Retrieval rule
 
-Custom pages and dashboards SHOULD use the app's approved data-provider or API
-client layer, not ad hoc local constants, for dynamic data retrieval.
+Frontend components MUST fetch API-backed data through the app's approved
+React-admin dataProvider layer.
+
+This applies to:
+
+- generated CRUD pages
+- `Home.tsx`
+- `Landing.tsx`
+- dashboards
+- custom views
+- relationship dialogs and tabs
+- any other frontend surface that retrieves backend/API data
+
+Component-level `fetch(...)`, ad hoc API client wrappers, or one-off query
+helpers are not the default contract for delivery code.
+
+If a surface needs data that is not a standard CRUD call, the frontend MUST
+extend or reuse the approved dataProvider contract for that API lane rather
+than bypassing it from the component tree.
 
 When a surface needs backend-computed aggregates or non-CRUD operational
 views, the frontend MUST rely on an approved backend read-model or metadata
-contract rather than reconstructing or inventing those values locally.
+contract, and it MUST still retrieve that data through the approved
+dataProvider contract rather than direct component-level fetch calls.
 
 ## Source of truth
 
