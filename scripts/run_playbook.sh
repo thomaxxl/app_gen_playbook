@@ -149,6 +149,9 @@ FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 LONG_MODEL="${LONG_MODEL:-}"
 REASONING_EFFORT="${REASONING_EFFORT:-high}"
+BACKEND_VENV="${BACKEND_VENV:-}"
+FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-}"
 
 PRODUCT_MANAGER_MODEL="${PRODUCT_MANAGER_MODEL:-${FAST_MODEL:-gpt-5.4}}"
 ARCHITECT_MODEL="${ARCHITECT_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
@@ -268,6 +271,94 @@ runtime_env: host
 EOF
 }
 
+resolve_playbook_path() {
+  local raw_path="$1"
+  local base_dir="${2:-$ROOT/app}"
+
+  [[ -n "$raw_path" ]] || return 0
+  python3 - "$raw_path" "$base_dir" <<'PY'
+from __future__ import annotations
+
+import pathlib
+import sys
+
+raw = pathlib.Path(sys.argv[1]).expanduser()
+base = pathlib.Path(sys.argv[2]).expanduser().resolve()
+if not raw.is_absolute():
+    raw = base / raw
+print(raw.resolve())
+PY
+}
+
+ensure_host_runtime_dependency_links() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
+  [[ -d "$ROOT/app" ]] || return 1
+
+  local frontend_node_modules_link backend_venv_link
+  local resolved_backend_venv resolved_frontend_node_modules
+  local existing_backend_target existing_frontend_target current_backend current_frontend
+
+  backend_venv_link="$ROOT/app/backend/.venv"
+  frontend_node_modules_link="$ROOT/app/frontend/node_modules"
+
+  if [[ -n "$BACKEND_VENV" ]]; then
+    resolved_backend_venv="$(resolve_playbook_path "$BACKEND_VENV")"
+    if [[ -z "$resolved_backend_venv" ]] || [[ ! -d "$resolved_backend_venv" ]]; then
+      log "host-runtime-invalid-backend-venv path=${BACKEND_VENV}"
+      return 1
+    fi
+    BACKEND_VENV="$resolved_backend_venv"
+
+    if [[ -L "$backend_venv_link" ]]; then
+      existing_backend_target="$(readlink "$backend_venv_link")"
+      if [[ -n "$existing_backend_target" ]]; then
+        current_backend="$(resolve_playbook_path "$existing_backend_target" "$ROOT/app/backend")"
+      else
+        current_backend=""
+      fi
+      if [[ "$current_backend" != "$BACKEND_VENV" ]]; then
+        log "host-runtime-backend-venv-mismatch link=${backend_venv_link#$ROOT/} expected=${BACKEND_VENV} actual=${current_backend}"
+        return 1
+      fi
+    elif [[ -e "$backend_venv_link" ]]; then
+      log "host-runtime-backend-venv-existing-local path=${backend_venv_link#$ROOT/} using BACKEND_VENV=${BACKEND_VENV}"
+    else
+      mkdir -p "$ROOT/app/backend"
+      ln -s "$BACKEND_VENV" "$backend_venv_link"
+      log "host-runtime-backend-venv-linked target=${BACKEND_VENV}"
+    fi
+  fi
+
+  if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
+    resolved_frontend_node_modules="$(resolve_playbook_path "$FRONTEND_NODE_MODULES_DIR")"
+    if [[ -z "$resolved_frontend_node_modules" ]] || [[ ! -d "$resolved_frontend_node_modules" ]]; then
+      log "host-runtime-invalid-frontend-node-modules path=${FRONTEND_NODE_MODULES_DIR}"
+      return 1
+    fi
+    FRONTEND_NODE_MODULES_DIR="$resolved_frontend_node_modules"
+
+    if [[ -L "$frontend_node_modules_link" ]]; then
+      existing_frontend_target="$(readlink "$frontend_node_modules_link")"
+      if [[ -n "$existing_frontend_target" ]]; then
+        current_frontend="$(resolve_playbook_path "$existing_frontend_target" "$ROOT/app/frontend")"
+      else
+        current_frontend=""
+      fi
+      if [[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]]; then
+        log "host-runtime-node-modules-mismatch link=${frontend_node_modules_link#$ROOT/} expected=${FRONTEND_NODE_MODULES_DIR} actual=${current_frontend}"
+        return 1
+      fi
+    elif [[ -e "$frontend_node_modules_link" ]]; then
+      log "host-runtime-node-modules-conflict link=${frontend_node_modules_link#$ROOT/} expected symlink to FRONTEND_NODE_MODULES_DIR=${FRONTEND_NODE_MODULES_DIR}"
+      return 1
+    else
+      mkdir -p "$ROOT/app/frontend"
+      ln -s "$FRONTEND_NODE_MODULES_DIR" "$frontend_node_modules_link"
+      log "host-runtime-node-modules-linked target=${FRONTEND_NODE_MODULES_DIR}"
+    fi
+  fi
+}
+
 host_runtime_frontend_port() {
   printf '%s\n' "${FRONTEND_PORT:-5173}"
 }
@@ -323,6 +414,7 @@ ensure_host_runtime_app_started() {
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
   [[ "$PLAYBOOK_AUTO_START_APP" == "1" ]] || return 1
   [[ -x "$ROOT/app/run.sh" ]] || return 1
+  ensure_host_runtime_dependency_links || return 1
 
   local frontend_host frontend_port backend_host backend_port app_runtime_log
   frontend_host="$(host_runtime_frontend_host)"
@@ -343,13 +435,19 @@ ensure_host_runtime_app_started() {
     BACKEND_PORT="$3" \
     FRONTEND_HOST="$4" \
     FRONTEND_PORT="$5" \
+    BACKEND_VENV="$6" \
+    FRONTEND_NODE_MODULES_DIR="$7" \
+    DEPENDENCY_PROVISIONING_MODE="$8" \
     exec ./run.sh
   ' bash \
     "$ROOT/app" \
     "${BACKEND_HOST:-127.0.0.1}" \
     "$backend_port" \
     "${FRONTEND_HOST:-127.0.0.1}" \
-    "$frontend_port" >>"$app_runtime_log" 2>&1 &
+    "$frontend_port" \
+    "$BACKEND_VENV" \
+    "$FRONTEND_NODE_MODULES_DIR" \
+    "$DEPENDENCY_PROVISIONING_MODE" >>"$app_runtime_log" 2>&1 &
   app_runtime_pid="$!"
 
   local attempt
@@ -1235,6 +1333,8 @@ check_orchestrator_liveness() {
 }
 
 dependency_provisioning_preflight() {
+  BACKEND_VENV="$BACKEND_VENV" \
+  FRONTEND_NODE_MODULES_DIR="$FRONTEND_NODE_MODULES_DIR" \
   python3 "$ROOT/tools/check_dependency_provisioning.py" --repo-root "$ROOT"
 }
 
