@@ -67,6 +67,12 @@ captured in the matching per-turn JSONL file under:
 
 - `runs/current/evidence/orchestrator/jsonl/*.events.jsonl`
 
+Transient Codex stream reconnect events recorded as JSONL `error` items MUST
+NOT be treated as fatal if the same turn later reaches `turn.completed` and
+produces a non-empty final result message. The orchestrator MUST only fail the
+turn for transport-layer `error` events when no later successful completion is
+present, or when Codex emits `turn.failed`.
+
 Recovery actions SHOULD be recorded in:
 
 - `runs/current/evidence/orchestrator/recovery-log.md`

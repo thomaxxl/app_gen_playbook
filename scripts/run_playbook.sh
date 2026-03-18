@@ -1164,49 +1164,7 @@ validate_role_turn() {
 assert_codex_success() {
   local jsonl_file="$1"
   local result_file="$2"
-  python3 - "$jsonl_file" "$result_file" <<'PY'
-from __future__ import annotations
-
-import json
-import sys
-from pathlib import Path
-
-jsonl_path = Path(sys.argv[1])
-result_path = Path(sys.argv[2])
-
-errors: list[str] = []
-if jsonl_path.exists():
-    for raw_line in jsonl_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        try:
-            obj = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        event_type = obj.get("type")
-        if event_type == "turn.failed":
-            message = obj.get("error", {}).get("message")
-            if isinstance(message, str) and message:
-                errors.append(message)
-        elif event_type == "error":
-            message = obj.get("message")
-            if isinstance(message, str) and message:
-                errors.append(message)
-
-if errors:
-    print(errors[-1])
-    raise SystemExit(1)
-
-if not result_path.exists():
-    print(f"missing final result file: {result_path}")
-    raise SystemExit(1)
-
-content = result_path.read_text(encoding="utf-8").strip()
-if not content:
-    print("codex run completed without a final agent message")
-    raise SystemExit(1)
-PY
+  python3 "$ROOT/tools/assert_codex_success.py" "$jsonl_file" "$result_file"
 }
 
 run_codex_command() {
