@@ -222,6 +222,18 @@ append_run_remark() {
   } >> "$remarks_file"
 }
 
+ensure_current_run_shared_state() {
+  mkdir -p "$RUN_ROOT"
+
+  if [[ ! -f "$RUN_ROOT/remarks.md" ]]; then
+    printf '# Run Remarks\n\n' > "$RUN_ROOT/remarks.md"
+  fi
+
+  if [[ ! -f "$RUN_ROOT/notes.md" ]]; then
+    printf '# Run Notes\n\n' > "$RUN_ROOT/notes.md"
+  fi
+}
+
 append_recovery_log() {
   local title="$1"
   local body="$2"
@@ -2662,6 +2674,7 @@ seed_new_run() {
   maybe_backup_current_run_before_new
   log "preparing current run"
   python3 "$ROOT/tools/reset_current_run.py" --repo-root "$ROOT" >/dev/null
+  ensure_current_run_shared_state
 
   mkdir -p "$EVIDENCE_ROOT"
   python3 "$ROOT/tools/session_registry.py" init --registry "$SESSIONS_JSON" >/dev/null
@@ -2682,6 +2695,7 @@ seed_new_run() {
 seed_change_run() {
   [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "Expected existing runs/current/ for $RUN_MODE_NAME."
   [[ -d "$ROOT/app" ]] || fatal_exit "missing app baseline" "Expected existing app/ for $RUN_MODE_NAME."
+  ensure_current_run_shared_state
 
   rm -f "$DELIVERY_APPROVED_MD" "$CEO_DELIVERY_VALIDATION_MD"
 
@@ -2722,6 +2736,7 @@ seed_change_run() {
 
 prepare_resume() {
   [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "Cannot resume because runs/current/ does not exist."
+  ensure_current_run_shared_state
   mkdir -p "$EVIDENCE_ROOT"
   python3 "$ROOT/tools/session_registry.py" init --registry "$SESSIONS_JSON" >/dev/null
   python3 "$ROOT/tools/reconcile_worker_state.py" \
