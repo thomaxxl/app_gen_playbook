@@ -149,6 +149,7 @@ FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 LONG_MODEL="${LONG_MODEL:-}"
 REASONING_EFFORT="${REASONING_EFFORT:-high}"
+CODEX_COMMAND_TIMEOUT_SECONDS="${CODEX_COMMAND_TIMEOUT_SECONDS:-900}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
 DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-}"
@@ -1555,6 +1556,8 @@ run_codex_command() {
   local jsonl_file="$6"
   shift 6
   local cmd=("$@")
+  local codex_rc=0
+  local timeout_seconds="$CODEX_COMMAND_TIMEOUT_SECONDS"
 
   (
     cd "$ROOT"
@@ -1568,7 +1571,11 @@ run_codex_command() {
       log "codex-reasoning-effort-unsupported value=$REASONING_EFFORT"
       REASONING_EFFORT_WARNED=1
     fi
-    "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
+    if [[ "$timeout_seconds" =~ ^[0-9]+$ && "$timeout_seconds" -gt 0 ]]; then
+      timeout "${timeout_seconds}s" "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
+    else
+      "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
+    fi
   ) &
   local codex_pid="$!"
 
@@ -1580,6 +1587,12 @@ run_codex_command() {
   done
 
   wait "$codex_pid"
+  codex_rc=$?
+  if [[ "$codex_rc" -eq 124 && "$timeout_seconds" =~ ^[0-9]+$ && "$timeout_seconds" -gt 0 ]]; then
+    printf '%s\n' "{\"type\":\"error\",\"message\":\"codex execution timed out after ${timeout_seconds}s\"}" >> "$jsonl_file"
+    log "codex execution timed out role=${runtime_role} timeout=${timeout_seconds}s"
+  fi
+  return "$codex_rc"
 }
 
 run_codex_fresh() {
