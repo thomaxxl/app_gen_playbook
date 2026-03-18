@@ -50,6 +50,32 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
         self.assertIn('if run_recovery_pass; then', script)
 
+    def test_operator_notes_outrank_generic_recovery_and_can_clear_stale_operator_action(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn("pending_operator_priority_role()", script)
+        self.assertIn("clear_superseded_operator_action_required()", script)
+        self.assertIn("oldest_operator_queue_file()", script)
+        self.assertIn("archive_superseded_messages_for_dirs()", script)
+        self.assertIn('grep -Eqi \'^(from|sender):[[:space:]]*operator[[:space:]]*$\' "$path"', script)
+        self.assertIn('message_supersedes_basename()', script)
+        self.assertIn('if clear_superseded_operator_action_required; then', script)
+        self.assertIn('operator_priority_role="$(pending_operator_priority_role || true)"', script)
+        main_loop_index = script.index("while true; do")
+        self.assertLess(
+            script.index('operator_priority_role="$(pending_operator_priority_role || true)"', main_loop_index),
+            script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
+        )
+
+    def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn('if [[ "$sender" == "ceo" ]]; then', script)
+        self.assertIn('orchestrator-note-archived-without-reescalation', script)
+        self.assertIn('CEO-originated reroute notes must not be escalated back to CEO.', script)
+
     def test_runner_archives_duplicate_queue_traces_before_claiming(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")

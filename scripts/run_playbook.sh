@@ -329,6 +329,16 @@ process_orchestrator_inbox() {
 
   sender="$(message_field from "$processed_path")"
   topic="$(message_field topic "$processed_path")"
+  if [[ "$sender" == "ceo" ]]; then
+    log "orchestrator-note-archived-without-reescalation message=$(basename "$processed_path") topic=${topic:-unspecified}"
+    append_recovery_log \
+      "Orchestrator Note Archived Without CEO Re-escalation" \
+      "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- CEO-originated reroute notes must not be escalated back to CEO."
+    append_run_remark \
+      "Orchestrator Note Archived Without CEO Re-escalation" \
+      "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- CEO-originated reroute notes now return control to normal dispatch instead of looping back into CEO."
+    return 0
+  fi
   reason="orchestrator-routed escalation requires CEO triage: ${processed_path#$ROOT/}"
   ceo_note="$(emit_ceo_escalation_note "$processed_path" "$sender" "$topic" "$reason")"
 
@@ -1207,6 +1217,150 @@ oldest_role_queue_file() {
   done | sort -t: -k3,3 | head -n 1
 }
 
+oldest_operator_queue_file() {
+  local lane="$1"
+  shift
+  local role_dir path
+  for role_dir in "$@"; do
+    for path in "$role_dir/$lane"/*.md; do
+      [[ -f "$path" ]] || continue
+      if grep -Eqi '^(from|sender):[[:space:]]*operator[[:space:]]*$' "$path"; then
+        printf '%s::%s\n' "$role_dir" "$path"
+      fi
+    done
+  done | sort -t: -k3,3 | head -n 1
+}
+
+message_supersedes_basename() {
+  local message_path="$1"
+  local supersedes
+  supersedes="$(message_field supersedes "$message_path" | tr -d '\r')"
+  if [[ -z "$supersedes" ]]; then
+    return 1
+  fi
+  basename "$supersedes"
+}
+
+archive_superseded_queue_trace() {
+  local runtime_role="$1"
+  local superseded_path="$2"
+  local processed_dir="$3"
+  local source_lane="$4"
+  local superseding_path="$5"
+  local stamp base superseding_base archived_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  base="$(basename "$superseded_path" .md)"
+  superseding_base="$(basename "$superseding_path" .md)"
+  archived_path="$processed_dir/${base}.superseded-by-${superseding_base}-${source_lane}-${stamp}.md"
+  mv "$superseded_path" "$archived_path"
+  log "queue-superseded-archived role=$runtime_role source=$source_lane archived=${archived_path#$ROOT/} superseding=$(basename "$superseding_path")"
+}
+
+archive_superseded_messages_for_dirs() {
+  local runtime_role="$1"
+  shift
+  local candidate_dirs=("$@")
+  local changed=1
+  local role_dir path processed_dir supersedes lane target_path target_role_dir
+
+  for role_dir in "${candidate_dirs[@]}"; do
+    mkdir -p "$role_dir/processed"
+  done
+
+  for role_dir in "${candidate_dirs[@]}"; do
+    for path in "$role_dir/inflight"/*.md "$role_dir/inbox"/*.md; do
+      [[ -f "$path" ]] || continue
+      supersedes="$(message_supersedes_basename "$path" || true)"
+      [[ -n "$supersedes" ]] || continue
+      target_role_dir=""
+      for target_role_dir in "${candidate_dirs[@]}"; do
+        for lane in inflight inbox; do
+          target_path="$target_role_dir/$lane/$supersedes"
+          [[ -f "$target_path" ]] || continue
+          [[ "$target_path" == "$path" ]] && continue
+          processed_dir="$target_role_dir/processed"
+          mkdir -p "$processed_dir"
+          archive_superseded_queue_trace "$runtime_role" "$target_path" "$processed_dir" "$lane" "$path"
+          changed=0
+        done
+      done
+    done
+  done
+
+  return "$changed"
+}
+
+pending_operator_priority_role() {
+  local role_dir role_name runtime_role
+  local operator_line path best_role="" best_name=""
+
+  while IFS= read -r role_dir; do
+    [[ -n "$role_dir" ]] || continue
+    role_name="$(basename "$role_dir")"
+    [[ "$role_name" == "orchestrator" ]] && continue
+    runtime_role="$(runtime_role_from_label "$role_name" 2>/dev/null || true)"
+    [[ -n "$runtime_role" ]] || continue
+
+    for operator_line in \
+      "$(oldest_operator_queue_file inflight "$role_dir")" \
+      "$(oldest_operator_queue_file inbox "$role_dir")"; do
+      [[ -n "$operator_line" ]] || continue
+      path="${operator_line#*::}"
+      if [[ -z "$best_name" || "$(basename "$path")" < "$best_name" ]]; then
+        best_name="$(basename "$path")"
+        best_role="$runtime_role"
+      fi
+    done
+  done < <(canonical_queue_dirs)
+
+  [[ -n "$best_role" ]] || return 1
+  printf '%s\n' "$best_role"
+}
+
+newer_pending_operator_override_path() {
+  local role_dir path newest=""
+
+  [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
+
+  while IFS= read -r role_dir; do
+    [[ -n "$role_dir" ]] || continue
+    [[ "$(basename "$role_dir")" == "orchestrator" ]] && continue
+    for path in "$role_dir/inflight"/*.md "$role_dir/inbox"/*.md; do
+      [[ -f "$path" ]] || continue
+      if ! grep -Eqi '^(from|sender):[[:space:]]*operator[[:space:]]*$' "$path"; then
+        continue
+      fi
+      if [[ "$path" -nt "$OPERATOR_ACTION_REQUIRED_MD" ]] && [[ -z "$newest" || "$path" -nt "$newest" ]]; then
+        newest="$path"
+      fi
+    done
+  done < <(canonical_queue_dirs)
+
+  [[ -n "$newest" ]] || return 1
+  printf '%s\n' "$newest"
+}
+
+clear_superseded_operator_action_required() {
+  local override_path archive_dir archived_path stamp
+
+  override_path="$(newer_pending_operator_override_path || true)"
+  [[ -n "$override_path" ]] || return 1
+
+  archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/operator-action-required.${stamp}.md"
+  mv "$OPERATOR_ACTION_REQUIRED_MD" "$archived_path"
+  log "operator-action-required-archived override=$(basename "$override_path") archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Operator Override Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nNewer operator note:\n- ${override_path#$ROOT/}"
+  append_run_remark \
+    "Operator Override Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nNewer operator note:\n- ${override_path#$ROOT/}"
+  return 0
+}
+
 claim_message() {
   local runtime_role="$1"
   local candidate_dirs=()
@@ -1232,11 +1386,18 @@ claim_message() {
     mkdir -p "$role_dir/inflight" "$role_dir/inbox" "$role_dir/processed"
   done
 
-  local existing oldest claimed basename source_role_dir
+  local existing oldest claimed basename source_role_dir operator_priority_line
   while true; do
+    archive_superseded_messages_for_dirs "$runtime_role" "${candidate_dirs[@]}" || true
+
     existing=""
     source_role_dir=""
-    while IFS= read -r line; do
+    operator_priority_line="$(oldest_operator_queue_file inflight "${candidate_dirs[@]}")"
+    if [[ -n "$operator_priority_line" ]]; then
+      source_role_dir="${operator_priority_line%%::*}"
+      existing="${operator_priority_line#*::}"
+    fi
+    while [[ -z "$existing" ]] && IFS= read -r line; do
       source_role_dir="${line%%::*}"
       existing="${line#*::}"
       break
@@ -1255,7 +1416,12 @@ claim_message() {
 
     oldest=""
     source_role_dir=""
-    while IFS= read -r line; do
+    operator_priority_line="$(oldest_operator_queue_file inbox "${candidate_dirs[@]}")"
+    if [[ -n "$operator_priority_line" ]]; then
+      source_role_dir="${operator_priority_line%%::*}"
+      oldest="${operator_priority_line#*::}"
+    fi
+    while [[ -z "$oldest" ]] && IFS= read -r line; do
       source_role_dir="${line%%::*}"
       oldest="${line#*::}"
       break
@@ -1553,15 +1719,29 @@ PY
 
 main_loop() {
   local parallel_started=0
-  local did_work completion_detail priority_role stall_key liveness_output
+  local did_work completion_detail priority_role operator_priority_role stall_key liveness_output
   priority_role="$TARGET_ROLE"
 
   while true; do
+    did_work=0
+
+    if clear_superseded_operator_action_required; then
+      did_work=1
+    fi
+
+    operator_priority_role="$(pending_operator_priority_role || true)"
+    if [[ -n "$operator_priority_role" ]]; then
+      maybe_enforce_dependency_provisioning_preflight "$operator_priority_role"
+      if run_role_once "$operator_priority_role"; then
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
+    fi
+
     if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
       operator_action_required_exit
     fi
 
-    did_work=0
     if normalize_queue_state; then
       did_work=1
     fi

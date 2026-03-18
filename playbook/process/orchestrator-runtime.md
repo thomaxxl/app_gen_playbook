@@ -235,6 +235,11 @@ declared prepared dependency roots are missing or incomplete, the orchestrator
 MUST write `runs/current/orchestrator/operator-action-required.md` and stop
 instead of invoking installer behavior indirectly through the roles.
 
+If a newer pending `from: operator` inbox or inflight note exists after an
+earlier `runs/current/orchestrator/operator-action-required.md` was written,
+the orchestrator MUST archive that stale operator-action file and let the
+newer operator note run before reissuing the same blocked diagnosis.
+
 ## Writable-root rule
 
 When the orchestrator starts Codex from a role-local runtime directory under
@@ -422,6 +427,11 @@ The CEO intervention path MUST:
 When `runs/current/orchestrator/operator-action-required.md` exists, the
 orchestrator MUST terminate non-zero with that file's contents as the final
 operator-facing diagnosis instead of continuing to re-queue recovery work.
+
+Exception: if a newer pending `from: operator` note exists, the orchestrator
+MUST treat that note as a superseding unblock attempt, archive the stale
+operator-action file, and give the operator note precedence over generic
+recovery or CEO re-escalation.
 
 ## Active-but-idle detection
 

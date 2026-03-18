@@ -36,6 +36,9 @@ Example:
 - Agents process inbox items oldest-first by filename timestamp.
 - If a newer message supersedes an older one, the newer message must include:
   - `supersedes: <filename>`
+- A pending `from: operator` message outranks generic recovery or escalation
+  notes for the same receiver lane and must be processed before older
+  orchestrator-created recovery traffic.
 - Blocked items remain in `inbox/` only if they are still actionable.
 - If a blocked item is no longer actionable, move it to `processed/` and emit a
   follow-up handoff to the next responsible agent.
