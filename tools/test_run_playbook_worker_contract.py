@@ -28,13 +28,13 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
-    def test_runner_supports_ceo_only_yolo_flag(self) -> None:
+    def test_runner_supports_playbook_wide_yolo_flag(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
 
-        self.assertIn("CEO_YOLO=0", script)
+        self.assertIn("PLAYBOOK_YOLO=0", script)
         self.assertIn("    --yolo)", script)
-        self.assertIn('if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then', script)
+        self.assertIn('if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then', script)
         self.assertIn('cmd+=(--dangerously-bypass-approvals-and-sandbox)', script)
         self.assertIn('cmd+=(--full-auto)', script)
         self.assertNotIn('cmd+=(--yolo)', script)
@@ -67,6 +67,18 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('operator_priority_role="$(pending_operator_priority_role || true)"', main_loop_index),
             script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
         )
+
+    def test_host_runtime_preflight_can_clear_sandbox_only_operator_blockers(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "run_playbook.sh").read_text(encoding="utf-8")
+
+        self.assertIn('PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-sandbox}"', script)
+        self.assertIn('RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"', script)
+        self.assertIn('HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"', script)
+        self.assertIn("write_runtime_environment_metadata()", script)
+        self.assertIn("perform_host_runtime_preflight()", script)
+        self.assertIn("clear_host_verified_operator_action_required()", script)
+        self.assertIn('if clear_host_verified_operator_action_required; then', script)
 
     def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]

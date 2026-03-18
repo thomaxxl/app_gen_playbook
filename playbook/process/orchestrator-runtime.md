@@ -8,8 +8,8 @@ The orchestrator MUST:
 
 - support `new-full-run`, `iterative-change-run`, `app-only-hotfix`, and
   `--resume`
-- support an optional top-level `--yolo` operator flag that affects only CEO
-  Codex turns
+- support an optional top-level `--yolo` operator flag that can affect the
+  full run
 - create a fresh local `runs/current/` from `runs/template/` for a new full
   run
 - seed the Product Manager inbox from the supplied brief or change request
@@ -117,10 +117,30 @@ The orchestrator SHOULD default to the local Codex CLI model/account default.
 
 If the operator starts `scripts/run_playbook.sh` with `--yolo`, the
 orchestrator MUST translate that operator flag into
-`--dangerously-bypass-approvals-and-sandbox` only for CEO `codex exec` and
-`codex exec resume` invocations. It MUST NOT apply that mode to Product
-Manager, Architect, Frontend, Backend, or DevOps turns, and it MUST NOT
-combine CEO yolo mode with `--full-auto`.
+`--dangerously-bypass-approvals-and-sandbox` for every role turn in that run.
+It MUST NOT combine yolo mode with `--full-auto`.
+
+The orchestrator SHOULD also honor:
+
+- `PLAYBOOK_RUNTIME_ENV=sandbox|host`
+
+It MUST record that setting in `runs/current/orchestrator/runtime-environment.json`.
+
+When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST write a host-runtime
+preflight artifact under:
+
+- `runs/current/evidence/host-runtime-verification.md`
+
+That artifact SHOULD at minimum capture:
+
+- whether localhost bind succeeds for the declared frontend and backend ports
+- whether the approved backend runtime path can import the required FastAPI
+  stack
+
+If host-runtime preflight proves the previously cited bind and backend-runtime
+constraints are satisfied, the orchestrator MUST treat any older
+`operator-action-required.md` file based only on those constraints as stale,
+archive it, and continue routing work instead of blocking immediately.
 
 It MAY accept explicit model overrides through environment variables such as:
 
@@ -239,6 +259,13 @@ If a newer pending `from: operator` inbox or inflight note exists after an
 earlier `runs/current/orchestrator/operator-action-required.md` was written,
 the orchestrator MUST archive that stale operator-action file and let the
 newer operator note run before reissuing the same blocked diagnosis.
+
+If the current run is in `PLAYBOOK_RUNTIME_ENV=host` and
+`runs/current/evidence/host-runtime-verification.md` proves that localhost bind
+and the approved backend runtime path are available, the orchestrator MUST NOT
+preserve or recreate an operator-action block that still cites only the old
+sandbox listener failure or default-interpreter dependency failure. It MUST
+route the next verification or recovery step instead.
 
 ## Writable-root rule
 

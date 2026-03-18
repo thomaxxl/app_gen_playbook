@@ -13,7 +13,8 @@ MODE="new"
 RESUME=0
 TARGET_ROLE=""
 INPUT_FILE=""
-CEO_YOLO=0
+PLAYBOOK_YOLO=0
+PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-sandbox}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -27,7 +28,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --yolo)
-      CEO_YOLO=1
+      PLAYBOOK_YOLO=1
       shift
       ;;
     --role)
@@ -79,6 +80,14 @@ case "$MODE" in
     ;;
 esac
 
+case "$PLAYBOOK_RUNTIME_ENV" in
+  sandbox|host) ;;
+  *)
+    echo "error: unsupported PLAYBOOK_RUNTIME_ENV: $PLAYBOOK_RUNTIME_ENV" >&2
+    exit 2
+    ;;
+esac
+
 if [[ -n "$TARGET_ROLE" ]]; then
   case "$TARGET_ROLE" in
     product_manager|architect|frontend|backend|deployment|ceo) ;;
@@ -109,6 +118,8 @@ LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
+RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
+HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
 RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
 RUN_DASHBOARD_INIT="$RUN_DASHBOARD_ROOT/scripts/init_db.sh"
@@ -191,6 +202,88 @@ append_recovery_log() {
     printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
     printf '%s\n' "$body"
   } >> "$recovery_file"
+}
+
+write_runtime_environment_metadata() {
+  mkdir -p "$ORCH_ROOT"
+  cat > "$RUNTIME_ENVIRONMENT_JSON" <<EOF
+{
+  "runtime_env": "$PLAYBOOK_RUNTIME_ENV",
+  "playbook_yolo": $([[ "$PLAYBOOK_YOLO" -eq 1 ]] && echo true || echo false),
+  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+}
+
+write_host_runtime_verification() {
+  local frontend_status="$1"
+  local backend_status="$2"
+  local frontend_port="$3"
+  local backend_port="$4"
+  local backend_python="$5"
+  mkdir -p "$(dirname "$HOST_RUNTIME_VERIFICATION_MD")"
+  cat > "$HOST_RUNTIME_VERIFICATION_MD" <<EOF
+---
+owner: orchestrator
+phase: host-runtime-preflight
+status: $( [[ "$frontend_status" == "ok" && "$backend_status" == "ok" ]] && echo ready-for-handoff || echo blocked )
+last_updated_by: orchestrator
+runtime_env: host
+---
+
+# Host Runtime Verification
+
+- frontend_bind: $frontend_status
+- backend_venv_imports: $backend_status
+- frontend_port: $frontend_port
+- backend_port: $backend_port
+- backend_python: $backend_python
+- updated_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+EOF
+}
+
+perform_host_runtime_preflight() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
+
+  local frontend_port backend_port backend_python frontend_status backend_status
+  frontend_port="${FRONTEND_PORT:-5173}"
+  backend_port="${BACKEND_PORT:-5656}"
+  backend_python="${BACKEND_VENV:-$ROOT/app/backend/.venv/bin/python}"
+  if [[ -d "$backend_python" ]]; then
+    backend_python="$backend_python/bin/python"
+  fi
+  frontend_status="failed"
+  backend_status="failed"
+
+  if python3 - "$frontend_port" "$backend_port" <<'PY' >/dev/null 2>&1
+from __future__ import annotations
+import socket
+import sys
+
+frontend_port = int(sys.argv[1])
+backend_port = int(sys.argv[2])
+for port in (frontend_port, backend_port):
+    sock = socket.socket()
+    try:
+        sock.bind(("127.0.0.1", port))
+    finally:
+        sock.close()
+PY
+  then
+    frontend_status="ok"
+  fi
+
+  if [[ -x "$backend_python" ]] && "$backend_python" - <<'PY' >/dev/null 2>&1
+import fastapi  # noqa: F401
+import sqlalchemy  # noqa: F401
+import safrs  # noqa: F401
+import uvicorn  # noqa: F401
+PY
+  then
+    backend_status="ok"
+  fi
+
+  write_host_runtime_verification "$frontend_status" "$backend_status" "$frontend_port" "$backend_port" "$backend_python"
 }
 
 emit_ceo_stall_note() {
@@ -478,6 +571,47 @@ EOF
     body="The run requires operator action, but no operator-action-required file was present."
   fi
   blocked_exit "run requires operator action" "$body"
+}
+
+host_runtime_verification_field_ok() {
+  local field="$1"
+  [[ -f "$HOST_RUNTIME_VERIFICATION_MD" ]] || return 1
+  grep -Eq "^- ${field}:[[:space:]]*ok$" "$HOST_RUNTIME_VERIFICATION_MD"
+}
+
+clear_host_verified_operator_action_required() {
+  [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+
+  local needs_frontend needs_backend archive_dir archived_path stamp
+  needs_frontend=0
+  needs_backend=0
+  grep -Eqi 'frontend listener bind|required by `app/run\.sh`|browser-level verification' "$OPERATOR_ACTION_REQUIRED_MD" && needs_frontend=1
+  grep -Eqi 'default interpreter|FastAPI dependency set|backend runtime verification' "$OPERATOR_ACTION_REQUIRED_MD" && needs_backend=1
+
+  if [[ "$needs_frontend" -eq 1 ]] && ! host_runtime_verification_field_ok frontend_bind; then
+    return 1
+  fi
+  if [[ "$needs_backend" -eq 1 ]] && ! host_runtime_verification_field_ok backend_venv_imports; then
+    return 1
+  fi
+  if [[ "$needs_frontend" -eq 0 && "$needs_backend" -eq 0 ]]; then
+    return 1
+  fi
+
+  archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/operator-action-required.host-cleared.${stamp}.md"
+  mv "$OPERATOR_ACTION_REQUIRED_MD" "$archived_path"
+  log "operator-action-required-host-cleared archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Host Runtime Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nHost runtime verification:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}"
+  append_run_remark \
+    "Host Runtime Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nHost runtime verification:\n- ${HOST_RUNTIME_VERIFICATION_MD#$ROOT/}"
+  return 0
 }
 
 stall_exit() {
@@ -958,7 +1092,7 @@ run_codex_fresh() {
   local cmd=(
     codex exec
   )
-  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+  if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then
     cmd+=(--dangerously-bypass-approvals-and-sandbox)
   else
     cmd+=(--full-auto)
@@ -986,7 +1120,7 @@ run_codex_resume() {
   local cmd=(
     codex exec resume
   )
-  if [[ "$runtime_role" == "ceo" && "$CEO_YOLO" -eq 1 ]]; then
+  if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then
     cmd+=(--dangerously-bypass-approvals-and-sandbox)
   else
     cmd+=(--full-auto)
@@ -1651,6 +1785,8 @@ seed_new_run() {
   python3 "$ROOT/tools/checkpoint_run_state.py" init-run \
     --repo-root "$ROOT" \
     --mode "$RUN_MODE_NAME" >/dev/null
+  write_runtime_environment_metadata
+  perform_host_runtime_preflight
 }
 
 seed_change_run() {
@@ -1687,6 +1823,8 @@ seed_change_run() {
     --repo-root "$ROOT" \
     --mode "$RUN_MODE_NAME" \
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
+  write_runtime_environment_metadata
+  perform_host_runtime_preflight
 }
 
 prepare_resume() {
@@ -1711,6 +1849,8 @@ PY
 )"
   fi
   set_run_status "active"
+  write_runtime_environment_metadata
+  perform_host_runtime_preflight
 
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true
@@ -1726,6 +1866,10 @@ main_loop() {
     did_work=0
 
     if clear_superseded_operator_action_required; then
+      did_work=1
+    fi
+
+    if clear_host_verified_operator_action_required; then
       did_work=1
     fi
 
