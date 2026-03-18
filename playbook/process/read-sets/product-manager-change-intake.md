@@ -18,3 +18,8 @@ After these reads, load only the current change-workspace files, the active
 role-load manifest when it exists, and the exact product artifacts explicitly
 referenced by the inbox item or task bundle. Do not read
 `runs/current/artifacts/product/` as a broad tree.
+
+For review-style change requests that challenge the current accepted app,
+`acceptance-criteria.md` and `custom-pages.md` SHOULD stay in scope even if the
+current implementation still matches the accepted baseline, because the review
+is questioning whether that baseline remains acceptable.

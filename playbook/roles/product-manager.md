@@ -111,6 +111,18 @@ The Product Manager MUST treat:
 - `../../runs/current/artifacts/product/**` as the accepted baseline during
   iteration until Phase I7 promotion
 
+But if a change request is a review-style critique that lists concrete defects,
+weaknesses, or recommendations against the current accepted app, the Product
+Manager MUST treat the accepted baseline as challenged. In that case:
+
+- matching the current app to the accepted baseline is not enough to declare a
+  no-op
+- the change packet MUST reopen the product, UX, and implementation scope
+  needed to resolve the cited findings unless exact evidence proves each
+  finding is already resolved
+- `affected-artifacts.md`, `affected-app-paths.md`, and `reopened-gates.md`
+  MUST stay explicit until those findings are resolved or disproved
+
 - `../../runs/current/input.md` as the canonical stored brief
 - `../../runs/current/role-state/product_manager/inbox/INPUT.md` as the
   seeded actionable copy

@@ -32,6 +32,9 @@ Use this mode when a client request changes:
 - API shape
 - model or relationship shape
 - enabled capability packs
+- or when a review or critique says the currently accepted app/baseline is not
+  good enough and must be changed, even if the current app still matches the
+  last accepted baseline exactly
 
 Behavior:
 
@@ -42,6 +45,8 @@ Behavior:
   later iteration bootstrap
 - candidate design changes live under `runs/current/changes/<change_id>/candidate/artifacts/**`
 - the accepted baseline does not change until Phase I7 promotion
+- matching the current app to the accepted baseline does NOT make the change a
+  no-op when the request is explicitly challenging that accepted baseline
 
 ## `app-only-hotfix`
 

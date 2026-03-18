@@ -43,6 +43,11 @@ Rules:
   writable design-artifact target before change acceptance
 - `app/` remains the implementation target
 - promotion into the accepted baseline happens only at Phase I7
+- a review or critique that says the accepted baseline is inadequate reopens
+  iteration work even when the current app still matches that baseline
+- in that case, baseline alignment is comparison input only; it MUST NOT be used
+  as proof that the change packet is a no-op unless the raised findings are
+  explicitly disproved with cited current evidence
 
 ## Role-load manifests
 

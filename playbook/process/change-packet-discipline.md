@@ -27,6 +27,12 @@ Rules:
   default scope boundary for change reads and writes
 - change-run task bundles MUST NOT justify reading whole artifact trees or
   whole `app/frontend/` or `app/backend/` subtrees by default
+- if `request.md` is a review-style critique that lists concrete defects,
+  weaknesses, or recommendations against the current accepted app, the packet
+  MUST treat that as a baseline challenge rather than an automatic no-op
+- review-style change packets MUST keep `affected-artifacts.md`,
+  `affected-app-paths.md`, and `reopened-gates.md` explicit until the packet
+  cites exact evidence that every raised finding is already resolved
 - if a task needs more than the current change packet provides, the owning role
   MUST update the packet or issue a narrower handoff instead of falling back to
   a broad repo scan

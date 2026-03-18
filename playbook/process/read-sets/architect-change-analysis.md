@@ -17,3 +17,8 @@ After these reads, load only the current change-workspace files, the active
 role-load manifest when it exists, the exact product or architecture artifacts
 explicitly affected by the change, and app paths named by the inbox item when
 baseline alignment requires them. Do not read artifact or `app/` trees broadly.
+
+When the change packet marks a review-driven delta or baseline challenge,
+baseline alignment MUST be treated as comparison input only. Do not collapse the
+packet to a no-op unless the current app and cited evidence explicitly resolve
+the review findings.

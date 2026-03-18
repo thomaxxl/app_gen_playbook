@@ -96,6 +96,12 @@ The Architect owns and MUST maintain:
 - `../../runs/current/artifacts/architecture/dependency-provisioning.md`
 - role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
+During change analysis, if the change packet marks a baseline challenge or
+review-driven delta, the Architect MUST NOT collapse the packet to a no-op
+solely because the current app still matches the accepted baseline. No-op is
+allowed only when the current app and cited evidence explicitly resolve every
+raised finding.
+
 The Architect MUST replace starter-placeholder content in those gating
 artifacts before Phase 2 is handed off for implementation.
 

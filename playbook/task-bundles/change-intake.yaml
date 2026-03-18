@@ -11,6 +11,8 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/product/acceptance-criteria.md
+  - runs/current/artifacts/product/custom-pages.md
 writable_targets:
   - runs/current/changes/*/request.md
   - runs/current/changes/*/classification.yaml
