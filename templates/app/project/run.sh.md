@@ -151,8 +151,16 @@ PY
   [[ -d "$BACKEND_DIR/.deps" ]] && [[ -d "$BACKEND_DIR/.deps/fastapi" ]] && [[ -d "$BACKEND_DIR/.deps/safrs" ]]
 }
 
+backend_source_ready() {
+  [[ -f "$BACKEND_DIR/src/my_app/__init__.py" ]]
+}
+
 require_installed_dependencies() {
   local missing=()
+
+  if ! backend_source_ready; then
+    missing+=("backend source package in backend/src/my_app")
+  fi
 
   if ! backend_dependencies_ready; then
     if [[ -n "$BACKEND_VENV_DIR" ]]; then

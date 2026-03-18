@@ -50,6 +50,13 @@ def check_backend_venv(repo_root: Path) -> CheckResult:
     )
 
 
+def check_backend_source_package(repo_root: Path) -> CheckResult:
+    package_init = repo_root / "app" / "backend" / "src" / "my_app" / "__init__.py"
+    if package_init.exists():
+        return CheckResult("backend_source", "ok", f"found backend package: {package_init}")
+    return CheckResult("backend_source", "blocked", f"missing backend package: {package_init}")
+
+
 def check_node_modules(repo_root: Path) -> CheckResult:
     frontend_root = repo_root / "app" / "frontend"
     node_modules = frontend_root / "node_modules"
@@ -188,6 +195,7 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     results = [
+        check_backend_source_package(repo_root),
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),
