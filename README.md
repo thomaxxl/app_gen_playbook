@@ -45,8 +45,10 @@ on this file for execution rules.
 - `scripts/run_playbook_interactive.sh`
   Interactive wrapper for run configuration and dispatch.
 - `scripts/clean.sh`
-  Cleans local `runs/current/` and `app/` without touching tracked starter or
-  example content.
+  Saves a filtered snapshot of local `runs/current/` and `app/` under
+  `saved/`, then cleans the workspace without touching tracked starter or
+  example content. The automatic snapshot omits local dependency trees such as
+  `.venv`, `.deps`, and `node_modules`.
 - `scripts/save_run.sh`
   Archives local `runs/current/` and `app/` under `saved/`, with an optional
   `--clean` step to reset the workspace after the snapshot succeeds.
@@ -134,6 +136,10 @@ resetting the workspace:
 ```
 
 That stores a local snapshot under `saved/` and then runs the normal cleanup.
+
+If you only want to clean the workspace, `./scripts/clean.sh` now saves a
+pre-clean snapshot automatically under `saved/` first, excluding local
+dependency trees.
 
 For authoritative iteration on an existing app:
 

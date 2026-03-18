@@ -13,6 +13,7 @@ RUN_CURRENT="$ROOT/runs/current"
 APP_DIR="$ROOT/app"
 BACKEND_VENV_LINK="$APP_DIR/backend/.venv"
 FRONTEND_NODE_MODULES_LINK="$APP_DIR/frontend/node_modules"
+save_output=""
 
 backend_venv_target=""
 frontend_node_modules_target=""
@@ -23,6 +24,15 @@ fi
 
 if [[ -L "$FRONTEND_NODE_MODULES_LINK" ]]; then
   frontend_node_modules_target="$(readlink "$FRONTEND_NODE_MODULES_LINK")"
+fi
+
+if [[ -d "$RUN_CURRENT" || -d "$APP_DIR" ]]; then
+  if ! save_output="$("$SCRIPT_DIR/save_run.sh" --name "pre-clean" --exclude-local-deps 2>&1)"; then
+    printf '%s\n' "$save_output" >&2
+    echo "error: failed to save workspace snapshot before clean" >&2
+    exit 1
+  fi
+  printf '%s\n' "$save_output"
 fi
 
 rm -rf "$RUN_CURRENT"
@@ -39,4 +49,4 @@ if [[ -n "$frontend_node_modules_target" ]]; then
   ln -s "$frontend_node_modules_target" "$FRONTEND_NODE_MODULES_LINK"
 fi
 
-echo "cleaned local runs/current and app/"
+echo "cleaned local runs/current and app/ (snapshot saved under saved/)"

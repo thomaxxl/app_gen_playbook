@@ -15,17 +15,35 @@ APP_DIR="$ROOT/app"
 
 clean_after=0
 archive_label=""
+exclude_local_deps=0
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/save_run.sh [--name LABEL] [--clean]
+Usage: ./scripts/save_run.sh [--name LABEL] [--clean] [--exclude-local-deps]
 
 Archives the current local run workspace and generated app under saved/<timestamp>[-label]/.
 
 Options:
-  --name LABEL   append a readable label to the archive directory name
-  --clean        run scripts/clean.sh after the archive succeeds
+  --name LABEL             append a readable label to the archive directory name
+  --clean                  run scripts/clean.sh after the archive succeeds
+  --exclude-local-deps     omit local dependency trees such as .venv, .deps,
+                           venv, env, and node_modules from the archived app
 EOF
+}
+
+copy_tree() {
+  local source_dir="$1"
+  local dest_dir="$2"
+  shift 2
+
+  mkdir -p "$dest_dir"
+  (
+    cd "$source_dir"
+    tar -cf - "$@" .
+  ) | (
+    cd "$dest_dir"
+    tar -xf -
+  )
 }
 
 while [[ $# -gt 0 ]]; do
@@ -40,6 +58,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --clean)
       clean_after=1
+      shift
+      ;;
+    --exclude-local-deps)
+      exclude_local_deps=1
       shift
       ;;
     -h|--help)
@@ -76,7 +98,22 @@ if [[ -d "$RUN_CURRENT" ]]; then
 fi
 
 if [[ -d "$APP_DIR" ]]; then
-  cp -a "$APP_DIR" "$archive_dir/app"
+  if [[ "$exclude_local_deps" -eq 1 ]]; then
+    copy_tree \
+      "$APP_DIR" \
+      "$archive_dir/app" \
+      --exclude='./backend/.venv' \
+      --exclude='./backend/.deps' \
+      --exclude='./backend/venv' \
+      --exclude='./backend/env' \
+      --exclude='./frontend/node_modules' \
+      --exclude='./node_modules' \
+      --exclude='./.venv' \
+      --exclude='./venv' \
+      --exclude='./env'
+  else
+    cp -a "$APP_DIR" "$archive_dir/app"
+  fi
   saved_any=1
 fi
 
@@ -95,6 +132,7 @@ cat >"$archive_dir/README.md" <<EOF
 - source_app_dir: \`$APP_DIR\`
 - archive_label: \`${archive_label:-none}\`
 - clean_after_save: \`$([[ "$clean_after" -eq 1 ]] && echo yes || echo no)\`
+- exclude_local_deps: \`$([[ "$exclude_local_deps" -eq 1 ]] && echo yes || echo no)\`
 
 Contents:
 
