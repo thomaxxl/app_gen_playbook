@@ -86,6 +86,24 @@ class CaptureFrontendBrowserProofTests(unittest.TestCase):
             self.assertFalse(ok)
             self.assertIn("capture_status=environment-blocked", detail)
 
+    def test_reads_bulleted_manifest_capture_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest_path = Path(tmp) / "manifest.md"
+            write_file(
+                manifest_path,
+                "\n".join(
+                    [
+                        "# UI Preview Manifest",
+                        "",
+                        "- capture_status: captured",
+                        "- command: npm run capture:ui-previews",
+                    ]
+                )
+                + "\n",
+            )
+
+            self.assertEqual(read_manifest_capture_status(manifest_path), "captured")
+
 
 if __name__ == "__main__":
     unittest.main()

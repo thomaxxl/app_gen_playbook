@@ -413,6 +413,84 @@ class RunPlaybookResumeTests(unittest.TestCase):
             archived = list(archive_dir.glob("pause-requested.resume-cleared.*.md"))
             self.assertTrue(archived)
 
+    def test_resume_clears_stale_operator_action_when_run_is_already_complete(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            script_target = repo_root / "scripts" / "run_playbook.sh"
+            script_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"blocked","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").write_text(
+                "# Operator Action Required\n\nStale blocked note.\n",
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 ready')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                "#!/usr/bin/env python3\nprint('run is complete')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("playbook run complete", result.stderr)
+            self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").exists())
+            archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "operator-action-archive"
+            archived = list(archive_dir.glob("operator-action-required.completed-cleared.*.md"))
+            self.assertTrue(archived)
+
 
 if __name__ == "__main__":
     unittest.main()

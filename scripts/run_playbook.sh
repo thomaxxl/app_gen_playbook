@@ -1225,6 +1225,26 @@ clear_browser_fallback_operator_action_required() {
   return 0
 }
 
+clear_completed_run_operator_action_required() {
+  [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
+  check_completion >/dev/null 2>&1 || return 1
+
+  local archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  local stamp archived_path
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/operator-action-required.completed-cleared.${stamp}.md"
+  mv "$OPERATOR_ACTION_REQUIRED_MD" "$archived_path"
+  log "operator-action-required-completed-cleared archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Completed Run Cleared Stale Block" \
+    "Archived stale operator-action file after the completion gate passed:\n- ${archived_path#$ROOT/}"
+  append_run_remark \
+    "Completed Run Cleared Stale Block" \
+    "Archived stale operator-action file after the completion gate passed:\n- ${archived_path#$ROOT/}"
+  return 0
+}
+
 clear_pause_requested_on_resume() {
   [[ -f "$PAUSE_REQUESTED_MD" ]] || return 1
 
@@ -2464,6 +2484,7 @@ PY
   clear_superseded_operator_action_required || true
   clear_host_verified_operator_action_required || true
   clear_browser_fallback_operator_action_required || true
+  clear_completed_run_operator_action_required || true
   clear_pause_requested_on_resume || true
 
   if ! check_completion >/dev/null 2>&1; then
@@ -2499,6 +2520,10 @@ main_loop() {
     fi
 
     if clear_browser_fallback_operator_action_required; then
+      did_work=1
+    fi
+
+    if clear_completed_run_operator_action_required; then
       did_work=1
     fi
 

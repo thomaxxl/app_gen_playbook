@@ -49,6 +49,9 @@ REQUIRED_EVIDENCE_OUTPUTS = (
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
+    r"(?im)^(?:-\s*)?capture_status:\s*([a-z0-9_-]+)\s*$"
+)
 CONTRACT_SAMPLES_REQUIRED_PATTERNS = (
     (
         re.compile(r"(?im)^##\s+SAFRS resource coverage\s*$"),
@@ -74,7 +77,8 @@ def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
     if not browser_proof.exists():
         return False
     proof_text = browser_proof.read_text(encoding="utf-8")
-    if "- capture_status: environment-blocked" not in proof_text:
+    proof_status_match = MARKDOWN_CAPTURE_STATUS_PATTERN.search(proof_text)
+    if proof_status_match is None or proof_status_match.group(1).strip().lower() != "environment-blocked":
         return False
 
     host_runtime = repo_root / "runs" / "current" / "evidence" / "host-runtime-verification.md"
@@ -413,10 +417,7 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 )
                 continue
         if relative_path == "runs/current/evidence/ui-previews/manifest.md":
-            capture_state_match = re.search(
-                r"(?im)^capture_status:\s*([a-z0-9_-]+)\s*$",
-                text,
-            )
+            capture_state_match = MARKDOWN_CAPTURE_STATUS_PATTERN.search(text)
             capture_state = capture_state_match.group(1).strip().lower() if capture_state_match else ""
             if capture_state not in UI_PREVIEW_CAPTURE_STATES:
                 blockers.append(

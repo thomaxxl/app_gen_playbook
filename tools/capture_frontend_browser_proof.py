@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,9 @@ CAPTURE_SETTLE_MILLISECONDS = 1000
 
 DEFAULT_ROUTES = (
     ("admin-entry", "/admin-app/"),
+)
+MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
+    r"(?im)^(?:-\s*)?capture_status:\s*([a-z0-9_-]+)\s*$"
 )
 
 
@@ -51,11 +55,11 @@ def has_ui_preview_capture_script(frontend_root: Path) -> bool:
 def read_manifest_capture_status(manifest_path: Path) -> str:
     if not manifest_path.exists():
         return ""
-    for raw_line in manifest_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if line.lower().startswith("capture_status:"):
-            return line.split(":", 1)[1].strip().lower()
-    return ""
+    text = manifest_path.read_text(encoding="utf-8")
+    match = MARKDOWN_CAPTURE_STATUS_PATTERN.search(text)
+    if match is None:
+        return ""
+    return match.group(1).strip().lower()
 
 
 def reviewable_image_files(screenshots_dir: Path) -> list[Path]:
