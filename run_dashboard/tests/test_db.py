@@ -29,6 +29,7 @@ class DatabaseTests(unittest.TestCase):
             try:
                 inspector = inspect(engine)
                 table_names = set(inspector.get_table_names())
+                handoff_columns = {column["name"] for column in inspector.get_columns("handoff_messages")}
             finally:
                 engine.dispose()
 
@@ -39,6 +40,11 @@ class DatabaseTests(unittest.TestCase):
             self.assertIn("run_files", table_names)
             self.assertIn("change_requests", table_names)
             self.assertIn("orchestrator_events", table_names)
+            self.assertIn("importance", handoff_columns)
+            self.assertIn("requires_dual_validation", handoff_columns)
+            self.assertIn("product_manager_validated", handoff_columns)
+            self.assertIn("architect_validated", handoff_columns)
+            self.assertIn("dual_validation_complete", handoff_columns)
 
     def test_write_snapshot_keeps_multiple_runs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

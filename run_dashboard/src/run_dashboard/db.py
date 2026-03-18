@@ -9,7 +9,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 
 metadata = MetaData()
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 schema_state = Table(
     "schema_state",
@@ -251,6 +251,11 @@ handoff_messages = Table(
     Column("to_role_code", String, nullable=False),
     Column("topic", String),
     Column("purpose", String),
+    Column("importance", String, nullable=False),
+    Column("requires_dual_validation", Boolean, nullable=False),
+    Column("product_manager_validated", Boolean, nullable=False),
+    Column("architect_validated", Boolean, nullable=False),
+    Column("dual_validation_complete", Boolean, nullable=False),
     Column("gate_status", String, nullable=False),
     Column("message_state", String, nullable=False),
     Column("inbox_path", String, nullable=False),

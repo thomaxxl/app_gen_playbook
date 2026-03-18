@@ -72,6 +72,77 @@ class MarkdownParsingTests(unittest.TestCase):
 
 
 class CollectorTests(unittest.TestCase):
+    def test_collect_handoffs_defaults_importance_to_medium(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root / "runs/current/role-state/backend/inbox/msg.md",
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: backend",
+                        "",
+                        "## Gate Status",
+                        "- pass",
+                    ]
+                ),
+            )
+            run_files, _, _ = collect_run_files(root, "run-1")
+            rows, _ = collect_handoffs(root, "run-1", run_files)
+            self.assertEqual(rows[0]["importance"], "medium")
+            self.assertFalse(rows[0]["requires_dual_validation"])
+            self.assertTrue(rows[0]["dual_validation_complete"])
+
+    def test_collect_handoffs_tracks_high_importance_dual_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root / "runs/current/role-state/backend/inbox/msg.md",
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: backend",
+                        "importance: high",
+                        "validated_by: product_manager, architect",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                    ]
+                ),
+            )
+            run_files, _, _ = collect_run_files(root, "run-1")
+            rows, _ = collect_handoffs(root, "run-1", run_files)
+            self.assertEqual(rows[0]["importance"], "high")
+            self.assertTrue(rows[0]["requires_dual_validation"])
+            self.assertTrue(rows[0]["product_manager_validated"])
+            self.assertTrue(rows[0]["architect_validated"])
+            self.assertTrue(rows[0]["dual_validation_complete"])
+
+    def test_collect_handoffs_keeps_warning_pending_until_both_validate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root / "runs/current/role-state/backend/inbox/msg.md",
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: backend",
+                        "importance: warning",
+                        "product_manager_validated: true",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                    ]
+                ),
+            )
+            run_files, _, _ = collect_run_files(root, "run-1")
+            rows, _ = collect_handoffs(root, "run-1", run_files)
+            self.assertEqual(rows[0]["importance"], "warning")
+            self.assertTrue(rows[0]["requires_dual_validation"])
+            self.assertTrue(rows[0]["product_manager_validated"])
+            self.assertFalse(rows[0]["architect_validated"])
+            self.assertFalse(rows[0]["dual_validation_complete"])
+
     def test_collect_handoffs_normalizes_devops_lane(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -69,6 +69,8 @@ Any non-`INPUT.md` inbox message should include:
 - `migration_required` (optional)
 - `regression_scope` (optional)
 - `task_id` (optional)
+- `importance` (optional)
+- `validated_by` (optional)
 - `supersedes` (optional)
 - `blocking issues`
 - `notes`
@@ -107,6 +109,27 @@ Use one of:
 - `pass`
 - `pass with assumptions`
 - `blocked`
+
+## Importance values
+
+Use one of:
+
+- `high`
+- `warning`
+- `medium`
+- `info`
+- `low`
+
+If omitted, downstream observers normalize the message to `medium`.
+
+Messages marked `warning` or `high` MUST be validated by both:
+
+- `product_manager`
+- `architect`
+
+Record that in the message header as:
+
+- `validated_by: product_manager, architect`
 
 ## Sender responsibilities
 

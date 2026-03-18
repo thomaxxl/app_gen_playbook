@@ -41,3 +41,22 @@ Domain projections then attach richer meaning to those file rows:
 The schema is versioned in `db.py`. Because this database is a derived mirror
 instead of an authoring surface, incompatible schema changes reset and rebuild
 the local SQLite file rather than running a complex migration chain.
+
+`handoff_messages` now includes normalized review metadata for message queues:
+
+- `importance`
+- `requires_dual_validation`
+- `product_manager_validated`
+- `architect_validated`
+- `dual_validation_complete`
+
+The collector normalizes `importance` to one of:
+
+- `high`
+- `warning`
+- `medium`
+- `info`
+- `low`
+
+When importance is `warning` or `high`, the row marks whether both Product
+Manager and Architect have validated the message.

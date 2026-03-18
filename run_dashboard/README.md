@@ -32,6 +32,20 @@ The dashboard DB is metadata-first:
 - the source filesystem remains authoritative
 - file bodies are still read from disk on demand when the UI needs them
 
+Handoff messages now also carry a normalized `importance` value for later
+filtering:
+
+- `high`
+- `warning`
+- `medium`
+- `info`
+- `low`
+
+If a message does not declare importance, the collector stores it as
+`medium`. `warning` and `high` messages also track whether both
+`product_manager` and `architect` have validated the message so later
+dashboards can filter for unresolved high-signal items.
+
 ## Layout
 
 - `schema/`

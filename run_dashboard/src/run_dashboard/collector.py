@@ -100,6 +100,8 @@ ARTIFACT_TEMPLATE_DIRS = {
     "backend-design": "backend_design",
 }
 
+MESSAGE_IMPORTANCE_VALUES = {"high", "warning", "medium", "info", "low"}
+
 NAMESPACE = uuid.UUID("d3e545b7-9556-4d5d-9021-04663cb8f5c9")
 
 
@@ -178,6 +180,53 @@ def as_string_list(value: object) -> list[str]:
         return [str(item).strip() for item in value if str(item).strip()]
     text = str(value).strip()
     return [text] if text else []
+
+
+def normalize_message_importance(value: object) -> str:
+    text = str(value or "").strip().lower().replace(" ", "_")
+    aliases = {
+        "warn": "warning",
+    }
+    normalized = aliases.get(text, text)
+    if normalized in MESSAGE_IMPORTANCE_VALUES:
+        return normalized
+    return "medium"
+
+
+def parse_truthy(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "validated", "complete", "approved"}
+
+
+def parse_role_validation_tokens(value: object) -> set[str]:
+    tokens: set[str] = set()
+    for item in as_string_list(value):
+        for raw_token in re.split(r"[,\n;]+", item):
+            token = normalize_role(raw_token.strip())
+            if token:
+                tokens.add(token)
+    return tokens
+
+
+def parse_message_validations(payload: dict[str, Any]) -> tuple[bool, bool]:
+    validated_roles = set()
+    for key in ("validated_by", "validated by", "approvals", "approved_by", "approved by"):
+        validated_roles.update(parse_role_validation_tokens(payload.get(key)))
+
+    product_manager_validated = (
+        "product_manager" in validated_roles
+        or parse_truthy(payload.get("product_manager_validated"))
+        or parse_truthy(payload.get("validated_by_product_manager"))
+    )
+    architect_validated = (
+        "architect" in validated_roles
+        or parse_truthy(payload.get("architect_validated"))
+        or parse_truthy(payload.get("validated_by_architect"))
+    )
+    return product_manager_validated, architect_validated
 
 
 def file_timestamp(path: Path) -> str:
@@ -814,6 +863,11 @@ def collect_handoffs(
         gate_status_raw = str(payload.get("gate status", "unspecified")).strip().lower().replace(" ", "_")
         if gate_status_raw not in {"pass", "pass_with_assumptions", "blocked", "unspecified"}:
             gate_status_raw = "unspecified"
+        importance = normalize_message_importance(
+            payload.get("importance") or payload.get("priority") or payload.get("severity")
+        )
+        requires_dual_validation = importance in {"warning", "high"}
+        product_manager_validated, architect_validated = parse_message_validations(payload)
         row = {
             "id": stable_uuid(run_db_id, "handoff", file_row["relative_path"]),
             "run_id": run_db_id,
@@ -830,6 +884,11 @@ def collect_handoffs(
             "to_role_code": normalize_role(str(payload.get("to", "")).strip()) or role_lane,
             "topic": str(payload.get("topic", "")).strip() or None,
             "purpose": str(payload.get("purpose", "")).strip() or None,
+            "importance": importance,
+            "requires_dual_validation": requires_dual_validation,
+            "product_manager_validated": product_manager_validated,
+            "architect_validated": architect_validated,
+            "dual_validation_complete": (not requires_dual_validation) or (product_manager_validated and architect_validated),
             "gate_status": gate_status_raw,
             "message_state": {"inbox": "inbox", "inflight": "processing", "processed": "processed"}.get(file_row.get("queue_state"), "inbox"),
             "inbox_path": file_row["relative_path"],
