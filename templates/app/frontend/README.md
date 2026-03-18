@@ -120,6 +120,9 @@ Notes:
 - the default generated form should visually resemble a typical admin form:
   mostly three standard fields per row, with compact scalar fields narrower
   and multiline fields full-width.
+- when the app needs large formatted prose blocks, the frontend SHOULD use
+  `react-markdown` rather than injected HTML. Keep secure defaults: no raw
+  HTML parsing, no `rehype-raw`, and explicit safe external-link handling.
 - `tests/resourceMetadata.test.ts.md` and `tests/schemaContext.test.ts.md`
   are part of the baseline relationship contract because sparse-schema apps
   must prove tab-group preservation and relationship fallback behavior.

@@ -29,6 +29,7 @@ Required runtime dependencies:
 - `react@19.1.0`
 - `react-dom@19.1.0`
 - `react-admin@5.8.0`
+- `react-markdown@10.1.0`
 - `react-router-dom@6.30.3`
 - `@mui/material@7.0.1`
 - `@mui/icons-material@7.0.1`
@@ -96,6 +97,7 @@ npm install \
   react@19.1.0 \
   react-dom@19.1.0 \
   react-admin@5.8.0 \
+  react-markdown@10.1.0 \
   react-router-dom@6.30.3 \
   @mui/material@7.0.1 \
   @mui/icons-material@7.0.1 \
@@ -172,6 +174,10 @@ npm install -D \
 
 - `react-router-dom` MUST be a direct dependency. The frontend MUST NOT rely
   on it being hoisted transitively by `react-admin`.
+- `react-markdown` is part of the baseline runtime so generated apps have a
+  standard safe path for large formatted text blocks. Frontend implementations
+  MUST keep the package on secure defaults and MUST NOT enable raw HTML
+  parsing by default.
 - The frontend MUST use the declared Node runtime and MUST NOT rely on
   whatever `node` happens to be present on the machine or in the base image.
 - The current starter dependency set is intentionally pinned to a Node 24-

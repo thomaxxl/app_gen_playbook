@@ -111,6 +111,20 @@ The frontend MUST:
 - avoid using placeholder text as the only label
 - explain empty states in user language rather than implementation language
 
+When a page needs to render a long formatted prose block such as help content,
+policy notes, onboarding guidance, release notes, or domain documentation, the
+frontend SHOULD render markdown through `react-markdown` instead of ad hoc
+HTML injection or manual paragraph splitting.
+
+Any `react-markdown` usage MUST keep secure defaults:
+
+- do not enable raw HTML parsing
+- do not add `rehype-raw`
+- keep link/image URL handling explicit and restrictive
+- add safe external-link attributes such as `rel="noopener noreferrer"` when
+  opening a new tab
+- prefer a small reviewed component map over rendering arbitrary custom HTML
+
 ## Relationship readability
 
 Generated pages and custom pages MUST prefer readable relationship labels or

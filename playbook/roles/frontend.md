@@ -163,6 +163,12 @@ React-admin resource grid or generic list shell as the first meaningful screen.
 If resource data appears on the entry page, it comes after the hero or behind a
 clear CTA.
 
+When the UI needs to render large formatted text blocks, the Frontend agent
+SHOULD use `react-markdown` as the default rendering path instead of injected
+HTML or bespoke formatting helpers. Any `react-markdown` usage MUST keep
+secure defaults: no raw HTML parsing, no `rehype-raw`, and explicit safe link
+handling.
+
 When a run materially changes visible UI behavior and a browser-capable
 Playwright environment is available, the Frontend agent MUST capture stable UI
 preview screenshots and place them under `../../runs/current/evidence/ui-previews/`.

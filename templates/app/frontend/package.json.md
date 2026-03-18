@@ -35,6 +35,7 @@ rather than an external package.
     "react": "19.1.0",
     "react-admin": "5.8.0",
     "react-dom": "19.1.0",
+    "react-markdown": "10.1.0",
     "react-router-dom": "6.30.3",
     "yaml": "2.8.1"
   },
@@ -104,6 +105,11 @@ The authoritative starter baseline remains this template plus
 `../../../specs/contracts/frontend/dependencies.md`. A tracked example app or
 generated app that drifts from that baseline MUST be treated as maintenance
 debt until the playbook is deliberately repinned.
+
+The baseline includes `react-markdown` so large formatted text blocks have a
+standard rendering path. Generated frontend code MUST keep secure defaults:
+do not enable raw HTML parsing, do not add `rehype-raw`, and keep external
+link handling explicit and safe.
 
 The starter baseline intentionally excludes external SAFRS-specific
 admin-client packages. Keep the generated `app/frontend/package.json` on the
