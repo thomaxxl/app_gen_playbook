@@ -115,6 +115,13 @@ as API-backed, the Backend agent MUST implement or clarify the required
 resource, read-model, or metadata lane instead of leaving the frontend to
 hardcode substitute values.
 
+When the backend is SAFRS-based and the required dynamic data does not map
+directly to stored model columns, the Backend agent MUST review the SAFRS
+documentation and available local examples for `jsonapi_attr` and
+`jsonapi_rpc` before inventing a custom workaround. Those mechanisms are
+approved ways to expose dynamic, computed, or operational data that still
+belongs on the API side.
+
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
 

@@ -20,6 +20,25 @@ The backend MAY satisfy UI data needs through one of these approved lanes:
 - dedicated operational endpoints when the data is not a good fit for CRUD
   resources
 
+In SAFRS-based backends, teams SHOULD also review the SAFRS documentation and
+examples for dynamic-data exposure patterns before inventing ad hoc APIs. In
+particular:
+
+- `jsonapi_attr` is appropriate for dynamic or computed attributes that belong
+  on a resource representation even when they do not come directly from a
+  database column
+- `jsonapi_rpc` is appropriate for explicit backend methods or operational
+  retrieval paths that do not fit cleanly as CRUD fields
+
+Use those capabilities when they fit the contract, instead of pushing the
+frontend to hardcode substitute values.
+
+Local workspace references currently include:
+
+- `../../../demo/vendor/safrs/README.md`
+- `../../../demo/examples/mini_examples/ex08_rpc.py`
+- `../../../projects/northwind/reference/models_guidance.py`
+
 ## Backend-owned dynamic classes
 
 The backend SHOULD own and expose:

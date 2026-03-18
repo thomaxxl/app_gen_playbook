@@ -9,6 +9,7 @@ The backend contract controls:
 - model naming and exposure rules
 - route discovery
 - API-backed dynamic data delivery and read-model obligations
+- SAFRS-native dynamic-data lanes such as `jsonapi_attr` and `jsonapi_rpc`
 - query commitments
 - backend validation and fallback verification
 

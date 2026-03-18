@@ -62,6 +62,8 @@ The real artifact MUST define:
 - which surfaces are backed only by CRUD resources
 - which surfaces require backend-computed read models, aggregate endpoints, or
   API metadata
+- when SAFRS-native mechanisms such as `jsonapi_attr` or `jsonapi_rpc` are the
+  preferred way to expose dynamic non-column or operational data
 - which values MAY stay static in the frontend bundle
 - which values are local UI state only and MUST NOT be mistaken for backend
   truth
