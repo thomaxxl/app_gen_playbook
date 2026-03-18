@@ -11,8 +11,8 @@ Always load:
 - `../../process/read-sets/devops-core.md`
 
 This role does not own product behavior, UX decisions, backend semantics, or
-business-rule logic. Baseline packaging still exists even when this role is
-inactive.
+business-rule logic. Baseline local delivery still exists even when this role
+is inactive. Docker/container delivery is optional for now.
 
 Load frontend/backend packaging details only when the current task needs them.
 

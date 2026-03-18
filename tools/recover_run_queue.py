@@ -118,26 +118,6 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
     (
-        "deployment",
-        "app/Dockerfile",
-        "missing",
-        (
-            "playbook/task-bundles/deployment.yaml",
-            "playbook/process/phases/phase-5-parallel-implementation.md",
-            "templates/app/deployment/Dockerfile.md",
-        ),
-    ),
-    (
-        "deployment",
-        "app/docker-compose.yml",
-        "missing",
-        (
-            "playbook/task-bundles/deployment.yaml",
-            "playbook/process/phases/phase-5-parallel-implementation.md",
-            "templates/app/deployment/docker-compose.yml.md",
-        ),
-    ),
-    (
         "backend",
         "app/reference/admin.yaml",
         "missing",

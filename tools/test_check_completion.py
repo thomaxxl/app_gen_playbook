@@ -13,6 +13,38 @@ def write_file(path: Path, content: str) -> None:
 
 
 class CheckCompletionTests(unittest.TestCase):
+    def test_missing_docker_outputs_are_non_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            for relative in (
+                "app/.gitignore",
+                "app/README.md",
+                "app/BUSINESS_RULES.md",
+                "app/install.sh",
+                "app/run.sh",
+                "app/reference/admin.yaml",
+                "app/backend/requirements.txt",
+                "app/backend/run.py",
+                "app/frontend/package.json",
+                "app/frontend/vite.config.ts",
+                "app/rules/rules.py",
+            ):
+                write_file(repo_root / relative, "present\n")
+
+            blockers = collect_blockers(repo_root)
+            paths = {blocker["path"] for blocker in blockers}
+            self.assertNotIn("app/Dockerfile", paths)
+            self.assertNotIn("app/docker-compose.yml", paths)
+
     def test_reports_blocked_architect_integration_work(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

@@ -123,8 +123,8 @@ To start a new run:
    - `../../runs/current/role-state/product_manager/inbox/INPUT.md`
 10. create local gitignored `../../app/`
 11. seed local `../../app/` from the relevant `../../templates/app/` files
-    needed for the generated-app baseline, including `Dockerfile` and
-    `docker-compose.yml`
+    needed for the generated-app baseline local runtime. Docker/container
+    delivery files may also be seeded when that lane is being attempted.
 12. materialize concrete dependency manifests in `../../app/` from the
     template sources plus the run-owned `runtime-bom.md` before install
 
@@ -151,8 +151,6 @@ When a run is complete:
 - local `../../app/` MUST contain the generated app
 - local `../../app/BUSINESS_RULES.md` MUST contain the generated-app snapshot
   of `../../runs/current/artifacts/product/business-rules.md`
-- local `../../app/Dockerfile` MUST exist
-- local `../../app/docker-compose.yml` MUST exist
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do

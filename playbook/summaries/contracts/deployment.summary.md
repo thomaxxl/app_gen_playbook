@@ -4,8 +4,8 @@ Load this when a task touches packaging or same-origin serving.
 
 The deployment contract controls:
 
-- baseline packaging requirements
-- advanced DevOps-owned packaging
+- baseline local-delivery requirements
+- optional Docker/container delivery and advanced DevOps-owned packaging
 - Docker/Compose/nginx expectations
 - packaged route verification
 

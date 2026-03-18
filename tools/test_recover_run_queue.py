@@ -99,6 +99,21 @@ def write_required_phase6_evidence(repo_root: Path) -> None:
 
 
 class RecoverRunQueueTests(unittest.TestCase):
+    def test_missing_docker_files_do_not_trigger_deployment_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            (repo_root / "app" / "Dockerfile").unlink()
+            (repo_root / "app" / "docker-compose.yml").unlink()
+
+            targets = select_recovery_targets(repo_root)
+            self.assertEqual(targets, {})
+
     def test_does_not_recover_while_initial_input_is_pending(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

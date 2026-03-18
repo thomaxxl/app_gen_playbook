@@ -67,12 +67,16 @@ A feature is done only when all of these are true:
 - no blocked Architect integration or drift handoff remains open while
   acceptance is being treated as complete
 
-If packaging was explicitly in scope:
+If Docker or container delivery was attempted:
 
 - the optional DevOps inbox must also be empty
-- `runs/current/artifacts/devops/verification.md` must exist
-- packaged route verification must be recorded
-- packaged route verification must include concrete status/header evidence for
+- `runs/current/artifacts/devops/verification.md` should record the outcome
+- any Docker or container packaging failure must be documented clearly
+- Docker or container delivery failure is non-blocking for now
+
+If same-origin or packaged route verification was attempted:
+
+- the verification record should include concrete status/header evidence for
   `/`, `/index.html`, `/admin-app/`, at least one `/admin-app/assets/...`
   response, and `/ui/admin/admin.yaml`
 

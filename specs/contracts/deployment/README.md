@@ -51,37 +51,44 @@ Recommended public routes:
 
 ## Required generated-app files
 
-The generated app MUST contain these root packaging files:
+The generated app MUST contain these runnable local-delivery files:
+
+- `install.sh`
+- `run.sh`
+
+Docker delivery files are optional for now. The generated app MAY also contain:
 
 - `Dockerfile`
 - `docker-compose.yml`
 
-This requirement applies even when the optional DevOps role is inactive. The
-presence of these two root files is part of the generated-app baseline, not an
-optional packaging upgrade.
+Their absence, or failure of Docker/container delivery, is non-blocking.
 
 ## Packaging lanes
 
-Baseline packaging is always required.
+Baseline local delivery is always required.
 
 It includes:
 
 - runnable dependency manifests
-- root `Dockerfile`
-- root `docker-compose.yml`
-- enough packaging instructions to run the app locally
+- local `install.sh`
+- local `run.sh`
+- enough instructions to run the app locally
 
-Advanced packaging belongs to the optional DevOps role when active.
+Optional Docker/container delivery belongs to the DevOps lane when active or
+explicitly requested.
 
 It includes:
 
+- root `Dockerfile`
+- root `docker-compose.yml`
 - nginx hardening
 - multi-stage optimization
 - runtime normalization fixes
 - packaging-specific verification matrices
 
 DevOps activation controls ownership of advanced packaging. It MUST NOT be
-interpreted as removing baseline packaging obligations.
+interpreted as removing baseline local-run obligations. Docker/container
+delivery remains optional and non-blocking for now.
 
 The generated app SHOULD also contain:
 
@@ -184,7 +191,7 @@ contract.
 
 ## Suggested compose behavior
 
-`docker-compose.yml` MUST:
+If `docker-compose.yml` is provided, it MUST:
 
 - build the image
 - publish a host port such as `8000`
@@ -206,6 +213,8 @@ When DevOps is active, it MUST write or update:
 - `../../runs/current/artifacts/devops/verification.md`
 
 ## Docker validation checks
+
+If Docker or container delivery is attempted, validate at least:
 
 - `GET /` returns a redirect or direct HTML response for the generated app, not
   the stock nginx page

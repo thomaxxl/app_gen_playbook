@@ -25,8 +25,6 @@ REQUIRED_APP_OUTPUTS = (
     ("app/BUSINESS_RULES.md", "product_manager"),
     ("app/install.sh", "deployment"),
     ("app/run.sh", "deployment"),
-    ("app/Dockerfile", "deployment"),
-    ("app/docker-compose.yml", "deployment"),
     ("app/reference/admin.yaml", "backend"),
     ("app/backend/requirements.txt", "backend"),
     ("app/backend/run.py", "backend"),

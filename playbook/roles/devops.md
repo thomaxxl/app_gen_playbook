@@ -46,7 +46,7 @@ This role SHOULD activate when any of these are true:
 
 This role SHOULD remain inactive when none of those conditions apply.
 
-Baseline packaging remains required even when this role is inactive. See:
+Baseline local delivery remains required even when this role is inactive. See:
 
 - `../process/packaging-lanes.md`
 
@@ -113,9 +113,11 @@ packaging-related feature packs enabled by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, copied, or used as
 packaging input.
 
-The DevOps role owns advanced packaging work. It MUST NOT treat baseline
-generated-app packaging files such as `Dockerfile` and `docker-compose.yml` as
-optional merely because DevOps activation is absent.
+The DevOps role owns Docker/container packaging and advanced packaging work.
+It MUST continue to treat baseline local-run files such as `install.sh` and
+`run.sh` as required. Docker/container delivery files such as `Dockerfile` and
+`docker-compose.yml` are optional for now, and their absence or failure is
+non-blocking unless the playbook policy changes in a future release.
 
 When reusable local dependency roots are needed for implementation or delivery,
 DevOps owns the normalization policy for:

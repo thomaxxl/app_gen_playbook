@@ -49,13 +49,14 @@ Required steps:
     - `../../app/rules/`
     - `../../app/reference/`
 17. seed local `../../app/` with the required generated-app root files from
-    `../../templates/app/project/` and `../../templates/app/deployment/`,
-    including at least:
+    `../../templates/app/project/`, including at least:
     - `.gitignore`
     - `install.sh`
     - `run.sh`
     - `README.md`
     - `BUSINESS_RULES.md` when available
+    Docker/container delivery files may also be seeded from
+    `../../templates/app/deployment/` when that lane is in scope:
     - `Dockerfile`
     - `docker-compose.yml`
 18. materialize app dependency manifests from the template sources plus the

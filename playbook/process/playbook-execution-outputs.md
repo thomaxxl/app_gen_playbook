@@ -79,6 +79,11 @@ The generated app MUST also contain:
 
 - local `../../app/.gitignore`
 - local `../../app/BUSINESS_RULES.md`
+- local `../../app/install.sh`
+- local `../../app/run.sh`
+
+The generated app MAY also contain optional Docker/container delivery files:
+
 - local `../../app/Dockerfile`
 - local `../../app/docker-compose.yml`
 
