@@ -166,11 +166,22 @@ The repository SHOULD provide a host-capable capture helper such as:
 
 - `tools/capture_frontend_browser_proof.py`
 
+When the generated app exposes `npm run capture:ui-previews`, that helper
+SHOULD treat the app-provided capture script as the canonical screenshot
+path. It SHOULD only fall back to generic direct-route capture when the app
+does not provide a preview-capture script.
+
 That helper SHOULD populate:
 
 - `runs/current/evidence/frontend-browser-proof.md`
 - `runs/current/evidence/ui-previews/manifest.md`
 - `runs/current/evidence/ui-previews/*.png`
+
+If `runs/current/artifacts/devops/execution-prereqs.md` proves
+`playwright_screenshot: ok` and the generated app exposes
+`capture:ui-previews`, the orchestrator MUST NOT accept a synthetic
+`environment-blocked` preview manifest without attempting that app-provided
+capture path first.
 
 If host-runtime preflight proves the previously cited bind and backend-runtime
 constraints are satisfied, the orchestrator MUST treat any older

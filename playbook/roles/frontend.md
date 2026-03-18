@@ -151,7 +151,7 @@ Playwright environment is available, the Frontend agent MUST capture stable UI
 preview screenshots and place them under `../../runs/current/evidence/ui-previews/`.
 Typical cases include new or changed entry pages, custom views, relationship
 dialogs or tabs, and meaningful form-layout changes. Backend-only or otherwise
-non-visible work does not require preview capture. The Frontend agent SHOULD
+non-visible work does not require preview capture. The Frontend agent MUST
 use `npm run capture:ui-previews` when the generated app provides it, and MUST
 update `../../runs/current/evidence/ui-previews/manifest.md` so Product can
 review the saved files directly.

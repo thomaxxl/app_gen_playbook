@@ -38,6 +38,9 @@ readiness note in:
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
+- when the generated app provides `npm run capture:ui-previews`, use that
+  script as the canonical preview-capture path instead of inventing separate
+  route-level screenshots
 - write `runs/current/evidence/frontend-browser-proof.md` as the canonical
   browser-level proof record for the live launcher path
 - maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
@@ -92,9 +95,13 @@ readiness note in:
   screenshots and `runs/current/evidence/ui-previews/manifest.md` tells
   Product exactly what to review, or the run evidence explains why preview
   capture was skipped
+- `environment-blocked` is not an acceptable preview result when the
+  execution-environment prerequisites already proved Playwright screenshot
+  capture is available and the generated app exposes `capture:ui-previews`
 - `runs/current/evidence/frontend-browser-proof.md` records the browser-level
-  launcher proof for `/admin`, dashboard, customer history, and playlist
-  editing, or records the exact environment-blocked fallback
+  launcher proof for the generated app's actual reviewable surfaces,
+  preferably through the app-provided preview-capture script, or records the
+  exact environment-blocked fallback
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI

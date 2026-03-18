@@ -125,6 +125,22 @@ def architect_blocked_integration_work(repo_root: Path) -> list[str]:
     return flagged
 
 
+def execution_prereqs_playwright_ok(repo_root: Path) -> bool:
+    prereq_path = repo_root / "runs" / "current" / "artifacts" / "devops" / "execution-prereqs.md"
+    if not prereq_path.exists():
+        return False
+    text = prereq_path.read_text(encoding="utf-8")
+    return bool(re.search(r"(?im)^-\s*`playwright_screenshot`:\s*`ok`\s*\(required\)\s*$", text))
+
+
+def app_declares_ui_preview_capture(repo_root: Path) -> bool:
+    package_json_path = repo_root / "app" / "frontend" / "package.json"
+    if not package_json_path.exists():
+        return False
+    text = package_json_path.read_text(encoding="utf-8")
+    return '"capture:ui-previews"' in text
+
+
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
 
@@ -343,6 +359,21 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         "owner": owner,
                         "phase": phase,
                         "reason": "ui preview manifest must declare capture_status as captured, not-required, or environment-blocked",
+                    }
+                )
+                continue
+            if (
+                capture_state == "environment-blocked"
+                and execution_prereqs_playwright_ok(repo_root)
+                and app_declares_ui_preview_capture(repo_root)
+            ):
+                blockers.append(
+                    {
+                        "kind": "ui-preview-fallback-invalid",
+                        "path": relative_path,
+                        "owner": owner,
+                        "phase": phase,
+                        "reason": "ui preview manifest claims environment-blocked even though execution prereqs prove Playwright capture is available and the app exposes capture:ui-previews",
                     }
                 )
                 continue

@@ -207,7 +207,9 @@ available, extend the Playwright validation to capture at least one or two
 intentional success-case screenshots for the affected surfaces and store them
 under `runs/current/evidence/ui-previews/`. The default generated frontend
 SHOULD provide `npm run capture:ui-previews` as the reviewable screenshot
-capture entrypoint.
+capture entrypoint. When that script exists and execution prerequisites prove
+Playwright screenshot capture is available, the run MUST use that script
+instead of accepting an `environment-blocked` fallback.
 
 The Playwright smoke run is the final pre-delivery validation gate. A
 generated app MUST NOT be treated as delivered before that run completes or a
