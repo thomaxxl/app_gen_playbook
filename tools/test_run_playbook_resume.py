@@ -195,6 +195,146 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertTrue(operator_action.exists())
             self.assertIn("execution-prereqs.md", operator_action.read_text(encoding="utf-8"))
 
+    def test_resume_clears_stale_execution_prereq_operator_action_when_prereqs_are_now_ready(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            script_target = repo_root / "scripts" / "run_playbook.sh"
+            script_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_repo / "scripts" / "run_playbook.sh", script_target)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"iterative-change-run","current_phase":"","change_id":"CR-test"}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "app" / "frontend").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "frontend" / "package.json").write_text(
+                '{"scripts":{"preview":"vite preview","capture:ui-previews":"playwright test ui-previews.e2e.spec.ts"}}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").write_text(
+                textwrap.dedent(
+                    """\
+                    # Operator Action Required
+
+                    Execution environment preflight failed before run startup.
+
+                    The playbook checked the current execution context before dispatching any role
+                    work and found that the generated app is not runnable in this environment.
+
+                    Required checks:
+                    - backend dependency/runtime availability
+                    - frontend dependency availability
+                    - frontend preview entrypoint presence
+                    - localhost port binding in the current execution context
+                    - Playwright screenshot capability
+
+                    Prerequisite artifact:
+                    - runs/current/artifacts/devops/execution-prereqs.md
+                    """
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "evidence" / "host-runtime-verification.md").write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: orchestrator
+                    phase: host-runtime-preflight
+                    status: ready-for-handoff
+                    last_updated_by: orchestrator
+                    runtime_env: host
+                    ---
+
+                    # Host Runtime Verification
+
+                    - frontend_bind: ok
+                    - backend_venv_imports: ok
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 ready')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                "#!/usr/bin/env python3\nprint('run is complete')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    parser.add_argument("--output")
+                    args = parser.parse_args()
+                    if args.output:
+                        path = Path(args.output)
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_text(
+                            "---\\nowner: devops\\nphase: execution-environment-preflight\\nstatus: ready-for-handoff\\nlast_updated_by: devops\\n---\\n\\n# Execution Environment Prerequisites\\n\\n- `python_venv`: `ok` (required)\\n  - verified imports\\n- `node_packages`: `ok` (required)\\n  - vite resolved\\n- `frontend_preview`: `ok` (required)\\n  - preview script declared\\n- `port_bind`: `ok` (required)\\n  - localhost bind succeeded\\n- `playwright_screenshot`: `ok` (required)\\n  - captured screenshot at smoke.png\\n",
+                            encoding="utf-8",
+                        )
+                    raise SystemExit(0)
+                    """
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("playbook run complete", result.stderr)
+            self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").exists())
+            archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "operator-action-archive"
+            archived = list(archive_dir.glob("operator-action-required.*-cleared.*.md"))
+            self.assertTrue(archived)
+
 
 if __name__ == "__main__":
     unittest.main()

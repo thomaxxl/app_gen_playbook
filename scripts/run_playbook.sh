@@ -1039,6 +1039,34 @@ host_runtime_verification_field_ok() {
   grep -Eq "^- ${field}:[[:space:]]*ok$" "$HOST_RUNTIME_VERIFICATION_MD"
 }
 
+execution_prereqs_required_checks_ok() {
+  local prereqs_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
+  [[ -f "$prereqs_path" ]] || return 1
+  grep -Eq '^status:[[:space:]]*ready-for-handoff$' "$prereqs_path" || return 1
+  ! grep -q '`blocked` (required)' "$prereqs_path"
+}
+
+clear_execution_prereq_operator_action_required() {
+  [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
+  grep -Fq 'Execution environment preflight failed before run startup.' "$OPERATOR_ACTION_REQUIRED_MD" || return 1
+  execution_prereqs_required_checks_ok || return 1
+
+  local archive_dir="$EVIDENCE_ROOT/operator-action-archive"
+  local stamp archived_path
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/operator-action-required.execution-prereqs-cleared.${stamp}.md"
+  mv "$OPERATOR_ACTION_REQUIRED_MD" "$archived_path"
+  log "operator-action-required-execution-prereqs-cleared archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Execution Prereqs Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nPrerequisite artifact:\n- runs/current/artifacts/devops/execution-prereqs.md"
+  append_run_remark \
+    "Execution Prereqs Cleared Stale Block" \
+    "Archived stale operator-action file:\n- ${archived_path#$ROOT/}\n\nPrerequisite artifact:\n- runs/current/artifacts/devops/execution-prereqs.md"
+  return 0
+}
+
 clear_host_verified_operator_action_required() {
   [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
@@ -1048,6 +1076,12 @@ clear_host_verified_operator_action_required() {
   needs_backend=0
   grep -Eqi 'frontend listener bind|required by `app/run\.sh`|browser-level verification' "$OPERATOR_ACTION_REQUIRED_MD" && needs_frontend=1
   grep -Eqi 'default interpreter|FastAPI dependency set|backend runtime verification' "$OPERATOR_ACTION_REQUIRED_MD" && needs_backend=1
+
+  if grep -Fq 'Execution environment preflight failed before run startup.' "$OPERATOR_ACTION_REQUIRED_MD"; then
+    execution_prereqs_required_checks_ok || return 1
+    needs_frontend=0
+    needs_backend=0
+  fi
 
   if [[ "$needs_frontend" -eq 1 ]] && ! host_runtime_verification_field_ok frontend_bind; then
     return 1
@@ -2301,6 +2335,10 @@ PY
   write_runtime_environment_metadata
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
+  clear_execution_prereq_operator_action_required || true
+  clear_superseded_operator_action_required || true
+  clear_host_verified_operator_action_required || true
+  clear_browser_fallback_operator_action_required || true
 
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true
@@ -2316,6 +2354,10 @@ main_loop() {
     did_work=0
 
     if clear_superseded_operator_action_required; then
+      did_work=1
+    fi
+
+    if clear_execution_prereq_operator_action_required; then
       did_work=1
     fi
 
