@@ -51,6 +51,11 @@ If a user-visible or operator-visible datum is naturally owned by a persisted
 database-backed table row or relationship, the default classification is
 `api-resource`.
 
+For such data, the default backend implementation lane is also a mapped
+SQLAlchemy ORM model and relationship. The Architect MAY approve a different
+implementation lane only when the run-owned artifacts record the reason and
+replacement contract.
+
 The Architect MAY classify such data as `api-read-model` or `api-meta` only
 when the run-owned artifacts record why ordinary SAFRS resource exposure is not
 the right primary contract for that surface.

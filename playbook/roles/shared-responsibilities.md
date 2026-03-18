@@ -60,10 +60,15 @@ When a user-visible or operator-visible concept maps cleanly to a persisted
 database-backed table or relationship:
 
 - the default delivery lane is a SAFRS JSON:API resource or relationship
+- the default implementation lane is a mapped SQLAlchemy ORM model and
+  relationship, not ad hoc row-dict assembly or raw-SQL-only handlers
 - Architecture MUST treat that as the default unless the run-owned artifacts
   record an explicit exception and replacement contract
 - Backend MUST NOT replace that default with a custom `/api/ops/` or ad hoc
   JSON endpoint merely because a custom summary page also exists
+- Backend MUST NOT bypass the ORM as the primary implementation path for that
+  resource unless the run-owned artifacts document why ORM mapping is not the
+  right fit
 - Frontend MUST treat custom read-model endpoints as supplements for
   dashboards, aggregates, or operational summaries, not as justification to
   bypass the underlying SAFRS resource/relationship lane

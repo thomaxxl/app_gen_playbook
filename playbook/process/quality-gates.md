@@ -18,6 +18,9 @@ The run is blocked if any of these are true:
 - DB-backed tables or relationships that should be ordinary SAFRS resources are
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception
+- DB-backed tables or relationships that should be ordinary ORM-backed domain
+  entities are implemented primarily through raw SQL or row-dict assembly
+  without an approved architecture exception
 - leftover mock, demo, or starter data remains visible without explicit
   approval in `runs/current/artifacts/product/sample-data.md`
 - a required custom page is still a metadata, status, or contract placeholder

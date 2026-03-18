@@ -17,6 +17,17 @@ class Collection(SAFRSBase, Base):
     __tablename__ = "collections"
 ```
 
+## ORM default rule
+
+For persisted database-backed tables and relationships that are appropriate for
+normal resource delivery, the backend MUST use mapped SQLAlchemy ORM models and
+relationships as the default implementation lane.
+
+The backend MUST NOT treat ad hoc row dictionaries, manual SQL result
+translation, or raw-SQL-only handlers as the normal implementation for such
+resources unless the run-owned architecture and backend-design artifacts record
+an explicit exception.
+
 ## Naming policy the playbook does own
 
 - Python class names: `PascalCase`
@@ -144,3 +155,7 @@ EXPOSED_MODELS = (Collection, Item, Status)
 
 That tuple is the source of truth for `api.expose_object(...)` in the starter
 example.
+
+For non-starter runs, the same rule applies: resources marked as SAFRS-exposed
+must be represented by real mapped ORM classes in `EXPOSED_MODELS`, not only
+by custom route handlers.

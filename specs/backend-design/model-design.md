@@ -36,8 +36,15 @@ The real artifact MUST also define:
 - for every resource whose `Exposed` value is `yes`, how that resource becomes
   a true `SAFRSBase` model in `EXPOSED_MODELS` instead of a hand-built JSON
   substitute
+- for every persisted table-backed resource, whether it is implemented as a
+  mapped SQLAlchemy ORM model or an approved exception, and why
 
 Persisted database-backed tables that are product-facing or operator-facing
 default to `Exposed = yes`. Any `no`, `internal`, `singleton`, or `deferred`
 decision for such a table MUST include an explicit reason and the replacement
 delivery contract if the UI still depends on the data.
+
+Persisted database-backed tables that are product-facing or operator-facing
+also default to ORM-backed implementation. Any raw-SQL-only or non-ORM path
+for such a table MUST include an explicit reason and the replacement
+maintenance and validation strategy.

@@ -17,6 +17,8 @@ and tests.
 - define which concepts remain internal, singleton/settings-style, deferred,
   or explicitly omitted
 - design SQLAlchemy models and relationships
+- treat mapped SQLAlchemy ORM models and relationships as the default
+  implementation lane for persisted DB-backed resources
 - define which relationships must be exposed through SAFRS for
   list/show/include/filter/drill-down behavior
 - define per-resource readonly and mutability policy
@@ -54,6 +56,8 @@ and tests.
   a frontend hardcoded-data fallback
 - every appropriate DB-backed table and relationship has a SAFRS exposure
   decision, and any non-SAFRS exception is explicitly justified
+- every appropriate DB-backed table and relationship has an ORM implementation
+  decision, and any raw-SQL or non-ORM exception is explicitly justified
 - no ambiguous lifecycle behavior remains
 - every required non-starter template replacement is identified before
   implementation starts

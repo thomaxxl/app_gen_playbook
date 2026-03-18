@@ -29,6 +29,7 @@ For persisted database-backed tables and relationships that the frontend or
 operator UX needs to browse, filter, include, or inspect, the default boundary
 is:
 
+- SQLAlchemy ORM owns the model and relationship mapping
 - SAFRS owns the resource and relationship exposure
 - JSON:API owns the wire contract for those resources and relationships
 - custom FastAPI or `/api/ops/` endpoints supplement that lane only for

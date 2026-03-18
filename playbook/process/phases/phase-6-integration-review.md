@@ -42,6 +42,9 @@ readiness note in:
   route discovery and are not replaced by hand-built substitute endpoints
 - verify that documented exposed relationships from
   `relationship-map.md` are actually navigable in live SAFRS payloads
+- verify that ordinary persisted resources are implemented through mapped
+  SQLAlchemy ORM models and relationships rather than raw-SQL row assemblers
+  unless an explicit approved exception exists
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
@@ -127,6 +130,8 @@ readiness note in:
 - DB-backed resources and relationships that the design marks as SAFRS-exposed
   are proven through live `/jsonapi.json` discovery and representative live
   resource and relationship samples
+- DB-backed resources and relationships that the design treats as ordinary
+  ORM-backed domain entities are not implemented as raw-SQL-only substitutes
 - no unapproved starter, mock, or demo rows remain visible
 - required custom pages are not metadata or status placeholders
 - the quality evidence pack exists and is internally consistent
@@ -154,3 +159,5 @@ Integration review fails when:
   instead of the approved API-backed contract
 - the backend replaced required SAFRS resource or relationship exposure with
   custom summary endpoints or hand-built JSON routes
+- the backend replaced required ORM-backed resource implementation with
+  raw-SQL-only or row-mapper handlers without an approved exception

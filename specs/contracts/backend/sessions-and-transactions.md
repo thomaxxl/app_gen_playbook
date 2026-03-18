@@ -40,6 +40,17 @@ For the generated backend contract:
 - SAFRS owns request-time CRUD persistence
 - the app does not wrap SAFRS resource handlers in extra manual commit logic
 
+## ORM query and mutation default
+
+For persisted database-backed resources and relationships that the app exposes
+as ordinary domain concepts, the backend SHOULD use the SQLAlchemy ORM session
+and mapped models as the normal query and mutation path.
+
+Raw SQL MAY still be used for migrations, diagnostics, exceptional performance
+cases, or explicit aggregate/read-model endpoints, but it MUST NOT silently
+replace the normal ORM implementation lane for ordinary SAFRS-backed
+resources.
+
 ## Custom endpoint rule
 
 If the app later adds custom non-SAFRS write endpoints:

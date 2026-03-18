@@ -22,6 +22,9 @@ This file defines the minimum backend validation checklist.
 - every relationship marked `Exposed relationship = yes` in
   `../../../runs/current/artifacts/backend-design/relationship-map.md` is
   proven through live SAFRS resource payloads or related routes
+- every ordinary persisted table-backed resource that the run-owned design
+  treats as ORM-backed is implemented through mapped SQLAlchemy ORM classes and
+  relationships rather than only raw-SQL or row-mapper handlers
 - collection endpoints discovered from the running app and matched to
   `admin.yaml endpoint` values return JSON:API list data
 - at least one discovered collection endpoint returns a non-empty seeded list
@@ -38,6 +41,9 @@ This file defines the minimum backend validation checklist.
 - custom `/api/ops/` or other read-model endpoints MAY supplement the resource
   contract, but MUST NOT replace SAFRS exposure for appropriate DB-backed
   tables or relationships
+- raw SQL or hand-built row adapters MAY supplement aggregate/read-model
+  endpoints, but MUST NOT replace the normal ORM lane for appropriate
+  DB-backed resources
 - one happy-path API create works
 - one happy-path API update works
 - one happy-path API delete works

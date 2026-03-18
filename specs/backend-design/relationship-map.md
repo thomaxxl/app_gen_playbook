@@ -35,6 +35,10 @@ If both source and target are SAFRS-exposed resources and the approved UI or
 review flows need the relationship for list/show/include/filter/drill-down
 behavior, the default is `Exposed relationship = yes`.
 
+If both source and target are persisted DB-backed resources, the default
+implementation lane is also an explicit SQLAlchemy ORM relationship with a
+named join path. Any non-ORM workaround MUST include an explicit reason.
+
 Any `Exposed relationship = no` decision for such a relationship MUST include
 an explicit reason and the replacement retrieval contract if the UI still needs
 that connection.

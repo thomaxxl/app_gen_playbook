@@ -41,6 +41,9 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - fail acceptance if DB-backed operator-visible or user-visible data that
   should be ordinary resource data is available only through custom summary
   endpoints instead of the approved SAFRS resource/relationship lane
+- fail acceptance if the evidence shows ordinary DB-backed resource delivery is
+  implemented outside the approved ORM+SAFRS lane without an explicit
+  exception
 - verify that first-version scope did not drift upward without justification
 - fail acceptance if the visible UI still reads like a contract/debug/recovery
   shell instead of the intended product
@@ -82,3 +85,5 @@ Acceptance fails when:
 - the evidence pack proves unresolved core behavior defects
 - required DB-backed resources or relationships are missing from the approved
   SAFRS JSON:API surface
+- required DB-backed resource delivery bypasses the approved ORM lane without
+  an explicit documented exception

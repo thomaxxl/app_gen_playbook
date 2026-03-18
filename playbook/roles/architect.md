@@ -100,9 +100,10 @@ The Architect owns and MUST maintain:
 
 For persisted database-backed tables and relationships that are visible to the
 product or operator UX, the Architect MUST default the integration boundary to
-SAFRS JSON:API resource and relationship exposure. The Architect MAY approve a
-different lane only when the run-owned architecture and backend-design
-artifacts record a concrete reason and a replacement contract.
+SQLAlchemy ORM plus SAFRS JSON:API resource and relationship exposure. The
+Architect MAY approve a different lane only when the run-owned architecture
+and backend-design artifacts record a concrete reason and a replacement
+contract.
 
 During change analysis, if the change packet marks a baseline challenge or
 review-driven delta, the Architect MUST NOT collapse the packet to a no-op
@@ -141,6 +142,8 @@ The Architect MUST ensure `data-sourcing-contract.md`,
 this rule:
 
 - DB-backed entity and relationship delivery defaults to SAFRS resources
+- DB-backed entity and relationship implementation defaults to mapped
+  SQLAlchemy ORM models and relationships
 - `/api/ops/` or other custom endpoints supplement but do not replace those
   resources unless an explicit exception is documented
 

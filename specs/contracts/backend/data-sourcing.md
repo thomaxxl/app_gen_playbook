@@ -26,6 +26,11 @@ and relationship surface exposed through SAFRS. Read-model or operational
 endpoints supplement that lane when needed, but MUST NOT silently replace it
 without an explicit architecture exception.
 
+The default implementation lane for those resources is also mapped SQLAlchemy
+ORM models and relationships. A custom read-model endpoint does not justify
+skipping the ORM for the underlying resource when ordinary resource delivery is
+still appropriate.
+
 In SAFRS-based backends, teams SHOULD also review the SAFRS documentation and
 examples for dynamic-data exposure patterns before inventing ad hoc APIs. In
 particular:

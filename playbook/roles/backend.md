@@ -120,10 +120,16 @@ product, architecture, UX, or operator contracts need to list, show, filter,
 include, or drill into, the Backend agent MUST default to SAFRS JSON:API
 resource and relationship exposure.
 
+For those same persisted tables and relationships, the Backend agent MUST also
+default to real SQLAlchemy ORM models and relationships as the implementation
+lane. Hand-built row mappers, direct `connection.execute(...)` read paths, or
+raw-SQL-only handlers are exceptions, not the default.
+
 If `resource-exposure-policy.md` marks a resource as exposed through SAFRS, the
 Backend agent MUST:
 
 - implement it as a true SAFRS model rather than a hand-built JSON route
+- implement it as a mapped SQLAlchemy ORM model rather than a raw-row adapter
 - include it in `EXPOSED_MODELS`
 - ensure route discovery shows it in the live `/jsonapi.json` contract
 - expose the documented relationships needed for list/show/include behavior
@@ -176,6 +182,11 @@ agent MUST explicitly resolve and record:
    - which DB-backed tables and relationships are exposed through SAFRS by
      default, which are approved exceptions, and how live `/jsonapi.json`
      evidence will prove that implementation matches the run-owned design
+10. ORM implementation reconciliation
+   - which DB-backed tables and relationships are implemented as mapped
+     SQLAlchemy ORM models by default, which exceptions are approved, and how
+     implementation evidence proves the backend did not fall back to raw-SQL
+     substitutes for ordinary resource delivery
 
 The Backend agent MUST map every approved rule ID from
 `../../runs/current/artifacts/product/business-rules.md` to:
