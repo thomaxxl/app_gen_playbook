@@ -234,6 +234,60 @@ append_recovery_log() {
   } >> "$recovery_file"
 }
 
+maybe_backup_current_run_before_new() {
+  [[ "$MODE" == "new" ]] || return 0
+  [[ -d "$RUN_ROOT" ]] || return 0
+
+  local backup_choice=""
+  local backup_output
+  local backup_path=""
+
+  if [[ -t 0 ]]; then
+    echo
+    echo "A runs/current directory already exists and --mode new would replace it:"
+    echo "- ${RUN_ROOT#$ROOT/}"
+    printf "Back it up to saved/ before continuing? [y/N]: "
+    if ! read -r backup_choice; then
+      backup_choice="n"
+    fi
+    case "${backup_choice,,}" in
+      y|yes)
+        ;;
+      n|no|"")
+        fatal_exit \
+          "new run blocked by existing runs/current" \
+          "A previous run exists at runs/current.\n\nUse one of:\n- run with --mode new and accept backup\n- manually archive or remove runs/current\n- run with --resume"
+        ;;
+      *)
+        fatal_exit \
+          "invalid response for current-run backup prompt" \
+          "Please answer y or n when asked to back up runs/current."
+        ;;
+    esac
+  else
+    if [[ "$PLAYBOOK_YOLO" -ne 1 ]]; then
+      fatal_exit \
+        "new run blocked by existing runs/current" \
+        "No interactive TTY is available to confirm backup. Re-run with --yolo to auto-backup before a new run, or manually archive/remove runs/current."
+    fi
+  fi
+
+  log "backing-up-existing-current-run reason=new-mode"
+  if ! backup_output="$("$SCRIPT_DIR/save_run.sh" --name "pre-new-run" 2>&1)"; then
+    fatal_exit \
+      "failed to back up existing runs/current" \
+      "Save step failed before running reset_current_run.py.\n\n$backup_output"
+  fi
+
+  backup_path="$(tail -n 1 <<< "$backup_output" | awk '{print $NF}')"
+  append_recovery_log \
+    "Backed up existing run before new mode" \
+    "Saved existing workspace before seeding a new run:\n- $backup_path\n\nBackup output:\n$backup_output"
+  append_run_remark \
+    "Backed up existing run before new mode" \
+    "Saved existing workspace before seeding a new run:\n- $backup_path\n\nBackup output:\n$backup_output"
+}
+
 write_runtime_environment_metadata() {
   mkdir -p "$ORCH_ROOT"
   cat > "$RUNTIME_ENVIRONMENT_JSON" <<EOF
@@ -2267,6 +2321,7 @@ ensure_worker_running() {
 }
 
 seed_new_run() {
+  maybe_backup_current_run_before_new
   log "preparing current run"
   python3 "$ROOT/tools/reset_current_run.py" --repo-root "$ROOT" >/dev/null
 
