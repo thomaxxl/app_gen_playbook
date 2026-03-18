@@ -33,6 +33,7 @@ A normal run MAY create or update mutable execution files in:
 
 - `../../runs/current/input.md`
 - `../../runs/current/remarks.md`
+- `../../runs/current/notes.md`
 - `../../runs/current/artifacts/`
 - `../../runs/current/changes/`
 - `../../runs/current/role-state/`

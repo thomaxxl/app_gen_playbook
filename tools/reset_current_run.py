@@ -97,7 +97,22 @@ def reset_current_run(repo_root: Path) -> Path:
     (runtime_state_dir / "sessions").mkdir(parents=True, exist_ok=True)
 
     remarks_path = current_dir / "remarks.md"
-    remarks_path.write_text("# Run Remarks\n\nNeutral at run start.\n", encoding="utf-8")
+    remarks_path.write_text(
+        "# Run Remarks\n\n"
+        "Neutral at run start.\n\n"
+        "Use this file for playbook feedback, especially ambiguities,\n"
+        "instruction gaps, or process confusion discovered during the run.\n",
+        encoding="utf-8",
+    )
+
+    notes_path = current_dir / "notes.md"
+    notes_path.write_text(
+        "# Run Notes\n\n"
+        "Neutral at run start.\n\n"
+        "Use this file for other run-specific notes and feedback that are not\n"
+        "specifically about playbook ambiguities.\n",
+        encoding="utf-8",
+    )
 
     app_done = current_dir / "APP_DONE"
     if app_done.exists():

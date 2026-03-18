@@ -101,6 +101,13 @@ Or launch interactively:
 The orchestrator keeps per-role evidence under `runs/current/evidence/` and
 per-role mutable state under `runs/current/role-state/`.
 
+Run-local note files are split deliberately:
+
+- `runs/current/remarks.md`
+  playbook feedback, especially ambiguities or process/documentation gaps
+- `runs/current/notes.md`
+  other run-specific notes or feedback
+
 If you want to watch the raw Codex subprocess output live while the run is
 active:
 

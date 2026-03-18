@@ -5,6 +5,8 @@ product_manager:
     - playbook/summaries/roles/product-manager.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/artifacts/product/**
     - runs/current/role-state/product_manager/**
     - runs/current/changes/*/request.md
@@ -33,6 +35,8 @@ architect:
     - playbook/summaries/roles/architect.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/artifacts/architecture/**
     - runs/current/role-state/architect/**
     - runs/current/changes/*/impact-manifest.yaml
@@ -54,6 +58,8 @@ frontend:
     - playbook/summaries/roles/frontend.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/artifacts/ux/**
     - runs/current/role-state/frontend/**
     - runs/current/changes/*/candidate/artifacts/ux/**
@@ -74,6 +80,8 @@ backend:
     - playbook/summaries/roles/backend.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/artifacts/backend-design/**
     - runs/current/role-state/backend/**
     - runs/current/changes/*/candidate/artifacts/backend-design/**
@@ -100,6 +108,7 @@ ceo:
     - runs/current/changes/**
     - runs/current/role-state/**
     - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/evidence/contract-samples.md
     - app/**
   cannot_write:
@@ -116,6 +125,8 @@ devops:
     - playbook/roles/shared-responsibilities.md
     - playbook/process/read-sets/devops-core.md
   writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
     - runs/current/artifacts/devops/**
     - runs/current/role-state/devops/**
     - runs/current/changes/*/candidate/artifacts/devops/**

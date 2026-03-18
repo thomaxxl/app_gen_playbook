@@ -43,6 +43,15 @@ During execution, the orchestrator also maintains:
 - local `runs/current/orchestrator/run-status.json`
 - local `runs/current/orchestrator/workers/*.json`
 
+Run-local note files:
+
+- `runs/current/remarks.md`
+  Reserved for playbook feedback, especially playbook ambiguities, unclear
+  instructions, or process gaps found during the run
+- `runs/current/notes.md`
+  Reserved for other run notes and feedback that are not specifically about
+  playbook ambiguities
+
 For an operator-facing summary of the active run, use:
 
 ```bash

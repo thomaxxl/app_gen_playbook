@@ -77,6 +77,8 @@ PHASE5_READY_PHASES = {
 
 ROLE_OWNED_PREFIXES = {
     "product_manager": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/artifacts/product/",
         "runs/current/role-state/product_manager/",
         "runs/current/changes/*/request.md",
@@ -91,6 +93,8 @@ ROLE_OWNED_PREFIXES = {
         "app/docs/change-history/**",
     ),
     "architect": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/artifacts/architecture/",
         "runs/current/role-state/architect/",
         "runs/current/changes/*/impact-manifest.yaml",
@@ -100,6 +104,8 @@ ROLE_OWNED_PREFIXES = {
         "app/README.md",
     ),
     "frontend": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/artifacts/ux/",
         "runs/current/role-state/frontend/",
         "runs/current/changes/*/candidate/artifacts/ux/**",
@@ -107,6 +113,8 @@ ROLE_OWNED_PREFIXES = {
         "app/frontend/",
     ),
     "backend": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/artifacts/backend-design/",
         "runs/current/role-state/backend/",
         "runs/current/changes/*/candidate/artifacts/backend-design/**",
@@ -116,6 +124,8 @@ ROLE_OWNED_PREFIXES = {
         "app/reference/admin.yaml",
     ),
     "deployment": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/artifacts/devops/",
         "runs/current/role-state/devops/",
         "runs/current/role-state/deployment/",
@@ -134,6 +144,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/changes/",
         "runs/current/role-state/",
         "runs/current/remarks.md",
+        "runs/current/notes.md",
         "runs/current/orchestrator/operator-action-required.md",
         "runs/current/evidence/contract-samples.md",
         "app/",

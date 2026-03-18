@@ -38,10 +38,15 @@ Rules:
 - this file is the canonical ownership and edit-policy reference
 - non-owning roles must request changes through inbox handoff unless
   ownership is explicitly delegated
+- `runs/current/remarks.md` and `runs/current/notes.md` are shared run-level
+  note files; any role MAY append concise entries, but roles MUST use
+  `remarks.md` only for playbook feedback and ambiguities, and MUST use
+  `notes.md` for other run feedback or observations
 - exception: during an orchestrator-declared stall intervention, the CEO MAY
   temporarily edit any file under `runs/current/artifacts/`, any role lane
-  under `runs/current/role-state/`, `runs/current/remarks.md`, and any local
-  `app/` subtree needed to restore progress
+  under `runs/current/role-state/`, `runs/current/remarks.md`,
+  `runs/current/notes.md`, and any local `app/` subtree needed to restore
+  progress
 - the CEO emergency override MUST NOT be used during normal phase execution
 - the CEO emergency override MUST NOT edit playbook source, `specs/`, or
   `templates/` unless the task is explicitly playbook maintenance

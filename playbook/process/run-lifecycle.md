@@ -23,6 +23,7 @@ The active run uses:
 - tracked neutral starter `../../runs/template/`
 - local `../../runs/current/input.md`
 - local `../../runs/current/remarks.md`
+- local `../../runs/current/notes.md`
 - local `../../runs/current/artifacts/`
 - local `../../runs/current/role-state/`
 - local `../../runs/current/evidence/`
@@ -103,6 +104,7 @@ To start a new run:
 4. update local `../../runs/current/input.md` with the new brief
 5. reset or archive stale run-local notes under:
    - `../../runs/current/remarks.md`
+   - `../../runs/current/notes.md`
    - `../../runs/current/artifacts/`
    - `../../runs/current/evidence/`
 6. clear active inbox items under `../../runs/current/role-state/`
@@ -154,7 +156,12 @@ When a run is complete:
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
-  not belong in the app tree, including orchestrator-detected stall diagnoses
+-  not belong in the app tree and that specifically concern playbook feedback,
+  especially playbook ambiguities, unclear instructions, or process gaps,
+  including orchestrator-detected stall diagnoses
+- `../../runs/current/notes.md` SHOULD preserve other run-level notes and
+  feedback that do not belong in the app tree but are not specifically about
+  playbook ambiguities
 - `../../runs/current/orchestrator/operator-action-required.md` MAY be created
   during blocked runs when only the operator can unblock the work; when it
   exists, the orchestrator is expected to stop and surface that file as the
