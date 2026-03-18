@@ -100,6 +100,9 @@ The CEO role MUST:
 - directly repair local playbook-runtime defects under `playbook/`,
   `scripts/`, or `tools/` when that defect is the blocker keeping the current
   run stalled
+- spend only reasonable time and effort on CEO-side unblock work; if forward
+  progress still cannot be restored after a serious but bounded local repair
+  attempt, prefer an explicit exit path over indefinite requeue churn
 - write `runs/current/orchestrator/pause-requested.md` when the operator asked
   to pause or cleanly stop the current run and continue later with
   `scripts/run_playbook.sh --resume`
@@ -157,7 +160,8 @@ update `runs/current/remarks.md`, restore forward progress if possible, write
 any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
 the same unresolved blocker when only the operator can unblock the run after
-local repair paths have been exhausted, approve or reject any pending
+local repair paths have been exhausted or after reasonable CEO-side repair
+effort has failed to restore progress, approve or reject any pending
 orchestrator termination before exit, validate successful delivery through
 `scripts/run_playbook.sh --ceo-delivery-validate` before writing
 `runs/current/orchestrator/delivery-approved.md`, then

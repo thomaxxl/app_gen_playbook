@@ -10,6 +10,8 @@ surface under `playbook/`, `scripts/`, or `tools/` needed to restore
 progress.
 If the blocker is a local playbook or orchestrator defect, CEO MUST attempt
 that repair before escalating externally.
+CEO should spend only reasonable time and effort on that unblock attempt; if
+progress still cannot be restored, it may approve exit instead of looping.
 If only the operator can unblock the run after those local repair paths are
 exhausted, CEO must write
 `runs/current/orchestrator/operator-action-required.md` and stop the requeue
