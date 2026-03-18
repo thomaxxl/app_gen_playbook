@@ -71,6 +71,8 @@ frontend package template before treating the playbook baseline as current.
 ## UX/UI validation
 
 - `Home` renders with a visible title and basic purpose text
+- `Home` renders a visible hero or landing section before any list/grid-heavy
+  content
 - `Home` visibly reflects the starter pattern declared in
   `landing-strategy.md`
 - the entry page visible in the app matches the route declared in
@@ -80,6 +82,8 @@ frontend package template before treating the playbook baseline as current.
 - at least one proof, summary, or reassurance region is present above the fold
   or immediately after the hero
 - `Home` exposes a visible path into the main app flow
+- the first meaningful above-the-fold content is not a generated React-admin
+  resource grid or generic datagrid shell
 - the entry page loading or partial-data state is understandable when summary
   data is delayed or partially unavailable
 - if the primary CTA is unavailable, the reason is visible
@@ -100,6 +104,8 @@ frontend package template before treating the playbook baseline as current.
   instead of collapsing into generic metadata/status panels
 - at least one generated list, one generated show page, and one generated form
   are reviewed as usable product pages rather than metadata viewers
+- the primary entry surface is reviewed as a landing/hero page, not as a
+  resource-list first impression
 - user-facing pages do not expose internal integration/debug language such as
   contract recovery, provisional endpoint warnings, route inventory, or
   template/bootstrap cleanup copy unless the run-owned UX artifacts explicitly
@@ -182,23 +188,25 @@ suite with at least this flow:
 9. assert the Home page loads without the bootstrap-error or home-error
 10. assert the Home page shows a visible title, purpose statement, and primary
     CTA
-11. switch to a narrow viewport and assert the primary CTA remains discoverable
-12. if the app includes `Landing.tsx`, assert the landing page loads without
+11. assert the first meaningful visible section is a hero/landing surface
+    rather than a resource grid
+12. switch to a narrow viewport and assert the primary CTA remains discoverable
+13. if the app includes `Landing.tsx`, assert the landing page loads without
    the bootstrap-error or landing-error screen
-13. assert the key seeded collection request returns `200`
-14. navigate to at least one generated resource route and verify a visible
+14. assert the key seeded collection request returns `200`
+15. navigate to at least one generated resource route and verify a visible
     seeded list-cell value renders from live backend data
-15. prove generated React-Admin resources are registered as direct `Admin`
+16. prove generated React-Admin resources are registered as direct `Admin`
     children by verifying the resource route resolves to a list page rather
     than a catch-all error route
-16. on at least one generated list route, open a relationship dialog from a
+17. on at least one generated list route, open a relationship dialog from a
     readable related label and verify the dialog summary renders
-17. on at least one generated show route, verify a relationship tab renders
+18. on at least one generated show route, verify a relationship tab renders
     for a related resource
-18. when the app relies on sparse relationship metadata, verify a `tomany`
+19. when the app relies on sparse relationship metadata, verify a `tomany`
     relationship tab still loads rows through fallback inference
-19. retain trace, screenshot, and video on failure
-20. fail if the primary entry page or required custom pages read like
+20. retain trace, screenshot, and video on failure
+21. fail if the primary entry page or required custom pages read like
     developer-facing contract/recovery shells rather than the UX artifacts they
     were supposed to implement
 
@@ -267,6 +275,8 @@ popups, the validation evidence MUST point to that documented exception.
   app flow
 - the primary entry page includes at least one confidence-building summary or
   proof cue
+- the primary entry page leads with a hero/landing surface instead of a raw
+  React-admin grid
 - the mobile layout preserves the purpose statement and CTA
 - if `Landing.tsx` is present, it is reachable
 - if `Landing.tsx` is present, it links or navigates into the admin resources

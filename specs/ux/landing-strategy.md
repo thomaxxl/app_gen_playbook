@@ -60,6 +60,7 @@ The real artifact MUST define:
 
 - entry-page title
 - one-sentence purpose or value statement
+- the hero or landing treatment shown before any list/grid content
 - primary CTA label
 - primary CTA route target
 - optional secondary CTA label and route target
@@ -70,6 +71,11 @@ The real artifact MUST define:
   the page
 - whether the first viewport includes summary cards, a workflow panel, or
   both
+
+The real artifact MUST NOT treat a generated React-admin resource grid,
+datagrid, or generic list page as the primary hero/landing treatment. If the
+entry experience needs a list preview, that preview appears below the hero or
+behind an explicit CTA.
 
 ## Section sequence
 
@@ -153,6 +159,8 @@ The real artifact MUST include concrete checks for:
 - the page exposes the main workflow without requiring menu discovery
 - the above-the-fold area includes at least one confidence-building summary or
   proof cue
+- the first viewport is led by a hero/landing section rather than a
+  React-admin resource grid
 - the mobile layout preserves the purpose statement and primary CTA
 - the entry page remains coherent when summary counts or recent-item data are
   empty

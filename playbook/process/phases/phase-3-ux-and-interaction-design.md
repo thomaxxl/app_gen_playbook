@@ -11,6 +11,8 @@ Design the user journey and page behavior before implementation diverges.
 - create screen inventory
 - define navigation/menu structure
 - define landing strategy and primary entry CTA hierarchy
+- define the hero/landing treatment that appears before any resource-grid
+  content on the primary entry surface
 - define default entry, return-path, and page-header behavior
 - define per-resource CRUD layouts
 - define form grouping, content clarity, and field-level guidance
@@ -44,6 +46,8 @@ Design the user journey and page behavior before implementation diverges.
   main routes
 - the primary entry route, entry-page proof cues, and CTA hierarchy are
   documented in `landing-strategy.md`
+- the entry strategy explicitly defines a hero/landing surface instead of
+  defaulting to a raw React-admin grid as the first impression
 - the visible icon system and icon mapping decisions are documented in
   `iconography.md` even when the run keeps the default icon wrapper behavior
 - responsive behavior is documented for the critical flows

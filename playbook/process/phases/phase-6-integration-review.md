@@ -32,6 +32,8 @@ readiness note in:
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
   `screen-inventory.md`, and `custom-view-specs.md` when custom pages exist
+- reject entry surfaces that drop users straight into a generated resource
+  grid or generic React-admin datagrid instead of a real hero/landing page
 - reject user-facing pages that expose contract/debug/recovery copy instead of
   the approved task-oriented UX
 - capture at least one contract sample in `runs/current/evidence/contract-samples.md`
@@ -122,6 +124,8 @@ readiness note in:
   render correct live data rather than only the initialized shell
 - required entry and custom pages are actual product surfaces, not contract,
   route, or recovery viewers
+- the first user-facing entry surface is a real landing/hero page, not a
+  generated React-admin resource grid
 - no required CRUD path remains unproven
 - the app is not accepted on shell loading alone; live backend data rendering
   is proven
@@ -154,6 +158,8 @@ Integration review fails when:
 - visible pages still read like internal shells
 - leftover unapproved demo, mock, or starter data is visible
 - required custom pages are still metadata or status placeholders
+- the primary entry surface is just a generated resource grid or generic list
+  shell instead of the approved landing/hero experience
 - the quality evidence pack is missing or contradictory
 - a required dynamic surface is implemented with hardcoded frontend data
   instead of the approved API-backed contract

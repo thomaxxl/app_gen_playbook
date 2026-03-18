@@ -27,6 +27,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   `runs/current/artifacts/ux/landing-strategy.md`,
   `runs/current/artifacts/ux/screen-inventory.md`, and
   `runs/current/artifacts/ux/custom-view-specs.md` when custom pages exist
+- fail acceptance if the first user-facing screen is a generic React-admin
+  grid/list instead of the intended landing/hero page
 - review frontend usability evidence and UI previews, not just technical gate
   notes
 - review `runs/current/evidence/ui-previews/manifest.md` and the listed
@@ -70,6 +72,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   rather than only mentioning that previews existed
 - required CRUD paths are accepted based on evidence, not only page existence
 - required custom pages behave like product surfaces, not metadata viewers
+- the primary entry surface reads like a landing/hero page rather than a
+  generic admin resource list
 - Product Manager can explain the app in user terms without relying on
   integration/runtime caveats
 
@@ -81,6 +85,7 @@ Acceptance fails when:
 - unapproved demo, mock, sample, or starter rows remain visible
 - required CRUD paths are not proven
 - required custom pages are still metadata viewers
+- the first user-facing screen is a generic React-admin list/grid shell
 - user-facing pages still expose implementation or debug language
 - the evidence pack proves unresolved core behavior defects
 - required DB-backed resources or relationships are missing from the approved

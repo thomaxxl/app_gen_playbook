@@ -151,6 +151,12 @@ diagnostics page. Silence or temporary backend uncertainty is not permission to
 turn `Home`, custom views, or generated resource routes into metadata/debug
 surfaces.
 
+The Frontend agent MUST also ensure the primary entry surface starts as a real
+landing/hero page. It MUST NOT drop users directly into a generated
+React-admin resource grid or generic list shell as the first meaningful screen.
+If resource data appears on the entry page, it comes after the hero or behind a
+clear CTA.
+
 When a run materially changes visible UI behavior and a browser-capable
 Playwright environment is available, the Frontend agent MUST capture stable UI
 preview screenshots and place them under `../../runs/current/evidence/ui-previews/`.

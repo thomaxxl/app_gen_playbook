@@ -18,12 +18,19 @@ React-admin chrome.
 - remain reachable at `/admin-app/#/Home`
 - appear in the left sidebar with a visible home icon
 - expose a visible title
+- expose a real hero or landing region before any resource-grid or list-heavy
+  content
 - expose a one-sentence purpose or value statement
 - expose the primary CTA defined by `landing-strategy.md`
 - expose at least one proof, reassurance, or summary region above the fold or
   immediately after the hero
 - answer the user-facing task described in `landing-strategy.md`, not internal
   implementation status
+
+The primary entry surface MUST NOT default to a generated React-admin list
+grid, generic datagrid shell, or starter resource index as the first
+above-the-fold content. Resource lists may appear later on the page or behind
+an explicit CTA, but they do not count as the required landing/hero surface.
 
 `Home.tsx` MUST NOT ship as a contract viewer, route inventory page, or
 recovery/debug shell. In particular, the primary entry page MUST NOT use
@@ -70,6 +77,10 @@ The landing strategy MUST also declare one starter pattern for `Home.tsx`:
 If the run uses `Landing.tsx` or `CustomDashboard.tsx` as part of the real
 entry experience, `Home.tsx` MUST still exist and MUST provide a visible path
 into that approved entry flow.
+
+Whether the run uses `Home only`, `Home as dashboard`, or a separate
+`Landing.tsx`, the first meaningful user-facing screen MUST still begin with a
+hero/landing treatment rather than a raw React-admin grid.
 
 ## Starter-compatibility rule
 

@@ -24,6 +24,8 @@ The run is blocked if any of these are true:
 - leftover mock, demo, or starter data remains visible without explicit
   approval in `runs/current/artifacts/product/sample-data.md`
 - a required custom page is still a metadata, status, or contract placeholder
+- the first user-facing screen is a raw React-admin list/datagrid shell rather
+  than a real landing/hero page
 - required relationship labels, tabs, or dialogs are missing where the
   approved UX and frontend contracts require them
 - approved rule IDs do not have the required backend test coverage
