@@ -19,6 +19,8 @@ and tests.
 - map approved rule IDs to LogicBank patterns, backend enforcement, and tests
 - define derived vs stored fields
 - define per-resource query commitments
+- define any backend read-model, aggregate, or metadata endpoints required by
+  the approved UI data-sourcing contract
 - define bootstrap/seed behavior
 - define startup order
 - define backend test scenarios
@@ -44,6 +46,8 @@ and tests.
 - every frontend-visible field maps to backend truth
 - every frontend-needed query behavior is either committed or explicitly out
   of scope
+- every approved API-backed UI surface has a backend delivery lane instead of
+  a frontend hardcoded-data fallback
 - no ambiguous lifecycle behavior remains
 - every required non-starter template replacement is identified before
   implementation starts

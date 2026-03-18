@@ -12,6 +12,7 @@ required_artifacts:
   - runs/current/artifacts/product/resource-inventory.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/overview.md
+  - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/generated-vs-custom.md
 conditional_artifacts:

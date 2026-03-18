@@ -110,9 +110,15 @@ These decisions MUST be recorded as a path-based table in
 The Architect MUST define:
 
 - framework-owned behavior versus app-owned behavior
+- what user-visible data is API-driven versus static frontend config
+- which surfaces require backend read models, aggregate endpoints, or API
+  metadata instead of CRUD-only resource fetches
 - search/query expectations the frontend relies on
 - runtime validation obligations
 - backend, frontend, rules, and Playwright checks required before delivery
+
+These decisions MUST be recorded in
+`runs/current/artifacts/architecture/data-sourcing-contract.md`.
 
 ## Step 8. Emit gates and handoffs
 

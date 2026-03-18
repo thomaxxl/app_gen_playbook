@@ -12,6 +12,7 @@ Required startup reads:
 - `../phases/phase-5-parallel-implementation.md`
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/contracts/backend/README.md`
+- `../../../specs/contracts/backend/data-sourcing.md`
 - `../../../specs/contracts/rules/README.md`
 - `../../../specs/contracts/backend/validation.md`
 - `../../../specs/contracts/backend/verification-fallbacks.md`

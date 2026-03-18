@@ -63,6 +63,11 @@ After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
 undecided feature packs MUST NOT be loaded, summarized, or copied.
 
+The Frontend agent MUST treat
+`../../runs/current/artifacts/architecture/data-sourcing-contract.md` as the
+authoritative boundary for what data may stay static in the bundle versus what
+must be fetched from the backend.
+
 This applies in particular to:
 
 - `font-awesome-icons`
@@ -155,6 +160,12 @@ non-visible work does not require preview capture. The Frontend agent MUST
 use `npm run capture:ui-previews` when the generated app provides it, and MUST
 update `../../runs/current/evidence/ui-previews/manifest.md` so Product can
 review the saved files directly.
+
+The Frontend agent MUST NOT ship hardcoded dynamic or ephemeral user-visible
+data such as dashboard metrics, blockers, history rows, queue rows, verification
+state, or environment-derived summaries. If the approved UX needs that data
+and the backend does not yet expose it, the Frontend agent MUST escalate the
+contract gap instead of embedding substitute literals.
 
 ## Escalation targets
 

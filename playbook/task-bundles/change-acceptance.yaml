@@ -10,6 +10,8 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/architecture/data-sourcing-contract.md
+  - runs/current/evidence/quality/data-sourcing-audit.md
 writable_targets:
   - runs/current/artifacts/**
   - runs/current/changes/*/promotion.yaml

@@ -108,6 +108,13 @@ resource behavior matrix, then reconcile those artifacts with the Architect's
 resource classification before choosing exposure shape, mutability, or query
 behavior for any resource.
 
+The Backend agent MUST also treat
+`../../runs/current/artifacts/architecture/data-sourcing-contract.md` as
+authoritative for dynamic UI data ownership. If that contract marks a surface
+as API-backed, the Backend agent MUST implement or clarify the required
+resource, read-model, or metadata lane instead of leaving the frontend to
+hardcode substitute values.
+
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
 

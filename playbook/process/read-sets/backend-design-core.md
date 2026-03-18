@@ -10,6 +10,7 @@ Required startup reads:
 - `../phases/phase-4-backend-design-and-rules-mapping.md`
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/contracts/backend/README.md`
+- `../../../specs/contracts/backend/data-sourcing.md`
 - `../../../specs/contracts/rules/README.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`

@@ -14,6 +14,7 @@ required_artifacts:
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/resource-naming.md
   - runs/current/artifacts/architecture/resource-classification.md
+  - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/runtime-bom.md
 reference_only:
   - runs/current/artifacts/product/workflows.md

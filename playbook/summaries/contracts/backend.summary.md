@@ -8,6 +8,7 @@ The backend contract controls:
 - SAFRS/FastAPI startup order
 - model naming and exposure rules
 - route discovery
+- API-backed dynamic data delivery and read-model obligations
 - query commitments
 - backend validation and fallback verification
 

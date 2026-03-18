@@ -26,6 +26,8 @@ readiness note in:
   `specs/contracts/backend/`, `specs/contracts/rules/`, and
   `specs/contracts/deployment/` technical contracts when packaging is in scope
 - verify schema/runtime wiring
+- verify that user-visible dynamic and ephemeral data comes from the approved
+  backend/API contracts instead of hardcoded frontend literals
 - verify frontend behavior against real backend data
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
@@ -57,6 +59,8 @@ readiness note in:
   delivery environment does not already have it
 - run the basic Playwright smoke suite as the final pre-delivery step
 - populate the full quality evidence pack under `runs/current/evidence/quality/`
+- write `runs/current/evidence/quality/data-sourcing-audit.md` and explicitly
+  call out any hardcoded dynamic-data violations or confirm none were found
 - cite the exact evidence files used when writing the final
   `integration-review.md`
 
@@ -70,6 +74,7 @@ readiness note in:
 - `runs/current/evidence/ui-previews/manifest.md`
 - `runs/current/evidence/frontend-usability.md`
 - `runs/current/evidence/quality/crud-matrix.md`
+- `runs/current/evidence/quality/data-sourcing-audit.md`
 - `runs/current/evidence/quality/seed-data-audit.md`
 - `runs/current/evidence/quality/ui-copy-audit.md`
 - `runs/current/evidence/quality/test-results.md`
@@ -112,6 +117,8 @@ readiness note in:
 - no required CRUD path remains unproven
 - the app is not accepted on shell loading alone; live backend data rendering
   is proven
+- user-visible dynamic or ephemeral data follows the approved
+  `data-sourcing-contract.md` and is not hardcoded in frontend delivery code
 - no unapproved starter, mock, or demo rows remain visible
 - required custom pages are not metadata or status placeholders
 - the quality evidence pack exists and is internally consistent
@@ -135,3 +142,5 @@ Integration review fails when:
 - leftover unapproved demo, mock, or starter data is visible
 - required custom pages are still metadata or status placeholders
 - the quality evidence pack is missing or contradictory
+- a required dynamic surface is implemented with hardcoded frontend data
+  instead of the approved API-backed contract

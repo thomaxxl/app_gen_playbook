@@ -24,6 +24,7 @@ The agent MUST load these files first:
 - [models-and-naming.md](models-and-naming.md)
 - [runtime-and-startup.md](runtime-and-startup.md)
 - [route-discovery.md](route-discovery.md)
+- [data-sourcing.md](data-sourcing.md)
 
 The agent MUST also consult:
 

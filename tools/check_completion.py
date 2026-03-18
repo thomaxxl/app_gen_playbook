@@ -40,6 +40,7 @@ REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/frontend-browser-proof.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/ui-previews/manifest.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/crud-matrix.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/data-sourcing-audit.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/seed-data-audit.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/ui-copy-audit.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/test-results.md", "architect", "phase-6-integration-review"),

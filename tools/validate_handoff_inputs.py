@@ -34,6 +34,7 @@ QUALITY_EVIDENCE_PATHS = {
     "runs/current/evidence/frontend-usability.md",
     "runs/current/evidence/ui-previews/manifest.md",
     "runs/current/evidence/quality/crud-matrix.md",
+    "runs/current/evidence/quality/data-sourcing-audit.md",
     "runs/current/evidence/quality/seed-data-audit.md",
     "runs/current/evidence/quality/ui-copy-audit.md",
     "runs/current/evidence/quality/test-results.md",

@@ -20,6 +20,8 @@ Design the user journey and page behavior before implementation diverges.
 - define accessibility-visible behavior and any higher-risk accessibility notes
 - define custom-page behavior
 - define relationship display patterns
+- define which screen and custom-view data is API-driven versus static UI
+  configuration
 - define any approved frontend validation mirrors and trace them to business
   rule IDs
 
@@ -50,5 +52,7 @@ Design the user journey and page behavior before implementation diverges.
 - any mirrored frontend validation is traceable to approved business-rule IDs
 - architect signs off on boundary compliance
 - backend understands frontend data needs
+- screen and custom-view specs explicitly identify which user-visible data must
+  come from the API
 - the `runs/current/artifacts/ux/` package is marked `ready-for-handoff` or
   `approved`

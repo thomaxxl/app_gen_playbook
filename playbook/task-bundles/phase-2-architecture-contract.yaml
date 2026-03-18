@@ -20,6 +20,7 @@ required_artifacts:
   - runs/current/artifacts/architecture/load-plan.md
 reference_only:
   - specs/architecture/README.md
+  - specs/architecture/data-sourcing-contract.md
   - specs/architecture/dependency-provisioning.md
   - playbook/process/rename-starter-trio-checklist.md
 writable_targets:

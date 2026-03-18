@@ -19,6 +19,8 @@ details that need more precision than the global summary.
 - Business-rule intent is owned by Product through
   `runs/current/artifacts/product/business-rules.md`.
 - Authoritative rule execution is owned by Backend.
+- User-visible dynamic or ephemeral data is owned by the backend/API contract,
+  not by frontend JavaScript literals.
 - Frontend MAY mirror only the subset of approved rules explicitly marked for
   mirroring.
 - Mirrored frontend validation exists for UX and latency only; it MUST NOT
@@ -43,6 +45,16 @@ When `dependency_provisioning.mode = preprovisioned-reuse-only`:
 - roles may only verify, reuse, and normalize the approved dependency roots
 - missing dependencies are an operator or environment block, not a role-owned
   repair task
+
+When a run-owned or implementation surface needs dynamic, time-varying,
+database-backed, workflow-backed, or environment-backed data:
+
+- Architecture MUST classify the source in
+  `runs/current/artifacts/architecture/data-sourcing-contract.md`
+- Backend MUST expose the approved API/resource/read-model/meta contract
+- Frontend MUST fetch that data instead of embedding it in the bundle
+- if the contract is missing or the backend does not expose the needed data,
+  roles MUST escalate the gap instead of hardcoding substitute values
 
 ## Artifact discipline
 

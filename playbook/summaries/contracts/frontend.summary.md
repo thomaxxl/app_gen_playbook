@@ -5,6 +5,7 @@ Load this when a task touches frontend implementation behavior.
 The frontend contract controls:
 
 - React-admin runtime wiring
+- dynamic-data sourcing boundaries
 - route/base-path behavior
 - entry page behavior
 - relationship UI

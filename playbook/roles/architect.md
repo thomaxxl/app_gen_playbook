@@ -12,6 +12,7 @@ backend, and rules can implement without guessing.
 - generated-versus-custom boundaries
 - runtime BOM and package freeze decisions
 - dependency provisioning policy
+- cross-layer data-sourcing ownership
 - capability profile and load plan
 - resource classification
 - integration boundary decisions
@@ -94,6 +95,7 @@ The Architect owns and MUST maintain:
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
 - `../../runs/current/artifacts/architecture/dependency-provisioning.md`
+- `../../runs/current/artifacts/architecture/data-sourcing-contract.md`
 - role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
 During change analysis, if the change packet marks a baseline challenge or

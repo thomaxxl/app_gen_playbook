@@ -232,6 +232,16 @@ REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
     ),
     (
         "architect",
+        "runs/current/evidence/quality/data-sourcing-audit.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
         "runs/current/evidence/quality/seed-data-audit.md",
         "missing",
         (

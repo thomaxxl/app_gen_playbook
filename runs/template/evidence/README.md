@@ -13,6 +13,7 @@ Expected run-owned evidence includes, when applicable:
   captured, not required, or blocked by environment constraints
 - `quality/` containing:
   - `crud-matrix.md`
+  - `data-sourcing-audit.md`
   - `seed-data-audit.md`
   - `ui-copy-audit.md`
   - `test-results.md`

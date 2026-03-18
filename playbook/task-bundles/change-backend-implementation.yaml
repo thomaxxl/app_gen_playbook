@@ -10,6 +10,7 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/architecture/resource-naming.md
+  - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/dependency-provisioning.md
 writable_targets:
   - runs/current/changes/*/verification/**

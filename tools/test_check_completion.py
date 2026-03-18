@@ -234,6 +234,7 @@ class CheckCompletionTests(unittest.TestCase):
                 "# UI Preview Manifest\n\ncapture_status: environment-blocked\n",
             )
             write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
             write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
             write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
             write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")

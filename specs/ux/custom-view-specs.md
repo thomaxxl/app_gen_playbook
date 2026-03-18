@@ -21,9 +21,9 @@ version at `../../runs/current/artifacts/ux/custom-view-specs.md`.
 
 The real artifact MUST include a table with at least these columns:
 
-| View ID | Route | View class | Required or optional | Starter compatible | Standard page shell required | Header or hero structure | Summary sections | CTA hierarchy | Proof or reassurance model | Data joins needed | Main interactions | CTA and recovery behavior | Chart text fallback | Mobile fallback | Acceptance hooks | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | Home/Landing/CustomDashboard/other custom | required/optional | yes/no | yes/no/custom shell | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace |
+| View ID | Route | View class | Required or optional | Starter compatible | Standard page shell required | Header or hero structure | Summary sections | CTA hierarchy | Proof or reassurance model | Data joins needed | Dynamic data that MUST come from API | Frontend-static config allowed | Main interactions | CTA and recovery behavior | Chart text fallback | Mobile fallback | Acceptance hooks | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | Home/Landing/CustomDashboard/other custom | required/optional | yes/no | yes/no/custom shell | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace |
 
 ## Required sections
 
@@ -37,6 +37,9 @@ The real artifact MUST define:
 - the CTA hierarchy for each custom view
 - how each custom view shows proof or reassurance
 - which data joins or summary fetches each custom view needs
+- which dynamic values each custom view MUST fetch from the backend
+- which values are only static frontend configuration and MAY stay in the
+  bundle
 - how each custom view participates in acceptance criteria
 - whether the view remains starter-compatible or requires a non-starter rewrite
 - what page-header layout each view requires

@@ -19,9 +19,9 @@ version at `../../runs/current/artifacts/ux/screen-inventory.md`.
 
 The real artifact MUST include a table with at least these columns:
 
-| Screen ID | Route | Screen type | Purpose | Above-the-fold goal | Page header summary | Above-the-fold content | Primary CTA | Primary summary data | User entry path | Data dependencies | Main actions | Empty-state CTA | Success states | Failure states | Responsive notes | Accessibility notes | Workflow IDs | Starter page shell sufficient for landing behavior |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | generated list/show/edit/create, Home, dashboard, singleton, custom | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | yes/no |
+| Screen ID | Route | Screen type | Purpose | Above-the-fold goal | Page header summary | Above-the-fold content | Primary CTA | Primary summary data | User entry path | Data dependencies | Dynamic data that MUST come from API | Frontend-static config allowed | Main actions | Empty-state CTA | Success states | Failure states | Responsive notes | Accessibility notes | Workflow IDs | Starter page shell sufficient for landing behavior |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | generated list/show/edit/create, Home, dashboard, singleton, custom | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | replace | yes/no |
 
 ## Required sections
 
@@ -37,6 +37,10 @@ The real artifact MUST define:
 - the main above-the-fold content each screen must expose
 - the primary CTA and summary data each screen must expose when it is part of
   the landing strategy
+- which screen data is authoritative backend/API data and must not be
+  hardcoded in frontend source
+- which screen-level values are only static UI configuration and may remain in
+  the frontend bundle
 - the empty-state CTA or recovery behavior each screen requires
 - any screen-specific responsive or accessibility decision that differs from
   the default frontend contract

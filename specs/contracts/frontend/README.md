@@ -23,6 +23,7 @@ The agent MUST load these files first:
 - [dependencies.md](dependencies.md)
 - [scaffold.md](scaffold.md)
 - [runtime-contract.md](runtime-contract.md)
+- [data-sourcing.md](data-sourcing.md)
 - [routing-and-paths.md](routing-and-paths.md)
 - [home-and-entry.md](home-and-entry.md)
 - [relationship-ui.md](relationship-ui.md)

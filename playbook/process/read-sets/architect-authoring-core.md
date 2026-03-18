@@ -15,6 +15,7 @@ Required startup reads:
 - `../../../playbook/summaries/contracts/backend.summary.md`
 - `../../../playbook/summaries/contracts/rules.summary.md`
 - `../../../specs/architecture/README.md`
+- `../../../specs/architecture/data-sourcing-contract.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 

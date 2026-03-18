@@ -82,6 +82,8 @@ business-rule behavior, or route meaning.
 - implement the baseline relationship runtime, including relationship metadata
   synthesis, related-record dialogs, and show-page relationship tabs
 - implement custom pages
+- implement dynamic user-visible data retrieval according to
+  `runs/current/artifacts/architecture/data-sourcing-contract.md`
 - implement shared page-shell and header consistency
 - implement navigation and user-visible states
 - implement accessibility-visible behavior and focus/orientation handling
@@ -109,6 +111,8 @@ business-rule behavior, or route meaning.
 - implement tests
 - ensure generated dependency manifests are concrete before install
 - implement the preferred HTTP/ASGI verification path
+- implement any approved read-model or metadata endpoints required by the
+  architecture data-sourcing contract
 - keep the fallback verification harness available when the preferred path is
   broken
 - if the preferred in-process HTTP path is host-unstable, gate it behind an
@@ -152,6 +156,8 @@ business-rule behavior, or route meaning.
   unresolved blockers
 - browser-level Playwright smoke verification exists and passes, or a recorded
   host/sandbox constraint explains the approved external verification path
+- no user-visible dynamic or ephemeral data remains hardcoded in frontend
+  source where the contract requires API-backed retrieval
 - backend verification evidence exists for either the preferred path or the
   documented fallback path
 - every rule marked with a frontend mirror mode other than `none` has a

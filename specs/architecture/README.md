@@ -21,6 +21,7 @@ Template files:
 - `integration-boundary.md`
 - `resource-naming.md`
 - `route-and-entry-model.md`
+- `data-sourcing-contract.md`
 - `runtime-bom.md`
 - `dependency-provisioning.md`
 - `generated-vs-custom.md`

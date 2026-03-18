@@ -13,6 +13,8 @@ The run is blocked if any of these are true:
 - the app only proves shell loading and does not prove real live-data rendering
 - a visible user-facing page reads like metadata, route inventory, contract
   recovery, runtime diagnostics, or template cleanup copy
+- user-visible dynamic or ephemeral data is hardcoded in frontend source where
+  the approved contract requires API-backed retrieval
 - leftover mock, demo, or starter data remains visible without explicit
   approval in `runs/current/artifacts/product/sample-data.md`
 - a required custom page is still a metadata, status, or contract placeholder
@@ -33,6 +35,7 @@ The canonical quality evidence pack lives under:
 Required files:
 
 - `crud-matrix.md`
+- `data-sourcing-audit.md`
 - `seed-data-audit.md`
 - `ui-copy-audit.md`
 - `test-results.md`

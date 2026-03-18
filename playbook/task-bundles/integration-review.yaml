@@ -12,6 +12,7 @@ required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/overview.md
+  - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/runtime-bom.md
   - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/ux/navigation.md
@@ -24,6 +25,7 @@ required_artifacts:
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/ui-previews/manifest.md
   - runs/current/evidence/quality/crud-matrix.md
+  - runs/current/evidence/quality/data-sourcing-audit.md
   - runs/current/evidence/quality/seed-data-audit.md
   - runs/current/evidence/quality/ui-copy-audit.md
   - runs/current/evidence/quality/test-results.md
