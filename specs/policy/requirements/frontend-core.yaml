@@ -1,0 +1,42 @@
+id: frontend-core
+title: Frontend core requirements
+description: Existing frontend-facing enforcement hooks registered as policy.
+requirements:
+  - id: FE-USABILITY-001
+    title: Frontend must not ship visible debug-shell or recovery copy
+    class: code_pattern
+    normative: MUST_NOT
+    severity: error
+    family: frontend-core
+    profiles:
+      - frontend-core
+      - gate-quality
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    owner_roles:
+      - frontend
+      - architect
+      - product_manager
+      - qa
+    source_docs:
+      - specs/contracts/frontend/validation.md
+      - playbook/process/quality-gates.md
+      - playbook/roles/frontend.md
+    description: >
+      User-facing frontend surfaces must not read like contract recovery,
+      route inventory, runtime diagnostics, or placeholder metadata shells.
+    validator:
+      kind: legacy_script
+      entrypoint: tools/check_frontend_usability.py
+    evidence:
+      required_files:
+        - runs/current/evidence/frontend-usability.md
+        - runs/current/evidence/ui-previews/manifest.md
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: true
+    remediation: >
+      Replace debug-shell copy with real product copy and update the reviewed
+      frontend usability evidence before handoff.

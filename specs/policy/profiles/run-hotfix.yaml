@@ -1,0 +1,4 @@
+id: run-hotfix
+title: Hotfix run policy
+includes:
+  - process-core

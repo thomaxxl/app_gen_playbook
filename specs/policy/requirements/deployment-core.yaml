@@ -1,0 +1,38 @@
+id: deployment-core
+title: Deployment core requirements
+description: Dependency/runtime provisioning policy registered as executable enforcement.
+requirements:
+  - id: DEP-PROVISIONING-001
+    title: Dependency provisioning mode is respected
+    class: load_policy
+    normative: MUST
+    severity: error
+    family: deployment-core
+    profiles:
+      - deployment-core
+      - role-devops
+      - phase-8-qa-pre-delivery-validation
+    owner_roles:
+      - deployment
+      - qa
+      - ceo
+    source_docs:
+      - playbook/roles/devops.md
+      - playbook/process/orchestrator-runtime.md
+    description: >
+      Preprovisioned dependency reuse mode must fail closed when dependency
+      roots are missing or incomplete, rather than silently creating new
+      environments or packages.
+    validator:
+      kind: legacy_script
+      entrypoint: tools/check_dependency_provisioning.py
+    evidence:
+      required_files:
+        - runs/current/artifacts/architecture/dependency-provisioning.md
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Provision the declared dependency roots outside the playbook, update
+      local runtime env overrides, and rerun the dependency check.

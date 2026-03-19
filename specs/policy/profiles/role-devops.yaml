@@ -1,0 +1,5 @@
+id: role-devops
+title: DevOps active policy
+includes:
+  - process-core
+  - deployment-core

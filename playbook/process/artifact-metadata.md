@@ -23,6 +23,11 @@ last_updated_by: product_manager
 
 This is an unfenced YAML-like header block at the top of the file.
 
+The executable enforcement source for this rule lives under:
+
+- `specs/policy/requirements/process-core.yaml`
+- requirement id `PROC-ARTMETA-001`
+
 Allowed `status` values:
 
 - `stub`

@@ -5,6 +5,15 @@ This file defines the canonical release blockers for the playbook.
 These blockers apply before integration review can pass, before product
 acceptance can pass, and before the orchestrator can treat the run as complete.
 
+The prose here explains gate intent. The executable enforcement source lives in
+the sidecar policy registry under `specs/policy/`, especially:
+
+- `specs/policy/requirements/evidence-core.yaml`
+- `specs/policy/requirements/frontend-core.yaml`
+- `specs/policy/requirements/backend-core.yaml`
+- `specs/policy/profiles/gate-quality.yaml`
+- `specs/policy/profiles/gate-acceptance.yaml`
+
 ## Hard blockers
 
 The run is blocked if any of these are true:

@@ -1,0 +1,41 @@
+id: process-core
+title: Process core requirements
+description: Executable rules for process and metadata consistency.
+requirements:
+  - id: PROC-ARTMETA-001
+    title: Run-owned artifact metadata format is consistent and unfenced
+    class: artifact_metadata
+    normative: MUST
+    severity: error
+    family: process-core
+    profiles:
+      - process-core
+    owner_roles:
+      - product_manager
+      - architect
+      - frontend
+      - backend
+      - deployment
+      - qa
+      - ceo
+    source_docs:
+      - playbook/process/artifact-metadata.md
+      - specs/contracts/artifact-frontmatter-template.md
+    description: >
+      Run-owned artifact templates and metadata guidance must agree on the
+      canonical unfenced YAML-like header format at the top of run-owned
+      artifacts.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/artifacts/validate_artifact_metadata_contract.py
+    evidence:
+      required_files:
+        - playbook/process/artifact-metadata.md
+        - specs/contracts/artifact-frontmatter-template.md
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Align the metadata guidance and template to the same unfenced header
+      format and remove contradictory front-matter delimiters.

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/requirement.schema.json",
+  "title": "Policy Requirement Set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "requirements"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/requirement"}
+    }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "class",
+        "normative",
+        "severity",
+        "family",
+        "owner_roles",
+        "source_docs",
+        "description",
+        "validator"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Z0-9-]+$"},
+        "title": {"type": "string", "minLength": 1},
+        "class": {
+          "type": "string",
+          "enum": [
+            "load_policy",
+            "ownership_policy",
+            "artifact_presence",
+            "artifact_metadata",
+            "artifact_shape",
+            "cross_artifact_consistency",
+            "code_pattern",
+            "route_exposure",
+            "runtime_behavior",
+            "test_traceability",
+            "evidence_presence",
+            "review_attestation",
+            "feature_gate",
+            "waiver_policy"
+          ]
+        },
+        "normative": {
+          "type": "string",
+          "enum": ["MUST", "MUST_NOT", "SHOULD", "MAY"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info"]
+        },
+        "family": {"type": "string", "minLength": 1},
+        "profiles": {"$ref": "#/$defs/stringArray"},
+        "owner_roles": {"$ref": "#/$defs/stringArray"},
+        "applies_when": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "run_modes": {"$ref": "#/$defs/stringArray"},
+            "phases": {"$ref": "#/$defs/stringArray"},
+            "gates": {"$ref": "#/$defs/stringArray"},
+            "features_any": {"$ref": "#/$defs/stringArray"}
+          }
+        },
+        "targets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "paths": {"$ref": "#/$defs/stringArray"},
+            "artifacts": {"$ref": "#/$defs/stringArray"}
+          }
+        },
+        "source_docs": {"$ref": "#/$defs/stringArray"},
+        "description": {"type": "string", "minLength": 1},
+        "validator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "entrypoint"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["legacy_script", "python_function"]
+            },
+            "entrypoint": {"type": "string", "minLength": 1},
+            "params": {"type": "object"}
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_files": {"$ref": "#/$defs/stringArray"}
+          }
+        },
+        "exceptions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowed": {"type": "boolean"}
+          }
+        },
+        "manual_attestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": {"type": "boolean"}
+          }
+        },
+        "remediation": {"type": "string"}
+      }
+    }
+  }
+}

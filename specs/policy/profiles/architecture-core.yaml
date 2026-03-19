@@ -1,0 +1,4 @@
+id: architecture-core
+title: Architecture core policy
+includes:
+  - process-core

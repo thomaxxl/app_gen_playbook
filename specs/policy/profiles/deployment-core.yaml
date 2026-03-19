@@ -1,0 +1,4 @@
+id: deployment-core
+title: Deployment core policy
+requirement_ids:
+  - DEP-PROVISIONING-001

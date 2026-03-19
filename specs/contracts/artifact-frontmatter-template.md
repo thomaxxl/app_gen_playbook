@@ -1,4 +1,3 @@
----
 owner: role_name
 phase: phase-name
 status: stub
@@ -7,7 +6,6 @@ depends_on:
 unresolved:
   - replace with run-specific decision
 last_updated_by: role_name
----
 
 # Artifact Frontmatter Template
 
@@ -22,5 +20,6 @@ Use this block at the top of run-owned artifact files under:
 Rules:
 
 - keep the metadata small and machine-readable
+- keep it unfenced; do not wrap it in `---` front-matter delimiters
 - update `status`, `unresolved`, and `last_updated_by` as the artifact evolves
 - do not replace artifact body content with inbox-only state

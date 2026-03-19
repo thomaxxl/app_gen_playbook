@@ -1,0 +1,4 @@
+id: process-core
+title: Process core policy
+requirement_ids:
+  - PROC-ARTMETA-001

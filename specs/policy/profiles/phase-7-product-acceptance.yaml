@@ -1,0 +1,4 @@
+id: phase-7-product-acceptance
+title: Phase 7 product acceptance policy
+includes:
+  - gate-acceptance

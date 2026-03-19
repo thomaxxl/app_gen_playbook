@@ -1,0 +1,4 @@
+id: evidence-core
+title: Evidence core policy
+requirement_ids:
+  - EVID-GATE-001

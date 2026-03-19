@@ -1,0 +1,6 @@
+id: role-product-manager
+title: Product Manager active policy
+includes:
+  - process-core
+  - evidence-core
+  - product-core

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/waiver.schema.json",
+  "title": "Policy Waiver",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "requirement_ids", "approved_by", "status"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "requirement_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "pattern": "^[A-Z0-9-]+$"}
+    },
+    "title": {"type": "string"},
+    "reason": {"type": "string"},
+    "approved_by": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["approved", "expired", "superseded"]
+    },
+    "scope": {"type": "object"},
+    "evidence": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

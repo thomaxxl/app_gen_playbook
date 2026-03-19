@@ -1,0 +1,5 @@
+id: phase-8-qa-pre-delivery-validation
+title: Phase 8 QA policy
+includes:
+  - gate-quality
+  - deployment-core

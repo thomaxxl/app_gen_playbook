@@ -1,0 +1,4 @@
+id: frontend-core
+title: Frontend core policy
+requirement_ids:
+  - FE-USABILITY-001

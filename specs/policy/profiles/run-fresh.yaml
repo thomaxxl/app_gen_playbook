@@ -1,0 +1,4 @@
+id: run-fresh
+title: Fresh run policy
+includes:
+  - process-core

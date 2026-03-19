@@ -1,0 +1,41 @@
+id: backend-core
+title: Backend core requirements
+description: Existing backend route-exposure enforcement registered as policy.
+requirements:
+  - id: BE-SAFRS-ORM-001
+    title: DB-backed resources use real SAFRS and ORM exposure
+    class: route_exposure
+    normative: MUST
+    severity: error
+    family: backend-core
+    profiles:
+      - backend-core
+      - gate-quality
+      - phase-4-backend-design-and-rules-mapping
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    owner_roles:
+      - backend
+      - architect
+      - qa
+    source_docs:
+      - specs/contracts/backend/validation.md
+      - playbook/process/quality-gates.md
+      - playbook/roles/backend.md
+    description: >
+      Required DB-backed resources must use the ORM + SAFRS lane instead of
+      fake JSON route adapters or renamed OpenAPI pretending to be JSON:API.
+    validator:
+      kind: legacy_script
+      entrypoint: tools/check_backend_orm_safrs.py
+    evidence:
+      required_files:
+        - runs/current/evidence/contract-samples.md
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Restore mapped ORM models and real SAFRS exposure, or record a narrow
+      architecture waiver for the non-SAFRS exception.

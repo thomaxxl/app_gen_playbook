@@ -1,0 +1,5 @@
+id: phase-1-product-definition
+title: Phase 1 product definition policy
+includes:
+  - process-core
+  - product-core

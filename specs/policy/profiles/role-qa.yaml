@@ -1,0 +1,8 @@
+id: role-qa
+title: QA active policy
+includes:
+  - process-core
+  - evidence-core
+  - frontend-core
+  - backend-core
+  - deployment-core

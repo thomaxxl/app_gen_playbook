@@ -1,0 +1,6 @@
+id: gate-quality
+title: Quality gate policy
+includes:
+  - evidence-core
+  - frontend-core
+  - backend-core

@@ -1,0 +1,6 @@
+id: role-frontend
+title: Frontend active policy
+includes:
+  - process-core
+  - frontend-core
+  - evidence-core

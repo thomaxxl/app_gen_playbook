@@ -1,0 +1,49 @@
+id: evidence-core
+title: Evidence and gate requirements
+description: Existing hard gate validators registered as executable requirements.
+requirements:
+  - id: EVID-GATE-001
+    title: Completion gate evidence is present and consistent
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: evidence-core
+    profiles:
+      - evidence-core
+      - gate-quality
+      - gate-acceptance
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    owner_roles:
+      - architect
+      - product_manager
+      - qa
+      - ceo
+    source_docs:
+      - playbook/process/quality-gates.md
+      - playbook/process/done.md
+      - playbook/process/phases/phase-6-integration-review.md
+      - playbook/process/phases/phase-7-product-acceptance.md
+      - playbook/process/phases/phase-8-qa-pre-delivery-validation.md
+    description: >
+      Required evidence packs, preview review artifacts, QA review, and gate
+      statuses must pass the canonical completion gate before the run can be
+      treated as complete.
+    validator:
+      kind: legacy_script
+      entrypoint: tools/check_completion.py
+    evidence:
+      required_files:
+        - runs/current/evidence/contract-samples.md
+        - runs/current/evidence/frontend-usability.md
+        - runs/current/evidence/ui-previews/manifest.md
+        - runs/current/evidence/quality/data-sourcing-audit.md
+        - runs/current/evidence/qa-delivery-review.md
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Complete the missing evidence pack items, resolve contradictory gate
+      states, or reopen the run until the canonical completion checker passes.

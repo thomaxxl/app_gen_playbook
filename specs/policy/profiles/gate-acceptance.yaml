@@ -1,0 +1,6 @@
+id: gate-acceptance
+title: Acceptance gate policy
+includes:
+  - evidence-core
+  - frontend-core
+  - backend-core
