@@ -1,0 +1,8 @@
+safrs
+Flask
+Flask-Cors
+fastapi
+gunicorn
+PyYAML
+SQLAlchemy
+uvicorn
