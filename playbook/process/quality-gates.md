@@ -33,6 +33,8 @@ The run is blocked if any of these are true:
 - approved rule IDs do not have the required backend test coverage
 - the final Playwright smoke validation is missing without a documented
   blocked-environment path
+- captured UI preview screenshots exist but were not analyzed for visible
+  content by Frontend, Architect, and Product Manager
 - the required quality evidence pack is missing, still placeholder, blocked
   without explanation, or contradictory
 

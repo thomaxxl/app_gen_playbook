@@ -2,7 +2,8 @@
 
 Use this role for sparse-input interpretation, product framing, resource
 inventory, workflows, business-rule intent, custom-page purpose, acceptance
-criteria, and sample-data expectations.
+criteria, sample-data expectations, and final screenshot-content approval
+during acceptance.
 
 Always load:
 

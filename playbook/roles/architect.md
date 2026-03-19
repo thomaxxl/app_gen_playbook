@@ -183,6 +183,11 @@ change users, scope, workflows, or required custom pages as product behavior.
 - correction requests back to Product Manager when product intent is still
   ambiguous
 
+When UI previews exist, the Architect MUST review the actual screenshot
+content, not only the manifest metadata, before approving Gate C. Architect
+approval is recorded by setting `architect_validation: approved` in
+`../../runs/current/evidence/ui-previews/manifest.md`.
+
 ## Completion rule
 
 Process every inbox file, update owned architecture artifacts, emit needed

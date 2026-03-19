@@ -83,6 +83,7 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 - `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/artifacts/product/**`
+- `../../runs/current/evidence/ui-previews/manifest.md`
 - `../../runs/current/changes/*/request.md`
 - `../../runs/current/changes/*/classification.yaml`
 - `../../runs/current/changes/*/affected-artifacts.md`
@@ -140,6 +141,12 @@ During Phase 7 acceptance, the Product Manager MUST judge the actual user-facing
 app, not only technical gate notes. Product acceptance MUST fail if the visible
 UI still reads like a contract, recovery, route-inventory, or other
 implementation/debug shell instead of the intended product.
+
+When UI previews were captured, the Product Manager MUST review the actual
+images and record `product_manager_validation: approved` in
+`../../runs/current/evidence/ui-previews/manifest.md` only after confirming
+the screenshots show usable content instead of blank, crashed, fallback, or
+placeholder screens.
 
 For a fresh run, the Product Manager MUST NOT use `../../example/` or
 `../../app/` as product inputs unless the task explicitly requests comparison

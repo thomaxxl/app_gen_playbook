@@ -29,3 +29,7 @@ screenshots.
 
 These screenshots support, but do not replace, the required
 `runs/current/evidence/frontend-usability.md` review record.
+
+When screenshots are present, the manifest must also record content review and
+explicit signoff from Frontend, Architect, and Product Manager. A PNG file by
+itself is not valid preview evidence.

@@ -10,7 +10,9 @@ Expected run-owned evidence includes, when applicable:
 - `frontend-usability.md` describing the reviewed entry/custom/generated pages
   and whether any internal debug or recovery copy leaked into visible UI
 - `ui-previews/manifest.md` stating whether user-review screenshots were
-  captured, not required, or blocked by environment constraints
+  captured, not required, or blocked by environment constraints; when
+  captured, it must also record content review and Frontend, Architect, plus
+  Product Manager signoff
 - `quality/` containing:
   - `crud-matrix.md`
   - `data-sourcing-audit.md`

@@ -18,6 +18,7 @@ type PreviewCapture = {
   file: string;
   route: string;
   surface: string;
+  assertions: string[];
 };
 
 function resolvePreviewOutputDir(): string {
@@ -49,11 +50,21 @@ async function writeManifest(
     "# UI Preview Manifest",
     "",
     "capture_status: captured",
+    "content_validation_status: reviewed",
     "- command: `npm run capture:ui-previews`",
     "- reviewed_surfaces:",
     ...captures.map((capture) =>
       `  - \`${capture.surface}\` at \`${capture.route}\` -> \`${capture.file}\``,
     ),
+    "- automated_content_assertions:",
+    ...captures.flatMap((capture) => [
+      `  - \`${capture.surface}\``,
+      ...capture.assertions.map((assertion) => `    - ${assertion}`),
+    ]),
+    "- frontend_validation: approved",
+    "- architect_validation: pending-review",
+    "- product_manager_validation: pending-review",
+    "- review_conclusion: Frontend verified the captured surfaces show meaningful visible content; Architect and Product Manager review is still required.",
     "",
     "These screenshots are intended for product-facing review.",
     "",
@@ -81,6 +92,11 @@ test("capture reviewable UI previews", async ({ page }) => {
     path: path.join(outputDir, "home-desktop.png"),
   });
   captures.push({
+    assertions: [
+      "hero purpose statement is visible",
+      "primary CTA is visible",
+      "proof strip is visible",
+    ],
     file: "home-desktop.png",
     route: "/admin-app/#/Home",
     surface: "Home desktop",
@@ -93,6 +109,9 @@ test("capture reviewable UI previews", async ({ page }) => {
     path: path.join(outputDir, "collection-list.png"),
   });
   captures.push({
+    assertions: [
+      "main application region is visible",
+    ],
     file: "collection-list.png",
     route: "/admin-app/#/Collection",
     surface: "Collection list",
@@ -106,6 +125,9 @@ test("capture reviewable UI previews", async ({ page }) => {
     path: path.join(outputDir, "home-mobile.png"),
   });
   captures.push({
+    assertions: [
+      "primary CTA remains visible at mobile width",
+    ],
     file: "home-mobile.png",
     route: "/admin-app/#/Home",
     surface: "Home mobile",

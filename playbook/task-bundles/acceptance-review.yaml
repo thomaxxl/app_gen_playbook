@@ -41,4 +41,5 @@ reference_only:
   - runs/current/artifacts/backend-design/test-plan.md
 writable_targets:
   - runs/current/artifacts/product/**
+  - runs/current/evidence/ui-previews/manifest.md
   - runs/current/role-state/product_manager/**

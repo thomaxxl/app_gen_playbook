@@ -347,7 +347,12 @@ class CheckCompletionTests(unittest.TestCase):
                         "# UI Preview Manifest",
                         "",
                         "- capture_status: captured",
+                        "- content_validation_status: reviewed",
                         "- command: npm run capture:ui-previews",
+                        "- frontend_validation: approved",
+                        "- architect_validation: approved",
+                        "- product_manager_validation: approved",
+                        "- review_conclusion: reviewed screenshots confirm meaningful rendered UI, not a blank or fallback shell",
                     ]
                 )
                 + "\n",
@@ -363,6 +368,71 @@ class CheckCompletionTests(unittest.TestCase):
             blockers = collect_blockers(repo_root)
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
             self.assertFalse(any(blocker["kind"] == "ui-preview-manifest-unstructured" for blocker in matching))
+            self.assertFalse(any(blocker["kind"] == "ui-preview-signoff-missing" for blocker in matching))
+            self.assertFalse(any(blocker["kind"] == "ui-preview-content-validation-missing" for blocker in matching))
+            self.assertFalse(any(blocker["kind"] == "ui-preview-review-conclusion-missing" for blocker in matching))
+
+    def test_requires_ui_preview_signoff_and_review_conclusion_when_captured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "\n".join(
+                    [
+                        "# Contract Samples",
+                        "",
+                        "## SAFRS resource coverage",
+                        "- discovered from /jsonapi.json",
+                        "",
+                        "## Relationship coverage",
+                        "- relationship proof present",
+                        "",
+                        "## Approved non-SAFRS exceptions",
+                        "- none",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "\n".join(
+                    [
+                        "# UI Preview Manifest",
+                        "",
+                        "capture_status: captured",
+                        "content_validation_status: pending-human-review",
+                        "frontend_validation: approved",
+                        "architect_validation: pending-review",
+                        "product_manager_validation: pending-review",
+                        "review_conclusion: pending-human-review",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "runs/current/evidence/ui-previews/project-overview.png", "fake image")
+            write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/quality-summary.md", "present\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
+            self.assertTrue(any(blocker["kind"] == "ui-preview-content-validation-missing" for blocker in matching))
+            self.assertTrue(any(blocker["kind"] == "ui-preview-signoff-missing" for blocker in matching))
+            self.assertTrue(any(blocker["kind"] == "ui-preview-review-conclusion-missing" for blocker in matching))
 
     def test_rejects_environment_blocked_preview_fallback_when_capture_is_available(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

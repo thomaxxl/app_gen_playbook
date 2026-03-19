@@ -33,6 +33,10 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   notes
 - review `runs/current/evidence/ui-previews/manifest.md` and the listed
   screenshots when `capture_status: captured`
+- validate the screenshot content yourself as Product Manager and record
+  `product_manager_validation: approved` in the manifest only after verifying
+  the captured surfaces match the intended product and are not blank, crashed,
+  or placeholder shells
 - review the delivery seed policy in
   `runs/current/artifacts/product/sample-data.md`
 - verify visible data matches the delivery seed policy
@@ -69,7 +73,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - the acceptance record cites the actual reviewed user-facing pages and the
   evidence used to judge them
 - if UI previews were captured, acceptance cites the reviewed screenshot files
-  rather than only mentioning that previews existed
+  rather than only mentioning that previews existed, and the preview manifest
+  carries Frontend, Architect, and Product Manager signoff
 - required CRUD paths are accepted based on evidence, not only page existence
 - required custom pages behave like product surfaces, not metadata viewers
 - the primary entry surface reads like a landing/hero page rather than a
@@ -88,6 +93,7 @@ Acceptance fails when:
 - the first user-facing screen is a generic React-admin list/grid shell
 - user-facing pages still expose implementation or debug language
 - the evidence pack proves unresolved core behavior defects
+- captured screenshot evidence lacks content review or Product Manager signoff
 - required DB-backed resources or relationships are missing from the approved
   SAFRS JSON:API surface
 - required DB-backed resource delivery bypasses the approved ORM lane without

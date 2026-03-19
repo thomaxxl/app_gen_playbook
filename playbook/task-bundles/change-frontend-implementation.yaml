@@ -13,6 +13,8 @@ required_artifacts:
   - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/dependency-provisioning.md
 writable_targets:
+  - runs/current/evidence/frontend-usability.md
+  - runs/current/evidence/ui-previews/**
   - runs/current/changes/*/verification/**
   - runs/current/role-state/frontend/**
   - app/frontend/**

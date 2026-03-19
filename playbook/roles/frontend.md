@@ -82,6 +82,8 @@ This applies in particular to:
 ## Writable targets
 
 - `../../runs/current/artifacts/ux/**`
+- `../../runs/current/evidence/frontend-usability.md`
+- `../../runs/current/evidence/ui-previews/**`
 - `../../runs/current/changes/*/candidate/artifacts/ux/**`
 - `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/frontend/**`
@@ -178,6 +180,20 @@ non-visible work does not require preview capture. The Frontend agent MUST
 use `npm run capture:ui-previews` when the generated app provides it, and MUST
 update `../../runs/current/evidence/ui-previews/manifest.md` so Product can
 review the saved files directly.
+
+The Frontend agent MUST treat preview capture as content-validation work, not
+as blind image export. The capture flow MUST assert meaningful visible content
+before each screenshot, and the manifest MUST record:
+
+- `content_validation_status: reviewed`
+- `frontend_validation: approved`
+- `architect_validation:` pending until Gate C review
+- `product_manager_validation:` pending until acceptance review
+- a concrete `review_conclusion:` rather than a placeholder
+
+The Frontend agent MUST NOT mark screenshot evidence complete if the images are
+blank, crashed, fallback-only, or otherwise fail to show the intended product
+surface.
 
 The Frontend agent MUST NOT ship hardcoded dynamic or ephemeral user-visible
 data such as dashboard metrics, blockers, history rows, queue rows, verification

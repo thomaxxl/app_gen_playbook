@@ -41,7 +41,9 @@ A feature is done only when all of these are true:
   environment was available, representative UI preview screenshots exist under
   `runs/current/evidence/ui-previews/`,
   `runs/current/evidence/ui-previews/manifest.md` points to the reviewable
-  files, or the run evidence explains why they were not captured
+  files, records analyzed screenshot content rather than only file creation,
+  includes Frontend, Architect, and Product Manager approval when captured, or
+  the run evidence explains why they were not captured
 - `runs/current/evidence/frontend-usability.md` exists and records the reviewed
   entry page, custom pages, generated list/show/form flows, and any visible
   debug-shell leakage decision

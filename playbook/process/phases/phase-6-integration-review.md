@@ -55,11 +55,18 @@ readiness note in:
 - when the generated app provides `npm run capture:ui-previews`, use that
   script as the canonical preview-capture path instead of inventing separate
   route-level screenshots
+- reject screenshot evidence that only proves file creation; the manifest and
+  reviewed images must prove meaningful visible content was rendered
+- validate the captured screenshots yourself as Architect and record
+  `architect_validation: approved` in
+  `runs/current/evidence/ui-previews/manifest.md` only after reviewing the
+  image content against the UX artifacts
 - write `runs/current/evidence/frontend-browser-proof.md` as the canonical
   browser-level proof record for the live launcher path
 - maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
   absence is explicitly classified as `captured`, `not-required`, or
-  `environment-blocked`
+  `environment-blocked`, and so captured previews include content-validation
+  status, role signoff, and a review conclusion
 - record the reviewed user-facing surfaces and usability conclusion in
   `runs/current/evidence/frontend-usability.md`
 - verify rules across create/update/delete/reparent flows
@@ -110,8 +117,9 @@ readiness note in:
 - if the run materially changed visible UI and browser execution was
   available, `runs/current/evidence/ui-previews/` contains representative
   screenshots and `runs/current/evidence/ui-previews/manifest.md` tells
-  Product exactly what to review, or the run evidence explains why preview
-  capture was skipped
+  Product exactly what to review, records analyzed content rather than only
+  file creation, and includes Frontend plus Architect signoff, or the run
+  evidence explains why preview capture was skipped
 - `environment-blocked` is not an acceptable preview result when the
   execution-environment prerequisites already proved Playwright screenshot
   capture is available and the generated app exposes `capture:ui-previews`
@@ -166,6 +174,8 @@ Integration review fails when:
 - the primary entry surface is just a generated resource grid or generic list
   shell instead of the approved landing/hero experience
 - the quality evidence pack is missing or contradictory
+- captured preview evidence is missing content analysis or required
+  Frontend/Architect signoff
 - a required dynamic surface is implemented with hardcoded frontend data
   instead of the approved API-backed contract
 - delivery page code bypasses the approved React-admin dataProvider boundary

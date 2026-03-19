@@ -30,5 +30,7 @@ reference_only:
   - runs/current/artifacts/backend-design/query-behavior.md
 writable_targets:
   - runs/current/artifacts/ux/**
+  - runs/current/evidence/frontend-usability.md
+  - runs/current/evidence/ui-previews/**
   - runs/current/role-state/frontend/**
   - app/frontend/**

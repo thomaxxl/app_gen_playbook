@@ -202,6 +202,11 @@ That helper SHOULD populate:
 - `runs/current/evidence/ui-previews/manifest.md`
 - `runs/current/evidence/ui-previews/*.png`
 
+When preview capture succeeds, the resulting manifest SHOULD still mark the
+role validations as pending until Frontend, Architect, and Product Manager
+have reviewed the captured images. The orchestrator may generate the preview
+artifact, but it MUST NOT treat file creation alone as final preview evidence.
+
 If `runs/current/artifacts/devops/execution-prereqs.md` proves
 `playwright_screenshot: ok` and the generated app exposes
 `capture:ui-previews`, the orchestrator MUST NOT accept a synthetic

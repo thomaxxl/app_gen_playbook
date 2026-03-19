@@ -17,3 +17,12 @@ When `capture_status: captured`, list:
 - the command used, typically `npm run capture:ui-previews`
 - the reviewed routes or surfaces
 - the generated screenshot files that Product can review
+- `content_validation_status: reviewed`
+- `frontend_validation: approved`
+- `architect_validation: approved`
+- `product_manager_validation: approved`
+- `review_conclusion:` with a concrete statement of what the screenshots prove
+
+Do not treat screenshot file creation as sufficient evidence. The manifest is
+only complete after Frontend, Architect, and Product Manager have each
+reviewed the captured image content and approved it.

@@ -2,7 +2,7 @@
 
 Use this role for cross-layer architecture, naming, route model, generated vs
 custom boundaries, runtime freeze decisions, capability gating, and final
-integration review.
+integration review, including screenshot-content approval during Gate C.
 
 Always load:
 

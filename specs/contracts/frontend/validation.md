@@ -132,6 +132,19 @@ Acceptance review uses that manifest to decide whether screenshots were
 deliberately reviewed, legitimately unnecessary, or skipped because the
 environment blocked browser execution.
 
+When `capture_status: captured`, the manifest MUST also record screenshot
+content review rather than only file creation. At minimum it MUST state:
+
+- `content_validation_status: reviewed`
+- `frontend_validation: approved`
+- `architect_validation: approved`
+- `product_manager_validation: approved`
+- a non-placeholder `review_conclusion:` describing what the screenshots prove
+
+The screenshot files alone are not valid preview evidence. A blank page,
+crashed route, fallback shell, or only generic admin chrome is invalid even if
+PNG files were produced.
+
 Typical trigger cases:
 
 - new or changed `Home`, `Landing`, or other entry surfaces
@@ -226,6 +239,21 @@ SHOULD provide `npm run capture:ui-previews` as the reviewable screenshot
 capture entrypoint. When that script exists and execution prerequisites prove
 Playwright screenshot capture is available, the run MUST use that script
 instead of accepting an `environment-blocked` fallback.
+
+Those preview captures MUST include route-level assertions for meaningful
+visible content before the screenshot is taken. It is not enough to prove that
+Playwright opened a page and wrote a PNG file.
+
+The screenshot review responsibility is split explicitly:
+
+- Frontend validates that the captured surfaces rendered the intended visible
+  content and records the first signoff in the manifest
+- Architect validates the same screenshots during Phase 6 as part of Gate C
+- Product Manager validates the same screenshots during Phase 7 before final
+  acceptance
+
+If any of those roles cannot approve the captured UI, the preview evidence is
+not complete and the gate fails.
 
 The Playwright smoke run is the final pre-delivery validation gate. A
 generated app MUST NOT be treated as delivered before that run completes or a

@@ -2,7 +2,8 @@
 
 Use this role for UX artifacts, frontend implementation, runtime wiring,
 React-admin resource registration, entry-page behavior, relationship UI, and
-frontend validation.
+frontend validation, including preview screenshot capture plus Frontend
+signoff on screenshot content.
 
 Always load:
 

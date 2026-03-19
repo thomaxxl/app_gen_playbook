@@ -166,7 +166,17 @@ def write_manifest(manifest_path: Path, status: str, command: str, captured: lis
         f"command: {command}",
     ]
     if captured:
-        lines.extend(["", "captured_routes:"])
+        lines.extend(
+            [
+                "content_validation_status: pending-human-review",
+                "frontend_validation: pending-review",
+                "architect_validation: pending-review",
+                "product_manager_validation: pending-review",
+                "review_conclusion: pending-human-review",
+                "",
+                "captured_routes:",
+            ]
+        )
         for label, url, filename in captured:
             lines.append(f"- {label}: {url}")
             lines.append(f"  file: {filename}")

@@ -50,6 +50,17 @@ UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
     r"(?im)^(?:-\s*)?capture_status:\s*([a-z0-9_-]+)\s*$"
 )
+UI_PREVIEW_CONTENT_VALIDATION_PATTERN = re.compile(
+    r"(?im)^(?:-\s*)?content_validation_status:\s*([a-z0-9_-]+)\s*$"
+)
+UI_PREVIEW_REVIEW_CONCLUSION_PATTERN = re.compile(
+    r"(?im)^(?:-\s*)?review_conclusion:\s*(.+?)\s*$"
+)
+UI_PREVIEW_VALIDATION_PATTERNS = {
+    "frontend": re.compile(r"(?im)^(?:-\s*)?frontend_validation:\s*([a-z0-9_-]+)\s*$"),
+    "architect": re.compile(r"(?im)^(?:-\s*)?architect_validation:\s*([a-z0-9_-]+)\s*$"),
+    "product_manager": re.compile(r"(?im)^(?:-\s*)?product_manager_validation:\s*([a-z0-9_-]+)\s*$"),
+}
 CONTRACT_SAMPLES_REQUIRED_PATTERNS = (
     (
         re.compile(r"(?im)^##\s+SAFRS resource coverage\s*$"),
@@ -189,6 +200,14 @@ def app_declares_ui_preview_capture(repo_root: Path) -> bool:
         return False
     text = package_json_path.read_text(encoding="utf-8")
     return '"capture:ui-previews"' in text
+
+
+def ui_preview_validation_value(text: str, role: str) -> str:
+    pattern = UI_PREVIEW_VALIDATION_PATTERNS[role]
+    match = pattern.search(text)
+    if match is None:
+        return ""
+    return match.group(1).strip().lower()
 
 
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
@@ -457,6 +476,58 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                             "owner": owner,
                             "phase": phase,
                             "reason": "ui preview manifest says screenshots were captured, but no reviewable image files exist",
+                        }
+                    )
+                    continue
+
+                content_validation_match = UI_PREVIEW_CONTENT_VALIDATION_PATTERN.search(text)
+                content_validation_status = (
+                    content_validation_match.group(1).strip().lower()
+                    if content_validation_match
+                    else ""
+                )
+                if content_validation_status != "reviewed":
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-content-validation-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must declare content_validation_status: reviewed",
+                        }
+                    )
+
+                missing_validations = [
+                    role.replace("_", "-")
+                    for role in ("frontend", "architect", "product_manager")
+                    if ui_preview_validation_value(text, role) != "approved"
+                ]
+                if missing_validations:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-signoff-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest is missing approved screenshot validation from: "
+                            + ", ".join(missing_validations),
+                        }
+                    )
+
+                review_conclusion_match = UI_PREVIEW_REVIEW_CONCLUSION_PATTERN.search(text)
+                review_conclusion = (
+                    review_conclusion_match.group(1).strip()
+                    if review_conclusion_match
+                    else ""
+                )
+                if not review_conclusion or "pending" in review_conclusion.lower():
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-review-conclusion-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must include a non-placeholder review_conclusion describing what the screenshots prove",
                         }
                     )
 
