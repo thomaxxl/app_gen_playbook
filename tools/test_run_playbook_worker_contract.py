@@ -171,6 +171,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('orchestrator-progress-note-archived', script)
         self.assertIn('Success-path progress notes do not require CEO triage', script)
         self.assertIn("acceptance-trigger-correction|acceptance-trigger-superseded", script)
+        self.assertIn("product-recovery-acknowledged", script)
 
     def test_browser_fallback_acceptance_requires_passed_integration_review(self) -> None:
         script = self.runner_core()

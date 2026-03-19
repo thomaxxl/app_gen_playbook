@@ -966,7 +966,7 @@ message_indicates_progress() {
 
   topic="$(message_field topic "$message_path" | tr '[:upper:]' '[:lower:]')"
   case "$topic" in
-    acceptance-trigger-correction|acceptance-trigger-superseded)
+    acceptance-trigger-correction|acceptance-trigger-superseded|product-recovery-acknowledged)
       return 0
       ;;
   esac
