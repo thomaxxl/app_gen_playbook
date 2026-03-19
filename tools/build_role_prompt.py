@@ -9,6 +9,7 @@ from orchestrator_common import (
     DISPLAY_TO_ROLE_FILE,
     RUNTIME_TO_DISPLAY,
     canonical_artifacts_for_role_phases,
+    parse_message_sections,
     parse_simple_yaml,
     phase_name_from_phase_doc,
     relpath,
@@ -25,68 +26,6 @@ CORE_READS = (
     "playbook/process/ownership-and-edits.md",
     "playbook/process/single-operator-mode.md",
 )
-
-
-SECTION_TITLES = (
-    "required reads",
-    "requested outputs",
-    "dependencies",
-    "gate status",
-    "implementation evidence",
-    "blocking issues",
-    "notes",
-)
-
-SECTION_ALIASES = {
-    "requested outputs completed": "requested outputs",
-}
-
-
-def canonical_section_title(normalized: str) -> str | None:
-    if normalized in SECTION_TITLES:
-        return normalized
-    return SECTION_ALIASES.get(normalized)
-
-
-def parse_message_sections(message_text: str) -> dict[str, list[str] | str]:
-    lines = message_text.splitlines()
-    sections: dict[str, list[str]] = {title: [] for title in SECTION_TITLES}
-    current_section: str | None = None
-
-    for raw_line in lines:
-        line = raw_line.strip()
-        normalized = re.sub(r"^[#\-\*\s]+", "", line).rstrip(":").strip().lower()
-        section_title = canonical_section_title(normalized)
-        if section_title is not None:
-            current_section = section_title
-            continue
-        if line.startswith("#"):
-            current_section = None
-            continue
-
-        if current_section is None:
-            continue
-
-        if not line:
-            continue
-
-        bullet_match = re.match(r"^[-*]\s+(.*)$", line)
-        numbered_match = re.match(r"^\d+\.\s+(.*)$", line)
-        if bullet_match:
-            sections[current_section].append(bullet_match.group(1).strip())
-        elif numbered_match:
-            sections[current_section].append(numbered_match.group(1).strip())
-        else:
-            sections[current_section].append(line)
-
-    output: dict[str, list[str] | str] = {}
-    for key, values in sections.items():
-        cleaned = [value for value in values if value]
-        if key == "gate status":
-            output[key] = cleaned[0] if cleaned else "unspecified"
-        else:
-            output[key] = cleaned
-    return output
 
 
 def dedupe_paths(paths: list[str]) -> list[str]:

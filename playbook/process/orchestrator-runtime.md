@@ -108,6 +108,12 @@ Every maintained shell entrypoint under `scripts/` MUST continue to pass
 blocking, because a broken runner cannot self-recover once the shell parser
 fails before startup.
 
+If a role turn repairs `scripts/run_playbook.sh` or
+`scripts/run_playbook_core.sh` while the orchestrator is already running, the
+current shell process MUST restart itself through `scripts/run_playbook.sh
+--resume` before the next control cycle. Continuing with stale shell function
+definitions is a runner defect.
+
 ## Session model
 
 The orchestrator MUST maintain one Codex session record per runtime role in:
@@ -143,12 +149,19 @@ The orchestrator SHOULD also honor:
 
 - `PLAYBOOK_RUNTIME_ENV=sandbox|host`
 
-It MUST record that setting in `runs/current/orchestrator/runtime-environment.json`.
+It MUST record that setting, its source, and the current runner epoch in
+`runs/current/orchestrator/runtime-environment.json`.
 
 If the operator does not set `PLAYBOOK_RUNTIME_ENV`, the orchestrator SHOULD
 default to `host`. `sandbox` remains an explicit opt-out for environments
 where host-side bind, app startup, or browser capture is intentionally
 unavailable.
+
+If the runtime env was only the implicit default and host-mode execution
+preflight proves the current execution context forbids localhost bind
+validation, the orchestrator SHOULD auto-pivot to
+`PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching roles. That pivot MUST be
+recorded in `runtime-environment.json` and `runs/current/remarks.md`.
 
 When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST write a host-runtime
 preflight artifact under:
@@ -345,6 +358,10 @@ placeholder.
 Before Phase 7, the orchestrator MUST refuse to dispatch or accept Product
 Manager acceptance work unless the full integration-review evidence pack
 exists, is no longer placeholder, and integration is not blocked.
+
+Browser-fallback Product acceptance notes MUST also be single-flight. The
+orchestrator MUST suppress duplicate fallback acceptance notes while the same
+evidence signature and integration-review state remain unchanged.
 
 Missing or placeholder quality evidence MUST be treated the same way as any
 other required gate blocker.

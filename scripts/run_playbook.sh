@@ -59,14 +59,14 @@ append_run_remark() {
   local title="$1"
   local body="$2"
   mkdir -p "$(dirname "$REMARKS_MD")"
-  if [[ ! -f "$REMARKS_MD" ]]; then
-    printf '# Run Remarks\n\n' > "$REMARKS_MD"
-  fi
-
   {
-    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
-    printf '%s\n' "$body"
-  } >> "$REMARKS_MD"
+    flock 9
+    if [[ ! -s "$REMARKS_MD" ]]; then
+      printf '# Run Remarks\n\n' >&9
+    fi
+    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title" >&9
+    printf '%b\n' "$body" >&9
+  } 9>>"$REMARKS_MD"
 }
 
 resolve_playbook_path() {

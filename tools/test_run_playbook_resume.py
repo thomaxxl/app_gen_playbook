@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -43,7 +44,496 @@ def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:
     )
 
 
+def browser_fallback_signature_for_test(
+    runtime_env: str,
+    frontend_bind: str,
+    capture_status: str,
+    integration_status: str,
+    acceptance_status: str,
+) -> str:
+    digest = hashlib.sha256()
+    for value in (runtime_env, frontend_bind, capture_status, integration_status, acceptance_status):
+        digest.update(value.encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 class RunPlaybookResumeTests(unittest.TestCase):
+    def test_resume_does_not_queue_product_acceptance_when_integration_review_is_blocked(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "artifacts" / "architecture").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md").write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: architect
+                    phase: phase-6-integration-review
+                    status: blocked
+                    last_updated_by: architect
+                    ---
+                    """
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "evidence" / "host-runtime-verification.md").write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: orchestrator
+                    phase: host-runtime-preflight
+                    status: ready-for-handoff
+                    last_updated_by: orchestrator
+                    runtime_env: host
+                    ---
+
+                    # Host Runtime Verification
+
+                    - frontend_bind: ok
+                    """
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md").write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: frontend
+                    phase: phase-6-integration-review
+                    status: blocked
+                    last_updated_by: frontend
+                    ---
+
+                    # Frontend Browser Proof
+
+                    - capture_status: environment-blocked
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 is not ready')\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    from pathlib import Path
+                    counter = Path(__file__).resolve().parent.parent / ".check_completion_count"
+                    if counter.exists():
+                        print("run is complete")
+                        raise SystemExit(0)
+                    counter.write_text("1\\n", encoding="utf-8")
+                    print("run is not complete")
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0", "PLAYBOOK_RUNTIME_ENV": "host"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}",
+            )
+            self.assertIn("playbook run complete", result.stderr)
+            product_inbox = repo_root / "runs" / "current" / "role-state" / "product_manager" / "inbox"
+            self.assertFalse(product_inbox.exists() and any(product_inbox.iterdir()))
+
+    def test_resume_does_not_requeue_duplicate_browser_fallback_acceptance_signature(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "artifacts" / "architecture").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "artifacts" / "product").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+            integration_review = repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md"
+            integration_review.write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: architect
+                    phase: phase-6-integration-review
+                    status: ready-for-handoff
+                    last_updated_by: architect
+                    ---
+                    """
+                ),
+                encoding="utf-8",
+            )
+            host_runtime = repo_root / "runs" / "current" / "evidence" / "host-runtime-verification.md"
+            host_runtime.write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: orchestrator
+                    phase: host-runtime-preflight
+                    status: ready-for-handoff
+                    last_updated_by: orchestrator
+                    runtime_env: host
+                    ---
+
+                    # Host Runtime Verification
+
+                    - frontend_bind: ok
+                    """
+                ),
+                encoding="utf-8",
+            )
+            browser_proof = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
+            browser_proof.write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: frontend
+                    phase: phase-6-integration-review
+                    status: blocked
+                    last_updated_by: frontend
+                    ---
+
+                    # Frontend Browser Proof
+
+                    - capture_status: environment-blocked
+                    """
+                ),
+                encoding="utf-8",
+            )
+            acceptance_review = repo_root / "runs" / "current" / "artifacts" / "product" / "acceptance-review.md"
+            signature = browser_fallback_signature_for_test(
+                "host",
+                "ok",
+                "environment-blocked",
+                "ready-for-handoff",
+                "missing",
+            )
+            (repo_root / "runs" / "current" / "orchestrator" / "browser-fallback-product-acceptance.signatures").write_text(
+                f"{signature}\n",
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 is not ready')\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    from pathlib import Path
+                    counter = Path(__file__).resolve().parent.parent / ".check_completion_count"
+                    if counter.exists():
+                        print("run is complete")
+                        raise SystemExit(0)
+                    counter.write_text("1\\n", encoding="utf-8")
+                    print("run is not complete")
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0", "PLAYBOOK_RUNTIME_ENV": "host"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}",
+            )
+            self.assertIn("product-acceptance-browser-fallback-suppressed", result.stderr)
+            product_inbox = repo_root / "runs" / "current" / "role-state" / "product_manager" / "inbox"
+            self.assertFalse(product_inbox.exists() and any(product_inbox.iterdir()))
+
+    def test_resume_auto_pivots_implicit_host_mode_to_sandbox_before_dispatch(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "app" / "frontend").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "frontend" / "package.json").write_text('{"scripts":{"preview":"vite preview"}}\n', encoding="utf-8")
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                "#!/usr/bin/env python3\nprint('run is complete')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    import os
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    parser.add_argument("--output", required=True)
+                    args = parser.parse_args()
+
+                    output_path = Path(args.output)
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    runtime_env = os.environ.get("PLAYBOOK_RUNTIME_ENV", "host")
+                    if runtime_env == "host":
+                        output_path.write_text(
+                            "---\\nowner: devops\\nphase: execution-environment-preflight\\nstatus: blocked\\nlast_updated_by: devops\\n---\\n\\n# Execution Environment Prerequisites\\n\\n- [x] `python_venv`: `ok` (required)\\n  - verified imports\\n- [x] `node_packages`: `ok` (required)\\n  - vite available\\n- [x] `frontend_preview`: `ok` (required)\\n  - preview script declared\\n- [ ] `port_bind`: `blocked` (required)\\n  - socket creation is denied by the current execution environment; cannot validate localhost ports 5173/5656: [Errno 1] Operation not permitted\\n- [ ] `playwright_screenshot`: `blocked` (required)\\n  - Operation not permitted\\n",
+                            encoding="utf-8",
+                        )
+                        raise SystemExit(1)
+                    output_path.write_text(
+                        "---\\nowner: devops\\nphase: execution-environment-preflight\\nstatus: ready-for-handoff\\nlast_updated_by: devops\\n---\\n\\n# Execution Environment Prerequisites\\n\\n- [x] `python_venv`: `ok` (required)\\n  - verified imports\\n- [x] `node_packages`: `ok` (required)\\n  - vite available\\n- [x] `frontend_preview`: `ok` (required)\\n  - preview script declared\\n- [x] `port_bind`: `ok` (required)\\n  - sandbox runtime mode defers localhost bind validation to a host-side verification step\\n- [x] `playwright_screenshot`: `ok` (required)\\n  - sandbox runtime mode defers Playwright browser-launch validation to a host-side verification step\\n",
+                        encoding="utf-8",
+                    )
+                    raise SystemExit(0)
+                    """
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("runtime-env-auto-pivot", result.stderr)
+            runtime_environment = (repo_root / "runs" / "current" / "orchestrator" / "runtime-environment.json").read_text(encoding="utf-8")
+            self.assertIn('"runtime_env": "sandbox"', runtime_environment)
+            self.assertIn('"runtime_env_source": "auto-pivoted-from-implicit-host"', runtime_environment)
+
+    def test_resume_self_reexecs_after_runtime_surface_change(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    from pathlib import Path
+
+                    repo_root = Path(__file__).resolve().parent.parent
+                    counter = repo_root / ".check_completion_count"
+                    runner_core = repo_root / "scripts" / "run_playbook_core.sh"
+                    if counter.exists():
+                        print("run is complete")
+                        raise SystemExit(0)
+                    counter.write_text("1\\n", encoding="utf-8")
+                    runner_core.write_text(runner_core.read_text(encoding="utf-8") + "\\n# test runtime surface change\\n", encoding="utf-8")
+                    print("run is not complete")
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("runner-self-reexec", result.stderr)
+            self.assertIn("playbook run complete", result.stderr)
+
     def test_resume_does_not_exit_when_recovery_pass_emits_nothing(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
 
@@ -659,6 +1149,177 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertEqual(
                 (repo_root / "runs" / "current" / "notes.md").read_text(encoding="utf-8"),
                 "# Run Notes\n\n",
+            )
+
+    def test_resume_archives_orchestrator_progress_note_and_recovers_without_ceo(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox" / "20260319-110108-from-backend-to-orchestrator-backend-design-recovery-complete.md").write_text(
+                textwrap.dedent(
+                    """\
+                    from: backend
+                    to: orchestrator
+                    topic: backend-design-recovery-complete
+                    purpose: report that the blocked Phase 4 recovery is cleared because the canonical backend-design artifact package now exists under the required filenames
+
+                    ## Outcome
+                    - The canonical package is ready-for-handoff.
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "validate_handoff_inputs.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    parser.add_argument("--change-id", default="")
+                    args = parser.parse_args()
+
+                    repo_root = Path(args.repo_root)
+                    orchestrator_note = repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox" / "20260319-110108-from-backend-to-orchestrator-backend-design-recovery-complete.md"
+                    if orchestrator_note.exists():
+                        raise SystemExit(0)
+                    note_path = repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox" / "20260319-120000-from-orchestrator-to-ceo-recovery.md"
+                    note_path.parent.mkdir(parents=True, exist_ok=True)
+                    note_path.write_text(
+                        "from: orchestrator\\n"
+                        "to: ceo\\n"
+                        "topic: recovery\\n"
+                        "purpose: restore progress\\n"
+                        "\\n"
+                        "## Required Reads\\n"
+                        "- runs/current/remarks.md\\n",
+                        encoding="utf-8",
+                    )
+                    print(note_path)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 ready')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    args = parser.parse_args()
+
+                    repo_root = Path(args.repo_root)
+                    recovery_note = repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox" / "20260319-120000-from-orchestrator-to-ceo-recovery.md"
+                    if recovery_note.exists():
+                        print("run is complete")
+                        raise SystemExit(0)
+                    print("run is not complete")
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("orchestrator-progress-note-archived", result.stderr)
+            self.assertNotIn("orchestrator-escalated", result.stderr)
+            remarks_text = (repo_root / "runs" / "current" / "remarks.md").read_text(encoding="utf-8")
+            self.assertNotIn("\\n", remarks_text)
+            self.assertTrue(
+                (
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "orchestrator"
+                    / "processed"
+                    / "20260319-110108-from-backend-to-orchestrator-backend-design-recovery-complete.md"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "ceo"
+                    / "inbox"
+                    / "20260319-120000-from-orchestrator-to-ceo-recovery.md"
+                ).exists()
+            )
+            self.assertFalse(
+                (
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "ceo"
+                    / "inbox"
+                    / "20260319-100525-from-orchestrator-to-ceo-escalation.md"
+                ).exists()
             )
 
 

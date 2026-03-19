@@ -26,11 +26,11 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("process_orchestrator_inbox()", script)
         self.assertIn('[[ -d "$inbox_dir" ]] || return 1', script)
         self.assertIn('if process_orchestrator_inbox; then', script)
-        self.assertIn('if run_role_once "ceo"; then', script)
+        self.assertIn('if run_role_once_with_runtime_reload_guard "ceo"; then', script)
         self.assertIn("orchestrator generated invalid recovery note", script)
         self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
         self.assertLess(
-            script.index('if run_role_once "ceo"; then'),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then'),
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
@@ -89,11 +89,11 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if run_recovery_pass; then', script)
         main_loop_index = script.index("while true; do")
         self.assertLess(
-            script.index('if run_role_once "ceo"; then', main_loop_index),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
             script.index('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', main_loop_index),
         )
         self.assertLess(
-            script.index('if run_role_once "ceo"; then', main_loop_index),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
             script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
         )
 
@@ -151,6 +151,59 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('orchestrator-note-archived-without-reescalation', script)
         self.assertIn('CEO-originated reroute notes must not be escalated back to CEO.', script)
 
+    def test_orchestrator_archives_progress_notes_without_ceo_escalation(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("message_gate_status()", script)
+        self.assertIn("message_indicates_progress()", script)
+        self.assertIn('if message_indicates_progress "$processed_path"; then', script)
+        self.assertIn('orchestrator-progress-note-archived', script)
+        self.assertIn('Success-path progress notes do not require CEO triage', script)
+        self.assertIn("acceptance-trigger-correction|acceptance-trigger-superseded", script)
+
+    def test_browser_fallback_acceptance_requires_passed_integration_review(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("integration_review_allows_product_acceptance()", script)
+        self.assertIn('integration_review_allows_product_acceptance "$integration_review" || return 1', script)
+        self.assertIn('case "$integration_status" in', script)
+        self.assertIn("ready-for-handoff|approved)", script)
+
+    def test_browser_fallback_acceptance_dedupes_by_signature(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES="$ORCH_ROOT/browser-fallback-product-acceptance.signatures"', script)
+        self.assertIn("browser_fallback_acceptance_signature()", script)
+        self.assertIn("browser_fallback_acceptance_signature_recorded()", script)
+        self.assertIn('record_browser_fallback_acceptance_signature "$acceptance_signature"', script)
+        self.assertIn("product-acceptance-browser-fallback-suppressed", script)
+
+    def test_runner_self_reexecs_after_runtime_surface_repairs(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('PLAYBOOK_RUNNER_EPOCH="${PLAYBOOK_RUNNER_EPOCH:-0}"', script)
+        self.assertIn("reset_runner_runtime_surface_fingerprint()", script)
+        self.assertIn("maybe_reexec_if_runtime_surface_changed()", script)
+        self.assertIn("run_role_once_with_runtime_reload_guard()", script)
+        self.assertIn('exec bash "$RUNNER_WRAPPER_SCRIPT" "${reexec_args[@]}"', script)
+        self.assertIn("runner-self-reexec", script)
+
+    def test_runner_auto_pivots_implicit_host_mode_to_sandbox_when_bind_is_forbidden(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("PLAYBOOK_RUNTIME_ENV_SOURCE=", script)
+        self.assertIn("maybe_auto_pivot_runtime_env_to_sandbox()", script)
+        self.assertIn("execution_prereqs_host_mode_requires_sandbox()", script)
+        self.assertIn("runtime-env-auto-pivot", script)
+        self.assertIn('"runtime_env_source": "$PLAYBOOK_RUNTIME_ENV_SOURCE"', script)
+
+    def test_runner_writes_remarks_with_real_newlines_under_a_lock(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("append_markdown_log_entry()", script)
+        self.assertIn("flock 9", script)
+        self.assertIn("printf '%b\\n' \"$body\"", script)
+
     def test_runner_archives_duplicate_queue_traces_before_claiming(self) -> None:
         script = self.runner_core()
 
@@ -197,6 +250,12 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if ! syntax_output="$(bash -n "$CORE_SCRIPT" 2>&1)"; then', script)
         self.assertIn("run_wrapper_ceo_core_syntax_repair()", script)
         self.assertIn('warning: run_playbook_core.sh failed bash -n; attempting CEO repair path via wrapper.', script)
+
+    def test_wrapper_remarks_use_real_newlines(self) -> None:
+        script = self.runner_wrapper()
+
+        self.assertIn("flock 9", script)
+        self.assertIn("printf '%b\\n' \"$body\"", script)
 
 
 if __name__ == "__main__":

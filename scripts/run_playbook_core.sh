@@ -28,7 +28,16 @@ RESUME=0
 TARGET_ROLE=""
 INPUT_FILE=""
 PLAYBOOK_YOLO=0
+PLAYBOOK_RUNTIME_ENV_EXPLICIT=0
+if [[ -v PLAYBOOK_RUNTIME_ENV ]]; then
+  PLAYBOOK_RUNTIME_ENV_EXPLICIT=1
+fi
 PLAYBOOK_RUNTIME_ENV="${PLAYBOOK_RUNTIME_ENV:-host}"
+PLAYBOOK_RUNTIME_ENV_SOURCE="explicit"
+if [[ "$PLAYBOOK_RUNTIME_ENV_EXPLICIT" -eq 0 ]]; then
+  PLAYBOOK_RUNTIME_ENV_SOURCE="implicit-default"
+fi
+PLAYBOOK_RUNNER_EPOCH="${PLAYBOOK_RUNNER_EPOCH:-0}"
 PLAYBOOK_AUTO_START_APP="${PLAYBOOK_AUTO_START_APP:-1}"
 
 while [[ $# -gt 0 ]]; do
@@ -130,12 +139,14 @@ STATE_ROOT="$RUN_ROOT/role-state"
 EVIDENCE_ROOT="$RUN_ROOT/evidence/orchestrator"
 SESSIONS_JSON="$EVIDENCE_ROOT/sessions.json"
 LOG_FILE="$EVIDENCE_ROOT/logs/orchestrator.log"
+RUNNER_WRAPPER_SCRIPT="$SCRIPT_DIR/run_playbook.sh"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"
 DELIVERY_APPROVED_MD="$ORCH_ROOT/delivery-approved.md"
 RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
+BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES="$ORCH_ROOT/browser-fallback-product-acceptance.signatures"
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
 FRONTEND_BROWSER_PROOF_MD="$RUN_ROOT/evidence/frontend-browser-proof.md"
 CEO_DELIVERY_VALIDATION_MD="$RUN_ROOT/evidence/ceo-delivery-validation.md"
@@ -172,6 +183,11 @@ app_runtime_pid=""
 ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
 ENSURE_WORKER_PID_RESULT=""
+RUNNER_RUNTIME_SURFACE_FINGERPRINT=""
+
+export PLAYBOOK_RUNTIME_ENV
+export PLAYBOOK_RUNTIME_ENV_SOURCE
+export PLAYBOOK_RUNNER_EPOCH
 
 role_state_dir() {
   case "$1" in
@@ -207,19 +223,37 @@ canonical_queue_dirs() {
   fi
 }
 
+utc_timestamp() {
+  date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || python3 - <<'PY'
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+print(datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+PY
+}
+
+append_markdown_log_entry() {
+  local output_path="$1"
+  local heading="$2"
+  local title="$3"
+  local body="$4"
+  mkdir -p "$(dirname "$output_path")"
+
+  {
+    flock 9
+    if [[ ! -s "$output_path" ]]; then
+      printf '%s\n\n' "$heading" >&9
+    fi
+    printf '\n## %s - %s\n\n' "$(utc_timestamp)" "$title" >&9
+    printf '%b\n' "$body" >&9
+  } 9>>"$output_path"
+}
+
 append_run_remark() {
   local title="$1"
   local body="$2"
-  local remarks_file="$RUN_ROOT/remarks.md"
-  mkdir -p "$(dirname "$remarks_file")"
-  if [[ ! -f "$remarks_file" ]]; then
-    printf '# Run Remarks\n\n' > "$remarks_file"
-  fi
-
-  {
-    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
-    printf '%s\n' "$body"
-  } >> "$remarks_file"
+  append_markdown_log_entry "$RUN_ROOT/remarks.md" "# Run Remarks" "$title" "$body"
 }
 
 ensure_current_run_shared_state() {
@@ -237,16 +271,7 @@ ensure_current_run_shared_state() {
 append_recovery_log() {
   local title="$1"
   local body="$2"
-  local recovery_file="$EVIDENCE_ROOT/recovery-log.md"
-  mkdir -p "$(dirname "$recovery_file")"
-  if [[ ! -f "$recovery_file" ]]; then
-    printf '# Recovery Log\n\n' > "$recovery_file"
-  fi
-
-  {
-    printf '\n## %s - %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
-    printf '%s\n' "$body"
-  } >> "$recovery_file"
+  append_markdown_log_entry "$EVIDENCE_ROOT/recovery-log.md" "# Recovery Log" "$title" "$body"
 }
 
 maybe_backup_current_run_before_new() {
@@ -308,8 +333,10 @@ write_runtime_environment_metadata() {
   cat > "$RUNTIME_ENVIRONMENT_JSON" <<EOF
 {
   "runtime_env": "$PLAYBOOK_RUNTIME_ENV",
+  "runtime_env_source": "$PLAYBOOK_RUNTIME_ENV_SOURCE",
+  "runner_epoch": $PLAYBOOK_RUNNER_EPOCH,
   "playbook_yolo": $([[ "$PLAYBOOK_YOLO" -eq 1 ]] && echo true || echo false),
-  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  "updated_at": "$(utc_timestamp)"
 }
 EOF
 }
@@ -626,20 +653,65 @@ attempt_host_browser_proof_capture() {
   return 1
 }
 
+write_execution_prereqs_for_env() {
+  local runtime_env="$1"
+  local output_path="$2"
+  BACKEND_VENV="${BACKEND_VENV}" FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR}" \
+    PLAYBOOK_RUNTIME_ENV="$runtime_env" \
+    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path"
+}
+
 record_execution_prereqs() {
   local output_path="$RUN_ROOT/artifacts/devops/execution-prereqs.md"
   if [[ ! -f "$ROOT/app/frontend/package.json" ]]; then
     return 0
   fi
   mkdir -p "$(dirname "$output_path")"
-  if BACKEND_VENV="${BACKEND_VENV}" FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR}" \
-    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path"; then
+  if write_execution_prereqs_for_env "$PLAYBOOK_RUNTIME_ENV" "$output_path"; then
     log "execution-prereqs-ready artifact=${output_path#$ROOT/}"
     return 0
   else
     log "execution-prereqs-blocked artifact=${output_path#$ROOT/}"
     return 1
   fi
+}
+
+execution_prereqs_host_mode_requires_sandbox() {
+  local artifact_path="$1"
+  [[ -f "$artifact_path" ]] || return 1
+  grep -Fq -- '- [ ] `port_bind`: `blocked` (required)' "$artifact_path" || return 1
+  grep -Eq 'socket creation is denied by the current execution environment|Operation not permitted' "$artifact_path"
+}
+
+maybe_auto_pivot_runtime_env_to_sandbox() {
+  [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 1
+  [[ "$PLAYBOOK_RUNTIME_ENV_EXPLICIT" -eq 0 ]] || return 1
+  [[ -f "$ROOT/app/frontend/package.json" ]] || return 1
+
+  local probe_path
+  probe_path="$(mktemp)"
+  if write_execution_prereqs_for_env host "$probe_path"; then
+    rm -f "$probe_path"
+    return 1
+  fi
+  if ! execution_prereqs_host_mode_requires_sandbox "$probe_path"; then
+    rm -f "$probe_path"
+    return 1
+  fi
+  rm -f "$probe_path"
+
+  PLAYBOOK_RUNTIME_ENV="sandbox"
+  PLAYBOOK_RUNTIME_ENV_SOURCE="auto-pivoted-from-implicit-host"
+  export PLAYBOOK_RUNTIME_ENV
+  export PLAYBOOK_RUNTIME_ENV_SOURCE
+  log "runtime-env-auto-pivot from=host to=sandbox"
+  append_recovery_log \
+    "Runtime Environment Auto-Pivoted To Sandbox" \
+    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
+  append_run_remark \
+    "Runtime Environment Auto-Pivoted To Sandbox" \
+    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
+  return 0
 }
 
 enforce_startup_execution_prereqs() {
@@ -790,7 +862,99 @@ runtime_role_from_label() {
 message_field() {
   local field_name="$1"
   local message_path="$2"
-  awk -F':[[:space:]]*' -v key="$field_name" '$1 == key { print $2; exit }' "$message_path"
+  local aliases=()
+  case "$field_name" in
+    from)
+      aliases=(from sender)
+      ;;
+    to)
+      aliases=(to receiver)
+      ;;
+    gate_status)
+      aliases=(gate_status gate-status "gate status")
+      ;;
+    *)
+      aliases=("$field_name")
+      ;;
+  esac
+
+  awk -v targets="$(printf '%s\n' "${aliases[@]}")" '
+    function norm(value, out) {
+      out = tolower(value)
+      gsub(/[^a-z0-9]/, "", out)
+      return out
+    }
+    BEGIN {
+      split(targets, raw_targets, "\n")
+      for (i in raw_targets) {
+        if (raw_targets[i] != "") {
+          wanted[norm(raw_targets[i])] = 1
+        }
+      }
+    }
+    /^[[:space:]]*$/ {
+      if (saw_headers) {
+        exit
+      }
+      next
+    }
+    /^##[[:space:]]+/ { exit }
+    {
+      line = $0
+      if (line ~ /^[[:space:]]*[A-Za-z][A-Za-z0-9_ -]*[[:space:]]*:/) {
+        saw_headers = 1
+        key = line
+        sub(/:.*/, "", key)
+        if (norm(key) in wanted) {
+          sub(/^[^:]*:[[:space:]]*/, "", line)
+          print line
+          exit
+        }
+        next
+      }
+      if (saw_headers) {
+        exit
+      }
+    }
+  ' "$message_path"
+}
+
+message_gate_status() {
+  local message_path="$1"
+  local gate_status
+  gate_status="$(awk '
+    /^##[[:space:]]+Gate Status[[:space:]]*$/ { in_section=1; next }
+    /^##[[:space:]]+/ { if (in_section) exit }
+    in_section && /^[[:space:]]*-[[:space:]]+/ {
+      sub(/^[[:space:]]*-[[:space:]]*/, "", $0)
+      print $0
+      exit
+    }
+  ' "$message_path")"
+  if [[ -n "$gate_status" ]]; then
+    printf '%s\n' "$gate_status"
+    return 0
+  fi
+  message_field gate_status "$message_path"
+}
+
+message_indicates_progress() {
+  local message_path="$1"
+  local gate_status topic
+
+  gate_status="$(message_gate_status "$message_path" | tr '[:upper:]' '[:lower:]')"
+  case "$gate_status" in
+    pass|"pass with assumptions") return 0 ;;
+    blocked) return 1 ;;
+  esac
+
+  topic="$(message_field topic "$message_path" | tr '[:upper:]' '[:lower:]')"
+  case "$topic" in
+    acceptance-trigger-correction|acceptance-trigger-superseded)
+      return 0
+      ;;
+  esac
+  [[ "$topic" =~ (^|[-_])(complete|completed|ready|approved|resolved)$ ]]
 }
 
 browser_proof_capture_status() {
@@ -839,7 +1003,62 @@ browser_proof_fallback_evidence_ready() {
 
 product_acceptance_pending() {
   local product_root="$STATE_ROOT/product_manager"
+  [[ -d "$product_root" ]] || return 1
   find "$product_root" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | grep -q .
+}
+
+artifact_status_value() {
+  local path="$1"
+  [[ -f "$path" ]] || return 1
+  awk -F':[[:space:]]*' '$1 == "status" { print $2; exit }' "$path"
+}
+
+browser_fallback_acceptance_signature() {
+  local integration_review="$RUN_ROOT/artifacts/architecture/integration-review.md"
+  local acceptance_review="$RUN_ROOT/artifacts/product/acceptance-review.md"
+  local integration_status acceptance_status frontend_bind capture_status
+  integration_status="$(artifact_status_value "$integration_review" || printf '%s' missing)"
+  acceptance_status="$(artifact_status_value "$acceptance_review" || printf '%s' missing)"
+  frontend_bind="$(host_runtime_verification_field_value frontend_bind || printf '%s' missing)"
+  capture_status="$(browser_proof_capture_status || printf '%s' missing)"
+  python3 - "$PLAYBOOK_RUNTIME_ENV" "$frontend_bind" "$capture_status" "$integration_status" "$acceptance_status" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import sys
+
+digest = hashlib.sha256()
+for value in sys.argv[1:]:
+    digest.update(value.encode("utf-8"))
+    digest.update(b"\0")
+print(digest.hexdigest())
+PY
+}
+
+browser_fallback_acceptance_signature_recorded() {
+  local signature="$1"
+  [[ -f "$BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES" ]] || return 1
+  grep -Fxq "$signature" "$BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES"
+}
+
+record_browser_fallback_acceptance_signature() {
+  local signature="$1"
+  mkdir -p "$(dirname "$BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES")"
+  printf '%s\n' "$signature" >> "$BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES"
+}
+
+integration_review_allows_product_acceptance() {
+  local path="$1"
+  [[ -f "$path" ]] || return 1
+
+  local integration_status
+  integration_status="$(awk -F':[[:space:]]*' '$1 == "status" { print $2; exit }' "$path")"
+  case "$integration_status" in
+    ready-for-handoff|approved)
+      return 0
+      ;;
+  esac
+  return 1
 }
 
 queue_browser_fallback_product_acceptance() {
@@ -848,6 +1067,7 @@ queue_browser_fallback_product_acceptance() {
 
   local integration_review="$RUN_ROOT/artifacts/architecture/integration-review.md"
   [[ -f "$integration_review" ]] || return 1
+  integration_review_allows_product_acceptance "$integration_review" || return 1
 
   local acceptance_review="$RUN_ROOT/artifacts/product/acceptance-review.md"
   if [[ -f "$acceptance_review" ]]; then
@@ -856,6 +1076,13 @@ queue_browser_fallback_product_acceptance() {
     if [[ "$acceptance_status" == "approved" ]]; then
       return 1
     fi
+  fi
+
+  local acceptance_signature
+  acceptance_signature="$(browser_fallback_acceptance_signature)"
+  if browser_fallback_acceptance_signature_recorded "$acceptance_signature"; then
+    log "product-acceptance-browser-fallback-suppressed reason=duplicate-signature signature=$acceptance_signature"
+    return 1
   fi
 
   local stamp note_path
@@ -868,6 +1095,7 @@ to: product_manager
 topic: integration-acceptance
 purpose: proceed with product acceptance using the approved host-runtime fallback evidence for browser verification
 change_id: ${ACTIVE_CHANGE_ID}
+orchestrator_signature: ${acceptance_signature}
 
 ## Required Reads
 - runs/current/artifacts/architecture/integration-review.md
@@ -898,6 +1126,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 - host runtime reached the live frontend URL, but automated browser-proof capture timed out and was recorded as the exact environment-blocked fallback allowed by phase 6
 - product acceptance should judge whether the evidence pack is sufficient to pass with assumptions, mirroring the documented blocked-environment fallback path
 EOF
+  record_browser_fallback_acceptance_signature "$acceptance_signature"
   log "product-acceptance-queued-from-browser-fallback note=${note_path#$ROOT/}"
   append_run_remark \
     "Product Acceptance Queued From Browser Fallback" \
@@ -1099,6 +1328,16 @@ process_orchestrator_inbox() {
       "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- CEO-originated reroute notes now return control to normal dispatch instead of looping back into CEO."
     return 0
   fi
+  if message_indicates_progress "$processed_path"; then
+    log "orchestrator-progress-note-archived message=$(basename "$processed_path") topic=${topic:-unspecified}"
+    append_recovery_log \
+      "Orchestrator Progress Note Archived" \
+      "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- Success-path progress notes do not require CEO triage and should return control to normal recovery or dispatch."
+    append_run_remark \
+      "Orchestrator Progress Note Archived" \
+      "Archived orchestrator progress note:\n- ${processed_path#$ROOT/}\n\nReason:\n- Success-path progress notes do not require CEO triage and should return control to normal recovery or dispatch."
+    return 0
+  fi
   reason="orchestrator-routed escalation requires CEO triage: ${processed_path#$ROOT/}"
   ceo_note="$(emit_ceo_escalation_note "$processed_path" "$sender" "$topic" "$reason")"
 
@@ -1285,6 +1524,12 @@ host_runtime_verification_field_ok() {
   grep -Eq "^- ${field}:[[:space:]]*ok$" "$HOST_RUNTIME_VERIFICATION_MD"
 }
 
+host_runtime_verification_field_value() {
+  local field="$1"
+  [[ -f "$HOST_RUNTIME_VERIFICATION_MD" ]] || return 1
+  awk -F':[[:space:]]*' -v key="- ${field}" '$1 == key { print $2; exit }' "$HOST_RUNTIME_VERIFICATION_MD"
+}
+
 clear_execution_prereqs_operator_action_required() {
   [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
   [[ -f "$RUN_ROOT/artifacts/devops/execution-prereqs.md" ]] || return 1
@@ -1462,7 +1707,7 @@ attempt_ceo_intervention() {
   fi
 
   log "stall-ceo-intervention reason=$reason"
-  run_role_once "ceo"
+  run_role_once_with_runtime_reload_guard "ceo"
   if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
     operator_action_required_exit
   fi
@@ -1487,7 +1732,7 @@ attempt_ceo_termination_review() {
   fi
 
   log "termination-review-ceo-intervention reason=$reason"
-  if ! run_role_once "ceo"; then
+  if ! run_role_once_with_runtime_reload_guard "ceo"; then
     return 1
   fi
   if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
@@ -1519,7 +1764,7 @@ attempt_ceo_delivery_approval() {
   fi
 
   log "delivery-review-ceo-intervention"
-  if ! run_role_once "ceo"; then
+  if ! run_role_once_with_runtime_reload_guard "ceo"; then
     return 1
   fi
   if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
@@ -1693,6 +1938,77 @@ if not path.exists():
 else:
     print(hashlib.sha256(path.read_bytes()).hexdigest())
 PY
+}
+
+runtime_surface_fingerprint() {
+  python3 - "$RUNNER_WRAPPER_SCRIPT" "$SCRIPT_DIR/run_playbook_core.sh" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+digest = hashlib.sha256()
+for raw_path in sys.argv[1:]:
+    path = Path(raw_path)
+    digest.update(path.name.encode("utf-8"))
+    digest.update(b"\0")
+    if path.exists():
+        digest.update(path.read_bytes())
+    else:
+        digest.update(b"__missing__")
+    digest.update(b"\0")
+print(digest.hexdigest())
+PY
+}
+
+reset_runner_runtime_surface_fingerprint() {
+  RUNNER_RUNTIME_SURFACE_FINGERPRINT="$(runtime_surface_fingerprint)"
+}
+
+maybe_reexec_if_runtime_surface_changed() {
+  local reason="$1"
+  local current_fingerprint next_epoch
+  local reexec_args=(--resume)
+
+  current_fingerprint="$(runtime_surface_fingerprint)"
+  if [[ -z "$RUNNER_RUNTIME_SURFACE_FINGERPRINT" ]]; then
+    RUNNER_RUNTIME_SURFACE_FINGERPRINT="$current_fingerprint"
+    return 1
+  fi
+  if [[ "$current_fingerprint" == "$RUNNER_RUNTIME_SURFACE_FINGERPRINT" ]]; then
+    return 1
+  fi
+
+  next_epoch="$((PLAYBOOK_RUNNER_EPOCH + 1))"
+  append_recovery_log \
+    "Runner Self-Reexec After Runtime Surface Repair" \
+    "The runner detected an on-disk update to its own shell runtime surfaces.\n\nReason:\n- ${reason}\n\nDecision:\n- restarting through scripts/run_playbook.sh --resume so the next control cycle uses the repaired shell definitions\n\nNext epoch:\n- ${next_epoch}"
+  append_run_remark \
+    "Runner Self-Reexec After Runtime Surface Repair" \
+    "The runner detected an on-disk update to its own shell runtime surfaces.\n\nReason:\n- ${reason}\n\nDecision:\n- restarting through scripts/run_playbook.sh --resume so the next control cycle uses the repaired shell definitions\n\nNext epoch:\n- ${next_epoch}"
+  log "runner-self-reexec reason=$reason epoch=$next_epoch"
+
+  PLAYBOOK_RUNNER_EPOCH="$next_epoch"
+  export PLAYBOOK_RUNNER_EPOCH
+  if [[ -n "$TARGET_ROLE" ]]; then
+    reexec_args+=(--role "$TARGET_ROLE")
+  fi
+  if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then
+    reexec_args+=(--yolo)
+  fi
+  exec bash "$RUNNER_WRAPPER_SCRIPT" "${reexec_args[@]}"
+}
+
+run_role_once_with_runtime_reload_guard() {
+  local runtime_role="$1"
+  shift
+
+  if ! run_role_once "$runtime_role" "$@"; then
+    return 1
+  fi
+  maybe_reexec_if_runtime_surface_changed "role-turn role=${runtime_role}" || true
+  return 0
 }
 
 session_get() {
@@ -2733,7 +3049,9 @@ seed_new_run() {
   python3 "$ROOT/tools/checkpoint_run_state.py" init-run \
     --repo-root "$ROOT" \
     --mode "$RUN_MODE_NAME" >/dev/null
+  maybe_auto_pivot_runtime_env_to_sandbox || true
   write_runtime_environment_metadata
+  reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
 }
@@ -2775,7 +3093,9 @@ seed_change_run() {
     --repo-root "$ROOT" \
     --mode "$RUN_MODE_NAME" \
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
+  maybe_auto_pivot_runtime_env_to_sandbox || true
   write_runtime_environment_metadata
+  reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
 }
@@ -2803,7 +3123,9 @@ PY
 )"
   fi
   set_run_status "active"
+  maybe_auto_pivot_runtime_env_to_sandbox || true
   write_runtime_environment_metadata
+  reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
   clear_execution_prereqs_operator_action_required || true
@@ -2824,6 +3146,7 @@ main_loop() {
   priority_role="$TARGET_ROLE"
 
   while true; do
+    maybe_reexec_if_runtime_surface_changed "main-loop heartbeat" || true
     did_work=0
 
     if clear_superseded_operator_action_required; then
@@ -2860,7 +3183,7 @@ main_loop() {
     operator_priority_role="$(pending_operator_priority_role || true)"
     if [[ -n "$operator_priority_role" ]]; then
       maybe_enforce_dependency_provisioning_preflight "$operator_priority_role"
-      if run_role_once "$operator_priority_role"; then
+      if run_role_once_with_runtime_reload_guard "$operator_priority_role"; then
         LAST_STALL_SIGNATURE=""
         continue
       fi
@@ -2891,7 +3214,7 @@ main_loop() {
       did_work=1
     fi
 
-    if run_role_once "ceo"; then
+    if run_role_once_with_runtime_reload_guard "ceo"; then
       did_work=1
       LAST_STALL_SIGNATURE=""
       if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
@@ -2919,7 +3242,7 @@ main_loop() {
 
     if [[ -n "$priority_role" ]]; then
       maybe_enforce_dependency_provisioning_preflight "$priority_role"
-      if run_role_once "$priority_role"; then
+      if run_role_once_with_runtime_reload_guard "$priority_role"; then
         did_work=1
       fi
       priority_role=""
@@ -2928,28 +3251,28 @@ main_loop() {
     if architect_blocked_integration_pending; then
       log "product-manager-skipped reason=architect-blocked-integration"
     else
-      if run_role_once "product_manager"; then
+      if run_role_once_with_runtime_reload_guard "product_manager"; then
         did_work=1
       fi
     fi
 
-    if run_role_once "architect"; then
+    if run_role_once_with_runtime_reload_guard "architect"; then
       did_work=1
     fi
 
     maybe_enforce_dependency_provisioning_preflight "deployment"
-    if run_role_once "deployment"; then
+    if run_role_once_with_runtime_reload_guard "deployment"; then
       did_work=1
     fi
 
     if [[ "$parallel_started" -eq 0 ]]; then
       maybe_enforce_dependency_provisioning_preflight "frontend"
-      if run_role_once "frontend"; then
+      if run_role_once_with_runtime_reload_guard "frontend"; then
         did_work=1
       fi
 
       maybe_enforce_dependency_provisioning_preflight "backend"
-      if run_role_once "backend"; then
+      if run_role_once_with_runtime_reload_guard "backend"; then
         did_work=1
       fi
     fi

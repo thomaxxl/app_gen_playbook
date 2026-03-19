@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import sys
 import unittest
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_role_prompt import parse_message_sections
 
 
@@ -41,6 +44,26 @@ class BuildRolePromptTests(unittest.TestCase):
             ["app/frontend/src/App.tsx"],
         )
         self.assertEqual(sections["blocking issues"], ["none"])
+
+    def test_gate_status_header_alias_is_promoted_into_sections(self) -> None:
+        sections = parse_message_sections(
+            "\n".join(
+                [
+                    "sender: architect",
+                    "receiver: frontend",
+                    "gate status: pass with assumptions",
+                    "",
+                    "## Required Reads",
+                    "- runs/current/artifacts/architecture/overview.md",
+                ]
+            )
+        )
+
+        self.assertEqual(sections["gate status"], "pass with assumptions")
+        self.assertEqual(
+            sections["required reads"],
+            ["runs/current/artifacts/architecture/overview.md"],
+        )
 
 
 if __name__ == "__main__":

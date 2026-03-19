@@ -6,7 +6,7 @@ import os
 import re
 from pathlib import Path
 from fnmatch import fnmatch
-from typing import Iterable
+from typing import Iterable, Mapping
 
 
 CORE_DISPLAY_ROLES = ("product-manager", "architect", "frontend", "backend")
@@ -194,12 +194,131 @@ EXCLUDED_ROOT_DIRS = {
     "app.cmdb",
 }
 
+MESSAGE_SECTION_TITLES = (
+    "required reads",
+    "requested outputs",
+    "dependencies",
+    "gate status",
+    "implementation evidence",
+    "blocking issues",
+    "notes",
+)
+
+MESSAGE_SECTION_ALIASES = {
+    "requested outputs completed": "requested outputs",
+}
+
+MESSAGE_FIELD_ALIASES = {
+    "from": ("from", "sender"),
+    "to": ("to", "receiver"),
+    "gate_status": ("gate_status", "gate-status", "gate status"),
+}
+
 
 def resolve_repo_root(path: str | Path) -> Path:
     repo_root = Path(path).resolve()
     if not (repo_root / ".git").exists():
         raise SystemExit(f"error: not a git repo root: {repo_root}")
     return repo_root
+
+
+def normalize_message_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", value.strip().lower())
+
+
+def canonical_message_section_title(normalized: str) -> str | None:
+    if normalized in MESSAGE_SECTION_TITLES:
+        return normalized
+    return MESSAGE_SECTION_ALIASES.get(normalized)
+
+
+def parse_message_headers(message_text: str) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    lines = message_text.splitlines()
+    index = 0
+    delimited = bool(lines and lines[0].strip() == "---")
+
+    if delimited:
+        index = 1
+
+    while index < len(lines):
+        raw_line = lines[index]
+        stripped = raw_line.strip()
+
+        if delimited and stripped == "---":
+            break
+        if stripped.startswith("##"):
+            break
+        if not stripped:
+            if headers:
+                break
+            index += 1
+            continue
+
+        key_match = re.match(r"^([A-Za-z][A-Za-z0-9_ -]*):\s*(.*)$", raw_line)
+        if not key_match:
+            if headers:
+                break
+            index += 1
+            continue
+
+        headers[normalize_message_key(key_match.group(1))] = key_match.group(2).strip()
+        index += 1
+
+    return headers
+
+
+def message_header_field(headers: Mapping[str, str], field_name: str) -> str:
+    aliases = MESSAGE_FIELD_ALIASES.get(field_name, (field_name,))
+    for alias in aliases:
+        value = headers.get(normalize_message_key(alias), "").strip()
+        if value:
+            return value
+    return ""
+
+
+def parse_message_sections(
+    message_text: str,
+    *,
+    headers: Mapping[str, str] | None = None,
+) -> dict[str, list[str] | str]:
+    if headers is None:
+        headers = parse_message_headers(message_text)
+
+    lines = message_text.splitlines()
+    sections: dict[str, list[str]] = {title: [] for title in MESSAGE_SECTION_TITLES}
+    current_section: str | None = None
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        normalized = re.sub(r"^[#\-\*\s]+", "", line).rstrip(":").strip().lower()
+        section_title = canonical_message_section_title(normalized)
+        if section_title is not None:
+            current_section = section_title
+            continue
+        if line.startswith("#"):
+            current_section = None
+            continue
+        if current_section is None or not line:
+            continue
+
+        bullet_match = re.match(r"^[-*]\s+(.*)$", line)
+        numbered_match = re.match(r"^\d+\.\s+(.*)$", line)
+        if bullet_match:
+            sections[current_section].append(bullet_match.group(1).strip())
+        elif numbered_match:
+            sections[current_section].append(numbered_match.group(1).strip())
+        else:
+            sections[current_section].append(line)
+
+    output: dict[str, list[str] | str] = {}
+    for key, values in sections.items():
+        cleaned = [value for value in values if value]
+        if key == "gate status":
+            output[key] = cleaned[0] if cleaned else message_header_field(headers, "gate_status") or "unspecified"
+        else:
+            output[key] = cleaned
+    return output
 
 
 def relpath(path: Path, repo_root: Path) -> str:

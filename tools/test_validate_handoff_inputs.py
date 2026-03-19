@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_handoff_inputs import validate_message, write_correction_note
 
 
@@ -389,6 +391,33 @@ class ValidateHandoffInputsTests(unittest.TestCase):
             self.assertIn("repair the missing or incomplete prerequisites", note_text)
             self.assertIn("runs/current/artifacts/ux/navigation.md", note_text)
             self.assertIn("runs/current/role-state/frontend/processed/handoff.md", note_text)
+
+    def test_sender_alias_and_header_gate_status_are_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/overview.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "sender: architect",
+                        "receiver: frontend",
+                        "gate status: pass with assumptions",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/artifacts/architecture/overview.md",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+            self.assertEqual(report["sender_runtime_role"], "architect")
 
     def test_devops_sender_correction_note_uses_devops_runtime_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
