@@ -17,8 +17,8 @@ Use this file as the discovery entrypoint for the playbook library.
   Tracked neutral starter workspace for a new run
 - local `runs/current/`
   Active run workspace created from `runs/template/`
-- `example/`
-  Preserved proof app, not a normative baseline source
+- `examples/`
+  Preserved example-app library, not a normative baseline source
 - local `app/`
   Generated working tree for the active run
 

@@ -7,9 +7,10 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Product Manager run output MUST be written under
   `../../runs/current/artifacts/product/`.
-- `../../example/` MAY be consulted as a runnable reference app, but it MUST
-  NOT replace run-owned product artifacts or become a hidden baseline source.
-- For a fresh run, `../../example/` and local `../../app/` MUST NOT be used
+- `../../examples/` MAY be consulted as a runnable reference-example library,
+  but it MUST NOT replace run-owned product artifacts or become a hidden
+  baseline source.
+- For a fresh run, `../../examples/` and local `../../app/` MUST NOT be used
   as product inputs unless the task explicitly requests comparison or
   maintenance.
 - `business-rules.md` is the single authoritative human-readable business-rule

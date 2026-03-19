@@ -1,5 +1,6 @@
 # Python runtime artifacts
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
@@ -18,13 +19,21 @@ tmp/
 # Local Python environments and install targets
 .venv/
 .venv*/
+**/.venv/
+**/.venv*/
 venv/
+**/venv/
 env/
+**/env/
 .deps/
+# Common frontend/build/runtime outputs
 # Frontend/runtime artifacts
 node_modules/
+**/node_modules/
 dist/
+**/dist/
 build/
+**/build/
 coverage/
 playwright-report/
 test-results/

@@ -39,7 +39,7 @@ task bundle:
 - do not read the whole `app/frontend/` or `app/backend/` tree for a normal
   change task
 - do not load disabled or undecided feature packs
-- do not treat `example/` as a baseline source
+- do not treat `examples/` as a baseline source
 - do not ignore the context-budget rules in `playbook/process/context-budgets.md`
 - do not treat `runs/current/changes/<change_id>/candidate/artifacts/**` as
   accepted baseline

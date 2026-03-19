@@ -21,4 +21,5 @@ Rules:
 - `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
   approved business-rules catalog.
 - Accepted artifacts MAY later be copied into local `../app/docs/`.
-- `../example/` is a preserved runnable example app, not a second spec source.
+- `../examples/` is a preserved runnable example-app library, not a second
+  spec source.

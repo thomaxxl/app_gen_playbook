@@ -7,7 +7,7 @@ See also:
 This file defines the local compatibility rules that apply on top of the
 playbook's maintained runtime baseline.
 
-Do not recover baseline versions from `example/`. The maintained baseline must
+Do not recover baseline versions from `examples/`. The maintained baseline must
 come from `runtime-baseline.md` and the run-owned `runtime-bom.md`.
 
 ## Virtual environments
@@ -133,7 +133,7 @@ deviation and the chosen workaround before continuing.
 - SAFRS: install as a normal pip package
 - LogicBank: install as a normal pip package
 
-The playbook baseline does not recover a SAFRS pin from `example/`. Each
+The playbook baseline does not recover a SAFRS pin from `examples/`. Each
 generated app must record the validated published `safrs==...` version it
 actually uses in the run-owned `runtime-bom.md`.
 - install LogicBank with the standard published package path:

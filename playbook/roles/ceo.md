@@ -80,7 +80,7 @@ stall diagnosis proves they are needed.
 
 - `../../specs/**` outside explicit playbook-maintenance tasks
 - `../../templates/**` outside explicit playbook-maintenance tasks
-- `../../example/**`
+- `../../examples/**`
 
 ## Working rules
 

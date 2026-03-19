@@ -16,7 +16,7 @@ conditional_artifacts:
   sparse_input:
     - runs/current/artifacts/product/input-interpretation.md
   example_comparison:
-    - example/README.md
+    - examples/README.md
 reference_only:
   - specs/product/README.md
   - specs/product/sample-data.md

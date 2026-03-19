@@ -148,7 +148,7 @@ images and record `product_manager_validation: approved` in
 the screenshots show usable content instead of blank, crashed, fallback, or
 placeholder screens.
 
-For a fresh run, the Product Manager MUST NOT use `../../example/` or
+For a fresh run, the Product Manager MUST NOT use `../../examples/` or
 `../../app/` as product inputs unless the task explicitly requests comparison
 or maintenance.
 

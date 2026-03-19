@@ -31,9 +31,9 @@ These instructions apply to the `app_gen_playbook` repository.
   feature packs, contracts, or templates.
 - Disabled or undecided feature packs must not be loaded into context and must
   not be copied into `app/`.
-- `example/` may be used as a reference example only when the current task
-  explicitly calls for comparison or maintenance. It is not the normative
-  contract source.
+- `examples/` may be used as a reference-example library only when the current
+  task explicitly calls for comparison, maintenance, or example-code reuse. It
+  is not the normative contract source.
 
 ## Repository Boundaries
 

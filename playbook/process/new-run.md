@@ -11,7 +11,7 @@ Required steps:
 
 1. archive any completed run-specific artifacts, evidence, or remarks that
    must remain available
-2. ensure preserved examples live under `../../example/`
+2. ensure preserved examples live under `../../examples/`
 3. recreate local `../../runs/current/` from the tracked neutral starter under
    `../../runs/template/`
 4. replace local `../../runs/current/input.md` with the new brief
@@ -73,7 +73,7 @@ Rules:
 - the tracked `../../runs/template/` tree MUST remain neutral and reusable;
   it MUST NOT accumulate domain-specific run output
 - the operator SHOULD preserve any historically useful run under
-  `../../example/` or another archive before reset
+  `../../examples/` or another archive before reset
 - optional feature packs MUST remain disabled or undecided until the new
   capability profile explicitly enables them
 - if `../../runs/current/input.md` and the Product Manager inbox `INPUT.md`

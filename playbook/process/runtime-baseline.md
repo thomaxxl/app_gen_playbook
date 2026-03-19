@@ -6,7 +6,7 @@ The run-owned `runs/current/artifacts/architecture/runtime-bom.md` MUST start
 from this baseline and record only the run-specific decisions or approved
 deviations needed for the current app.
 
-The maintained baseline MUST NOT be recovered from `example/`.
+The maintained baseline MUST NOT be recovered from `examples/`.
 
 ## Baseline matrix
 
@@ -25,7 +25,7 @@ The maintained baseline MUST NOT be recovered from `example/`.
 ## Baseline rules
 
 - The generated app MUST be installable from the runtime decisions recorded in
-  `runtime-bom.md` without consulting `example/`.
+  `runtime-bom.md` without consulting `examples/`.
 - If a run deviates from this baseline, the deviation MUST be recorded in the
   run-owned `runtime-bom.md` with a reason.
 - If maintainers repin the house baseline, they MUST update this file,

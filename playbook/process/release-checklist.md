@@ -28,7 +28,7 @@ or broad reuse.
 
 - confirm maintained runtime decisions live in
   `playbook/process/runtime-baseline.md`
-- confirm `example/` is not being used as the normative source for runtime or
+- confirm `examples/` is not being used as the normative source for runtime or
   dependency decisions
 
 ## Role/read-set hygiene

@@ -52,8 +52,8 @@ In app-only maintenance mode:
   snapshot if business rules are changed
 - local `../../app/REMARKS.md` MAY be updated to record app-local findings
 - `../../runs/current/` MAY remain neutral or historical
-- `../../example/` MUST remain unchanged unless the task explicitly asks to
-  archive or refresh the preserved example
+- `../../examples/` MUST remain unchanged unless the task explicitly asks to
+  archive, refresh, or add preserved example apps
 
 In app-only maintenance mode, the operator MUST NOT silently treat
 `../../runs/current/` as the authoritative run record for the current app if

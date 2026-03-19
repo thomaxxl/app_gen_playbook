@@ -8,8 +8,8 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Architect run output MUST be written under
   `../../runs/current/artifacts/architecture/`.
-- `../../example/` MAY be consulted as a runnable reference app, but it MUST
-  NOT be treated as the architecture source of truth.
+- `../../examples/` MAY be consulted as a runnable reference-example library,
+  but it MUST NOT be treated as the architecture source of truth.
 
 Template files:
 
@@ -29,10 +29,10 @@ Template files:
 - `decision-log.md`
 - `integration-review.md`
 
-Preserved filled reference:
+Preserved filled references:
 
-- `../../example/artifacts/architecture/`
+- `../../examples/<example_name>/artifacts/architecture/`
 
-The preserved example MAY be consulted as a formatting and artifact-shape
-reference, but it MUST NOT override the current run's own product and
+The preserved examples MAY be consulted as formatting and artifact-shape
+references, but they MUST NOT override the current run's own product and
 architecture decisions.

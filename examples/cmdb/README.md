@@ -2,7 +2,7 @@
 
 This directory preserves a generated SAFRS + FastAPI + React-Admin CMDB app.
 
-It is the current runnable example referenced by the playbook.
+It is one of the preserved runnable examples referenced by the playbook.
 
 It also contains a preserved filled architecture example package under:
 

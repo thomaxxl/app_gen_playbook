@@ -148,7 +148,7 @@ ceo:
   cannot_write:
     - specs/**
     - templates/**
-    - example/**
+    - examples/**
 
 devops:
   always_load:

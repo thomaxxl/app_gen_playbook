@@ -36,8 +36,10 @@ on this file for execution rules.
   The run workspace model.
   `runs/template/` is the tracked starter.
   `runs/current/` is the local active run created from that starter.
-- `example/`
-  A preserved runnable example app generated from this playbook.
+- `examples/`
+  A preserved library of runnable example apps generated from or aligned with
+  this playbook. Use [examples/README.md](examples/README.md) as the stable
+  entrypoint.
 - `app/`
   The local ignored generated-app working tree for the active run.
 - `scripts/run_playbook.sh`
@@ -47,7 +49,8 @@ on this file for execution rules.
 - `scripts/clean.sh`
   Saves a filtered snapshot of local `runs/current/` and `app/` under
   `saved/`, then cleans the workspace without touching tracked starter or
-  example content. The automatic snapshot omits local dependency trees such as
+  preserved example content. The automatic snapshot omits local dependency
+  trees such as
   `.venv`, `.deps`, and `node_modules`.
 - `scripts/save_run.sh`
   Archives local `runs/current/` and `app/` under `saved/`, with an optional
@@ -103,7 +106,7 @@ Or launch interactively:
    environment intervention, the run stops non-zero and points at
    `runs/current/orchestrator/operator-action-required.md`.
 4. The generated app is built locally under `app/`.
-5. A preserved runnable reference remains available under `example/`.
+5. Preserved runnable references remain available under `examples/`.
 
 The orchestrator keeps per-role evidence under `runs/current/evidence/` and
 per-role mutable state under `runs/current/role-state/`.
@@ -238,7 +241,7 @@ For human orientation:
 3. [runs/README.md](runs/README.md)
 4. [specs/README.md](specs/README.md)
 5. [templates/README.md](templates/README.md)
-6. [example/README.md](example/README.md)
+6. [examples/README.md](examples/README.md)
 
 For generated-app shape:
 
@@ -252,7 +255,8 @@ For generated-app shape:
 - `runs/current/` is local run state, not committed playbook source.
 - `run_dashboard/` is operator tooling. It may observe `runs/current/`, but it
   is not a normative contract or role-loading surface.
-- `example/` is a proof/reference app, not the source of truth for contracts.
+- `examples/` is a proof/reference library, not the source of truth for
+  contracts.
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are template sources; run-specific artifacts belong
   under `runs/current/artifacts/`.

@@ -51,13 +51,14 @@ The run-owned feature gating artifacts are:
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
 
-## Preserved example plus fresh app rule
+## Preserved examples plus fresh app rule
 
 The playbook distinguishes three different states:
 
-- `../../example/`
-  A preserved runnable example app. Ordinary app generation MUST NOT overwrite
-  it unless the task explicitly refreshes the preserved example.
+- `../../examples/`
+  A preserved runnable example-app library. Ordinary app generation MUST NOT
+  overwrite or repurpose it unless the task explicitly refreshes or adds a
+  preserved example.
 - `../../runs/current/`
   A local run-state area created from `../../runs/template/` for a new full
   run.
@@ -97,7 +98,7 @@ case, the operator MUST preserve the distinction between:
 To start a new run:
 
 1. preserve or archive the current run if needed
-2. preserve historical app-specific artifacts under `../../example/` or
+2. preserve historical app-specific artifacts under `../../examples/` or
    another archive if they must remain available
 3. recreate local `../../runs/current/` from the tracked neutral starter under
    `../../runs/template/`
