@@ -113,7 +113,16 @@ ensure_host_runtime_dependency_links() {
     [[ -d "$resolved_frontend_node_modules" ]] || return 1
     FRONTEND_NODE_MODULES_DIR="$resolved_frontend_node_modules"
     mkdir -p "$ROOT/app/frontend"
-    if [[ ! -L "$frontend_node_modules_link" ]] && [[ ! -e "$frontend_node_modules_link" ]]; then
+    if [[ -L "$frontend_node_modules_link" ]]; then
+      local existing_frontend_target current_frontend
+      existing_frontend_target="$(readlink "$frontend_node_modules_link")"
+      if [[ -n "$existing_frontend_target" ]]; then
+        current_frontend="$(resolve_playbook_path "$existing_frontend_target" "$ROOT/app/frontend")"
+        if [[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]] && [[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]; then
+          FRONTEND_NODE_MODULES_DIR="$current_frontend"
+        fi
+      fi
+    elif [[ ! -e "$frontend_node_modules_link" ]]; then
       ln -s "$FRONTEND_NODE_MODULES_DIR" "$frontend_node_modules_link"
     fi
   fi

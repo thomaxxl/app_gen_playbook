@@ -454,8 +454,13 @@ ensure_host_runtime_dependency_links() {
         current_frontend=""
       fi
       if [[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]]; then
-        log "host-runtime-node-modules-mismatch link=${frontend_node_modules_link#$ROOT/} expected=${FRONTEND_NODE_MODULES_DIR} actual=${current_frontend}"
-        return 1
+        if [[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]; then
+          FRONTEND_NODE_MODULES_DIR="$current_frontend"
+          log "host-runtime-node-modules-existing-local link=${frontend_node_modules_link#$ROOT/} using FRONTEND_NODE_MODULES_DIR=${FRONTEND_NODE_MODULES_DIR}"
+        else
+          log "host-runtime-node-modules-mismatch link=${frontend_node_modules_link#$ROOT/} expected=${FRONTEND_NODE_MODULES_DIR} actual=${current_frontend}"
+          return 1
+        fi
       fi
     elif [[ -e "$frontend_node_modules_link" ]]; then
       log "host-runtime-node-modules-conflict link=${frontend_node_modules_link#$ROOT/} expected symlink to FRONTEND_NODE_MODULES_DIR=${FRONTEND_NODE_MODULES_DIR}"
@@ -970,11 +975,27 @@ message_indicates_progress() {
 
   topic="$(message_field topic "$message_path" | tr '[:upper:]' '[:lower:]')"
   case "$topic" in
-    acceptance-trigger-correction|acceptance-trigger-superseded)
+    acceptance-trigger-correction|acceptance-trigger-superseded|product-recovery-acknowledged)
       return 0
       ;;
   esac
   [[ "$topic" =~ (^|[-_])(complete|completed|ready|approved|resolved)$ ]]
+}
+
+orchestrator_note_has_active_owner_lane() {
+  local message_path="$1"
+  local sender topic
+
+  sender="$(message_field from "$message_path" | tr '[:upper:]' '[:lower:]')"
+  topic="$(message_field topic "$message_path" | tr '[:upper:]' '[:lower:]')"
+
+  if [[ "$sender" == "architect" ]] && [[ "$topic" == "integration-review-block-persists" ]]; then
+    if [[ "$(role_actionable_count frontend)" -gt 0 ]] || [[ "$(role_actionable_count backend)" -gt 0 ]]; then
+      return 0
+    fi
+  fi
+
+  return 1
 }
 
 browser_proof_capture_status() {
@@ -1428,6 +1449,16 @@ process_orchestrator_inbox() {
     append_run_remark \
       "Orchestrator Progress Note Archived" \
       "Archived orchestrator progress note:\n- ${processed_path#$ROOT/}\n\nReason:\n- Success-path progress notes do not require CEO triage and should return control to normal recovery or dispatch."
+    return 0
+  fi
+  if orchestrator_note_has_active_owner_lane "$processed_path"; then
+    log "orchestrator-blocked-note-archived-active-owner message=$(basename "$processed_path") topic=${topic:-unspecified}"
+    append_recovery_log \
+      "Orchestrator Blocked Note Archived With Active Owner Lane" \
+      "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- The note is blocked, but the run already has active normal-owner work in flight so CEO triage would only create a false stall."
+    append_run_remark \
+      "Orchestrator Blocked Note Archived With Active Owner Lane" \
+      "Archived orchestrator blocked note:\n- ${processed_path#$ROOT/}\n\nReason:\n- The note is blocked, but Frontend or Backend already has actionable work so the runner should continue normal dispatch instead of re-escalating to CEO."
     return 0
   fi
   reason="orchestrator-routed escalation requires CEO triage: ${processed_path#$ROOT/}"
@@ -1946,6 +1977,7 @@ handle_role_codex_failure() {
   local message_path="$3"
   local failure_detail="$4"
   local ceo_review_status=0
+  local owner_queue_before owner_queue_after
 
   python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
     --repo-root "$ROOT" \
@@ -1953,10 +1985,16 @@ handle_role_codex_failure() {
     --status interrupted \
     --claimed-message "$(basename "$message_path")" >/dev/null
 
+  owner_queue_before="$(actionable_owner_queue_fingerprint)"
   if attempt_ceo_termination_review \
     "codex failed for role $runtime_role" \
     "$failure_detail"; then
+    owner_queue_after="$(actionable_owner_queue_fingerprint)"
     if [[ ! -f "$message_path" ]]; then
+      return 0
+    fi
+    if [[ "$owner_queue_after" != "$owner_queue_before" ]]; then
+      log "termination-review-forward-progress-restored role=$runtime_role message=${message_base}.md"
       return 0
     fi
   else
@@ -2602,6 +2640,39 @@ pending_actionable_count() {
   done < <(canonical_queue_dirs)
 
   printf '%s\n' "$count"
+}
+
+actionable_owner_queue_fingerprint() {
+  python3 - "$STATE_ROOT" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+state_root = Path(sys.argv[1])
+role_names = ["product_manager", "architect", "frontend", "backend"]
+if (state_root / "devops").is_dir():
+    role_names.append("devops")
+elif (state_root / "deployment").is_dir():
+    role_names.append("deployment")
+
+digest = hashlib.sha256()
+for role_name in role_names:
+    role_dir = state_root / role_name
+    for lane in ("inbox", "inflight"):
+        lane_dir = role_dir / lane
+        if not lane_dir.is_dir():
+            continue
+        for path in sorted(lane_dir.glob("*.md")):
+            rel = path.relative_to(state_root)
+            digest.update(str(rel).encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+
+print(digest.hexdigest())
+PY
 }
 
 extract_json_string_field() {

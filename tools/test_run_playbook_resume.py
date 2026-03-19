@@ -1336,6 +1336,306 @@ class RunPlaybookResumeTests(unittest.TestCase):
                 ).exists()
             )
 
+    def test_resume_accepts_ceo_recovery_lane_after_role_timeout(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            frontend_dir = repo_root / "runs" / "current" / "role-state" / "frontend"
+            ceo_dir = repo_root / "runs" / "current" / "role-state" / "ceo"
+            for role_dir in (frontend_dir, ceo_dir):
+                (role_dir / "inbox").mkdir(parents=True, exist_ok=True)
+                (role_dir / "inflight").mkdir(parents=True, exist_ok=True)
+                (role_dir / "processed").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+            (
+                frontend_dir
+                / "inflight"
+                / "20260319-182619-from-architect-to-frontend-live-quality-correction-required.md"
+            ).write_text(
+                textwrap.dedent(
+                    """\
+                    from: architect
+                    to: frontend
+                    topic: live-quality-correction-required
+                    purpose: correct the reviewed routes and return updated evidence
+
+                    ## Gate Status
+                    - blocked
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 ready')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    args = parser.parse_args()
+
+                    repo_root = Path(args.repo_root)
+                    recovery_note = (
+                        repo_root
+                        / "runs"
+                        / "current"
+                        / "role-state"
+                        / "frontend"
+                        / "inbox"
+                        / "20260319-184645-from-ceo-to-frontend-recovery.md"
+                    )
+                    if recovery_note.exists():
+                        print("run is complete")
+                        raise SystemExit(0)
+                    print("run is not complete")
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_dependency_provisioning.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.parse_args(); raise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "validate_handoff_inputs.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    import json
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    parser.add_argument("--runtime-role", required=True)
+                    parser.add_argument("--message", required=True)
+                    parser.add_argument("--json")
+                    parser.add_argument("--emit-correction-note", action="store_true")
+                    args = parser.parse_args()
+
+                    if args.json:
+                        output = Path(args.json)
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        output.write_text(
+                            json.dumps({"valid": True, "blockers": []}),
+                            encoding="utf-8",
+                        )
+                    raise SystemExit(0)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "validate_role_diff.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    subparsers = parser.add_subparsers(dest="command", required=True)
+
+                    snapshot = subparsers.add_parser("snapshot")
+                    snapshot.add_argument("--repo-root", required=True)
+                    snapshot.add_argument("--output", required=True)
+
+                    validate = subparsers.add_parser("validate")
+                    validate.add_argument("--repo-root", required=True)
+                    validate.add_argument("--runtime-role", required=True)
+                    validate.add_argument("--snapshot", required=True)
+                    validate.add_argument("--evidence-out", required=True)
+                    validate.add_argument("--ignore-runtime-role", action="append", default=[])
+
+                    args = parser.parse_args()
+                    if args.command == "snapshot":
+                        output = Path(args.output)
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        output.write_text("{}\n", encoding="utf-8")
+                    else:
+                        evidence = Path(args.evidence_out)
+                        evidence.parent.mkdir(parents=True, exist_ok=True)
+                        evidence.write_text("validated\n", encoding="utf-8")
+                    raise SystemExit(0)
+                    """
+                ),
+            )
+            write_executable(
+                tools_dir / "build_role_prompt.py",
+                "#!/usr/bin/env python3\nprint('stub prompt')\n",
+            )
+            write_executable(
+                tools_dir / "assert_codex_success.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "run_process_group.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--cwd", required=True)
+                    parser.add_argument("--prompt-file", required=True)
+                    parser.add_argument("--output-file", required=True)
+                    parser.add_argument("--timeout-seconds")
+                    parser.add_argument("command", nargs=argparse.REMAINDER)
+                    args = parser.parse_args()
+
+                    repo_root = Path(args.cwd)
+                    output_file = Path(args.output_file)
+                    output_file.parent.mkdir(parents=True, exist_ok=True)
+                    command = args.command[1:] if args.command and args.command[0] == "--" else args.command
+                    result_file = None
+                    for index, token in enumerate(command):
+                        if token == "--output-last-message":
+                            result_file = Path(command[index + 1])
+                            break
+                    if result_file is None:
+                        raise SystemExit("missing --output-last-message")
+                    result_file.parent.mkdir(parents=True, exist_ok=True)
+
+                    if output_file.name.startswith("frontend-"):
+                        output_file.write_text("", encoding="utf-8")
+                        raise SystemExit(124)
+
+                    if output_file.name.startswith("ceo-"):
+                        ceo_inflight = sorted(
+                            (repo_root / "runs" / "current" / "role-state" / "ceo" / "inflight").glob("*.md")
+                        )
+                        if not ceo_inflight:
+                            raise SystemExit("missing ceo inflight note")
+                        processed_path = (
+                            repo_root
+                            / "runs"
+                            / "current"
+                            / "role-state"
+                            / "ceo"
+                            / "processed"
+                            / ceo_inflight[0].name
+                        )
+                        processed_path.parent.mkdir(parents=True, exist_ok=True)
+                        ceo_inflight[0].replace(processed_path)
+
+                        recovery_note = (
+                            repo_root
+                            / "runs"
+                            / "current"
+                            / "role-state"
+                            / "frontend"
+                            / "inbox"
+                            / "20260319-184645-from-ceo-to-frontend-recovery.md"
+                        )
+                        recovery_note.parent.mkdir(parents=True, exist_ok=True)
+                        recovery_note.write_text(
+                            "from: ceo\\n"
+                            "to: frontend\\n"
+                            "topic: recovery\\n"
+                            "purpose: resume the timed-out frontend correction pass\\n\\n"
+                            "## Gate Status\\n"
+                            "- pass\\n",
+                            encoding="utf-8",
+                        )
+
+                        remarks = repo_root / "runs" / "current" / "remarks.md"
+                        remarks.parent.mkdir(parents=True, exist_ok=True)
+                        with remarks.open("a", encoding="utf-8") as handle:
+                            handle.write("\\n## 2026-03-19T17:48:28Z - CEO Rejected Frontend Timeout Termination\\n")
+
+                        context = repo_root / "runs" / "current" / "role-state" / "ceo" / "context.md"
+                        context.parent.mkdir(parents=True, exist_ok=True)
+                        context.write_text("# CEO Context\\n", encoding="utf-8")
+
+                        output_file.write_text('{"type":"turn.completed"}\\n', encoding="utf-8")
+                        result_file.write_text(
+                            "Summary: rejected the pending non-success termination and restored the frontend recovery lane\\n",
+                            encoding="utf-8",
+                        )
+                        raise SystemExit(0)
+
+                    output_file.write_text('{"type":"turn.completed"}\\n', encoding="utf-8")
+                    result_file.write_text("Summary: stub success\\n", encoding="utf-8")
+                    raise SystemExit(0)
+                    """
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("termination-review-forward-progress-restored role=frontend", result.stderr)
+            self.assertNotIn("fatal: ceo did not approve or resolve codex failure termination", result.stderr)
+            self.assertTrue(
+                (
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "frontend"
+                    / "inbox"
+                    / "20260319-184645-from-ceo-to-frontend-recovery.md"
+                ).exists()
+            )
+            self.assertTrue(any((repo_root / "runs" / "current" / "role-state" / "ceo" / "processed").glob("*.md")))
+            self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

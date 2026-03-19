@@ -128,9 +128,13 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("emit_ceo_termination_review_note()", script)
         self.assertIn("attempt_ceo_termination_review()", script)
         self.assertIn("handle_role_codex_failure()", script)
+        self.assertIn("actionable_owner_queue_fingerprint()", script)
         self.assertIn("purpose: approve or reject a pending non-success playbook termination before the orchestrator exits", script)
         self.assertIn('if attempt_ceo_termination_review \\', script)
         self.assertIn('"codex failed for role $runtime_role"', script)
+        self.assertIn('owner_queue_before="$(actionable_owner_queue_fingerprint)"', script)
+        self.assertIn('if [[ "$owner_queue_after" != "$owner_queue_before" ]]; then', script)
+        self.assertIn("termination-review-forward-progress-restored", script)
         self.assertIn("ceo did not approve or resolve startup termination", script)
         self.assertIn("ceo did not approve or resolve dependency-preflight termination", script)
         self.assertIn("ceo did not approve or resolve codex failure termination", script)
@@ -194,6 +198,17 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('orchestrator-progress-note-archived', script)
         self.assertIn('Success-path progress notes do not require CEO triage', script)
         self.assertIn("acceptance-trigger-correction|acceptance-trigger-superseded", script)
+        self.assertIn("product-recovery-acknowledged", script)
+
+    def test_orchestrator_archives_blocked_architect_notes_when_owner_work_is_active(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("orchestrator_note_has_active_owner_lane()", script)
+        self.assertIn('if [[ "$sender" == "architect" ]] && [[ "$topic" == "integration-review-block-persists" ]]; then', script)
+        self.assertIn('if [[ "$(role_actionable_count frontend)" -gt 0 ]] || [[ "$(role_actionable_count backend)" -gt 0 ]]; then', script)
+        self.assertIn('if orchestrator_note_has_active_owner_lane "$processed_path"; then', script)
+        self.assertIn("orchestrator-blocked-note-archived-active-owner", script)
+        self.assertIn("false stall", script)
 
     def test_browser_fallback_acceptance_requires_passed_integration_review(self) -> None:
         script = self.runner_core()
@@ -230,6 +245,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("execution_prereqs_host_mode_requires_sandbox()", script)
         self.assertIn("runtime-env-auto-pivot", script)
         self.assertIn('"runtime_env_source": "$PLAYBOOK_RUNTIME_ENV_SOURCE"', script)
+
+    def test_runner_accepts_valid_local_frontend_node_modules_mirror(self) -> None:
+        script = self.runner_core()
+        wrapper = self.runner_wrapper()
+
+        self.assertIn('host-runtime-node-modules-existing-local', script)
+        self.assertIn('[[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]', script)
+        self.assertIn('FRONTEND_NODE_MODULES_DIR="$current_frontend"', script)
+        self.assertIn('[[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]] && [[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]', wrapper)
 
     def test_runner_writes_remarks_with_real_newlines_under_a_lock(self) -> None:
         script = self.runner_core()
