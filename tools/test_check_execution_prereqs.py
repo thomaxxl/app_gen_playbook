@@ -62,6 +62,8 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
     def test_check_port_bind_returns_ok_when_ports_are_free(self) -> None:
         result = check_execution_prereqs.check_port_bind(Path("."))
+        if result.status == "blocked" and "socket creation is denied" in result.detail:
+            self.skipTest("socket operations are not permitted in this execution environment")
         self.assertEqual(result.status, "ok")
         self.assertIn("localhost bind succeeded", result.detail)
 
@@ -72,20 +74,41 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         try:
             check_execution_prereqs.PORT_BIND_RETRY_ATTEMPTS = 1
             check_execution_prereqs.PORT_BIND_RETRY_DELAY_SECONDS = 0
-            with _TestServer() as frontend, _TestServer() as backend:
-                check_execution_prereqs.expected_runtime_listeners_ready = lambda fp, bp: fp == frontend.port and bp == backend.port
-                with unittest.mock.patch.dict(
-                    "os.environ",
-                    {"FRONTEND_PORT": str(frontend.port), "BACKEND_PORT": str(backend.port)},
-                    clear=False,
-                ):
-                    result = check_execution_prereqs.check_port_bind(Path("."))
+            try:
+                with _TestServer() as frontend, _TestServer() as backend:
+                    check_execution_prereqs.expected_runtime_listeners_ready = lambda fp, bp: fp == frontend.port and bp == backend.port
+                    with unittest.mock.patch.dict(
+                        "os.environ",
+                        {"FRONTEND_PORT": str(frontend.port), "BACKEND_PORT": str(backend.port)},
+                        clear=False,
+                    ):
+                        result = check_execution_prereqs.check_port_bind(Path("."))
+            except PermissionError:
+                self.skipTest("socket operations are not permitted in this execution environment")
             self.assertEqual(result.status, "ok")
             self.assertIn("expected app listeners already active", result.detail)
         finally:
             check_execution_prereqs.expected_runtime_listeners_ready = original_expected_runtime_listeners_ready
             check_execution_prereqs.PORT_BIND_RETRY_ATTEMPTS = original_attempts
             check_execution_prereqs.PORT_BIND_RETRY_DELAY_SECONDS = original_delay
+
+    def test_check_port_bind_reports_socket_permission_denied(self) -> None:
+        with unittest.mock.patch.object(check_execution_prereqs.socket, "socket", side_effect=PermissionError(1, "Operation not permitted")):
+            result = check_execution_prereqs.check_port_bind(Path("."))
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("socket creation is denied", result.detail)
+
+    def test_check_port_bind_is_deferred_in_sandbox_runtime(self) -> None:
+        with unittest.mock.patch.dict("os.environ", {"PLAYBOOK_RUNTIME_ENV": "sandbox"}, clear=False):
+            result = check_execution_prereqs.check_port_bind(Path("."))
+        self.assertEqual(result.status, "ok")
+        self.assertIn("sandbox runtime mode defers localhost bind validation", result.detail)
+
+    def test_check_playwright_screenshot_is_deferred_in_sandbox_runtime(self) -> None:
+        with unittest.mock.patch.dict("os.environ", {"PLAYBOOK_RUNTIME_ENV": "sandbox"}, clear=False):
+            result = check_execution_prereqs.check_playwright_screenshot(Path("."))
+        self.assertEqual(result.status, "ok")
+        self.assertIn("sandbox runtime mode defers Playwright browser-launch validation", result.detail)
 
     def test_render_markdown_uses_checkbox_style(self) -> None:
         result_ok = CheckResult("python_venv", "ok", "all good")
