@@ -638,11 +638,41 @@ def upsert_row(conn, table: Table, row: dict[str, Any], index_elements: list[str
 
 
 def insert_rows(conn, table: Table, rows: list[dict[str, Any]]) -> None:
-    if rows:
-        conn.execute(table.insert(), [row_for_table(table, row) for row in rows])
+    if not rows:
+        return
+
+    filtered_rows = [row_for_table(table, row) for row in rows]
+    primary_key_columns = [column.name for column in table.primary_key.columns]
+    if primary_key_columns:
+        deduped_rows: dict[tuple[Any, ...], dict[str, Any]] = {}
+        ordered_keys: list[tuple[Any, ...]] = []
+        for row in filtered_rows:
+            key = tuple(row.get(column) for column in primary_key_columns)
+            if key not in deduped_rows:
+                ordered_keys.append(key)
+            deduped_rows[key] = row
+        filtered_rows = [deduped_rows[key] for key in ordered_keys]
+
+    conn.execute(table.insert(), filtered_rows)
 
 
 def delete_run_scoped_rows(conn, run_id: str) -> None:
+    file_ids = list(conn.execute(select(run_files.c.id).where(run_files.c.run_id == run_id)).scalars())
+    artifact_ids = list(conn.execute(select(artifacts.c.id).where(artifacts.c.run_id == run_id)).scalars())
+    change_request_ids = list(conn.execute(select(change_requests.c.id).where(change_requests.c.run_id == run_id)).scalars())
+    verification_check_ids = list(conn.execute(select(verification_checks.c.id).where(verification_checks.c.run_id == run_id)).scalars())
+
+    if verification_check_ids:
+        conn.execute(delete(verification_check_evidence).where(verification_check_evidence.c.verification_check_id.in_(verification_check_ids)))
+    if file_ids:
+        conn.execute(delete(markdown_sections).where(markdown_sections.c.file_id.in_(file_ids)))
+        conn.execute(delete(markdown_documents).where(markdown_documents.c.file_id.in_(file_ids)))
+    if artifact_ids:
+        conn.execute(delete(artifact_dependencies).where(artifact_dependencies.c.artifact_id.in_(artifact_ids)))
+    if change_request_ids:
+        conn.execute(delete(change_request_role_loads).where(change_request_role_loads.c.change_request_id.in_(change_request_ids)))
+        conn.execute(delete(change_request_items).where(change_request_items.c.change_request_id.in_(change_request_ids)))
+
     for table in RUN_SCOPED_TABLES:
         if "run_id" in table.c:
             conn.execute(delete(table).where(table.c.run_id == run_id))
