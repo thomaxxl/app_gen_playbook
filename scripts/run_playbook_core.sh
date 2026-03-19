@@ -978,6 +978,22 @@ message_indicates_progress() {
   [[ "$topic" =~ (^|[-_])(complete|completed|ready|approved|resolved)$ ]]
 }
 
+orchestrator_note_has_active_owner_lane() {
+  local message_path="$1"
+  local sender topic
+
+  sender="$(message_field from "$message_path" | tr '[:upper:]' '[:lower:]')"
+  topic="$(message_field topic "$message_path" | tr '[:upper:]' '[:lower:]')"
+
+  if [[ "$sender" == "architect" ]] && [[ "$topic" == "integration-review-block-persists" ]]; then
+    if [[ "$(role_actionable_count frontend)" -gt 0 ]] || [[ "$(role_actionable_count backend)" -gt 0 ]]; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
 browser_proof_capture_status() {
   [[ -f "$FRONTEND_BROWSER_PROOF_MD" ]] || return 1
   awk -F':[[:space:]]*' '$1 == "- capture_status" { print $2; exit }' "$FRONTEND_BROWSER_PROOF_MD"
@@ -1360,6 +1376,16 @@ process_orchestrator_inbox() {
     append_run_remark \
       "Orchestrator Progress Note Archived" \
       "Archived orchestrator progress note:\n- ${processed_path#$ROOT/}\n\nReason:\n- Success-path progress notes do not require CEO triage and should return control to normal recovery or dispatch."
+    return 0
+  fi
+  if orchestrator_note_has_active_owner_lane "$processed_path"; then
+    log "orchestrator-blocked-note-archived-active-owner message=$(basename "$processed_path") topic=${topic:-unspecified}"
+    append_recovery_log \
+      "Orchestrator Blocked Note Archived With Active Owner Lane" \
+      "Archived note:\n- ${processed_path#$ROOT/}\n\nReason:\n- The note is blocked, but the run already has active normal-owner work in flight so CEO triage would only create a false stall."
+    append_run_remark \
+      "Orchestrator Blocked Note Archived With Active Owner Lane" \
+      "Archived orchestrator blocked note:\n- ${processed_path#$ROOT/}\n\nReason:\n- The note is blocked, but Frontend or Backend already has actionable work so the runner should continue normal dispatch instead of re-escalating to CEO."
     return 0
   fi
   reason="orchestrator-routed escalation requires CEO triage: ${processed_path#$ROOT/}"

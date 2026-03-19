@@ -177,6 +177,16 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("acceptance-trigger-correction|acceptance-trigger-superseded", script)
         self.assertIn("product-recovery-acknowledged", script)
 
+    def test_orchestrator_archives_blocked_architect_notes_when_owner_work_is_active(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("orchestrator_note_has_active_owner_lane()", script)
+        self.assertIn('if [[ "$sender" == "architect" ]] && [[ "$topic" == "integration-review-block-persists" ]]; then', script)
+        self.assertIn('if [[ "$(role_actionable_count frontend)" -gt 0 ]] || [[ "$(role_actionable_count backend)" -gt 0 ]]; then', script)
+        self.assertIn('if orchestrator_note_has_active_owner_lane "$processed_path"; then', script)
+        self.assertIn("orchestrator-blocked-note-archived-active-owner", script)
+        self.assertIn("false stall", script)
+
     def test_browser_fallback_acceptance_requires_passed_integration_review(self) -> None:
         script = self.runner_core()
 
