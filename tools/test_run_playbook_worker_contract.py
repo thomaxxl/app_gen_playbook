@@ -209,6 +209,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("runtime-env-auto-pivot", script)
         self.assertIn('"runtime_env_source": "$PLAYBOOK_RUNTIME_ENV_SOURCE"', script)
 
+    def test_runner_accepts_valid_local_frontend_node_modules_mirror(self) -> None:
+        script = self.runner_core()
+        wrapper = self.runner_wrapper()
+
+        self.assertIn('host-runtime-node-modules-existing-local', script)
+        self.assertIn('[[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]', script)
+        self.assertIn('FRONTEND_NODE_MODULES_DIR="$current_frontend"', script)
+        self.assertIn('[[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]] && [[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]', wrapper)
+
     def test_runner_writes_remarks_with_real_newlines_under_a_lock(self) -> None:
         script = self.runner_core()
 

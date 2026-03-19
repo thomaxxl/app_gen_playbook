@@ -451,8 +451,13 @@ ensure_host_runtime_dependency_links() {
         current_frontend=""
       fi
       if [[ "$current_frontend" != "$FRONTEND_NODE_MODULES_DIR" ]]; then
-        log "host-runtime-node-modules-mismatch link=${frontend_node_modules_link#$ROOT/} expected=${FRONTEND_NODE_MODULES_DIR} actual=${current_frontend}"
-        return 1
+        if [[ -d "$current_frontend" ]] && [[ -x "$current_frontend/.bin/vite" ]]; then
+          FRONTEND_NODE_MODULES_DIR="$current_frontend"
+          log "host-runtime-node-modules-existing-local link=${frontend_node_modules_link#$ROOT/} using FRONTEND_NODE_MODULES_DIR=${FRONTEND_NODE_MODULES_DIR}"
+        else
+          log "host-runtime-node-modules-mismatch link=${frontend_node_modules_link#$ROOT/} expected=${FRONTEND_NODE_MODULES_DIR} actual=${current_frontend}"
+          return 1
+        fi
       fi
     elif [[ -e "$frontend_node_modules_link" ]]; then
       log "host-runtime-node-modules-conflict link=${frontend_node_modules_link#$ROOT/} expected symlink to FRONTEND_NODE_MODULES_DIR=${FRONTEND_NODE_MODULES_DIR}"
