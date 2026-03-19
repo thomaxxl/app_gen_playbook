@@ -83,7 +83,7 @@ test("capture reviewable UI previews", async ({ page }) => {
   await fs.mkdir(outputDir, { recursive: true });
 
   await page.setViewportSize({ width: 1440, height: 1024 });
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await expect(page.getByTestId("entry-purpose")).toBeVisible();
   await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
   await expect(page.getByTestId("entry-proof-strip")).toBeVisible();
@@ -98,11 +98,11 @@ test("capture reviewable UI previews", async ({ page }) => {
       "proof strip is visible",
     ],
     file: "home-desktop.png",
-    route: "/admin-app/#/Home",
+    route: "/app/#/Home",
     surface: "Home desktop",
   });
 
-  await page.goto("/admin-app/#/Collection");
+  await page.goto("/app/#/Collection");
   await expect(page.getByRole("main")).toBeVisible();
   await page.screenshot({
     fullPage: true,
@@ -113,12 +113,12 @@ test("capture reviewable UI previews", async ({ page }) => {
       "main application region is visible",
     ],
     file: "collection-list.png",
-    route: "/admin-app/#/Collection",
+    route: "/app/#/Collection",
     surface: "Collection list",
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
   await page.screenshot({
     fullPage: true,
@@ -129,7 +129,7 @@ test("capture reviewable UI previews", async ({ page }) => {
       "primary CTA remains visible at mobile width",
     ],
     file: "home-mobile.png",
-    route: "/admin-app/#/Home",
+    route: "/app/#/Home",
     surface: "Home mobile",
   });
 

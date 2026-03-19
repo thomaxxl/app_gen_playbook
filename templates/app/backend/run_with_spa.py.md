@@ -7,7 +7,7 @@ See also:
 - [../../../specs/contracts/deployment/README.md](../../../specs/contracts/deployment/README.md)
 
 Use this shape when one process should serve both the FastAPI API and a built
-React admin app at `/admin-app/`.
+React admin app at `/app/`.
 
 ```python
 from __future__ import annotations
@@ -31,7 +31,7 @@ from my_app import create_app as create_backend_app
 from my_app.config import get_settings
 
 DOCS_DESCRIPTION = """
-## <a href="/admin-app/">Admin App</a>
+## <a href="/app/">Admin App</a>
 
 This process serves both the SAFRS FastAPI API and the built React admin app.
 """.strip()
@@ -46,14 +46,14 @@ def create_app():
     assets_dir = FRONTEND_DIST_DIR / "assets"
 
     if assets_dir.is_dir():
-        app.mount("/admin-app/assets", StaticFiles(directory=str(assets_dir)), name="spa-admin-assets")
+        app.mount("/app/assets", StaticFiles(directory=str(assets_dir)), name="spa-admin-assets")
 
     @app.get("/", include_in_schema=False)
     def root_redirect() -> RedirectResponse:
-        return RedirectResponse(url="/admin-app/", status_code=307)
+        return RedirectResponse(url="/app/", status_code=307)
 
-    @app.get("/admin-app", include_in_schema=False)
-    @app.get("/admin-app/", include_in_schema=False)
+    @app.get("/app", include_in_schema=False)
+    @app.get("/app/", include_in_schema=False)
     def admin_app() -> FileResponse:
         return FileResponse(frontend_index)
 
@@ -73,4 +73,4 @@ Notes:
 
 - Use it when you want a minimal deployable app without nginx.
 - Rebuild `frontend/dist/` before running it.
-- Root `/` should redirect to `/admin-app/`.
+- Root `/` should redirect to `/app/`.

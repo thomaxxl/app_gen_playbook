@@ -3,15 +3,15 @@ import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
-function adminAppDevBase() {
+function appDevBase() {
   return {
-    name: "admin-app-dev-base",
+    name: "app-dev-base",
     configureServer(server: { middlewares: { use: (handler: (req: { url?: string }, _res: unknown, next: () => void) => void) => void } }) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url === "/admin-app") {
+        if (req.url === "/app") {
           req.url = "/";
-        } else if (req.url?.startsWith("/admin-app/")) {
-          req.url = req.url.replace(/^\/admin-app/, "") || "/";
+        } else if (req.url?.startsWith("/app/")) {
+          req.url = req.url.replace(/^\/app/, "") || "/";
         }
         next();
       });
@@ -37,8 +37,8 @@ export default defineConfig(({ mode }) => {
   );
 
   return {
-    base: "/admin-app/",
-    plugins: [adminAppDevBase(), react()],
+    base: "/app/",
+    plugins: [appDevBase(), react()],
     resolve: {
       alias: {
         "fs/promises": fsPromisesShim,

@@ -43,7 +43,7 @@ Run-owned DevOps artifacts live under:
 
 Recommended public routes:
 
-- `/admin-app/` for the frontend
+- `/app/` for the frontend
 - `/api` for the SAFRS API
 - `/docs` for FastAPI docs
 - `/ui/admin/admin.yaml` for the frontend contract
@@ -151,13 +151,13 @@ For production-style packaging:
 - run `npm run build` with a Node runtime compatible with the frontend
   `engines` contract
 - copy `frontend/dist/` into the image
-- serve the SPA under `/admin-app/`
-- emit assets under `/admin-app/assets/`
+- serve the SPA under `/app/`
+- emit assets under `/app/assets/`
 
 For development packaging:
 
 - run Vite in the container
-- proxy `/admin-app/` through nginx
+- proxy `/app/` through nginx
 - keep same-origin `/api` and `/ui`
 
 ## nginx responsibilities
@@ -166,7 +166,7 @@ nginx should:
 
 - redirect or forward `/` to the generated SPA entry
 - redirect or forward `/index.html` to the generated SPA entry
-- serve the SPA only under `/admin-app/`
+- serve the SPA only under `/app/`
 - proxy `/api`
 - proxy `/docs`
 - proxy `/ui`
@@ -220,9 +220,9 @@ If Docker or container delivery is attempted, validate at least:
   the stock nginx page
 - `GET /index.html` returns a redirect or direct HTML response for the
   generated app, not the stock nginx page
-- `GET /admin-app/` returns the SPA HTML entrypoint
-- at least one built asset URL under `/admin-app/assets/` returns `200`
-- JavaScript asset responses under `/admin-app/assets/` return a JavaScript
+- `GET /app/` returns the SPA HTML entrypoint
+- at least one built asset URL under `/app/assets/` returns `200`
+- JavaScript asset responses under `/app/assets/` return a JavaScript
   MIME type instead of HTML
 - `GET /docs` loads FastAPI docs
 - `GET /ui/admin/admin.yaml` returns `200` and a non-HTML response

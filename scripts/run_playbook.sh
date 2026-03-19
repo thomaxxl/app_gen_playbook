@@ -333,7 +333,7 @@ ceo_delivery_validate() {
   frontend_port="$(host_runtime_frontend_port)"
   backend_host="$(host_runtime_backend_host)"
   backend_port="$(host_runtime_backend_port)"
-  frontend_url="http://${frontend_host}:${frontend_port}/admin-app/"
+  frontend_url="http://${frontend_host}:${frontend_port}/app/"
   backend_url="http://${backend_host}:${backend_port}/docs"
 
   mkdir -p "$(dirname "$CEO_DELIVERY_RUNTIME_LOG")" "$(dirname "$CEO_DELIVERY_VALIDATION_MD")"

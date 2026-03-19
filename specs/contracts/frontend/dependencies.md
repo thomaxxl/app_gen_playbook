@@ -206,10 +206,10 @@ npm install -D \
 - `vitest`, `jsdom`, and `@testing-library/react` are part of the standard
   starter validation stack. The generated frontend MUST ship at least one
   bootstrap smoke test, one search/filter merge test, and one config test for
-  the `/admin-app/` base path.
+  the `/app/` base path.
 - `@playwright/test` is part of the required delivery gate. The generated
   frontend MUST ship at least one browser-level smoke suite that verifies the
-  app under `/admin-app/` and fails on console errors or broken network
+  app under `/app/` and fails on console errors or broken network
   requests.
 - `d3` is optional at install time, but it is the standard choice for custom
   charts, trees, and SVG figures when those are required.

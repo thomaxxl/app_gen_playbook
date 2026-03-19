@@ -105,9 +105,9 @@ npm run dev
 
 Default frontend URLs:
 
-- `http://127.0.0.1:5173/admin-app/`
-- `http://127.0.0.1:5173/admin-app/#/Home`
-- `http://127.0.0.1:5173/admin-app/#/Landing`
+- `http://127.0.0.1:5173/app/`
+- `http://127.0.0.1:5173/app/#/Home`
+- `http://127.0.0.1:5173/app/#/Landing`
 
 Browser-capable review flow:
 
@@ -143,7 +143,7 @@ If dependencies are missing, `run.sh` must stop immediately.
 newer Linux Bash environments.
 
 By default `run.sh` serves the frontend in preview mode so the canonical
-`/admin-app/` path behaves like packaged delivery.
+`/app/` path behaves like packaged delivery.
 
 Common overrides:
 
@@ -172,10 +172,10 @@ Notes:
 - Make it explicit that `./install.sh` prepares Playwright only in
   `clean-install` mode.
 - Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
-- Document the canonical `/admin-app/`, `/docs`, and `/ui/admin/admin.yaml`
+- Document the canonical `/app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
-- Document `/admin-app/#/Home` as the required in-admin entry page. Treat
-  `/admin-app/#/Landing` as optional unless the generated app actually ships a
+- Document `/app/#/Home` as the required in-admin entry page. Treat
+  `/app/#/Landing` as optional unless the generated app actually ships a
   starter custom page.
 - If the app supports uploaded files, also document the logical `/media/...`
   route and make clear that those URLs are logical app routes, not raw storage

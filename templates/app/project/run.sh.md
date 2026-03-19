@@ -291,9 +291,9 @@ done
 echo "Backend pid: $backend_pid"
 echo "Frontend pid: $frontend_pid"
 echo "Frontend mode: $FRONTEND_MODE"
-echo "Frontend URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/"
-echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Home"
-echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Landing"
+echo "Frontend URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/"
+echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/#/Home"
+echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/#/Landing"
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
 if [[ -n "$REMOTE" ]]; then
@@ -332,7 +332,7 @@ Notes:
   a dead backend process.
 - Keep the backend/frontend host and port values configurable so the same
   launcher works on the host machine and inside a container.
-- The default frontend mode is `preview` so `/admin-app/` behaves like the
+- The default frontend mode is `preview` so `/app/` behaves like the
   packaged app during combined-run validation. Use `FRONTEND_MODE=dev` only
   when explicit dev-server behavior is needed.
 - If `REMOTE` is set, `run.sh` MUST bind both backend and frontend to

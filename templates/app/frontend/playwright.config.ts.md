@@ -40,7 +40,7 @@ export default defineConfig({
     },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    url: "http://127.0.0.1:5173/admin-app/",
+    url: "http://127.0.0.1:5173/app/",
   },
 });
 ```
@@ -50,7 +50,7 @@ Notes:
 - The starter smoke gate MUST run the combined app through `run.sh`.
 - Before delivery, the operator MUST verify Playwright is available and install
   the Chromium runtime if it is missing.
-- The canonical browser base path for the starter app is `/admin-app/`.
+- The canonical browser base path for the starter app is `/app/`.
 - Keep trace, screenshot, and video on failure so delivery regressions are
   diagnosable.
 - `npm run capture:ui-previews` SHOULD write intentional success-case preview

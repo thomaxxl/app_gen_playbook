@@ -33,6 +33,6 @@ export default defineConfig({
     },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    url: "http://127.0.0.1:5173/admin-app/",
+    url: "http://127.0.0.1:5173/app/",
   },
 });

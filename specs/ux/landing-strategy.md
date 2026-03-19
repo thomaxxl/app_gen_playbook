@@ -116,7 +116,7 @@ The real artifact MUST define:
 
 The real artifact MUST define what reduces user uncertainty on the entry page.
 
-Typical admin-app proof signals include:
+Typical in-app proof signals include:
 
 - counts and totals
 - last-updated timestamps

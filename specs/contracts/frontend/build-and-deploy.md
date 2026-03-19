@@ -6,7 +6,7 @@ This file defines the production build expectations for generated frontends.
 
 `vite build` MUST produce a frontend that works when served under:
 
-- `/admin-app/`
+- `/app/`
 
 The starter scaffold MUST also support:
 
@@ -23,17 +23,17 @@ with a TypeScript project reference setup rooted at:
 
 The frontend MUST set:
 
-- `base: "/admin-app/"`
+- `base: "/app/"`
 
 This ensures asset URLs are emitted under:
 
-- `/admin-app/assets/...`
+- `/app/assets/...`
 
 ## Required production URLs
 
-- SPA: `/admin-app/`
-- required in-admin entry: `/admin-app/#/Home`
-- starter custom-route example: `/admin-app/#/Landing`
+- SPA: `/app/`
+- required in-admin entry: `/app/#/Home`
+- starter custom-route example: `/app/#/Landing`
 - API: `/api`
 - admin schema: `/ui/admin/admin.yaml`
 - docs schema: `/jsonapi.json`
@@ -42,10 +42,10 @@ This ensures asset URLs are emitted under:
 
 The server MUST:
 
-- serve the SPA entrypoint at `/admin-app/`
-- serve emitted assets from `/admin-app/assets/`
-- redirect or forward `/` to `/admin-app/`
-- redirect or forward `/index.html` to `/admin-app/`
+- serve the SPA entrypoint at `/app/`
+- serve emitted assets from `/app/assets/`
+- redirect or forward `/` to `/app/`
+- redirect or forward `/index.html` to `/app/`
 - proxy `/api`
 - proxy `/ui`
 - proxy `/jsonapi.json`
@@ -55,13 +55,13 @@ The server MUST:
 
 Because routing is hash-based, hard-refresh behavior is simple:
 
-- the server only needs to return the SPA entrypoint for `/admin-app/`
+- the server only needs to return the SPA entrypoint for `/app/`
 - the hash portion never reaches the server
 
 ## Root page
 
 For packaged same-origin delivery, root `/` and `/index.html` MUST redirect or
-forward to `/admin-app/`. The default packaged starter MUST NOT ship the stock
+forward to `/app/`. The default packaged starter MUST NOT ship the stock
 nginx welcome page or a separate generic landing page in front of the admin app.
 
 ## Minimum automated checks

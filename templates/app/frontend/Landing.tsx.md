@@ -6,7 +6,7 @@ See also:
 - [../../../specs/contracts/frontend/record-shape.md](../../../specs/contracts/frontend/record-shape.md)
 - [../reference/admin.yaml.md](../reference/admin.yaml.md)
 
-Use this pattern when the app needs a route such as `/admin-app/#/Landing` that
+Use this pattern when the app needs a route such as `/app/#/Landing` that
 uses the React-Admin data provider but should not render the normal admin
 chrome.
 

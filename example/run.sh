@@ -225,9 +225,9 @@ done
 echo "Backend pid: $backend_pid"
 echo "Frontend pid: $frontend_pid"
 echo "Frontend mode: $FRONTEND_MODE"
-echo "Frontend URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/"
-echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Home"
-echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/admin-app/#/Landing"
+echo "Frontend URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/"
+echo "Home URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/#/Home"
+echo "Landing URL: http://${DISPLAY_FRONTEND_HOST}:${FRONTEND_PORT}/app/#/Landing"
 echo "API docs: http://${DISPLAY_BACKEND_HOST}:${BACKEND_PORT}/docs"
 echo "Frontend proxy target: ${VITE_BACKEND_ORIGIN}"
 if [[ -n "$REMOTE" ]]; then

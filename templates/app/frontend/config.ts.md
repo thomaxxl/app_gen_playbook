@@ -19,5 +19,5 @@ Notes:
 
 - Avoid hardcoding `127.0.0.1` into built bundles.
 - Let Vite env vars override same-origin defaults during local development.
-- The public SPA path is `/admin-app/`, but the config values above stay
+- The public SPA path is `/app/`, but the config values above stay
   same-origin API/admin paths.

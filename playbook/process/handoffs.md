@@ -166,7 +166,7 @@ Complete only when:
 - the inbox message records the confirmed frontend build command
 - the inbox message records the required frontend runtime or Node version
 - the message identifies any packaging-relevant frontend constraints such as
-  `/admin-app/` asset paths or required same-origin routes
+  `/app/` asset paths or required same-origin routes
 
 Inbox target:
 

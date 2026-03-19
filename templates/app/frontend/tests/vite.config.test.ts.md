@@ -5,7 +5,7 @@ See also:
 - [../../../../specs/contracts/frontend/build-and-deploy.md](../../../../specs/contracts/frontend/build-and-deploy.md)
 - [../vite.config.ts.md](../vite.config.ts.md)
 
-Use a small config test so `/admin-app/` deployment assumptions stay
+Use a small config test so `/app/` deployment assumptions stay
 executable.
 
 ```ts
@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import viteConfig from "../vite.config";
 
 describe("vite config", () => {
-  it("uses the admin-app base path and same-origin backend proxies", async () => {
+  it("uses the app base path and same-origin backend proxies", async () => {
     const config = await viteConfig({
       command: "serve",
       mode: "test",
@@ -22,7 +22,7 @@ describe("vite config", () => {
       isPreview: false,
     });
 
-    expect(config.base).toBe("/admin-app/");
+    expect(config.base).toBe("/app/");
     expect(config.server?.proxy).toMatchObject({
       "/api": "http://127.0.0.1:5656",
       "/ui": "http://127.0.0.1:5656",

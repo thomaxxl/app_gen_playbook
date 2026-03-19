@@ -134,9 +134,9 @@ npm run capture:ui-previews
 
 Default frontend URLs:
 
-- `http://127.0.0.1:5173/admin-app/`
-- `http://127.0.0.1:5173/admin-app/#/Home`
-- `http://127.0.0.1:5173/admin-app/#/Landing`
+- `http://127.0.0.1:5173/app/`
+- `http://127.0.0.1:5173/app/#/Home`
+- `http://127.0.0.1:5173/app/#/Landing`
 
 ## Run Both
 
@@ -146,11 +146,11 @@ After installing dependencies:
 bash ./run.sh
 ```
 
-By default `run.sh` serves the frontend in preview mode so `/admin-app/`
+By default `run.sh` serves the frontend in preview mode so `/app/`
 matches packaged route behavior.
 
-`/admin-app/#/Home` is the required in-admin entry page and appears in the
-left sidebar with a home icon. `/admin-app/#/Landing` remains the custom
+`/app/#/Home` is the required in-admin entry page and appears in the
+left sidebar with a home icon. `/app/#/Landing` remains the custom
 no-layout dashboard route.
 
 Use `REMOTE=1 bash ./run.sh` to bind both backend and frontend to `0.0.0.0`

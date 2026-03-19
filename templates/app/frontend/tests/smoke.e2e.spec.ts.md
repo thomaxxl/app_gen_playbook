@@ -50,7 +50,7 @@ test("starter app smoke flow works", async ({ page, request }) => {
     response.url().includes("/api/collections") && response.status() === 200,
   );
 
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await collectionResponsePromise;
 
   await expect(
@@ -69,7 +69,7 @@ test("starter app smoke flow works", async ({ page, request }) => {
     await expect(page.getByText(/landing error/i)).toHaveCount(0);
   }
 
-  await page.goto("/admin-app/#/Collection");
+  await page.goto("/app/#/Collection");
   await expect(
     page.getByRole("cell", { name: "Spring Planning" }).first(),
   ).toBeVisible();
@@ -81,7 +81,7 @@ test("starter app smoke flow works", async ({ page, request }) => {
 
 test("entry page remains discoverable on a narrow viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
 
   await expect(page.getByTestId("entry-purpose")).toBeVisible();
   await expect(page.getByTestId("entry-primary-cta")).toBeVisible();

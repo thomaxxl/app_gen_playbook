@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 CAPTURE_TIMEOUT_SECONDS = 30
 SCRIPT_CAPTURE_TIMEOUT_SECONDS = 180
@@ -16,7 +17,7 @@ CAPTURE_SETTLE_MILLISECONDS = 1000
 
 
 DEFAULT_ROUTES = (
-    ("admin-entry", "/admin-app/"),
+    ("app-entry", "/app/"),
 )
 MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
     r"(?im)^(?:-\s*)?capture_status:\s*([a-z0-9_-]+)\s*$"
@@ -27,9 +28,8 @@ def normalize_url(base_url: str, route: str) -> str:
     if route.startswith(("http://", "https://", "data:")):
         return route
     if route.startswith("/"):
-        if base_url.endswith("/"):
-            return f"{base_url.rstrip('/')}{route}"
-        origin = base_url.split("/admin", 1)[0].rstrip("/")
+        parts = urlsplit(base_url)
+        origin = f"{parts.scheme}://{parts.netloc}".rstrip("/")
         return f"{origin}{route}"
     return f"{base_url.rstrip('/')}/{route.lstrip('/')}"
 

@@ -55,7 +55,7 @@ test("capture reviewable CMDB previews", async ({ page }) => {
   await fs.mkdir(outputDir, { recursive: true });
 
   await page.setViewportSize({ width: 1440, height: 1024 });
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
   await expect(page.getByText(/cmdb operations console/i)).toBeVisible();
   await page.screenshot({
@@ -64,11 +64,11 @@ test("capture reviewable CMDB previews", async ({ page }) => {
   });
   captures.push({
     file: "home-desktop.png",
-    route: "/admin-app/#/Home",
+    route: "/app/#/Home",
     surface: "Home desktop",
   });
 
-  await page.goto("/admin-app/#/Landing");
+  await page.goto("/app/#/Landing");
   await expect(page.getByText(/dashboard unavailable/i)).toHaveCount(0);
   await page.screenshot({
     fullPage: true,
@@ -76,11 +76,11 @@ test("capture reviewable CMDB previews", async ({ page }) => {
   });
   captures.push({
     file: "landing.png",
-    route: "/admin-app/#/Landing",
+    route: "/app/#/Landing",
     surface: "Landing page",
   });
 
-  await page.goto("/admin-app/#/Service");
+  await page.goto("/app/#/Service");
   await expect(page.getByText("COMMERCE")).toBeVisible();
   await page.screenshot({
     fullPage: true,
@@ -88,12 +88,12 @@ test("capture reviewable CMDB previews", async ({ page }) => {
   });
   captures.push({
     file: "service-list.png",
-    route: "/admin-app/#/Service",
+    route: "/app/#/Service",
     surface: "Service list",
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
   await page.screenshot({
     fullPage: true,
@@ -101,7 +101,7 @@ test("capture reviewable CMDB previews", async ({ page }) => {
   });
   captures.push({
     file: "home-mobile.png",
-    route: "/admin-app/#/Home",
+    route: "/app/#/Home",
     surface: "Home mobile",
   });
 

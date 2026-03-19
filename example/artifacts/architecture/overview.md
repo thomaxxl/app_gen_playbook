@@ -24,8 +24,8 @@ contracts but replaces the starter domain and naming entirely.
 ## Frontend shape
 
 - schema-driven React-Admin CRUD pages remain the default shell
-- `/admin-app/#/Home` is the required in-admin entry page
-- `/admin-app/#/Landing` is a custom no-layout dashboard route
+- `/app/#/Home` is the required in-admin entry page
+- `/app/#/Landing` is a custom no-layout dashboard route
 - relationship tabs and related-record popups are baseline generated behavior
 
 ## Backend shape

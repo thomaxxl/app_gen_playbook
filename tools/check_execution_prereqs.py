@@ -171,7 +171,7 @@ def http_probe(url: str, *, expect_html: bool = False) -> bool:
 
 
 def expected_runtime_listeners_ready(frontend_port: int, backend_port: int) -> bool:
-    frontend_ok = http_probe(f"http://127.0.0.1:{frontend_port}/admin-app/", expect_html=True)
+    frontend_ok = http_probe(f"http://127.0.0.1:{frontend_port}/app/", expect_html=True)
     backend_ok = (
         http_probe(f"http://127.0.0.1:{backend_port}/docs", expect_html=True)
         or http_probe(f"http://127.0.0.1:{backend_port}/healthz")

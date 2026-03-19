@@ -20,7 +20,7 @@ Recommended public routes:
 
 - `/`
 - `/index.html`
-- `/admin-app/`
+- `/app/`
 - `/api`
 - `/docs`
 - `/ui/admin/admin.yaml`

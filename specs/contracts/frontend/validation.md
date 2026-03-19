@@ -16,7 +16,7 @@ of approved rules whose `Frontend Mirror` field is not `none` in:
 - `npm run test` succeeds
 - `npm run test:e2e` succeeds
 - `npm run build` succeeds
-- built app loads under `/admin-app/`
+- built app loads under `/app/`
 
 If dependency maintenance changes direct frontend versions during a run, the
 agent MUST sync those versions back into the playbook dependency contract and
@@ -32,9 +32,9 @@ frontend package template before treating the playbook baseline as current.
 
 ## Route validation
 
-- `/admin-app/#/Home` works
-- `/admin-app/#/Landing` works when the app includes the starter custom page
-- `/admin-app/#/<Resource>` works for at least one generated resource
+- `/app/#/Home` works
+- `/app/#/Landing` works when the app includes the starter custom page
+- `/app/#/<Resource>` works for at least one generated resource
 - hard refresh on a hash route still works
 
 ## Contract validation
@@ -183,7 +183,7 @@ The starter frontend MUST ship automated tests for:
   present
 - the real `admin.yaml -> loadAdminBootstrap -> dataProvider.getList(...)`
   path preserves at least one representative scalar field in returned records
-- Vite base-path and proxy configuration for `/admin-app/`, `/jsonapi.json`,
+- Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`
 
 These tests do not replace browser-level QA, but they are the minimum
@@ -198,8 +198,8 @@ suite with at least this flow:
 2. if Playwright or its browser runtime is missing, install it before
    continuing, for example with `npx playwright install chromium`
 3. start the app on fixed ports
-4. wait for backend `/healthz` and frontend `/admin-app/`
-5. open `/admin-app/#/Home`
+4. wait for backend `/healthz` and frontend `/app/`
+5. open `/app/#/Home`
 6. fail on browser console errors, page errors, and failed same-origin
    network requests
 7. assert `/ui/admin/admin.yaml` returns `200`

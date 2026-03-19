@@ -12,23 +12,23 @@ server {
     server_name _;
 
     location = / {
-        return 302 /admin-app/;
+        return 302 /app/;
     }
 
     location = /index.html {
-        return 302 /admin-app/;
+        return 302 /app/;
     }
 
-    location = /admin-app {
-        return 302 /admin-app/;
+    location = /app {
+        return 302 /app/;
     }
 
-    location = /admin-app/ {
+    location = /app/ {
         alias /app/frontend/dist/index.html;
         default_type text/html;
     }
 
-    location /admin-app/assets/ {
+    location /app/assets/ {
         alias /app/frontend/dist/assets/;
     }
 
@@ -65,8 +65,8 @@ server {
 
 Notes:
 
-- Keep `/admin-app/` and `/api` on one origin.
-- Root `/` and `/index.html` redirect to `/admin-app/`.
+- Keep `/app/` and `/api` on one origin.
+- Root `/` and `/index.html` redirect to `/app/`.
 - If the backend docs use extra assets, proxy those too.
 - Use the `/_protected_media/` block only when the backend is configured for
   nginx media serving through `X-Accel-Redirect`.

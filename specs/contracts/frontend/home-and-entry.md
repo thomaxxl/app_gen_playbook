@@ -15,7 +15,7 @@ React-admin chrome.
 
 `Home.tsx` MUST:
 
-- remain reachable at `/admin-app/#/Home`
+- remain reachable at `/app/#/Home`
 - appear in the left sidebar with a visible home icon
 - expose a visible title
 - expose a real hero or landing region before any resource-grid or list-heavy

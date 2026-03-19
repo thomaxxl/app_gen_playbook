@@ -33,7 +33,7 @@ test("cmdb smoke flow works", async ({ page, request }) => {
       response.url().includes("/api/configuration_items") && response.status() === 200,
   );
 
-  await page.goto("/admin-app/#/Home");
+  await page.goto("/app/#/Home");
   await itemResponsePromise;
 
   await expect(
@@ -42,10 +42,10 @@ test("cmdb smoke flow works", async ({ page, request }) => {
   await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
   await expect(page.getByText(/cmdb operations console/i)).toBeVisible();
 
-  await page.goto("/admin-app/#/Landing");
+  await page.goto("/app/#/Landing");
   await expect(page.getByText(/dashboard unavailable/i)).toHaveCount(0);
 
-  await page.goto("/admin-app/#/Service");
+  await page.goto("/app/#/Service");
   await expect(page.getByText("COMMERCE")).toBeVisible();
 
   expect(consoleErrors).toEqual([]);

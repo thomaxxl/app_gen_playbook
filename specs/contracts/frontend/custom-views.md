@@ -12,7 +12,7 @@ dashboards, D3 pages, and other extra custom routes.
 The app MAY also include a no-layout landing route:
 
 - `/#/Landing` inside the hash router
-- public URL `/admin-app/#/Landing`
+- public URL `/app/#/Landing`
 
 The frontend MUST use `CustomRoutes noLayout` for pages that should not show
 the normal React-admin chrome.

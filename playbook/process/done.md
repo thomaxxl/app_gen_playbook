@@ -88,7 +88,7 @@ If Docker or container delivery was attempted:
 If same-origin or packaged route verification was attempted:
 
 - the verification record should include concrete status/header evidence for
-  `/`, `/index.html`, `/admin-app/`, at least one `/admin-app/assets/...`
+  `/`, `/index.html`, `/app/`, at least one `/app/assets/...`
   response, and `/ui/admin/admin.yaml`
 
 If fallback verification was used, the fallback path and justification must be
