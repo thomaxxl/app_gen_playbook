@@ -65,6 +65,12 @@ class BuildRolePromptTests(unittest.TestCase):
             ["runs/current/artifacts/architecture/overview.md"],
         )
 
+    def test_prompt_instructions_require_process_cleanup(self) -> None:
+        source = (Path(__file__).resolve().parent / "build_role_prompt.py").read_text(encoding="utf-8")
+
+        self.assertIn("do not leave background servers, watchers, or helper processes running", source)
+        self.assertIn("terminate any processes you started for this turn", source)
+
 
 if __name__ == "__main__":
     unittest.main()

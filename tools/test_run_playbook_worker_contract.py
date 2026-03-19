@@ -16,9 +16,11 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
     def test_parallel_worker_start_does_not_use_command_substitution(self) -> None:
         script = self.runner_core()
 
+        self.assertIn('PLAYBOOK_ENABLE_PARALLEL_WORKERS="${PLAYBOOK_ENABLE_PARALLEL_WORKERS:-0}"', script)
         self.assertNotIn('frontend_pid="$(ensure_worker_running', script)
         self.assertNotIn('backend_pid="$(ensure_worker_running', script)
         self.assertIn("ENSURE_WORKER_PID_RESULT", script)
+        self.assertIn('if [[ "$PLAYBOOK_ENABLE_PARALLEL_WORKERS" -eq 1 ]] && [[ "$parallel_started" -eq 0 ]] && phase5_ready >/dev/null 2>&1; then', script)
 
     def test_runner_processes_ceo_and_orchestrator_exception_lanes(self) -> None:
         script = self.runner_core()
@@ -138,11 +140,20 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("perform_host_runtime_preflight()", script)
         self.assertIn("record_execution_prereqs()", script)
         self.assertIn("enforce_startup_execution_prereqs()", script)
+        self.assertIn("cleanup_playbook_runtime_processes()", script)
         self.assertIn("clear_host_verified_operator_action_required()", script)
         self.assertIn("attempt_host_browser_proof_capture()", script)
         self.assertIn('if clear_host_verified_operator_action_required; then', script)
         self.assertIn('if attempt_host_browser_proof_capture; then', script)
         self.assertIn('Execution environment preflight failed before run startup.', script)
+        self.assertIn('local socket creation / loopback capability in the current execution context', script)
+
+    def test_runner_reaps_leftover_processes_from_each_codex_turn(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('python3 "$ROOT/tools/run_process_group.py"', script)
+        self.assertIn("--prompt-file", script)
+        self.assertIn("--output-file", script)
 
     def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
         script = self.runner_core()

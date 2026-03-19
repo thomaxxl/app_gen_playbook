@@ -169,3 +169,14 @@ orchestrator termination before exit, validate successful delivery through
 `runs/current/orchestrator/delivery-approved.md` with `status: approved`,
 then
 archive processed inbox files.
+
+When the active blocker is execution-environment startup, localhost bind, or
+similar host-runtime failure:
+
+- inspect `runs/current/artifacts/devops/execution-prereqs.md` first
+- inspect for stale playbook-started listeners, previews, or workers that may
+  still be occupying the declared ports
+- if a safe local repair is obvious, terminate the stale process and rerun the
+  prerequisite check once before approving a blocked exit
+- only fall back to `operator-action-required.md` when the remaining blocker is
+  truly external or policy-bound

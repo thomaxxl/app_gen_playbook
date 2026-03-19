@@ -34,7 +34,10 @@ Before that gate passes:
 
 After that gate passes:
 
-- Frontend and Backend SHOULD run in parallel background workers
+- Frontend and Backend SHOULD continue in the main serial control lane by
+  default
+- parallel background workers MAY be re-enabled only by explicit operator
+  choice once the runtime/process-hygiene risk is acceptable again
 - Product Manager and Architect MUST remain in the main control lane
 - Architect remains the contract-drift arbiter
 
@@ -55,6 +58,10 @@ During implementation, role-local `context.md`, owned artifacts, and inbox
 traces remain the durable source of truth. Codex session resume MAY be used to
 reduce startup and prompt rebuild cost, but it MUST NOT replace those durable
 records.
+
+Every implementation agent MUST terminate any server, watcher, preview, or
+helper process it started for the turn before moving the claimed inflight item
+into `processed/`.
 
 If the current run lane is `rename-only` or `non-starter`, the Backend
 implementation lane MUST also complete a starter-template replacement sweep

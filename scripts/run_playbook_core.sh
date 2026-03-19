@@ -39,6 +39,7 @@ if [[ "$PLAYBOOK_RUNTIME_ENV_EXPLICIT" -eq 0 ]]; then
 fi
 PLAYBOOK_RUNNER_EPOCH="${PLAYBOOK_RUNNER_EPOCH:-0}"
 PLAYBOOK_AUTO_START_APP="${PLAYBOOK_AUTO_START_APP:-1}"
+PLAYBOOK_ENABLE_PARALLEL_WORKERS="${PLAYBOOK_ENABLE_PARALLEL_WORKERS:-0}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -108,6 +109,14 @@ case "$PLAYBOOK_RUNTIME_ENV" in
   sandbox|host) ;;
   *)
     echo "error: unsupported PLAYBOOK_RUNTIME_ENV: $PLAYBOOK_RUNTIME_ENV" >&2
+    exit 2
+    ;;
+esac
+
+case "$PLAYBOOK_ENABLE_PARALLEL_WORKERS" in
+  0|1) ;;
+  *)
+    echo "error: unsupported PLAYBOOK_ENABLE_PARALLEL_WORKERS: $PLAYBOOK_ENABLE_PARALLEL_WORKERS" >&2
     exit 2
     ;;
 esac
@@ -762,6 +771,7 @@ Required checks:
 - backend dependency/runtime availability
 - frontend dependency availability
 - frontend preview entrypoint presence
+- local socket creation / loopback capability in the current execution context
 - localhost port binding in the current execution context
 - Playwright screenshot capability
 
@@ -770,6 +780,12 @@ Prerequisite artifact:
 
 $detail
 EOF
+  if cleanup_playbook_runtime_processes; then
+    if record_execution_prereqs; then
+      rm -f "$OPERATOR_ACTION_REQUIRED_MD"
+      return 0
+    fi
+  fi
   local ceo_review_status=0
   if attempt_ceo_termination_review \
     "execution environment preflight failed before run startup" \
@@ -1215,6 +1231,9 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Requested Outputs
 - record the termination review in runs/current/remarks.md
 - either restore forward progress directly or emit the reroute/recovery work needed to continue
+- when the blocker is an execution-environment or localhost-runtime failure,
+  inspect and terminate stale playbook-started listeners or workers if that
+  is the safest repair path, then rerun the prerequisite check once
 - runs/current/orchestrator/operator-action-required.md if CEO approves a blocked termination
 - runs/current/orchestrator/pause-requested.md if CEO approves a clean pause instead of continuing
 - do not leave the run in a terminating state without an explicit CEO decision
@@ -1380,6 +1399,35 @@ cleanup_background_processes() {
     kill "$backend_pid" 2>/dev/null || true
     wait "$backend_pid" 2>/dev/null || true
   fi
+}
+
+cleanup_playbook_runtime_processes() {
+  local had_cleanup=0
+
+  if [[ -n "$app_runtime_pid" ]] && kill -0 "$app_runtime_pid" 2>/dev/null; then
+    had_cleanup=1
+  fi
+  if [[ -n "$frontend_pid" ]] && kill -0 "$frontend_pid" 2>/dev/null; then
+    had_cleanup=1
+  fi
+  if [[ -n "$backend_pid" ]] && kill -0 "$backend_pid" 2>/dev/null; then
+    had_cleanup=1
+  fi
+
+  cleanup_background_processes
+  app_runtime_pid=""
+  frontend_pid=""
+  backend_pid=""
+
+  if [[ "$had_cleanup" -eq 1 ]]; then
+    log "playbook-runtime-processes-cleaned"
+    append_run_remark \
+      "Playbook Runtime Processes Cleaned" \
+      "The orchestrator terminated lingering playbook-started runtime processes before retrying execution preflight."
+    return 0
+  fi
+
+  return 1
 }
 
 trap cleanup_background_processes EXIT INT TERM
@@ -2292,22 +2340,26 @@ run_codex_command() {
   local cmd=("$@")
   local codex_rc=0
   local timeout_seconds="$CODEX_COMMAND_TIMEOUT_SECONDS"
+  local full_cmd=( "${cmd[@]}" )
+  local runner_cmd=(
+    python3 "$ROOT/tools/run_process_group.py"
+    --cwd "$ROOT"
+    --prompt-file "$prompt_file"
+    --output-file "$jsonl_file"
+  )
 
-  (
-    cd "$ROOT"
-    local full_cmd=( "${cmd[@]}" )
-    if [[ -n "$model" ]]; then
-      full_cmd+=(--model "$model")
-    fi
-    if [[ -n "$REASONING_EFFORT" ]]; then
-      full_cmd+=(--config "model_reasoning_effort=$REASONING_EFFORT")
-    fi
-    if [[ "$timeout_seconds" =~ ^[0-9]+$ && "$timeout_seconds" -gt 0 ]]; then
-      timeout "${timeout_seconds}s" "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
-    else
-      "${full_cmd[@]}" < "$prompt_file" > "$jsonl_file" 2>&1
-    fi
-  ) &
+  if [[ -n "$model" ]]; then
+    full_cmd+=(--model "$model")
+  fi
+  if [[ -n "$REASONING_EFFORT" ]]; then
+    full_cmd+=(--config "model_reasoning_effort=$REASONING_EFFORT")
+  fi
+  if [[ "$timeout_seconds" =~ ^[0-9]+$ && "$timeout_seconds" -gt 0 ]]; then
+    runner_cmd+=(--timeout-seconds "$timeout_seconds")
+  fi
+  runner_cmd+=(--)
+
+  "${runner_cmd[@]}" "${full_cmd[@]}" &
   local codex_pid="$!"
 
   while kill -0 "$codex_pid" 2>/dev/null; do
@@ -3142,7 +3194,7 @@ PY
 
 main_loop() {
   local parallel_started=0
-  local did_work completion_detail priority_role operator_priority_role stall_key liveness_output
+  local did_work completion_detail="" priority_role operator_priority_role stall_key liveness_output
   priority_role="$TARGET_ROLE"
 
   while true; do
@@ -3277,7 +3329,7 @@ main_loop() {
       fi
     fi
 
-    if [[ "$parallel_started" -eq 0 ]] && phase5_ready >/dev/null 2>&1; then
+    if [[ "$PLAYBOOK_ENABLE_PARALLEL_WORKERS" -eq 1 ]] && [[ "$parallel_started" -eq 0 ]] && phase5_ready >/dev/null 2>&1; then
       log "phase-5-ready starting parallel frontend/backend workers"
       ensure_worker_running frontend "" product_manager architect backend
       frontend_pid="$ENSURE_WORKER_PID_RESULT"

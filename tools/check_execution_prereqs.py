@@ -59,6 +59,35 @@ def frontend_tool_path(repo_root: Path, name: str) -> Path:
 def runtime_environment() -> str:
     return os.environ.get("PLAYBOOK_RUNTIME_ENV", "host").strip() or "host"
 
+def check_local_socket_capability() -> CheckResult:
+    sock: socket.socket | None = None
+    try:
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+    except PermissionError as exc:
+        return CheckResult(
+            "local_socket_runtime",
+            "blocked",
+            f"local socket creation or bind is denied in the current execution context: {exc}",
+        )
+    except OSError as exc:
+        if exc.errno in {errno.EPERM, errno.EACCES}:
+            return CheckResult(
+                "local_socket_runtime",
+                "blocked",
+                f"local socket creation or bind is denied in the current execution context: {exc}",
+            )
+        return CheckResult(
+            "local_socket_runtime",
+            "blocked",
+            f"local socket probe failed unexpectedly: {exc}",
+        )
+    finally:
+        if sock is not None:
+            sock.close()
+
+    return CheckResult("local_socket_runtime", "ok", "local socket creation and loopback bind succeeded")
+
 
 def check_backend_venv(repo_root: Path) -> CheckResult:
     python_path = backend_python_path(repo_root)
@@ -176,6 +205,21 @@ def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
                         f"cannot validate localhost ports {frontend_port}/{backend_port}: {exc}"
                     ),
                 )
+            except OSError as exc:
+                if exc.errno in {errno.EPERM, errno.EACCES}:
+                    return CheckResult(
+                        "port_bind",
+                        "blocked",
+                        (
+                            "socket creation is denied by the current execution environment; "
+                            f"cannot validate localhost ports {frontend_port}/{backend_port}: {exc}"
+                        ),
+                    )
+                return CheckResult(
+                    "port_bind",
+                    "blocked",
+                    f"bind failed for localhost ports {frontend_port}/{backend_port}: {exc}",
+                )
             try:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind(("127.0.0.1", port))
@@ -288,6 +332,7 @@ def main() -> int:
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),
+        check_local_socket_capability(),
         check_port_bind(repo_root),
         check_playwright_screenshot(repo_root),
         check_docker(),

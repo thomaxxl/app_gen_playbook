@@ -148,6 +148,7 @@ It MUST NOT combine yolo mode with `--full-auto`.
 The orchestrator SHOULD also honor:
 
 - `PLAYBOOK_RUNTIME_ENV=sandbox|host`
+- `PLAYBOOK_ENABLE_PARALLEL_WORKERS=0|1`
 
 It MUST record that setting, its source, and the current runner epoch in
 `runs/current/orchestrator/runtime-environment.json`.
@@ -162,6 +163,11 @@ preflight proves the current execution context forbids localhost bind
 validation, the orchestrator SHOULD auto-pivot to
 `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching roles. That pivot MUST be
 recorded in `runtime-environment.json` and `runs/current/remarks.md`.
+
+If the operator does not set `PLAYBOOK_ENABLE_PARALLEL_WORKERS`, the
+orchestrator SHOULD default to `0`. Parallel background workers are disabled by
+default for now because lingering worker-owned processes and port conflicts are
+currently a higher risk than the throughput benefit.
 
 When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST write a host-runtime
 preflight artifact under:
@@ -185,6 +191,7 @@ and SHOULD cover:
 
 - backend venv availability
 - frontend `node_modules` availability
+- local socket creation / loopback capability
 - localhost port bind capability
 - Playwright screenshot capture capability
 - Docker availability as an optional check
@@ -195,6 +202,18 @@ prerequisite check and stop immediately with `operator-action-required.md` if
 any required check fails. Recording a blocked prerequisite artifact is not
 enough; the run MUST NOT proceed into role dispatch until the current
 execution context validates.
+
+If execution preflight fails, the orchestrator MUST:
+
+- record the failure in `runs/current/artifacts/devops/execution-prereqs.md`
+- attempt cleanup of any playbook-started runtime processes it is already
+  tracking
+- rerun the prerequisite check once after that cleanup
+- route the remaining failure through CEO before exiting
+
+If the remaining blocker is local socket restriction or stale listeners, CEO
+MUST attempt a reasonable local repair such as terminating stale playbook-owned
+listeners before approving a blocked exit.
 
 For browser-level launcher proof, the playbook SHOULD maintain:
 
@@ -434,7 +453,8 @@ Before Phase 5:
 
 After Phase 5:
 
-- Frontend and Backend SHOULD run as long-lived background workers
+- Frontend and Backend SHOULD remain in the main serial control lane unless the
+  operator explicitly enables parallel workers
 - Product Manager and Architect MUST remain in the main control lane
 - CEO MUST run immediately when a CEO inbox note already exists
 - Frontend and Backend workers MUST process only their own oldest actionable
@@ -464,7 +484,8 @@ The orchestrator MUST capture worker PIDs through a non-subshell path, such as
 an explicit shared variable set by the worker-start helper.
 
 Phase 5 readiness MUST be computed from run-owned artifact status, not guessed
-from inbox activity.
+from inbox activity. Even after Phase 5 is ready, the default runtime behavior
+for now is serial frontend/backend dispatch, not background parallel workers.
 
 ## Resume behavior
 

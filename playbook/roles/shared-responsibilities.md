@@ -34,6 +34,12 @@ details that need more precision than the global summary.
   stall intervention or an explicit operator request.
 - During normal execution, CEO MUST NOT be treated as an additional default
   participant in the phase pipeline.
+- Any process an agent starts for a turn is part of that turn's responsibility.
+  Agents MUST terminate servers, watchers, previews, or helper processes they
+  started before moving the claimed inflight item into `processed/`.
+- Agents MUST NOT rely on parallel background work to finish later after they
+  hand off. If persistent runtime work is required, it must be explicitly
+  orchestrator-owned and recorded as such.
 
 When `dependency_provisioning.mode = preprovisioned-reuse-only`:
 

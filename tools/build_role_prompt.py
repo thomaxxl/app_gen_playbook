@@ -157,6 +157,7 @@ def emit_full_prompt(
         "- do not load unrelated role files or feature packs not required by this task\n"
         "- do not edit artifacts owned by another role\n"
         "- do not silently patch playbook contract areas unless the inbox task explicitly delegates playbook maintenance\n"
+        "- do not leave background servers, watchers, or helper processes running when you hand off this turn\n"
     )
 
     print("Current message metadata:\n")
@@ -174,9 +175,10 @@ def emit_full_prompt(
         "1. update owned artifacts\n"
         "2. update the role context.md\n"
         "3. create any required downstream inbox files\n"
-        "4. move the claimed inflight work item into processed/\n"
-        "5. start the final response with `Summary: ...`\n"
-        "6. then summarize what changed and what remains open\n"
+        "4. terminate any processes you started for this turn\n"
+        "5. move the claimed inflight work item into processed/\n"
+        "6. start the final response with `Summary: ...`\n"
+        "7. then summarize what changed and what remains open\n"
     )
 
     print("Inbox message content:\n")
@@ -218,7 +220,9 @@ def emit_short_prompt(
     print("- Do not process any other inbox item.")
     print("- Do not edit another role's artifact area or app subtree.")
     print("- If contract drift exists, write a handoff into the Architect inbox instead of silently patching around it.")
+    print("- Do not leave background servers, watchers, or helper processes running after this turn.")
     print("- Update your role context.md.")
+    print("- Terminate any processes you started for this turn.")
     print("- Move the claimed inflight work item into processed/.")
     print("- Start the final response with `Summary: ...` on a single line.")
     print("")
