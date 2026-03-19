@@ -34,6 +34,10 @@ phase_7_product_acceptance:
   summary: playbook/summaries/phases/phase-7.summary.md
   product_manager: playbook/task-bundles/acceptance-review.yaml
 
+phase_8_qa_pre_delivery_validation:
+  summary: playbook/summaries/phases/phase-8.summary.md
+  qa: playbook/task-bundles/qa-delivery-review.yaml
+
 phase_I0_baseline_alignment:
   summary: playbook/summaries/phases/phase-I0.summary.md
   architect: playbook/task-bundles/baseline-alignment.yaml

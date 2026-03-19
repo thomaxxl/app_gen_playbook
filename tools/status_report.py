@@ -37,6 +37,7 @@ ROLE_ORDER = (
     "architect",
     "frontend",
     "backend",
+    "qa",
     "ceo",
     "deployment",
 )
@@ -59,6 +60,7 @@ PHASE_LABELS = {
     "phase-5-parallel-implementation": "Phase 5 - Parallel implementation",
     "phase-6-integration-review": "Phase 6 - Integration review",
     "phase-7-product-acceptance": "Phase 7 - Product acceptance",
+    "phase-8-qa-pre-delivery-validation": "Phase 8 - QA pre-delivery validation",
 }
 
 STATUS_SCORES = {
@@ -291,6 +293,7 @@ def compute_current_phase(
         "phase-5-parallel-implementation",
         "phase-6-integration-review",
         "phase-7-product-acceptance",
+        "phase-8-qa-pre-delivery-validation",
     ]
     for phase in ordered:
         if phase == "phase-5-parallel-implementation":
@@ -298,7 +301,7 @@ def compute_current_phase(
         state = phases.get(phase, {}).get("state")
         if state != "complete":
             return phase
-    return "phase-7-product-acceptance"
+    return "phase-8-qa-pre-delivery-validation"
 
 
 def stage_progress(phases: dict[str, dict[str, Any]], phase5_ready: bool) -> dict[str, Any]:
@@ -332,6 +335,7 @@ def stage_progress(phases: dict[str, dict[str, Any]], phase5_ready: bool) -> dic
         "build": {"state": build_state, "phase5_ready": phase5_ready},
         "integration": {"score": phases.get("phase-6-integration-review", {}).get("score", 0.0)},
         "acceptance": {"score": phases.get("phase-7-product-acceptance", {}).get("score", 0.0)},
+        "qa": {"score": phases.get("phase-8-qa-pre-delivery-validation", {}).get("score", 0.0)},
     }
 
 

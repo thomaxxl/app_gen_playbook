@@ -37,6 +37,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [summaries/phases/phase-5.summary.md](summaries/phases/phase-5.summary.md)
 - [summaries/phases/phase-6.summary.md](summaries/phases/phase-6.summary.md)
 - [summaries/phases/phase-7.summary.md](summaries/phases/phase-7.summary.md)
+- [summaries/phases/phase-8.summary.md](summaries/phases/phase-8.summary.md)
 
 ## Change-phase summaries
 
@@ -55,6 +56,7 @@ Use this file as the discovery entrypoint for the playbook library.
 - [summaries/roles/architect.summary.md](summaries/roles/architect.summary.md)
 - [summaries/roles/frontend.summary.md](summaries/roles/frontend.summary.md)
 - [summaries/roles/backend.summary.md](summaries/roles/backend.summary.md)
+- [summaries/roles/qa.summary.md](summaries/roles/qa.summary.md)
 - [summaries/roles/ceo.summary.md](summaries/roles/ceo.summary.md)
 - [summaries/roles/devops.summary.md](summaries/roles/devops.summary.md)
 
@@ -86,6 +88,7 @@ Compatibility-only alias:
 - [task-bundles/backend-implementation.yaml](task-bundles/backend-implementation.yaml)
 - [task-bundles/integration-review.yaml](task-bundles/integration-review.yaml)
 - [task-bundles/acceptance-review.yaml](task-bundles/acceptance-review.yaml)
+- [task-bundles/qa-delivery-review.yaml](task-bundles/qa-delivery-review.yaml)
 - [task-bundles/deployment.yaml](task-bundles/deployment.yaml)
 - [task-bundles/ceo-stall-intervention.yaml](task-bundles/ceo-stall-intervention.yaml)
 - [task-bundles/baseline-alignment.yaml](task-bundles/baseline-alignment.yaml)

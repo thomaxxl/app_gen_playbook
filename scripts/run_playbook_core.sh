@@ -123,7 +123,7 @@ esac
 
 if [[ -n "$TARGET_ROLE" ]]; then
   case "$TARGET_ROLE" in
-    product_manager|architect|frontend|backend|deployment|ceo) ;;
+    product_manager|architect|frontend|backend|qa|deployment|ceo) ;;
     *)
       echo "error: unsupported runtime role: $TARGET_ROLE" >&2
       exit 2
@@ -158,6 +158,7 @@ RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
 BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES="$ORCH_ROOT/browser-fallback-product-acceptance.signatures"
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
 FRONTEND_BROWSER_PROOF_MD="$RUN_ROOT/evidence/frontend-browser-proof.md"
+QA_DELIVERY_REVIEW_MD="$RUN_ROOT/evidence/qa-delivery-review.md"
 CEO_DELIVERY_VALIDATION_MD="$RUN_ROOT/evidence/ceo-delivery-validation.md"
 RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
@@ -182,6 +183,7 @@ ARCHITECT_MODEL="${ARCHITECT_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
 FRONTEND_MODEL="${FRONTEND_MODEL:-${LONG_MODEL:-gpt-5.3-codex-spark}}"
 BACKEND_MODEL="${BACKEND_MODEL:-$FRONTEND_MODEL}"
 DEVOPS_MODEL="${DEVOPS_MODEL:-$FRONTEND_MODEL}"
+QA_MODEL="${QA_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
 CEO_MODEL="${CEO_MODEL:-$ARCHITECT_MODEL}"
 DEPLOYMENT_MODEL="${DEPLOYMENT_MODEL:-$DEVOPS_MODEL}"
 
@@ -219,6 +221,7 @@ canonical_queue_dirs() {
     "$STATE_ROOT/architect" \
     "$STATE_ROOT/frontend" \
     "$STATE_ROOT/backend" \
+    "$STATE_ROOT/qa" \
     "$STATE_ROOT/ceo"
 
   if [[ -d "$STATE_ROOT/devops" ]]; then
@@ -869,6 +872,7 @@ runtime_role_from_label() {
     architect) printf '%s\n' "architect" ;;
     frontend) printf '%s\n' "frontend" ;;
     backend) printf '%s\n' "backend" ;;
+    qa) printf '%s\n' "qa" ;;
     deployment|devops) printf '%s\n' "deployment" ;;
     ceo) printf '%s\n' "ceo" ;;
     *) return 1 ;;
@@ -1304,6 +1308,75 @@ change_id: ${ACTIVE_CHANGE_ID}
 ${completion_detail}
 EOF
   printf '%s\n' "$note_path"
+}
+
+emit_qa_delivery_review_note() {
+  local completion_detail="$1"
+  local stamp note_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  note_path="$STATE_ROOT/qa/inbox/${stamp}-from-orchestrator-to-qa-delivery-review.md"
+  mkdir -p "$STATE_ROOT/qa/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: qa
+topic: pre-delivery-qa-review
+purpose: independently validate the delivered app before CEO final approval
+change_id: ${ACTIVE_CHANGE_ID}
+
+## Required Reads
+- runs/current/remarks.md
+- runs/current/notes.md
+- runs/current/orchestrator/run-status.json
+- runs/current/evidence/orchestrator/logs/orchestrator.log
+- runs/current/artifacts/architecture/integration-review.md
+- runs/current/artifacts/product/acceptance-review.md
+- runs/current/evidence/contract-samples.md
+- runs/current/evidence/frontend-usability.md
+- runs/current/evidence/ui-previews/manifest.md
+- runs/current/evidence/quality/ui-copy-audit.md
+- runs/current/evidence/quality/test-results.md
+- runs/current/evidence/quality/quality-summary.md
+- playbook/task-bundles/qa-delivery-review.yaml
+- playbook/roles/qa.md
+- app/run.sh
+
+## Requested Outputs
+- record the QA review in runs/current/evidence/qa-delivery-review.md
+- run app/run.sh and confirm the delivered app boots
+- perform basic live user testing against the app
+- reject delivery if the frontend is blank, visibly crashed, flickering from obvious request loops, or still exposing metadata/debug/recovery copy
+- reject delivery if backend runtime errors appear during the tested flows
+- if QA fails, create the owner handoffs needed to reopen the run
+- if QA passes, mark runs/current/evidence/qa-delivery-review.md with explicit approval fields
+
+## Dependencies
+- none
+
+## Gate Status
+- blocked
+
+## Blocking Issues
+- the canonical completion gate passed, but independent QA validation is still required before CEO delivery approval
+
+## Notes
+- QA is a pre-delivery validation lane only; it should not silently patch the app
+- the QA decision must be based on live behavior, not only on prior evidence claims
+- completion detail:
+${completion_detail}
+EOF
+  printf '%s\n' "$note_path"
+}
+
+qa_delivery_review_approved() {
+  [[ -f "$QA_DELIVERY_REVIEW_MD" ]] || return 1
+  grep -Eq '^status:[[:space:]]*(ready-for-handoff|approved)$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?qa_decision:[[:space:]]*approved[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?run_sh_validation:[[:space:]]*passed[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?basic_user_testing:[[:space:]]*passed[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?frontend_runtime_errors:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?backend_runtime_errors:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?metadata_leakage:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?review_summary:[[:space:]]*.+$' "$QA_DELIVERY_REVIEW_MD" || return 1
 }
 
 delivery_approved() {
@@ -1792,6 +1865,41 @@ attempt_ceo_termination_review() {
   return 0
 }
 
+attempt_qa_delivery_review() {
+  local completion_detail="$1"
+  local qa_pending note_path
+
+  if qa_delivery_review_approved; then
+    return 0
+  fi
+
+  qa_pending="$(find "$STATE_ROOT/qa" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
+  if [[ -z "$qa_pending" ]]; then
+    note_path="$(emit_qa_delivery_review_note "$completion_detail")"
+    append_recovery_log \
+      "QA Delivery Review Queued" \
+      "Queued QA delivery-review note:\n- ${note_path#$ROOT/}\n\nCompletion detail:\n$completion_detail"
+    append_run_remark \
+      "QA Delivery Review Queued" \
+      "Queued QA delivery-review note:\n- ${note_path#$ROOT/}\n\nCompletion detail:\n$completion_detail"
+  fi
+
+  log "delivery-review-qa-intervention"
+  maybe_enforce_dependency_provisioning_preflight "qa"
+  if ! run_role_once_with_runtime_reload_guard "qa"; then
+    return 1
+  fi
+  if qa_delivery_review_approved; then
+    return 0
+  fi
+  if [[ "$(pending_actionable_count)" -gt 0 ]]; then
+    return 1
+  fi
+  fatal_exit \
+    "qa did not approve delivery or reopen the run" \
+    "The canonical completion gate passed, but QA did not write an approved runs/current/evidence/qa-delivery-review.md artifact and did not reopen any work."
+}
+
 attempt_ceo_delivery_approval() {
   local completion_detail="$1"
   local ceo_pending note_path
@@ -1881,6 +1989,7 @@ role_model() {
     architect) printf '%s\n' "$ARCHITECT_MODEL" ;;
     frontend) printf '%s\n' "$FRONTEND_MODEL" ;;
     backend) printf '%s\n' "$BACKEND_MODEL" ;;
+    qa) printf '%s\n' "$QA_MODEL" ;;
     deployment) printf '%s\n' "$DEPLOYMENT_MODEL" ;;
     ceo) printf '%s\n' "$CEO_MODEL" ;;
     *) printf '%s\n' "$FAST_MODEL" ;;
@@ -1901,6 +2010,7 @@ display_role_for_runtime() {
     architect) printf '%s\n' "architect" ;;
     frontend) printf '%s\n' "frontend" ;;
     backend) printf '%s\n' "backend" ;;
+    qa) printf '%s\n' "qa" ;;
     deployment) printf '%s\n' "deployment" ;;
     ceo) printf '%s\n' "ceo" ;;
     *) printf '%s\n' "$1" ;;
@@ -1913,6 +2023,7 @@ role_file_for_runtime() {
     architect) printf '%s\n' "playbook/roles/architect.md" ;;
     frontend) printf '%s\n' "playbook/roles/frontend.md" ;;
     backend) printf '%s\n' "playbook/roles/backend.md" ;;
+    qa) printf '%s\n' "playbook/roles/qa.md" ;;
     deployment) printf '%s\n' "playbook/roles/devops.md" ;;
     ceo) printf '%s\n' "playbook/roles/ceo.md" ;;
     *) return 1 ;;
@@ -1950,6 +2061,13 @@ role_add_dirs() {
         "$ROOT/app/backend" \
         "$ROOT/app/rules" \
         "$ROOT/app/reference"
+      ;;
+    qa)
+      printf '%s\n' \
+        "$RUN_ROOT/artifacts" \
+        "$RUN_ROOT/evidence" \
+        "$STATE_ROOT" \
+        "$ROOT/app"
       ;;
     deployment)
       printf '%s\n' \
@@ -2213,7 +2331,7 @@ run_recovery_pass() {
 
 role_requires_dependency_preflight() {
   case "$1" in
-    frontend|backend|deployment) return 0 ;;
+    frontend|backend|qa|deployment) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -2587,6 +2705,7 @@ is_canonical_queue_path() {
     architect/inbox/*.md|architect/inflight/*.md|\
     frontend/inbox/*.md|frontend/inflight/*.md|\
     backend/inbox/*.md|backend/inflight/*.md|\
+    qa/inbox/*.md|qa/inflight/*.md|\
     ceo/inbox/*.md|ceo/inflight/*.md)
       return 0
       ;;
@@ -3246,6 +3365,14 @@ main_loop() {
     fi
 
     if completion_detail="$(check_completion 2>&1)"; then
+      if ! qa_delivery_review_approved; then
+        if attempt_qa_delivery_review "$completion_detail"; then
+          LAST_STALL_SIGNATURE=""
+          continue
+        fi
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
       if ! delivery_approved; then
         if attempt_ceo_delivery_approval "$completion_detail"; then
           touch "$RUN_ROOT/APP_DONE"
@@ -3309,6 +3436,11 @@ main_loop() {
     fi
 
     if run_role_once_with_runtime_reload_guard "architect"; then
+      did_work=1
+    fi
+
+    maybe_enforce_dependency_provisioning_preflight "qa"
+    if run_role_once_with_runtime_reload_guard "qa"; then
       did_work=1
     fi
 

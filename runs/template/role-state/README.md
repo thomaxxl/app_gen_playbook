@@ -11,6 +11,7 @@ At run reset, the orchestrator MUST create role-local runtime directories for:
 - `architect`
 - `frontend`
 - `backend`
+- `qa`
 - `ceo`
 - optional `deployment`
 

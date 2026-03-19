@@ -116,7 +116,8 @@ The CEO role MUST:
   orchestrator exits by either restoring progress, writing
   `runs/current/orchestrator/operator-action-required.md`, or writing
   `runs/current/orchestrator/pause-requested.md`
-- before approving successful delivery, run
+- before approving successful delivery, verify QA has already approved
+  `runs/current/evidence/qa-delivery-review.md`, then run
   `scripts/run_playbook.sh --ceo-delivery-validate`, inspect
   `runs/current/evidence/ceo-delivery-validation.md`, and write
   `runs/current/orchestrator/delivery-approved.md` with an explicit
@@ -165,7 +166,8 @@ the same unresolved blocker when only the operator can unblock the run after
 local repair paths have been exhausted or after reasonable CEO-side repair
 effort has failed to restore progress, approve or reject any pending
 orchestrator termination before exit, validate successful delivery through
-`scripts/run_playbook.sh --ceo-delivery-validate` before writing
+`scripts/run_playbook.sh --ceo-delivery-validate` only after QA has approved
+`runs/current/evidence/qa-delivery-review.md`, before writing
 `runs/current/orchestrator/delivery-approved.md` with `status: approved`,
 then
 archive processed inbox files.

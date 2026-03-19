@@ -107,6 +107,22 @@ backend:
     - runs/current/artifacts/devops/**
     - app/frontend/**
 
+qa:
+  always_load:
+    - playbook/summaries/global-core.md
+    - playbook/summaries/process-core.md
+    - playbook/summaries/roles/qa.summary.md
+    - playbook/roles/shared-responsibilities.md
+    - playbook/process/read-sets/qa-core.md
+  writable:
+    - runs/current/remarks.md
+    - runs/current/notes.md
+    - runs/current/evidence/qa-delivery-review.md
+    - runs/current/role-state/qa/**
+  cannot_write:
+    - runs/current/artifacts/**
+    - app/**
+
 ceo:
   always_load:
     - playbook/summaries/global-core.md

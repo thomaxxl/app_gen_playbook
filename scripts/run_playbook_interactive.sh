@@ -64,7 +64,7 @@ pick_role() {
       return 0
     fi
     case "$role" in
-      product_manager|architect|frontend|backend|devops|ceo) break ;;
+      product_manager|architect|frontend|backend|qa|devops|ceo) break ;;
       *)
         echo "Unsupported role: $role"
         ;;

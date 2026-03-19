@@ -33,6 +33,8 @@ The orchestrator MUST:
   optional review detail
 - keep the CEO role dormant unless a stall candidate is detected or the
   operator explicitly targets the CEO role
+- require an independent QA validation turn after product acceptance and
+  before CEO final delivery approval
 - validate handoff inputs before dispatching the receiver
 - surface canonical output filenames to the active role at prompt time when
   the current phase or task bundle implies them
@@ -262,8 +264,20 @@ CEO approval of termination is expressed by either:
 - writing `runs/current/orchestrator/operator-action-required.md`
 - writing `runs/current/orchestrator/pause-requested.md`
 
-Before the orchestrator marks the run complete, it MUST require explicit CEO
-delivery approval. That approval MUST include:
+Before the orchestrator marks the run complete, it MUST require explicit QA
+delivery validation followed by explicit CEO delivery approval.
+
+The QA validation MUST include:
+
+- a `runs/current/evidence/qa-delivery-review.md` artifact
+- a real `app/run.sh` validation path
+- basic user testing against the live app
+- explicit confirmation that the frontend is not blank, crashed, or still
+  exposing metadata/debug shells
+- explicit confirmation that the backend did not surface obvious runtime
+  errors during the tested flows
+
+The CEO delivery approval MUST then include:
 
 - a real `app/run.sh` validation run through
   `scripts/run_playbook.sh --ceo-delivery-validate`

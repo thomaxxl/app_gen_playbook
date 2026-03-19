@@ -36,6 +36,29 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
+    def test_runner_registers_qa_as_pre_delivery_role(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('product_manager|architect|frontend|backend|qa|deployment|ceo', script)
+        self.assertIn('"$STATE_ROOT/qa"', script)
+        self.assertIn('qa/inbox/*.md|qa/inflight/*.md', script)
+        self.assertIn('qa) printf \'%s\\n\' "$QA_MODEL"', script)
+        self.assertIn('qa) printf \'%s\\n\' "qa"', script)
+        self.assertIn('qa) printf \'%s\\n\' "playbook/roles/qa.md"', script)
+
+    def test_runner_requires_qa_before_ceo_delivery_approval(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('QA_DELIVERY_REVIEW_MD="$RUN_ROOT/evidence/qa-delivery-review.md"', script)
+        self.assertIn("emit_qa_delivery_review_note()", script)
+        self.assertIn("qa_delivery_review_approved()", script)
+        self.assertIn("attempt_qa_delivery_review()", script)
+        completion_index = script.index('if completion_detail="$(check_completion 2>&1)"; then')
+        qa_index = script.index('if ! qa_delivery_review_approved; then', completion_index)
+        ceo_index = script.index('if ! delivery_approved; then', completion_index)
+        self.assertLess(qa_index, ceo_index)
+        self.assertIn('"qa did not approve delivery or reopen the run"', script)
+
     def test_ceo_runtime_can_patch_local_playbook_runtime_surfaces(self) -> None:
         script = self.runner_core()
 

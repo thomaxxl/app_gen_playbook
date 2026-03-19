@@ -17,6 +17,7 @@ Role files:
 - [architect.md](architect.md)
 - [frontend.md](frontend.md)
 - [backend.md](backend.md)
+- [qa.md](qa.md)
 - [ceo.md](ceo.md)
 - [devops.md](devops.md)
 - [deployment.md](deployment.md) (compatibility alias only)
@@ -28,6 +29,7 @@ Role summaries:
 - [../summaries/roles/architect.summary.md](../summaries/roles/architect.summary.md)
 - [../summaries/roles/frontend.summary.md](../summaries/roles/frontend.summary.md)
 - [../summaries/roles/backend.summary.md](../summaries/roles/backend.summary.md)
+- [../summaries/roles/qa.summary.md](../summaries/roles/qa.summary.md)
 - [../summaries/roles/ceo.summary.md](../summaries/roles/ceo.summary.md)
 - [../summaries/roles/devops.summary.md](../summaries/roles/devops.summary.md)
 
@@ -55,6 +57,7 @@ All role execution MUST follow the capability-gating rules in:
 - [../process/read-sets/backend-design-core.md](../process/read-sets/backend-design-core.md)
 - [../process/read-sets/backend-implementation-core.md](../process/read-sets/backend-implementation-core.md)
 - [../process/read-sets/backend-change-delta.md](../process/read-sets/backend-change-delta.md)
+- [../process/read-sets/qa-core.md](../process/read-sets/qa-core.md)
 - [../process/read-sets/ceo-core.md](../process/read-sets/ceo-core.md)
 - [../process/read-sets/devops-core.md](../process/read-sets/devops-core.md)
 

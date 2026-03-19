@@ -37,6 +37,7 @@ The run is blocked if any of these are true:
   blocked-environment path
 - captured UI preview screenshots exist but were not analyzed for visible
   content by Frontend, Architect, and Product Manager
+- the independent QA delivery review is missing, still placeholder, or failed
 - the required quality evidence pack is missing, still placeholder, blocked
   without explanation, or contradictory
 
@@ -61,12 +62,17 @@ Phase 6 also depends on:
 - `runs/current/evidence/frontend-usability.md`
 - `runs/current/evidence/ui-previews/manifest.md`
 
+Final delivery also depends on:
+
+- `runs/current/evidence/qa-delivery-review.md`
+
 ## Ownership
 
 - Frontend owns implementation and frontend-oriented validation outputs
 - Backend owns implementation and backend-oriented validation outputs
 - Architect owns the Phase 6 quality evidence pack and the integration gate
 - Product Manager consumes that evidence and owns the final acceptance gate
+- QA owns the independent pre-delivery validation artifact
 
 ## Gate rule
 

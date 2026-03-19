@@ -61,6 +61,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - `runs/current/artifacts/product/acceptance-review.md`
 - updated `runs/current/artifacts/product/assumptions-and-open-questions.md`
   if work is deferred
+- a QA handoff or reopen notes when acceptance passes but final delivery still
+  needs independent QA validation
 
 ## Exit criteria
 
@@ -72,6 +74,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   backlog cycle
 - the acceptance record cites the actual reviewed user-facing pages and the
   evidence used to judge them
+- accepted delivery is handed to QA for an independent final validation pass
+  before CEO approval
 - if UI previews were captured, acceptance cites the reviewed screenshot files
   rather than only mentioning that previews existed, and the preview manifest
   carries Frontend, Architect, and Product Manager signoff

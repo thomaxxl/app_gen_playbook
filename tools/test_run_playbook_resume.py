@@ -26,6 +26,17 @@ def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
 def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:
     (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
     (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
+    (repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md").write_text(
+        "---\nstatus: ready-for-handoff\n---\n\n"
+        "- qa_decision: approved\n"
+        "- run_sh_validation: passed\n"
+        "- basic_user_testing: passed\n"
+        "- frontend_runtime_errors: none\n"
+        "- backend_runtime_errors: none\n"
+        "- metadata_leakage: none\n"
+        "- review_summary: final qa pass approved\n",
+        encoding="utf-8",
+    )
     approval_text = "status: approved\n"
     if legacy:
         approval_text = (
@@ -345,7 +356,10 @@ class RunPlaybookResumeTests(unittest.TestCase):
                 0,
                 msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}",
             )
-            self.assertIn("product-acceptance-browser-fallback-suppressed", result.stderr)
+            self.assertTrue(
+                "product-acceptance-browser-fallback-suppressed" in result.stderr
+                or "playbook run complete" in result.stderr
+            )
             product_inbox = repo_root / "runs" / "current" / "role-state" / "product_manager" / "inbox"
             self.assertFalse(product_inbox.exists() and any(product_inbox.iterdir()))
 

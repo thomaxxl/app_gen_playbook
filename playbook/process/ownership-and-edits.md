@@ -10,6 +10,7 @@ Ownership map:
 - `runs/current/artifacts/ux/` -> UX/UI + Frontend
 - `runs/current/artifacts/backend-design/` -> Backend
 - `runs/current/artifacts/devops/` -> DevOps
+- `runs/current/evidence/qa-delivery-review.md` -> QA
 - `runs/current/changes/<change_id>/candidate/artifacts/product/` -> Product Manager
 - `runs/current/changes/<change_id>/candidate/artifacts/architecture/` -> Architect
 - `runs/current/changes/<change_id>/candidate/artifacts/ux/` -> UX/UI + Frontend

@@ -24,8 +24,10 @@ Before the orchestrator exits non-successfully, CEO must approve that
 termination by either restoring progress, writing
 `runs/current/orchestrator/operator-action-required.md`, or writing
 `runs/current/orchestrator/pause-requested.md`.
-Before successful delivery, CEO must run `scripts/run_playbook.sh --ceo-delivery-validate`,
-validate `app/run.sh` booted the app successfully, and write
+Before successful delivery, CEO must wait for QA approval in
+`runs/current/evidence/qa-delivery-review.md`, then run
+`scripts/run_playbook.sh --ceo-delivery-validate`, validate `app/run.sh`
+booted the app successfully, and write
 `runs/current/orchestrator/delivery-approved.md`.
 Every CEO unblock intervention MUST be recorded in `runs/current/remarks.md`.
 

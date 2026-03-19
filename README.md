@@ -204,6 +204,10 @@ The normal runtime roles are:
 - `backend`
   Owns backend-design artifacts, SAFRS model/API implementation, rule
   enforcement, and backend verification.
+- `qa`
+  Independent pre-delivery validation lane that boots the generated app,
+  exercises basic user flows, and rejects blank, erroring, or metadata-heavy
+  deliveries before CEO approval.
 - `devops`
   Optional packaging/runtime lane for install/run packaging, Docker files,
   delivery environment checks, and deployment-oriented verification.
@@ -220,9 +224,10 @@ The usual flow is:
 3. `frontend` and `backend` in parallel once Phase 5 is open
 4. `architect` integration review
 5. `product_manager` acceptance
-
+6. `qa` pre-delivery validation
 `devops` joins when packaging/runtime work is in scope. `ceo` is a recovery
-exception, not a standard phase participant.
+exception plus the final delivery-approval lane; it is not a standard build
+phase participant.
 
 ## Key Files To Read Next
 

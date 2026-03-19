@@ -25,6 +25,7 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertTrue((repo_root / "app" / "rules").is_dir())
             self.assertTrue((repo_root / "app" / "reference").is_dir())
             self.assertTrue((repo_root / "runs" / "current" / "role-state" / "devops").is_dir())
+            self.assertTrue((repo_root / "runs" / "current" / "role-state" / "qa").is_dir())
             self.assertTrue((repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox").is_dir())
             self.assertTrue((repo_root / "runs" / "current" / "role-state" / "orchestrator" / "processed").is_dir())
             self.assertTrue((repo_root / "runs" / "current" / "remarks.md").is_file())
@@ -33,6 +34,8 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertIn("repair the current blocker even in local playbook runtime files when necessary", ceo_agents)
             self.assertIn("validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval", ceo_agents)
             self.assertIn("record every unblock intervention in runs/current/remarks.md", ceo_agents)
+            qa_agents = (repo_root / "runs" / "current" / "role-state" / "qa" / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("independently validate the delivered app before CEO approval", qa_agents)
 
 
 if __name__ == "__main__":

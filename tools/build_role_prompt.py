@@ -119,7 +119,10 @@ def build_canonical_outputs(
     for value in sections.get("requested outputs", []):
         if not isinstance(value, str):
             continue
-        path_match = re.findall(r"(runs/current/artifacts/[A-Za-z0-9_./-]+\.md|app/[A-Za-z0-9_./-]+)", value)
+        path_match = re.findall(
+            r"(runs/current/artifacts/[A-Za-z0-9_./-]+\.md|runs/current/evidence/[A-Za-z0-9_./-]+\.md|app/[A-Za-z0-9_./-]+)",
+            value,
+        )
         outputs.extend(path_match)
 
     return dedupe_paths(outputs)

@@ -15,6 +15,7 @@ def canonical_queue_roots(state_root: Path) -> list[Path]:
         state_root / "architect",
         state_root / "frontend",
         state_root / "backend",
+        state_root / "qa",
         state_root / "ceo",
     ]
     if (state_root / "devops").exists():

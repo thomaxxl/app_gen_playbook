@@ -15,8 +15,12 @@ A feature is done only when all of these are true:
 - the final pre-delivery step was an actual Playwright smoke run against the
   app, not just a claim that the tests should pass
 - the app is proven to boot without bootstrap/runtime failure
+- QA has independently validated the delivered app through a final
+  pre-delivery review
 - CEO has run `app/run.sh` through
   `scripts/run_playbook.sh --ceo-delivery-validate`
+- `runs/current/evidence/qa-delivery-review.md` exists and records a
+  successful QA validation
 - `runs/current/evidence/ceo-delivery-validation.md` exists and records a
   successful delivery validation
 - `runs/current/orchestrator/delivery-approved.md` exists
@@ -64,6 +68,9 @@ A feature is done only when all of these are true:
 - `Home`, required custom pages, and sampled generated CRUD pages match the
   run-owned UX artifacts closely enough that Product Manager can accept them in
   user-facing terms
+- QA can start the delivered app with `app/run.sh`, exercise basic user flows,
+  and confirm that the frontend is not blank, crashed, or metadata-heavy and
+  that the backend is not surfacing obvious runtime errors during those flows
 - all core-agent inboxes are empty
 - no core-agent inflight items remain
 - the dormant CEO lane is empty unless a stall intervention is still actively

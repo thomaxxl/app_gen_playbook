@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_role_prompt import parse_message_sections
+from build_role_prompt import build_canonical_outputs, parse_message_sections
 
 
 class BuildRolePromptTests(unittest.TestCase):
@@ -70,6 +71,21 @@ class BuildRolePromptTests(unittest.TestCase):
 
         self.assertIn("do not leave background servers, watchers, or helper processes running", source)
         self.assertIn("terminate any processes you started for this turn", source)
+
+    def test_canonical_outputs_extract_evidence_paths_from_requested_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            read_paths: list[str] = []
+            sections = {
+                "requested outputs": [
+                    "update runs/current/evidence/qa-delivery-review.md",
+                    "write app/run.sh notes",
+                ]
+            }
+
+            outputs = build_canonical_outputs(repo_root, "qa", read_paths, sections)
+
+            self.assertIn("runs/current/evidence/qa-delivery-review.md", outputs)
 
 
 if __name__ == "__main__":

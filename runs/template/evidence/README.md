@@ -9,6 +9,8 @@ Expected run-owned evidence includes, when applicable:
 - `contract-samples.md`
 - `frontend-usability.md` describing the reviewed entry/custom/generated pages
   and whether any internal debug or recovery copy leaked into visible UI
+- `qa-delivery-review.md` describing the final independent QA pass before CEO
+  delivery approval
 - `ui-previews/manifest.md` stating whether user-review screenshots were
   captured, not required, or blocked by environment constraints; when
   captured, it must also record content review and Frontend, Architect, plus

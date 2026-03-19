@@ -9,13 +9,14 @@ from fnmatch import fnmatch
 from typing import Iterable, Mapping
 
 
-CORE_DISPLAY_ROLES = ("product-manager", "architect", "frontend", "backend")
+CORE_DISPLAY_ROLES = ("product-manager", "architect", "frontend", "backend", "qa")
 
 DISPLAY_TO_RUNTIME = {
     "product-manager": "product_manager",
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "qa": "qa",
     "ceo": "ceo",
     "deployment": "deployment",
     "devops": "deployment",
@@ -26,6 +27,7 @@ DISPLAY_TO_ROLE_FILE = {
     "architect": "playbook/roles/architect.md",
     "frontend": "playbook/roles/frontend.md",
     "backend": "playbook/roles/backend.md",
+    "qa": "playbook/roles/qa.md",
     "ceo": "playbook/roles/ceo.md",
     "deployment": "playbook/roles/devops.md",
     "devops": "playbook/roles/devops.md",
@@ -36,6 +38,7 @@ RUNTIME_TO_DISPLAY = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "qa": "qa",
     "ceo": "ceo",
     "deployment": "deployment",
 }
@@ -45,6 +48,7 @@ ROLE_STATE_DIR_BY_RUNTIME = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "qa": "qa",
     "ceo": "ceo",
     "deployment": "devops",
 }
@@ -125,6 +129,12 @@ ROLE_OWNED_PREFIXES = {
         "app/backend/",
         "app/rules/",
         "app/reference/admin.yaml",
+    ),
+    "qa": (
+        "runs/current/remarks.md",
+        "runs/current/notes.md",
+        "runs/current/evidence/qa-delivery-review.md",
+        "runs/current/role-state/qa/",
     ),
     "deployment": (
         "runs/current/remarks.md",
