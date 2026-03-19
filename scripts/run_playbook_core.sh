@@ -2651,7 +2651,7 @@ import sys
 from pathlib import Path
 
 state_root = Path(sys.argv[1])
-role_names = ["product_manager", "architect", "frontend", "backend"]
+role_names = ["product_manager", "architect", "frontend", "backend", "qa"]
 if (state_root / "devops").is_dir():
     role_names.append("devops")
 elif (state_root / "deployment").is_dir():

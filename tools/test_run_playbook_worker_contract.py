@@ -129,6 +129,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("attempt_ceo_termination_review()", script)
         self.assertIn("handle_role_codex_failure()", script)
         self.assertIn("actionable_owner_queue_fingerprint()", script)
+        self.assertIn('role_names = ["product_manager", "architect", "frontend", "backend", "qa"]', script)
         self.assertIn("purpose: approve or reject a pending non-success playbook termination before the orchestrator exits", script)
         self.assertIn('if attempt_ceo_termination_review \\', script)
         self.assertIn('"codex failed for role $runtime_role"', script)
