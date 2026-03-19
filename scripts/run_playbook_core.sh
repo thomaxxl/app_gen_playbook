@@ -1843,6 +1843,7 @@ handle_role_codex_failure() {
   local message_path="$3"
   local failure_detail="$4"
   local ceo_review_status=0
+  local owner_queue_before owner_queue_after
 
   python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
     --repo-root "$ROOT" \
@@ -1850,10 +1851,16 @@ handle_role_codex_failure() {
     --status interrupted \
     --claimed-message "$(basename "$message_path")" >/dev/null
 
+  owner_queue_before="$(actionable_owner_queue_fingerprint)"
   if attempt_ceo_termination_review \
     "codex failed for role $runtime_role" \
     "$failure_detail"; then
+    owner_queue_after="$(actionable_owner_queue_fingerprint)"
     if [[ ! -f "$message_path" ]]; then
+      return 0
+    fi
+    if [[ "$owner_queue_after" != "$owner_queue_before" ]]; then
+      log "termination-review-forward-progress-restored role=$runtime_role message=${message_base}.md"
       return 0
     fi
   else
@@ -2489,6 +2496,39 @@ pending_actionable_count() {
   done < <(canonical_queue_dirs)
 
   printf '%s\n' "$count"
+}
+
+actionable_owner_queue_fingerprint() {
+  python3 - "$STATE_ROOT" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+state_root = Path(sys.argv[1])
+role_names = ["product_manager", "architect", "frontend", "backend"]
+if (state_root / "devops").is_dir():
+    role_names.append("devops")
+elif (state_root / "deployment").is_dir():
+    role_names.append("deployment")
+
+digest = hashlib.sha256()
+for role_name in role_names:
+    role_dir = state_root / role_name
+    for lane in ("inbox", "inflight"):
+        lane_dir = role_dir / lane
+        if not lane_dir.is_dir():
+            continue
+        for path in sorted(lane_dir.glob("*.md")):
+            rel = path.relative_to(state_root)
+            digest.update(str(rel).encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+
+print(digest.hexdigest())
+PY
 }
 
 extract_json_string_field() {
