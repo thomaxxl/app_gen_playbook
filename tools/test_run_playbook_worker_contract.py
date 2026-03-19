@@ -69,6 +69,11 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertNotIn("codex_supports_reasoning_effort()", script)
         self.assertNotIn("codex-reasoning-effort-unsupported", script)
 
+    def test_runner_defaults_codex_timeout_to_1500_seconds(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('CODEX_COMMAND_TIMEOUT_SECONDS="${CODEX_COMMAND_TIMEOUT_SECONDS:-1500}"', script)
+
     def test_runner_exits_on_operator_action_required_and_only_recovers_on_empty_queue(self) -> None:
         script = self.runner_core()
 
