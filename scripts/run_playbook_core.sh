@@ -1532,6 +1532,49 @@ attempt_ceo_delivery_approval() {
     "The canonical completion gate passed, but CEO did not validate delivery via app/run.sh, did not write runs/current/orchestrator/delivery-approved.md, and did not reopen any work."
 }
 
+handle_role_codex_failure() {
+  local runtime_role="$1"
+  local message_base="$2"
+  local message_path="$3"
+  local failure_detail="$4"
+  local ceo_review_status=0
+
+  python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
+    --repo-root "$ROOT" \
+    --role "$runtime_role" \
+    --status interrupted \
+    --claimed-message "$(basename "$message_path")" >/dev/null
+
+  if attempt_ceo_termination_review \
+    "codex failed for role $runtime_role" \
+    "$failure_detail"; then
+    if [[ ! -f "$message_path" ]]; then
+      return 0
+    fi
+  else
+    ceo_review_status=$?
+    if [[ "$ceo_review_status" -eq 2 ]]; then
+      if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+        pause_requested_exit
+      fi
+      if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+        operator_action_required_exit
+      fi
+    fi
+  fi
+
+  if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+    pause_requested_exit
+  fi
+  if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then
+    operator_action_required_exit
+  fi
+
+  fatal_exit \
+    "ceo did not approve or resolve codex failure termination" \
+    "Claimed work item: ${message_base}.md"$'\n'"$failure_detail"$'\n\n'"CEO neither restored forward progress nor approved a non-success termination artifact."
+}
+
 role_model() {
   case "$1" in
     product_manager) printf '%s\n' "$PRODUCT_MANAGER_MODEL" ;;
@@ -2552,25 +2595,21 @@ run_role_once() {
   if [[ "$run_error" -ne 0 ]]; then
     local process_error
     process_error="$(extract_codex_failure_detail "$jsonl_file")"
-    python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
-      --repo-root "$ROOT" \
-      --role "$runtime_role" \
-      --status interrupted \
-      --claimed-message "$(basename "$message_path")" >/dev/null
-    fatal_exit \
-      "codex failed for role $runtime_role" \
-      "Claimed work item: ${message_base}.md"$'\n'"Codex exited non-zero before a valid final response was recorded."$'\n'"Error: $process_error"
+    handle_role_codex_failure \
+      "$runtime_role" \
+      "$message_base" \
+      "$message_path" \
+      "Codex exited non-zero before a valid final response was recorded."$'\n'"Error: $process_error"
+    return 0
   fi
 
   if ! codex_error="$(assert_codex_success "$jsonl_file" "$result_file" 2>&1)"; then
-    python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
-      --repo-root "$ROOT" \
-      --role "$runtime_role" \
-      --status interrupted \
-      --claimed-message "$(basename "$message_path")" >/dev/null
-    fatal_exit \
-      "codex failed for role $runtime_role" \
-      "Claimed work item: ${message_base}.md"$'\n'"Error: $codex_error"
+    handle_role_codex_failure \
+      "$runtime_role" \
+      "$message_base" \
+      "$message_path" \
+      "Codex reported an invalid or incomplete final response."$'\n'"Error: $codex_error"
+    return 0
   fi
 
   session_record "$runtime_role" "$jsonl_file" "$role_dir" "$(display_model "$model")"

@@ -216,6 +216,9 @@ archive it, and continue routing work instead of blocking immediately.
 Before the orchestrator exits non-successfully for a runner-owned blocked,
 stall, or active-but-idle condition, it MUST give CEO a chance to review that
 termination unless the terminating artifact was already produced by CEO.
+Worker-launch failures, Codex execution failures, and role-turn timeouts are
+also runner-owned non-success paths and MUST follow the same CEO review rule
+before the orchestrator exits.
 CEO approval of termination is expressed by either:
 
 - restoring progress so the run continues
