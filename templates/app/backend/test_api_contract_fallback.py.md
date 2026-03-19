@@ -15,10 +15,12 @@ from pathlib import Path
 
 import yaml
 from sqlalchemy import inspect, text
+from safrs import SAFRSBase
 
 from my_app import create_app
 from my_app.config import get_settings
-from my_app.db import session_scope
+from my_app.db import Base, session_scope
+from my_app.models import EXPOSED_MODELS
 
 
 def configure_test_env(monkeypatch, tmp_path: Path) -> None:
@@ -57,6 +59,17 @@ def test_app_builds_and_registers_core_routes(monkeypatch, tmp_path):
     assert "/ui/admin/admin.yaml" in route_paths
     for endpoint in exposed_endpoints(schema).values():
         assert endpoint in route_paths, endpoint
+
+
+def test_fallback_still_requires_safrs_registration_and_orm_models(monkeypatch, tmp_path):
+    configure_test_env(monkeypatch, tmp_path)
+    app = create_app()
+
+    assert hasattr(app.state, "safrs_api")
+    assert EXPOSED_MODELS
+    for model in EXPOSED_MODELS:
+        assert issubclass(model, SAFRSBase)
+        assert issubclass(model, Base)
 
 
 def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):

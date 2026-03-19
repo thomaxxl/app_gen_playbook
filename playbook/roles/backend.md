@@ -134,6 +134,11 @@ Backend agent MUST:
 - ensure route discovery shows it in the live `/jsonapi.json` contract
 - expose the documented relationships needed for list/show/include behavior
 
+The Backend agent MUST NOT treat a plain FastAPI app as compliant merely
+because it serves a document at `/jsonapi.json`. That path counts only when the
+backend is wired through `SafrsFastAPI` and the required resources come from
+real SAFRS-exposed ORM models.
+
 Custom `/api/ops/` or other read-model endpoints MAY supplement those
 resources, but they MUST NOT replace the required SAFRS exposure for
 appropriate DB-backed tables and relationships.

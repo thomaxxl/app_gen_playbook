@@ -20,6 +20,8 @@ The run is blocked if any of these are true:
 - DB-backed tables or relationships that should be ordinary SAFRS resources are
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception
+- `/jsonapi.json` exists only as renamed FastAPI OpenAPI while required
+  SAFRS-backed resources are missing from real model exposure
 - DB-backed tables or relationships that should be ordinary ORM-backed domain
   entities are implemented primarily through raw SQL or row-dict assembly
   without an approved architecture exception

@@ -6,7 +6,8 @@ This file defines the minimum backend validation checklist.
 
 - `python run.py` starts
 - `/docs` loads
-- `/jsonapi.json` loads
+- `/jsonapi.json` loads and represents live SAFRS-backed resource discovery,
+  not merely FastAPI OpenAPI renamed onto that path
 - `/healthz` returns ok
 - `/ui/admin/admin.yaml` is served
 
@@ -19,6 +20,8 @@ This file defines the minimum backend validation checklist.
 - every resource marked `Exposed through SAFRS = yes` in
   `../../../runs/current/artifacts/backend-design/resource-exposure-policy.md`
   appears in live `/jsonapi.json` discovery and in the actual exposed model set
+- the backend uses `SafrsFastAPI` plus `EXPOSED_MODELS` for those resources
+  instead of hand-built row-document route adapters
 - every relationship marked `Exposed relationship = yes` in
   `../../../runs/current/artifacts/backend-design/relationship-map.md` is
   proven through live SAFRS resource payloads or related routes
@@ -44,6 +47,8 @@ This file defines the minimum backend validation checklist.
 - raw SQL or hand-built row adapters MAY supplement aggregate/read-model
   endpoints, but MUST NOT replace the normal ORM lane for appropriate
   DB-backed resources
+- a FastAPI app MUST NOT satisfy this contract by exposing plain OpenAPI at
+  `/jsonapi.json` while bypassing SAFRS model registration
 - one happy-path API create works
 - one happy-path API update works
 - one happy-path API delete works

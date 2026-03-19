@@ -15,9 +15,12 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 import pytest
+from safrs import SAFRSBase
 import yaml
 
 from my_app import create_app
+from my_app.db import Base
+from my_app.models import EXPOSED_MODELS
 
 ENABLE_TESTCLIENT = os.getenv("MY_APP_ENABLE_TESTCLIENT") == "1"
 pytestmark = pytest.mark.skipif(
@@ -101,6 +104,17 @@ def test_core_routes_exist(monkeypatch, tmp_path):
     ):
         response = client.get(path)
         assert response.status_code == 200, path
+
+
+def test_safrs_registration_and_orm_models_exist(monkeypatch, tmp_path):
+    configure_test_env(monkeypatch, tmp_path)
+    app = create_app()
+
+    assert hasattr(app.state, "safrs_api")
+    assert EXPOSED_MODELS
+    for model in EXPOSED_MODELS:
+        assert issubclass(model, SAFRSBase)
+        assert issubclass(model, Base)
 
 
 def test_admin_yaml_endpoints_match_discovered_collection_routes(monkeypatch, tmp_path):

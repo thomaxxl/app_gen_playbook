@@ -15,6 +15,7 @@ from orchestrator_common import (
     parse_metadata_block,
     resolve_repo_root,
 )
+from check_backend_orm_safrs import audit_backend_orm_safrs
 
 
 READY_ARTIFACT_STATUSES = {"ready-for-handoff", "approved"}
@@ -530,6 +531,18 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                             "reason": "captured ui preview manifest must include a non-placeholder review_conclusion describing what the screenshots prove",
                         }
                     )
+
+    backend_audit_issues = audit_backend_orm_safrs(repo_root)
+    for issue in backend_audit_issues:
+        blockers.append(
+            {
+                "kind": "backend-orm-safrs-audit-failed",
+                "path": "app/backend/src/my_app",
+                "owner": "backend",
+                "phase": "phase-6-integration-review",
+                "reason": issue,
+            }
+        )
 
     return blockers
 

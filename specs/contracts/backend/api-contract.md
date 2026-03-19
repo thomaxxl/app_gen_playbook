@@ -15,6 +15,8 @@ The generated app relies on these SAFRS/backend behaviors staying stable:
 - canonical schema URL `/jsonapi.json`
 - ordinary persisted resource delivery coming from real ORM-backed SAFRS
   resources, not hand-built JSON stand-ins
+- `/jsonapi.json` representing real SAFRS-backed resource discovery, not only
+  a renamed FastAPI OpenAPI document
 - include support for declared relationship names
 - SAFRS query behavior described in `query-contract.md`
 - JSON:API error normalization visible to the frontend

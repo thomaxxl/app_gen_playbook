@@ -112,6 +112,10 @@ The canonical backend schema URL is:
 
 Downstream tools SHOULD rely on that URL.
 
+That URL is canonical only when it is backed by real SAFRS resource exposure.
+The backend MUST NOT satisfy this rule by pointing plain FastAPI OpenAPI at
+`/jsonapi.json` without `SafrsFastAPI` and `EXPOSED_MODELS` registration.
+
 `/swagger.json` may exist as a compatibility alias, but it is not the primary
 contract URL.
 

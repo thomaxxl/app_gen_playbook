@@ -479,6 +479,42 @@ class CheckCompletionTests(unittest.TestCase):
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
             self.assertTrue(any(blocker["kind"] == "ui-preview-fallback-invalid" for blocker in matching))
 
+    def test_reports_backend_orm_safrs_audit_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "def create_app():",
+                        '    return FastAPI(openapi_url="/jsonapi.json")',
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/db.py",
+                "from sqlalchemy import text\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["kind"] == "backend-orm-safrs-audit-failed"]
+            self.assertTrue(matching)
+
 
 if __name__ == "__main__":
     unittest.main()

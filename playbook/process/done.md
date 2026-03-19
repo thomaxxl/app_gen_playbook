@@ -50,6 +50,8 @@ A feature is done only when all of these are true:
 - if a run claims frontend/backend integration success,
   `runs/current/evidence/contract-samples.md` exists and records at least one
   `admin.yaml endpoint` to live-route to sample-record trace
+- any required SAFRS-backed resource lane is proven through real ORM +
+  `SafrsFastAPI` exposure, not only by serving a document at `/jsonapi.json`
 - the canonical quality evidence pack exists under
   `runs/current/evidence/quality/`
 - the quality evidence pack does not remain in starter-placeholder form

@@ -44,6 +44,8 @@ readiness note in:
 - verify that DB-backed resources marked as SAFRS-exposed in
   `resource-exposure-policy.md` are actually present in live `/jsonapi.json`
   route discovery and are not replaced by hand-built substitute endpoints
+- reject any backend that satisfies `/jsonapi.json` only by pointing FastAPI
+  OpenAPI at that path without real `SafrsFastAPI` registration
 - verify that documented exposed relationships from
   `relationship-map.md` are actually navigable in live SAFRS payloads
 - verify that ordinary persisted resources are implemented through mapped
@@ -182,5 +184,7 @@ Integration review fails when:
   for API-backed data retrieval
 - the backend replaced required SAFRS resource or relationship exposure with
   custom summary endpoints or hand-built JSON routes
+- the backend only renamed FastAPI OpenAPI to `/jsonapi.json` and did not
+  expose the required resources through real SAFRS model registration
 - the backend replaced required ORM-backed resource implementation with
   raw-SQL-only or row-mapper handlers without an approved exception
