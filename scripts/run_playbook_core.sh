@@ -1036,7 +1036,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 - record the delivery review in runs/current/remarks.md
 - run scripts/run_playbook.sh --ceo-delivery-validate
 - review runs/current/evidence/ceo-delivery-validation.md
-- write runs/current/orchestrator/delivery-approved.md when delivery is validated
+- write runs/current/orchestrator/delivery-approved.md with an explicit metadata line `status: approved` when delivery is validated
 - if delivery validation fails, repair the blocker directly or emit the handoff needed to continue
 
 ## Dependencies
@@ -1061,7 +1061,14 @@ EOF
 delivery_approved() {
   [[ -f "$DELIVERY_APPROVED_MD" ]] || return 1
   [[ -f "$CEO_DELIVERY_VALIDATION_MD" ]] || return 1
-  grep -Eq '^status:[[:space:]]*approved$' "$DELIVERY_APPROVED_MD"
+  grep -Eq '^status:[[:space:]]*ready-for-handoff$' "$CEO_DELIVERY_VALIDATION_MD" || return 1
+
+  if grep -Eq '^status:[[:space:]]*approved$' "$DELIVERY_APPROVED_MD"; then
+    return 0
+  fi
+
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?approved_by:[[:space:]]*ceo[[:space:]]*$' "$DELIVERY_APPROVED_MD" \
+    && grep -Eq '^[[:space:]]*(-[[:space:]]*)?approved_at:[[:space:]]*.+$' "$DELIVERY_APPROVED_MD"
 }
 
 process_orchestrator_inbox() {

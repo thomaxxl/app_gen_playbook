@@ -233,6 +233,11 @@ delivery approval. That approval MUST include:
 - a delivery-validation artifact under
   `runs/current/evidence/ceo-delivery-validation.md`
 - a CEO approval file at `runs/current/orchestrator/delivery-approved.md`
+  with an explicit `status: approved` metadata line
+
+For compatibility, the runner MAY also accept an older CEO approval note that
+records `approved_by: ceo` and `approved_at: ...`, but the canonical file
+shape is the explicit `status: approved` approval record.
 
 It MAY accept explicit model overrides through environment variables such as:
 

@@ -119,7 +119,8 @@ The CEO role MUST:
 - before approving successful delivery, run
   `scripts/run_playbook.sh --ceo-delivery-validate`, inspect
   `runs/current/evidence/ceo-delivery-validation.md`, and write
-  `runs/current/orchestrator/delivery-approved.md`
+  `runs/current/orchestrator/delivery-approved.md` with an explicit
+  `status: approved` metadata line
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared
@@ -165,5 +166,6 @@ local repair paths have been exhausted or after reasonable CEO-side repair
 effort has failed to restore progress, approve or reject any pending
 orchestrator termination before exit, validate successful delivery through
 `scripts/run_playbook.sh --ceo-delivery-validate` before writing
-`runs/current/orchestrator/delivery-approved.md`, then
+`runs/current/orchestrator/delivery-approved.md` with `status: approved`,
+then
 archive processed inbox files.

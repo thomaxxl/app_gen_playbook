@@ -22,15 +22,23 @@ def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
         shutil.copy2(source_repo / "scripts" / script_name, scripts_dir / script_name)
 
 
-def seed_delivery_approval(repo_root: Path) -> None:
+def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:
     (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
     (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
+    approval_text = "status: approved\n"
+    if legacy:
+        approval_text = (
+            "# Delivery Approved\n\n"
+            "- approved_by: ceo\n"
+            "- approved_at: 2026-03-19T09:31:23Z\n"
+            "- validation_artifact: runs/current/evidence/ceo-delivery-validation.md\n"
+        )
     (repo_root / "runs" / "current" / "orchestrator" / "delivery-approved.md").write_text(
-        "status: approved\n",
+        approval_text,
         encoding="utf-8",
     )
     (repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md").write_text(
-        "status: ready-for-handoff\n",
+        "---\nstatus: ready-for-handoff\n---\n",
         encoding="utf-8",
     )
 
@@ -97,6 +105,80 @@ class RunPlaybookResumeTests(unittest.TestCase):
                     counter.write_text("1\\n", encoding="utf-8")
                     print("run is not complete")
                     raise SystemExit(1)
+                    """
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"stdout:\\n{result.stdout}\\n\\nstderr:\\n{result.stderr}",
+            )
+            self.assertIn("playbook run complete", result.stderr)
+
+    def test_resume_accepts_legacy_ceo_delivery_approval_shape(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root, legacy=True)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":""}\n',
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 is not ready')\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    print("run is complete")
+                    raise SystemExit(0)
                     """
                 ),
             )
