@@ -325,6 +325,10 @@ EOF
 
 ceo_delivery_validate() {
   local frontend_host frontend_port backend_host backend_port frontend_url backend_url
+  local launcher_pid=""
+  local ready_deadline=0
+  local ready_timeout_seconds=60
+  local startup_reached=0
   local run_status=1
   local validation_status="blocked"
   local detail="app/run.sh delivery validation failed"
@@ -348,9 +352,8 @@ ceo_delivery_validate() {
   mkdir -p "$(dirname "$CEO_DELIVERY_RUNTIME_LOG")" "$(dirname "$CEO_DELIVERY_VALIDATION_MD")"
   : > "$CEO_DELIVERY_RUNTIME_LOG"
 
-  if (
+  (
     cd "$ROOT/app"
-    RUN_SH_EXIT_ON_READY=1 \
     RUN_SH_VALIDATE_FRONTEND_URL="$frontend_url" \
     RUN_SH_VALIDATE_BACKEND_URL="$backend_url" \
     BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}" \
@@ -361,8 +364,34 @@ ceo_delivery_validate() {
     FRONTEND_NODE_MODULES_DIR="$FRONTEND_NODE_MODULES_DIR" \
     DEPENDENCY_PROVISIONING_MODE="$DEPENDENCY_PROVISIONING_MODE" \
     ./run.sh
-  ) 2>&1 | tee "$CEO_DELIVERY_RUNTIME_LOG"; then
-    run_status=0
+  ) > >(tee "$CEO_DELIVERY_RUNTIME_LOG") 2>&1 &
+  launcher_pid=$!
+
+  ready_deadline=$((SECONDS + ready_timeout_seconds))
+  while (( SECONDS < ready_deadline )); do
+    if ! kill -0 "$launcher_pid" 2>/dev/null; then
+      wait "$launcher_pid"
+      run_status=$?
+      break
+    fi
+
+    if curl -fsS -o /dev/null --max-time 5 "$frontend_url" && \
+       curl -fsS -o /dev/null --max-time 5 "$backend_url"; then
+      startup_reached=1
+      run_status=0
+      break
+    fi
+
+    sleep 1
+  done
+
+  if [[ "$startup_reached" -eq 0 ]] && kill -0 "$launcher_pid" 2>/dev/null; then
+    detail="app/run.sh did not validate the frontend and backend delivery URLs within ${ready_timeout_seconds}s"
+  fi
+
+  if kill -0 "$launcher_pid" 2>/dev/null; then
+    kill "$launcher_pid" 2>/dev/null || true
+    wait "$launcher_pid" 2>/dev/null || true
   fi
 
   if runtime_log_has_content "$CEO_DELIVERY_RUNTIME_LOG"; then
