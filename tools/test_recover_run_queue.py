@@ -68,6 +68,7 @@ def ensure_role_dirs(repo_root: Path, role: str) -> None:
 def write_app_baseline(repo_root: Path) -> None:
     for relative in (
         "app/README.md",
+        "app/BUSINESS_RULES.md",
         "app/.gitignore",
         "app/install.sh",
         "app/run.sh",
@@ -84,10 +85,38 @@ def write_app_baseline(repo_root: Path) -> None:
 
 
 def write_required_phase6_evidence(repo_root: Path) -> None:
+    write_file(
+        repo_root / "runs/current/evidence/contract-samples.md",
+        "\n".join(
+            [
+                "# Contract Samples",
+                "",
+                "## SAFRS resource coverage",
+                "- discovered from /jsonapi.json",
+                "",
+                "## Relationship coverage",
+                "- relationship proof present",
+                "",
+                "## Approved non-SAFRS exceptions",
+                "- none",
+                "",
+            ]
+        ),
+    )
+    write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+    write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+    write_file(
+        repo_root / "runs/current/evidence/ui-previews/manifest.md",
+        "\n".join(
+            [
+                "# UI Preview Manifest",
+                "",
+                "capture_status: not-required",
+                "",
+            ]
+        ),
+    )
     for relative in (
-        "runs/current/evidence/contract-samples.md",
-        "runs/current/evidence/frontend-usability.md",
-        "runs/current/evidence/ui-previews/manifest.md",
         "runs/current/evidence/quality/crud-matrix.md",
         "runs/current/evidence/quality/data-sourcing-audit.md",
         "runs/current/evidence/quality/seed-data-audit.md",
@@ -190,6 +219,88 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_run_artifact(repo_root / "runs/current/artifacts/architecture/overview.md")
             targets = select_recovery_targets(repo_root)
             self.assertEqual(set(targets), {"frontend", "backend"})
+
+    def test_requeues_missing_business_rules_output_for_product_manager(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            (repo_root / "app" / "BUSINESS_RULES.md").unlink()
+
+            targets = select_recovery_targets(repo_root)
+
+            self.assertEqual(set(targets), {"product_manager"})
+            product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
+            self.assertEqual(product_paths, {"app/BUSINESS_RULES.md"})
+
+    def test_requeues_architect_for_ui_preview_review_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "\n".join(
+                    [
+                        "# UI Preview Manifest",
+                        "",
+                        "capture_status: captured",
+                        "content_validation_status: pending-review",
+                        "frontend_validation: approved",
+                        "architect_validation: pending-review",
+                        "product_manager_validation: pending-review",
+                        "review_conclusion: pending-review",
+                        "",
+                    ]
+                ),
+            )
+            write_file(repo_root / "runs/current/evidence/ui-previews/admin-entry.png", "fake image")
+
+            targets = select_recovery_targets(repo_root)
+
+            self.assertEqual(set(targets), {"architect"})
+            architect_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["architect"]}
+            self.assertEqual(architect_paths, {"runs/current/evidence/ui-previews/manifest.md"})
+
+    def test_requeues_backend_for_backend_source_validation_failures(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "def create_app():",
+                        '    return FastAPI(openapi_url="/jsonapi.json")',
+                        "",
+                    ]
+                ),
+            )
+            write_file(repo_root / "app/backend/src/my_app/db.py", "from sqlalchemy import text\n")
+
+            targets = select_recovery_targets(repo_root)
+
+            self.assertEqual(set(targets), {"backend"})
+            backend_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["backend"]}
+            self.assertEqual(backend_paths, {"app/backend/src/my_app"})
 
     def test_acceptance_review_is_only_requeued_after_other_core_roles_are_quiescent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

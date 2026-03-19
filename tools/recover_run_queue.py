@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from check_phase5_ready import collect_phase5_blockers
+from check_completion import collect_blockers
 from orchestrator_common import (
     DISPLAY_TO_RUNTIME,
     CORE_DISPLAY_ROLES,
@@ -85,6 +85,16 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
             "playbook/process/phases/phase-5-parallel-implementation.md",
             "playbook/process/playbook-execution-outputs.md",
             "templates/app/project/README.app.md",
+        ),
+    ),
+    (
+        "product_manager",
+        "app/BUSINESS_RULES.md",
+        "missing",
+        (
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "playbook/process/playbook-execution-outputs.md",
+            "templates/app/project/BUSINESS_RULES.app.md",
         ),
     ),
     (
@@ -178,6 +188,19 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
 )
+ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
+    "missing-generated-app-output",
+    "missing-required-evidence-output",
+    "required-evidence-output-placeholder",
+    "contract-samples-unstructured",
+    "ui-preview-manifest-unstructured",
+    "ui-preview-images-missing",
+    "ui-preview-content-validation-missing",
+    "ui-preview-signoff-missing",
+    "ui-preview-review-conclusion-missing",
+    "ui-preview-fallback-invalid",
+    "backend-orm-safrs-audit-failed",
+}
 REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
     (
         "architect",
@@ -387,43 +410,51 @@ def collect_artifact_needs(repo_root: Path) -> list[ArtifactNeed]:
     return needs
 
 
-def collect_app_implementation_needs(repo_root: Path) -> list[ArtifactNeed]:
-    if collect_phase5_blockers(repo_root):
-        return []
+def extra_reads_for_completion_blocker(path: str) -> tuple[str, ...]:
+    for _, relative_path, _, extra_reads in APP_IMPLEMENTATION_NEEDS:
+        if relative_path == path:
+            return extra_reads
 
+    for _, relative_path, _, extra_reads in REQUIRED_EVIDENCE_NEEDS:
+        if relative_path == path:
+            return extra_reads
+
+    if path == "app/backend/src/my_app":
+        return (
+            "playbook/task-bundles/backend-implementation.yaml",
+            "playbook/process/phases/phase-5-parallel-implementation.md",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+        )
+
+    return ()
+
+
+def collect_completion_blocker_needs(repo_root: Path) -> list[ArtifactNeed]:
     needs: list[ArtifactNeed] = []
-    for role, relative_path, reason, extra_reads in APP_IMPLEMENTATION_NEEDS:
-        path = repo_root / relative_path
-        if not path.exists():
-            needs.append(
-                ArtifactNeed(
-                    role=role,
-                    phase="phase-5-parallel-implementation",
-                    path=path,
-                    reason=reason,
-                    extra_reads=extra_reads,
-                )
+
+    for blocker in collect_blockers(repo_root):
+        kind = str(blocker.get("kind", "")).strip()
+        if kind not in ACTIONABLE_COMPLETION_BLOCKER_KINDS:
+            continue
+
+        role = str(blocker.get("owner", "")).strip()
+        phase = str(blocker.get("phase", "")).strip()
+        relative_path = str(blocker.get("path", "")).strip()
+        reason = str(blocker.get("reason", "")).strip()
+        if role not in ROLE_LABELS or not phase or not relative_path or not reason:
+            continue
+
+        needs.append(
+            ArtifactNeed(
+                role=role,
+                phase=phase,
+                path=repo_root / relative_path,
+                reason=reason,
+                extra_reads=extra_reads_for_completion_blocker(relative_path),
             )
-    return needs
+        )
 
-
-def collect_required_evidence_needs(repo_root: Path, app_needs: list[ArtifactNeed]) -> list[ArtifactNeed]:
-    if app_needs:
-        return []
-
-    needs: list[ArtifactNeed] = []
-    for role, relative_path, reason, extra_reads in REQUIRED_EVIDENCE_NEEDS:
-        path = repo_root / relative_path
-        if not path.exists():
-            needs.append(
-                ArtifactNeed(
-                    role=role,
-                    phase="phase-6-integration-review",
-                    path=path,
-                    reason=reason,
-                    extra_reads=extra_reads,
-                )
-            )
     return needs
 
 
@@ -478,9 +509,7 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
         return {}
 
     needs = collect_artifact_needs(repo_root)
-    app_needs = collect_app_implementation_needs(repo_root)
-    needs.extend(app_needs)
-    needs.extend(collect_required_evidence_needs(repo_root, app_needs))
+    needs.extend(collect_completion_blocker_needs(repo_root))
     targets: dict[str, list[ArtifactNeed]] = {}
 
     for role in ROLE_LABELS:
@@ -499,7 +528,7 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
 
         targets[role] = sorted(
             eligible,
-            key=lambda need: (PHASE_ORDER.get(need.phase, 99), str(need.path)),
+            key=lambda need: (PHASE_ORDER.get(need.phase, 99), str(need.path), need.reason),
         )
 
     return targets
@@ -553,7 +582,7 @@ def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], 
             "- blocked",
             "",
             "## Blocking Issues",
-            "- completion is still blocked by missing or non-final canonical artifacts in your owned area",
+            "- completion is still blocked by unresolved canonical outputs or validation blockers in your owned area",
         ]
     )
 
