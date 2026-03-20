@@ -159,6 +159,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/orchestrator/delivery-approved.md",
+        "runs/current/orchestrator/ceo-progress-followup-requested.md",
         "runs/current/orchestrator/operator-action-required.md",
         "runs/current/orchestrator/pause-requested.md",
         "runs/current/evidence/ceo-delivery-validation.md",

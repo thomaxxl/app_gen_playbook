@@ -1,27 +1,29 @@
-# `frontend/src/App.tsx`
-
-See also:
-
-- [../../../specs/contracts/frontend/runtime-contract.md](../../../specs/contracts/frontend/runtime-contract.md)
-- [../../../specs/contracts/frontend/home-and-entry.md](../../../specs/contracts/frontend/home-and-entry.md)
-- [../../../specs/contracts/frontend/custom-views.md](../../../specs/contracts/frontend/custom-views.md)
-
-Keep the app root thin, but make resource wiring explicit.
-
-```tsx
 import { CustomRoutes, Resource } from "react-admin";
 import { Navigate, Route } from "react-router-dom";
 
 import AppIcon from "./AppIcon";
 import Home from "./Home";
+import {
+  ArtifactsPage,
+  BlockersPage,
+  ChangesPage,
+  EvidencePage,
+  FilesPage,
+  MessagesPage,
+  ObserverLayout,
+  PhasesPage,
+  TimelinePage,
+  WorkersPage,
+} from "./ObserverPages";
 import { appConfig } from "./config";
-import { resourcePages } from "./generated/resourcePages";
-import { SchemaDrivenAdminApp } from "./shared-runtime/SchemaDrivenAdminApp";
+import { resourcePages } from "./resourcePages";
+import { SchemaDrivenAdminApp } from "./SchemaDrivenAdminApp";
 
 export default function App() {
   return (
     <SchemaDrivenAdminApp
       appConfig={appConfig}
+      layout={ObserverLayout}
       resourcePages={resourcePages}
     >
       <>
@@ -29,28 +31,26 @@ export default function App() {
           icon={(props) => <AppIcon name="home" {...props} />}
           list={Home}
           name="Home"
-          options={{ label: "Home" }}
+          options={{ label: "Run Overview" }}
         />
         <CustomRoutes noLayout>
           <Route element={<Navigate replace to="/Home" />} path="/" />
+        </CustomRoutes>
+        <CustomRoutes>
+          <Route element={<PhasesPage />} path="/phases" />
+          <Route element={<ArtifactsPage />} path="/artifacts" />
+          <Route element={<MessagesPage />} path="/messages" />
+          <Route element={<BlockersPage />} path="/blockers" />
+          <Route element={<EvidencePage />} path="/evidence" />
+          <Route element={<WorkersPage />} path="/workers" />
+          <Route element={<TimelinePage />} path="/timeline" />
+          <Route element={<FilesPage />} path="/files" />
+          <Route element={<ChangesPage />} path="/changes" />
+          <Route element={<Navigate replace to="/phases" />} path="/Collection" />
+          <Route element={<Navigate replace to="/messages" />} path="/Item" />
+          <Route element={<Navigate replace to="/files" />} path="/Status" />
         </CustomRoutes>
       </>
     </SchemaDrivenAdminApp>
   );
 }
-```
-
-Notes:
-
-- Do not bury project-specific API paths in the component tree.
-- Keep app title and endpoint config in `config.ts`.
-- `Home.tsx` is the required in-admin landing page with sidebar presence.
-- The starter redirect to `/Home` is correct unless the run-owned
-  `route-and-entry-model.md`, `navigation.md`, and `landing-strategy.md`
-  explicitly approve a different primary entry route.
-- `Landing.tsx` is starter-only and MUST NOT be imported here unless the
-  run-owned custom-view spec explicitly enables it.
-- If the app needs a no-layout route, add it explicitly through
-  `CustomRoutes noLayout` after the UX artifact set defines it.
-- `children` inside `SchemaDrivenAdminApp` is the official custom-route
-  extension point.

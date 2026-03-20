@@ -1,13 +1,3 @@
-# `frontend/tests/ui-previews.e2e.spec.ts`
-
-See also:
-
-- [../../../../specs/contracts/frontend/validation.md](../../../../specs/contracts/frontend/validation.md)
-- [../playwright.config.ts.md](../playwright.config.ts.md)
-
-This is the reviewable screenshot companion to the smoke suite.
-
-```ts
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -84,6 +74,7 @@ test("capture reviewable UI previews", async ({ page }) => {
 
   await page.setViewportSize({ width: 1440, height: 1024 });
   await page.goto("/app/#/Home");
+  await expect(page.getByText(/run overview/i)).toBeVisible();
   await expect(page.getByTestId("entry-purpose")).toBeVisible();
   await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
   await expect(page.getByTestId("entry-proof-strip")).toBeVisible();
@@ -102,45 +93,37 @@ test("capture reviewable UI previews", async ({ page }) => {
     surface: "Home desktop",
   });
 
-  await page.goto("/app/#/Collection");
-  await expect(page.getByRole("main")).toBeVisible();
+  await page.goto("/app/#/phases");
+  await expect(page.getByText(/phases/i).first()).toBeVisible();
   await page.screenshot({
     fullPage: true,
-    path: path.join(outputDir, "collection-list.png"),
+    path: path.join(outputDir, "phases-desktop.png"),
   });
   captures.push({
     assertions: [
-      "main application region is visible",
+      "phase heading is visible",
+      "phase status cards are visible",
     ],
-    file: "collection-list.png",
-    route: "/app/#/Collection",
-    surface: "Collection list",
+    file: "phases-desktop.png",
+    route: "/app/#/phases",
+    surface: "Phases desktop",
   });
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/app/#/Home");
-  await expect(page.getByTestId("entry-primary-cta")).toBeVisible();
+  await page.goto("/app/#/files");
+  await expect(page.getByText(/files/i).first()).toBeVisible();
   await page.screenshot({
     fullPage: true,
-    path: path.join(outputDir, "home-mobile.png"),
+    path: path.join(outputDir, "files-desktop.png"),
   });
   captures.push({
     assertions: [
-      "primary CTA remains visible at mobile width",
+      "file catalog heading is visible",
+      "run file rows are visible",
     ],
-    file: "home-mobile.png",
-    route: "/app/#/Home",
-    surface: "Home mobile",
+    file: "files-desktop.png",
+    route: "/app/#/files",
+    surface: "Files desktop",
   });
 
   await writeManifest(outputDir, captures);
 });
-```
-
-Notes:
-
-- This file is for intentional success-case screenshots, not failure artifacts.
-- The output directory SHOULD default to the playbook evidence tree when the
-  generated app still lives inside the playbook repo.
-- In a standalone generated app repo, it MAY fall back to a local
-  `app/evidence/ui-previews/` directory instead.

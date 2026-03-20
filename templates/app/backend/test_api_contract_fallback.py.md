@@ -11,6 +11,7 @@ integration test path, but it gives the backend agent a concrete executable
 verification harness instead of only prose instructions.
 
 ```python
+import shutil
 from pathlib import Path
 
 import yaml
@@ -20,14 +21,35 @@ from safrs import SAFRSBase
 from my_app import create_app
 from my_app.config import get_settings
 from my_app.db import Base, session_scope
-from my_app.models import EXPOSED_MODELS
+from my_app.models import EXPOSED_MODELS, ArtifactPackage, Run, RunFile
+
+REQUIRED_RESOURCES = {
+    "Project",
+    "Run",
+    "RunPhaseStatus",
+    "ArtifactPackage",
+    "Artifact",
+    "HandoffMessage",
+    "Blocker",
+    "EvidenceItem",
+    "VerificationCheck",
+    "WorkerState",
+    "OrchestratorEvent",
+    "RunFile",
+    "ChangeRequest",
+}
 
 
 def configure_test_env(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("MY_APP_DB_PATH", str(tmp_path / "fallback.sqlite"))
+    app_root = Path(__file__).resolve().parents[2]
+    playbook_root = app_root.parent
+    source_db = playbook_root / "run_dashboard" / "run_dashboard.sqlite3"
+    copied_db = tmp_path / "observer.sqlite3"
+    shutil.copy2(source_db, copied_db)
+    monkeypatch.setenv("MY_APP_DB_PATH", str(copied_db))
     monkeypatch.setenv(
         "MY_APP_ADMIN_YAML_PATH",
-        str(Path(__file__).resolve().parents[2] / "reference" / "admin.yaml"),
+        str(app_root / "reference" / "admin.yaml"),
     )
 
 
@@ -43,7 +65,7 @@ def exposed_endpoints(schema: dict) -> dict[str, str]:
         endpoint = resource.get("endpoint")
         assert isinstance(endpoint, str) and endpoint.startswith("/api/"), resource_key
         endpoints[resource_key] = endpoint
-    assert endpoints
+    assert REQUIRED_RESOURCES.issubset(set(endpoints))
     return endpoints
 
 
@@ -83,16 +105,19 @@ def test_openapi_generation_works_without_http_client(monkeypatch, tmp_path):
         assert endpoint in spec["paths"], endpoint
 
 
-def test_session_factory_and_tables_exist_without_http_client(monkeypatch, tmp_path):
+def test_session_factory_and_observer_tables_exist_without_http_client(monkeypatch, tmp_path):
     configure_test_env(monkeypatch, tmp_path)
     app = create_app()
     session_factory = app.state.session_factory
     inspector = inspect(app.state.engine)
     table_names = set(inspector.get_table_names())
 
-    assert table_names
+    assert {"runs", "artifact_packages", "run_files"}.issubset(table_names)
     with session_scope(session_factory) as session:
         assert session.execute(text("SELECT 1")).scalar_one() == 1
+        assert session.query(Run).count() > 0
+        assert session.query(ArtifactPackage).count() > 0
+        assert session.query(RunFile).count() > 0
 ```
 
 Notes:
@@ -102,6 +127,3 @@ Notes:
 - Record the fallback choice in the role `context.md` and handoff note.
 - Keep the normal `test_api_contract.py` file in the project even if this
   fallback harness is the path that actually runs in the current environment.
-- This fallback harness MUST remain run-agnostic. Domain-specific seed and
-  rule assertions belong in `test_bootstrap.py` and `test_rules.py`, not in
-  starter hardcoded model-name checks here.

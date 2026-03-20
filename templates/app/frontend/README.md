@@ -45,34 +45,36 @@ Suggested copy order:
 22. `shared-runtime/relationshipUi.tsx.md`
 23. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
 24. `shared-runtime/resourceRegistry.tsx.md`
-25. `generated/resources/Collection.tsx.md`
-26. `generated/resources/Item.tsx.md`
-27. `generated/resources/Status.tsx.md`
-28. `resourcePages.ts.md`
-29. `App.tsx.md`
-30. `Home.tsx.md`
-31. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
-32. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
-33. `D3Visualization.tsx.md` if the app needs charts or figures
-34. `shared-runtime/files/README.md`
-35. `shared-runtime/files/uploadAwareDataProvider.ts.md`
-36. `shared-runtime/files/fileValueAdapters.ts.md`
-37. `shared-runtime/files/fileFieldHelpers.ts.md`
-38. `fs-promises.ts.md`
-39. `vite.config.ts.md`
-40. `vitest.config.ts.md`
-41. `playwright.config.ts.md`
-42. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
-43. `tests/schemaContext.test.ts.md`
-44. `tests/dataProvider.integration.test.ts.md`
-45. `tests/resourceMetadata.test.ts.md`
-46. `tests/createSearchEnabledDataProvider.test.ts.md`
-47. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
-48. `tests/vite.config.test.ts.md`
-49. `tests/smoke.e2e.spec.ts.md`
-50. `tests/ui-previews.e2e.spec.ts.md`
-51. `../project/run.sh.md`
-52. `../project/README.app.md`
+25. `observerRouteContracts.ts.md`
+26. `ObserverPages.tsx.md`
+27. `resourcePages.ts.md`
+28. `App.tsx.md`
+29. `Home.tsx.md`
+30. `generated/resources/Collection.tsx.md` only for starter-style resource wrappers
+31. `generated/resources/Item.tsx.md` only for starter-style resource wrappers
+32. `generated/resources/Status.tsx.md` only for starter-style resource wrappers
+33. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
+34. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
+35. `D3Visualization.tsx.md` if the app needs charts or figures
+36. `shared-runtime/files/README.md`
+37. `shared-runtime/files/uploadAwareDataProvider.ts.md`
+38. `shared-runtime/files/fileValueAdapters.ts.md`
+39. `shared-runtime/files/fileFieldHelpers.ts.md`
+40. `fs-promises.ts.md`
+41. `vite.config.ts.md`
+42. `vitest.config.ts.md`
+43. `playwright.config.ts.md`
+44. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+45. `tests/schemaContext.test.ts.md`
+46. `tests/dataProvider.integration.test.ts.md`
+47. `tests/resourceMetadata.test.ts.md`
+48. `tests/createSearchEnabledDataProvider.test.ts.md`
+49. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+50. `tests/vite.config.test.ts.md`
+51. `tests/smoke.e2e.spec.ts.md`
+52. `tests/ui-previews.e2e.spec.ts.md`
+53. `../project/run.sh.md`
+54. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -87,7 +89,9 @@ Notes:
 - For non-starter domains, the three starter wrapper files are examples, not a
   fixed universal file list. The implementation MUST create one wrapper file
   per resource declared in
-  `../../../runs/current/artifacts/architecture/resource-naming.md`.
+  `../../../runs/current/artifacts/architecture/resource-naming.md`, or use an
+  explicit observer-resource registry such as `observerRouteContracts.ts.md`
+  when the app is a run observer over `run_dashboard`.
 - `resourcePages.ts.md` MUST register the actual resource wrapper set for the
   current app, not the starter trio by default.
 - For non-starter domains, the Frontend role MUST apply

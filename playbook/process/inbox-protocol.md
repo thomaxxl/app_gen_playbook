@@ -87,6 +87,7 @@ Standard orchestrator-created message topics:
 - `recovery`
 - `handoff-correction`
 - `stall-intervention`
+- `progress-audit`
 
 Supported operator-created CEO control topic:
 

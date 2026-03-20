@@ -37,9 +37,12 @@ Always load:
 - `process-core.md`
 - `../../process/read-sets/ceo-core.md`
 
-This role is dormant by default. It is not part of the normal phase pipeline
-and SHOULD be loaded only for orchestrator-declared stall intervention or an
-explicit operator request.
+This role is dormant by default outside explicit stall, progress-audit, and
+operator-steering intervention. The orchestrator may also trigger a periodic
+CEO progress audit after roughly every 25 non-CEO turn JSONL files, and if
+CEO had to unblock the run it may request forced follow-up for the next 5
+control loops by writing
+`runs/current/orchestrator/ceo-progress-followup-requested.md`.
 
 Full docs:
 

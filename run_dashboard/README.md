@@ -15,6 +15,11 @@ The intended model is:
 3. the collector writes a derived operational view into SQLite through SQLAlchemy
 4. dashboards and reporting query SQLite, not the playbook workspace
 
+Generated current-run observer apps may also read this SQLite database in
+read-only mode. In that architecture, `run_dashboard` remains a derived source
+of truth for run status, while the generated app becomes a presentation layer
+over the mirrored data instead of inventing a second status schema.
+
 The schema is now organized in two layers:
 
 - a generic file catalog for the current run
@@ -171,3 +176,4 @@ It MAY:
 - read `runs/current/`
 - read `app/`
 - record normalized state in a standalone SQLite database
+- serve as the read-only backing store for generated current-run observer apps

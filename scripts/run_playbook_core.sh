@@ -154,6 +154,8 @@ RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"
 KILL_REQUESTED_MD="$ORCH_ROOT/kill-requested.md"
+CEO_PROGRESS_AUDIT_STATE="$ORCH_ROOT/ceo-progress-audit.env"
+CEO_PROGRESS_FOLLOWUP_REQUESTED_MD="$ORCH_ROOT/ceo-progress-followup-requested.md"
 RUNNER_PID_FILE="$ORCH_ROOT/runner.pid"
 DELIVERY_APPROVED_MD="$ORCH_ROOT/delivery-approved.md"
 FATAL_ERROR_OPERATOR_ESCALATION_TAG="fatal-error-operator-escalation"
@@ -172,6 +174,8 @@ RUN_DASHBOARD_WATCH="$RUN_DASHBOARD_ROOT/scripts/watch_current_run.sh"
 POLL_SECONDS="${POLL_SECONDS:-1}"
 LEASE_SECONDS="${LEASE_SECONDS:-600}"
 IDLE_THRESHOLD_SECONDS="${IDLE_THRESHOLD_SECONDS:-300}"
+CEO_PROGRESS_AUDIT_INTERVAL="${CEO_PROGRESS_AUDIT_INTERVAL:-25}"
+CEO_PROGRESS_FOLLOWUP_LOOPS="${CEO_PROGRESS_FOLLOWUP_LOOPS:-5}"
 FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 LONG_MODEL="${LONG_MODEL:-}"
@@ -199,6 +203,8 @@ LAST_STALL_SIGNATURE=""
 ENSURE_WORKER_PID_RESULT=""
 RUNNER_RUNTIME_SURFACE_FINGERPRINT=""
 POLICY_EVALUATION_LAST_OUTPUT=""
+CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT=0
+CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING=0
 
 export PLAYBOOK_RUNTIME_ENV
 export PLAYBOOK_RUNTIME_ENV_SOURCE
@@ -217,6 +223,63 @@ role_state_dir() {
       printf '%s\n' "$STATE_ROOT/$1"
       ;;
   esac
+}
+
+sanitize_nonnegative_integer() {
+  local raw_value="${1:-}"
+  local default_value="${2:-0}"
+  case "$raw_value" in
+    ''|*[!0-9]*)
+      printf '%s\n' "$default_value"
+      ;;
+    *)
+      printf '%s\n' "$raw_value"
+      ;;
+  esac
+}
+
+load_ceo_progress_audit_state() {
+  CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT=0
+  CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING=0
+  [[ -f "$CEO_PROGRESS_AUDIT_STATE" ]] || return 0
+
+  local key value
+  while IFS='=' read -r key value; do
+    case "$key" in
+      last_jsonl_count)
+        CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$(sanitize_nonnegative_integer "$value" 0)"
+        ;;
+      followup_loops_remaining)
+        CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING="$(sanitize_nonnegative_integer "$value" 0)"
+        ;;
+    esac
+  done < "$CEO_PROGRESS_AUDIT_STATE"
+}
+
+write_ceo_progress_audit_state() {
+  mkdir -p "$ORCH_ROOT"
+  cat > "$CEO_PROGRESS_AUDIT_STATE" <<EOF
+last_jsonl_count=$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT
+followup_loops_remaining=$CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING
+EOF
+}
+
+count_non_ceo_turn_jsonl_files() {
+  local jsonl_dir="$EVIDENCE_ROOT/jsonl"
+  local count=0 path base
+  [[ -d "$jsonl_dir" ]] || {
+    printf '%s\n' "0"
+    return 0
+  }
+
+  while IFS= read -r -d '' path; do
+    base="$(basename "$path")"
+    [[ "$base" == ceo-* ]] && continue
+    [[ "$base" == *.resume-failed.events.jsonl ]] && continue
+    count=$((count + 1))
+  done < <(find "$jsonl_dir" -maxdepth 1 -type f -name '*.events.jsonl' -print0)
+
+  printf '%s\n' "$count"
 }
 
 canonical_queue_dirs() {
@@ -884,6 +947,111 @@ change_id: ${ACTIVE_CHANGE_ID}
   runs/current/orchestrator/operator-action-required.md instead of re-queuing
   the same unresolved blocker
 EOF
+}
+
+emit_ceo_progress_audit_note() {
+  local audit_kind="$1"
+  local detail="$2"
+  local current_turn_count="$3"
+  local followup_loops="$4"
+  local stamp note_path
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  note_path="$STATE_ROOT/ceo/inbox/${stamp}-from-orchestrator-to-ceo-progress-audit.md"
+  mkdir -p "$STATE_ROOT/ceo/inbox"
+  cat > "$note_path" <<EOF
+from: orchestrator
+to: ceo
+topic: progress-audit
+purpose: review recent run progress, decide whether the playbook is truly advancing, and unblock the run when progress has degraded or stalled
+change_id: ${ACTIVE_CHANGE_ID}
+
+## Required Reads
+- runs/current/remarks.md
+- runs/current/orchestrator/run-status.json
+- runs/current/evidence/orchestrator/logs/orchestrator.log
+- playbook/task-bundles/ceo-stall-intervention.yaml
+- playbook/roles/ceo.md
+
+## Requested Outputs
+- updated CEO progress assessment in runs/current/remarks.md
+- any required recovery or re-queue handoff notes
+- direct local playbook-runtime repairs under playbook/, scripts/, or tools/
+  if those files are the blocker keeping the run from progressing
+- runs/current/orchestrator/operator-action-required.md if the remaining blocker
+  requires external operator, environment, or policy intervention
+- runs/current/orchestrator/ceo-progress-followup-requested.md if you had to
+  unblock the run directly or if progress is still fragile enough that the
+  orchestrator should force a CEO follow-up audit on each of the next
+  ${followup_loops} control loops
+
+## Dependencies
+- none
+
+## Gate Status
+- blocked
+
+## Blocking Issues
+- periodic CEO progress audit requested by the orchestrator after recent role activity
+
+## Notes
+- audit kind: $audit_kind
+- non-CEO turn jsonl count: $current_turn_count
+- orchestrator detail: $detail
+- do not treat "busy but advancing" work as blocked; only intervene when the
+  run is not making credible forward progress
+- if you do intervene locally, request follow-up by writing
+  runs/current/orchestrator/ceo-progress-followup-requested.md
+- every CEO unblock intervention must be recorded in runs/current/remarks.md
+EOF
+  printf '%s\n' "$note_path"
+}
+
+capture_ceo_progress_followup_request() {
+  [[ -f "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD" ]] || return 1
+
+  local loops
+  loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
+  load_ceo_progress_audit_state
+  CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING="$loops"
+  write_ceo_progress_audit_state
+  rm -f "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD"
+  log "ceo-progress-followup-armed loops=$loops"
+  return 0
+}
+
+maybe_queue_ceo_progress_audit() {
+  local completion_detail="$1"
+  local current_turn_count interval threshold note_path audit_kind audit_detail ceo_pending followup_loops
+
+  load_ceo_progress_audit_state
+  current_turn_count="$(count_non_ceo_turn_jsonl_files)"
+  interval="$(sanitize_nonnegative_integer "$CEO_PROGRESS_AUDIT_INTERVAL" 25)"
+  followup_loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
+  ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
+
+  if [[ "$CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING" -gt 0 ]]; then
+    [[ -n "$ceo_pending" ]] && return 1
+    audit_kind="follow-up"
+    audit_detail="A previous CEO unblock requested forced monitoring for the next $CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING control loops.\n\nCurrent completion detail:\n$completion_detail"
+    note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$followup_loops")"
+    CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING=$((CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING - 1))
+    CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$current_turn_count"
+    write_ceo_progress_audit_state
+    log "ceo-progress-audit-queued kind=$audit_kind remaining=$CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING note=${note_path#$ROOT/}"
+    return 0
+  fi
+
+  threshold=$((CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT + interval))
+  [[ "$current_turn_count" -lt "$threshold" ]] && return 1
+  [[ -n "$ceo_pending" ]] && return 1
+
+  audit_kind="periodic"
+  audit_detail="The orchestrator has recorded $current_turn_count non-CEO turn JSONL files. Review recent progress and determine whether the run is still advancing credibly.\n\nCurrent completion detail:\n$completion_detail"
+  note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$followup_loops")"
+  CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$current_turn_count"
+  write_ceo_progress_audit_state
+  log "ceo-progress-audit-queued kind=$audit_kind count=$current_turn_count note=${note_path#$ROOT/}"
+  return 0
 }
 
 runtime_role_from_label() {
@@ -3477,6 +3645,7 @@ run_role_once() {
         "role $runtime_role did not update remarks.md" \
         "Expected the CEO intervention to append a diagnosis or unblock note to runs/current/remarks.md."
     fi
+    capture_ceo_progress_followup_request || true
   fi
 
   python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
@@ -3801,6 +3970,10 @@ main_loop() {
       did_work=1
     fi
 
+    if maybe_queue_ceo_progress_audit "$completion_detail"; then
+      did_work=1
+    fi
+
     if run_role_once_with_runtime_reload_guard "ceo"; then
       did_work=1
       LAST_STALL_SIGNATURE=""
@@ -3945,6 +4118,7 @@ else
 fi
 
 clear_steering_requests_on_startup
+capture_ceo_progress_followup_request || true
 register_runner_pid
 start_dashboard_sidecar
 main_loop

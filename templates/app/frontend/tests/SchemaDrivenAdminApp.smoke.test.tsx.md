@@ -15,7 +15,7 @@ import type { DataProvider } from "react-admin";
 import type { Schema } from "safrs-jsonapi-client";
 import { describe, expect, it, vi } from "vitest";
 
-import { SchemaDrivenAdminApp } from "../src/shared-runtime/SchemaDrivenAdminApp";
+import { SchemaDrivenAdminApp } from "../src/SchemaDrivenAdminApp";
 
 const loadAdminBootstrap = vi.fn();
 const buildResources = vi.fn(() => <div>resources-ready</div>);

@@ -36,6 +36,25 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
         )
 
+    def test_runner_schedules_periodic_ceo_progress_audits(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('CEO_PROGRESS_AUDIT_STATE="$ORCH_ROOT/ceo-progress-audit.env"', script)
+        self.assertIn('CEO_PROGRESS_FOLLOWUP_REQUESTED_MD="$ORCH_ROOT/ceo-progress-followup-requested.md"', script)
+        self.assertIn('CEO_PROGRESS_AUDIT_INTERVAL="${CEO_PROGRESS_AUDIT_INTERVAL:-25}"', script)
+        self.assertIn('CEO_PROGRESS_FOLLOWUP_LOOPS="${CEO_PROGRESS_FOLLOWUP_LOOPS:-5}"', script)
+        self.assertIn("count_non_ceo_turn_jsonl_files()", script)
+        self.assertIn("emit_ceo_progress_audit_note()", script)
+        self.assertIn("capture_ceo_progress_followup_request()", script)
+        self.assertIn("maybe_queue_ceo_progress_audit()", script)
+        self.assertIn("topic: progress-audit", script)
+        self.assertIn("ceo-progress-followup-armed", script)
+        main_loop_index = script.index("while true; do")
+        self.assertLess(
+            script.index('if maybe_queue_ceo_progress_audit "$completion_detail"; then', main_loop_index),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
+        )
+
     def test_runner_registers_qa_as_pre_delivery_role(self) -> None:
         script = self.runner_core()
 
@@ -111,6 +130,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('clear_pause_requested_on_startup()', script)
         self.assertIn('clear_kill_requested_on_startup()', script)
         self.assertIn('clear_steering_requests_on_startup()', script)
+        self.assertIn('capture_ceo_progress_followup_request || true', script)
         self.assertIn('register_runner_pid()', script)
         self.assertIn('pending_inflight_role()', script)
         self.assertIn('pause_drain_in_progress()', script)

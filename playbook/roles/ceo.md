@@ -2,8 +2,9 @@
 
 ## Mission
 
-Remain dormant during normal execution, then intervene only when the run seems
-stalled or the operator explicitly needs to steer execution.
+Remain dormant during normal execution except for orchestrator-triggered
+progress audits, then intervene only when the run seems stalled, is no longer
+making credible progress, or the operator explicitly needs to steer execution.
 
 The CEO role MUST begin by determining whether the run is actually blocked or
 merely slow. If the run is blocked, the CEO MAY assume any run-owned artifact
@@ -66,6 +67,7 @@ stall diagnosis proves they are needed.
 - `../../runs/current/artifacts/**`
 - `../../runs/current/role-state/**`
 - `../../runs/current/orchestrator/pause-requested.md`
+- `../../runs/current/orchestrator/ceo-progress-followup-requested.md`
 - `../../runs/current/orchestrator/operator-action-required.md`
 - `../../runs/current/orchestrator/delivery-approved.md`
 - `../../runs/current/remarks.md`
@@ -87,6 +89,8 @@ stall diagnosis proves they are needed.
 The CEO role MUST:
 
 - start by deciding whether the run is truly blocked
+- treat an orchestrator-created `topic: progress-audit` note as a required
+  periodic review of whether the run is still making credible forward progress
 - treat an operator-created CEO inbox message as a high-priority control note
   that may reroute, pause, resume, narrow, or clarify the active work
 - treat a steering note that asks for a restart-from-phase-0 as authority to
@@ -107,6 +111,10 @@ The CEO role MUST:
 - write `runs/current/orchestrator/pause-requested.md` when the operator asked
   to pause or cleanly stop the current run and continue later with
   `scripts/run_playbook.sh --resume`
+- write `runs/current/orchestrator/ceo-progress-followup-requested.md` when
+  you had to intervene locally to unblock the run or when progress is still
+  fragile enough that the orchestrator should force CEO follow-up reviews on
+  each of the next 5 control loops
 - write `runs/current/orchestrator/operator-action-required.md` when the
   remaining blocker requires external operator intervention, environment
   provisioning, credentials, network access, or a policy decision the agents
@@ -135,6 +143,22 @@ The CEO role MUST:
 The CEO role MUST NOT silently bypass segmentation. It may load broad context
 only because the orchestrator explicitly declared a stall or the operator
 explicitly targeted the CEO role.
+
+## Progress audit rule
+
+The orchestrator may periodically queue a CEO `topic: progress-audit` note
+after roughly every 25 non-CEO Codex turn JSONL files.
+
+That periodic review is not a license to micromanage normal work. The CEO
+should:
+
+- confirm that the run is still advancing credibly
+- avoid intervening when the queue is simply busy but healthy
+- intervene only when the run is blocked, degraded, or drifting into fake
+  progress
+- request forced follow-up over the next 5 control loops by writing
+  `runs/current/orchestrator/ceo-progress-followup-requested.md` only when the
+  unblock work needs short-horizon monitoring
 
 ## Operator steering rule
 

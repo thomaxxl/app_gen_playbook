@@ -22,15 +22,17 @@ from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 Base = declarative_base()
 
 
-def build_engine(settings) -> Engine:
-    settings.db_path.parent.mkdir(parents=True, exist_ok=True)
+def build_engine(database_url: str) -> Engine:
+    if database_url.startswith("sqlite:///"):
+        db_path = database_url.replace("sqlite:///", "")
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(
-        settings.database_url,
+        database_url,
         connect_args={"check_same_thread": False},
         future=True,
     )
 
-    if settings.database_url.startswith("sqlite"):
+    if database_url.startswith("sqlite"):
         @event.listens_for(engine, "connect")
         def enable_sqlite_foreign_keys(dbapi_connection, _connection_record):
             cursor = dbapi_connection.cursor()

@@ -13,15 +13,18 @@ reading the rest of the guide first.
 ````md
 # My App
 
-This project is a starter SAFRS + FastAPI + React-Admin application generated
-from the SAFRS app-development playbook.
+This project is a SAFRS + FastAPI + React-Admin run-observer application
+generated from the SAFRS app-development playbook.
+
+It is intended to read current-run status from the mirrored
+`run_dashboard.sqlite3` data set in read-only mode.
 
 ## Structure
 
 - `.gitignore`: standalone-repo ignore policy for the generated app
-- `backend/`: FastAPI + SQLAlchemy + LogicBank + SAFRS
+- `backend/`: FastAPI + SQLAlchemy + SAFRS over the mirrored run-dashboard DB
 - `frontend/`: Vite + React-Admin + `safrs-jsonapi-client`
-- `reference/admin.yaml`: frontend contract
+- `reference/admin.yaml`: observer API contract
 - `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together

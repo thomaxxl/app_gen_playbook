@@ -73,10 +73,8 @@ def repo_skill_install_hint(repo_root: Path, skill_name: str) -> str:
     source_dir = repo_root / "skills" / skill_name
     install_dir = repo_root / ".codex" / "skills" / skill_name
     return (
-        f"missing repo skill '{skill_name}'. Install it before startup, for example:\n"
+        f"missing repo skill '{skill_name}'. Copy it into .codex/skills before startup, for example:\n"
         f"    mkdir -p {repo_root / '.codex' / 'skills'}\n"
-        f"    ln -s {source_dir} {install_dir}\n"
-        f"  or:\n"
         f"    cp -a {source_dir} {install_dir}"
     )
 

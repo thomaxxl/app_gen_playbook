@@ -31,8 +31,9 @@ The orchestrator MUST:
 - stop and surface a clear reason when the run becomes non-progressing
 - treat missing or placeholder quality evidence as a gate blocker, not as an
   optional review detail
-- keep the CEO role dormant unless a stall candidate is detected or the
-  operator explicitly targets the CEO role
+- keep the CEO role mostly dormant unless a stall candidate is detected, a
+  periodic progress audit is due, or the operator explicitly targets the CEO
+  role
 - require an independent QA validation turn after product acceptance and
   before CEO final delivery approval
 - validate handoff inputs before dispatching the receiver
@@ -206,9 +207,10 @@ and SHOULD cover:
 - Docker availability as an optional check
 
 If a required repo-local skill is missing, the startup prerequisite artifact
-MUST surface a concrete install recommendation using the local repo copy
+MUST surface a concrete copy-install recommendation using the local repo copy
 under `app_gen_playbook/skills/<name>` and the matching install target under
-`app_gen_playbook/.codex/skills/<name>`.
+`app_gen_playbook/.codex/skills/<name>`, for example by recommending
+`cp -a app_gen_playbook/skills/<name> app_gen_playbook/.codex/skills/<name>`.
 
 Before entering the main control loop for a run that already has
 `app/frontend/package.json`, the orchestrator MUST run that execution
@@ -528,6 +530,18 @@ MUST be treated as a high-priority control note. After exception-lane routing,
 the orchestrator MUST run CEO before recovery synthesis, Product Manager,
 Architect, Deployment, or Phase-5 background-worker checks.
 
+The orchestrator MUST also schedule a periodic CEO progress audit after
+roughly every 25 non-CEO Codex turn JSONL files unless a CEO note is already
+pending. That audit MUST use a normal CEO inbox note with
+`topic: progress-audit` so the usual validation, remarks, and archive rules
+still apply.
+
+If CEO directly unblocks the run during a periodic progress audit, CEO MAY
+write `runs/current/orchestrator/ceo-progress-followup-requested.md`. When
+that marker appears, the orchestrator MUST force a CEO progress-audit review
+on each of the next 5 control loops, consuming the marker into runner-owned
+audit state so the follow-up survives resume and self-reexec.
+
 That rule allows an operator to steer a live run by writing a normal inbox
 message directly into the CEO lane without modifying the runner process itself.
 
@@ -574,6 +588,9 @@ When `--resume` is used, the orchestrator MUST:
 - archive `runs/current/orchestrator/kill-requested.md` if it exists, because
   runner startup is an explicit operator decision to continue after a forced
   stop
+- consume `runs/current/orchestrator/ceo-progress-followup-requested.md` into
+  runner-owned progress-audit state if it exists, because a follow-up request
+  created just before restart MUST not be lost
 - run a queue-recovery pass before continuing normal scheduling when
   completion still fails
 

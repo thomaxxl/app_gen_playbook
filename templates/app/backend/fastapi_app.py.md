@@ -1,97 +1,43 @@
-# `backend/src/my_app/fastapi_app.py`
-
-See also:
-
-- [../../../specs/contracts/backend/README.md](../../../specs/contracts/backend/README.md)
-- [../../../specs/contracts/rules/README.md](../../../specs/contracts/rules/README.md)
-- [../../../specs/contracts/backend/runtime-and-startup.md](../../../specs/contracts/backend/runtime-and-startup.md)
-- [../../../specs/contracts/backend/bootstrap-and-db-lifecycle.md](../../../specs/contracts/backend/bootstrap-and-db-lifecycle.md)
-- [../../../specs/contracts/rules/lifecycle.md](../../../specs/contracts/rules/lifecycle.md)
-
-This is the core FastAPI app shape used by the current validation apps.
-
-```python
 from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.requests import Request
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from logic_bank.util import ConstraintException
+from fastapi.responses import FileResponse, RedirectResponse
 from safrs.fastapi.api import SafrsFastAPI
 
-from .bootstrap import seed_reference_data, validate_admin_schema
+from .bootstrap import validate_admin_schema, validate_observer_database
 from .config import get_settings
-from .db import (
-    Base,
-    bind_safrs_db,
-    build_engine,
-    build_session_factory,
-    session_scope,
-)
+from .db import bind_safrs_db, build_engine, build_session_factory
 from .models import EXPOSED_MODELS
-from .rules import activate_logic
 
 
-def jsonapi_error_response(status_code: int, detail: str) -> JSONResponse:
-    return JSONResponse(
-        status_code=status_code,
-        content={
-            "jsonapi": {"version": "1.0"},
-            "errors": [
-                {
-                    "status": str(status_code),
-                    "title": "ValidationError",
-                    "detail": detail,
-                }
-            ],
-        },
-    )
+def _configure_read_only_models() -> None:
+    for model in EXPOSED_MODELS:
+        model.http_methods = ["GET"]
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    engine = build_engine(settings)
+    engine = build_engine(settings.database_url)
+    validate_observer_database(engine)
     session_factory = build_session_factory(engine)
     bind_safrs_db(session_factory)
-    Base.metadata.create_all(engine)
     validate_admin_schema(settings)
-    activate_logic(session_factory)
-    with session_scope(session_factory) as session:
-        seed_reference_data(session)
 
     app = FastAPI(
-        title="My App SAFRS API",
+        title="Run Observer API",
         docs_url=None,
         redoc_url=None,
         openapi_url="/jsonapi.json",
     )
 
     @app.middleware("http")
-    async def cleanup_session(request, call_next):
+    async def cleanup_session(request: Request, call_next):  # noqa: ARG001
         try:
             return await call_next(request)
         finally:
             session_factory.remove()
-
-    @app.exception_handler(ConstraintException)
-    async def handle_constraint_exception(
-        _request: Request,
-        exc: ConstraintException,
-    ) -> JSONResponse:
-        return jsonapi_error_response(400, str(exc))
-
-    api = SafrsFastAPI(app, prefix=settings.api_prefix)
-    app.state.safrs_api = api
-    app.state.engine = engine
-    app.state.session_factory = session_factory
-
-    for model in EXPOSED_MODELS:
-        api.expose_object(model)
-
-    @app.get("/", include_in_schema=False)
-    def root() -> RedirectResponse:
-        return RedirectResponse(url="/docs", status_code=307)
 
     @app.get("/docs", include_in_schema=False)
     def docs():
@@ -101,27 +47,35 @@ def create_app() -> FastAPI:
             swagger_ui_parameters=app.swagger_ui_parameters,
         )
 
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse(url="/docs", status_code=307)
+
     @app.get("/healthz", include_in_schema=False)
     def healthz() -> dict[str, object]:
-        return {"status": "ok", "framework": "fastapi"}
+        return {
+            "status": "ok",
+            "database": str(settings.db_path),
+            "framework": "fastapi+safrs",
+            "mode": "run-observer",
+        }
 
     @app.get("/ui/admin/admin.yaml", include_in_schema=False)
     def admin_yaml() -> FileResponse:
         return FileResponse(settings.admin_yaml_path, media_type="text/yaml")
 
+    @app.get("/swagger.json", include_in_schema=False)
+    def swagger_json() -> dict[str, object]:
+        return app.openapi()
+
+    api = SafrsFastAPI(app, prefix=settings.api_prefix)
+    app.state.safrs_api = api
+    app.state.engine = engine
+    app.state.session_factory = session_factory
+
+    _configure_read_only_models()
+
+    for model in EXPOSED_MODELS:
+        api.expose_object(model)
+
     return app
-```
-
-Notes:
-
-- Keep `/jsonapi.json` canonical for FastAPI SAFRS.
-- Serve `admin.yaml` from the backend so the frontend can stay same-origin.
-- Put the root redirect on `/docs`, not a JSON metadata response.
-- Convert LogicBank `ConstraintException` failures into JSON:API `400`
-  responses so rule errors stay transport-stable.
-- Activate LogicBank against the real app session factory before seed/bootstrap.
-- Perform `admin.yaml` validation and idempotent seed/bootstrap before exposing
-  SAFRS routes.
-- If uploads are enabled, apply
-  `templates/features/uploads/backend/fastapi_app.uploads.patch.md` rather
-  than editing ad hoc comments inside this file.

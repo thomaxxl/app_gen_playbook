@@ -6,110 +6,75 @@ See also:
 - [../../../specs/contracts/backend/validation.md](../../../specs/contracts/backend/validation.md)
 
 ```python
-import pytest
+import shutil
 from pathlib import Path
 
+import pytest
+
 from my_app import create_app
-from my_app.bootstrap import validate_admin_schema
+from my_app.bootstrap import validate_admin_schema, validate_observer_database
 from my_app.config import get_settings
-from my_app.db import session_scope
-from my_app.models import Collection, Item, Status
-from sqlalchemy.exc import IntegrityError
+from my_app.db import build_engine, session_scope
+from my_app.models import ArtifactPackage, Run, RunFile
+
+REQUIRED_RESOURCES = {
+    "Project",
+    "Run",
+    "RunPhaseStatus",
+    "ArtifactPackage",
+    "Artifact",
+    "HandoffMessage",
+    "Blocker",
+    "EvidenceItem",
+    "VerificationCheck",
+    "WorkerState",
+    "OrchestratorEvent",
+    "RunFile",
+    "ChangeRequest",
+}
 
 
-def configure_test_env(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("MY_APP_DB_PATH", str(tmp_path / "bootstrap.sqlite"))
+def configure_test_env(monkeypatch, tmp_path: Path, copy_observer_db: bool = True) -> Path:
+    app_root = Path(__file__).resolve().parents[2]
+    playbook_root = app_root.parent
+    db_path = tmp_path / "observer.sqlite3"
+    if copy_observer_db:
+        shutil.copy2(playbook_root / "run_dashboard" / "run_dashboard.sqlite3", db_path)
+    monkeypatch.setenv("MY_APP_DB_PATH", str(db_path))
     monkeypatch.setenv(
         "MY_APP_ADMIN_YAML_PATH",
-        str(Path(__file__).resolve().parents[2] / "reference" / "admin.yaml"),
+        str(app_root / "reference" / "admin.yaml"),
     )
+    return db_path
 
 
 def test_admin_schema_has_required_resources(monkeypatch, tmp_path):
     configure_test_env(monkeypatch, tmp_path)
     schema = validate_admin_schema(get_settings())
-    assert "Collection" in schema["resources"]
-    assert "Item" in schema["resources"]
-    assert "Status" in schema["resources"]
+    assert REQUIRED_RESOURCES.issubset(set(schema["resources"]))
 
 
-def test_second_startup_does_not_duplicate_seed(monkeypatch, tmp_path):
+def test_observer_startup_reads_mirrored_run_data(monkeypatch, tmp_path):
     configure_test_env(monkeypatch, tmp_path)
-    create_app()
     app = create_app()
 
     session_factory = app.state.session_factory
     with session_scope(session_factory) as session:
-        assert session.query(Status).count() == 3
-        assert session.query(Collection).count() == 1
-        assert session.query(Item).count() == 2
-        collection = session.query(Collection).one()
-        assert collection.item_count == 2
+        assert session.query(Run).count() > 0
+        assert session.query(ArtifactPackage).count() > 0
+        assert session.query(RunFile).count() > 0
 
 
-def test_deleting_collection_deletes_items(monkeypatch, tmp_path):
-    configure_test_env(monkeypatch, tmp_path)
-    app = create_app()
-    session_factory = app.state.session_factory
+def test_validate_observer_database_rejects_empty_sqlite(monkeypatch, tmp_path):
+    db_path = configure_test_env(monkeypatch, tmp_path, copy_observer_db=False)
+    engine = build_engine(f"sqlite:///{db_path}")
 
-    with session_scope(session_factory) as session:
-        collection = session.query(Collection).one()
-        session.delete(collection)
-
-    with session_scope(session_factory) as session:
-        assert session.query(Collection).count() == 0
-        assert session.query(Item).count() == 0
-
-
-def test_deleting_referenced_status_fails(monkeypatch, tmp_path):
-    configure_test_env(monkeypatch, tmp_path)
-    app = create_app()
-    session_factory = app.state.session_factory
-
-    with pytest.raises(IntegrityError):
-        with session_scope(session_factory) as session:
-            status = session.get(Status, 1)
-            assert status is not None
-            session.delete(status)
-
-    with session_scope(session_factory) as session:
-        assert session.query(Status).count() == 3
-        assert session.query(Item).count() == 2
-
-
-def test_items_require_collection_id_and_status_id(monkeypatch, tmp_path):
-    configure_test_env(monkeypatch, tmp_path)
-    app = create_app()
-    session_factory = app.state.session_factory
-
-    with pytest.raises(IntegrityError):
-        with session_scope(session_factory) as session:
-            session.add(
-                Item(
-                    title="Broken item",
-                    estimate_hours=1.0,
-                    completed_at=None,
-                    collection_id=None,
-                    status_id=None,
-                )
-            )
-
-
-def test_item_update_rejects_null_required_foreign_key(monkeypatch, tmp_path):
-    configure_test_env(monkeypatch, tmp_path)
-    app = create_app()
-    session_factory = app.state.session_factory
-
-    with pytest.raises(IntegrityError):
-        with session_scope(session_factory) as session:
-            item = session.get(Item, 1)
-            assert item is not None
-            item.status_id = None
+    with pytest.raises(RuntimeError):
+        validate_observer_database(engine)
 ```
 
 Notes:
 
-- This file is still expected to use the normal local integration/runtime path
-  first.
-- If local HTTP/ASGI verification is broken, document the fallback path using
-  `../../../specs/contracts/backend/verification-fallbacks.md`.
+- This observer app is read-only and should not seed placeholder PM data.
+- Validation should prove the mirrored run-dashboard database exists and is
+  usable, not that a starter seed can create demo rows.

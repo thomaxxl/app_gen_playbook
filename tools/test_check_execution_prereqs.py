@@ -102,7 +102,8 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
         self.assertEqual(result.status, "blocked")
         self.assertIn("openapi-to-admin-yaml", result.detail)
-        self.assertIn("ln -s", result.detail)
+        self.assertIn("cp -a", result.detail)
+        self.assertNotIn("ln -s", result.detail)
         self.assertIn(".codex/skills", result.detail)
 
     def test_check_repo_local_skills_accepts_installed_required_repo_skills(self) -> None:

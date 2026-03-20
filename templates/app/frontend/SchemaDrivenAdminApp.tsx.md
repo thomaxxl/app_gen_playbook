@@ -1,4 +1,4 @@
-# `frontend/src/shared-runtime/SchemaDrivenAdminApp.tsx`
+# `frontend/src/SchemaDrivenAdminApp.tsx`
 
 See also:
 
@@ -15,19 +15,20 @@ import Typography from "@mui/material/Typography";
 import { Component, startTransition, useEffect, useState } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { Admin } from "react-admin";
-import type { DataProvider } from "react-admin";
-import type { Schema } from "safrs-jsonapi-client";
+import type { DataProvider, LayoutProps } from "react-admin";
+import type { ComponentType } from "react";
+import type { Schema } from "./shared-runtime/admin/adminSchema";
 
-import ErrorState from "../ErrorState";
-import type { RawAdminYaml } from "./admin/resourceMetadata";
+import ErrorState from "./ErrorState";
+import type { RawAdminYaml } from "./shared-runtime/admin/resourceMetadata";
 
 import {
   AdminSchemaProvider,
   type AdminAppConfig,
   loadAdminBootstrap,
-} from "./admin/schemaContext";
-import { buildResources } from "./resourceRegistry";
-import type { ResourcePages } from "./resourceRegistry";
+} from "./shared-runtime/admin/schemaContext";
+import { buildResources } from "./shared-runtime/resourceRegistry";
+import type { ResourcePages } from "./shared-runtime/resourceRegistry";
 
 interface BootstrapState {
   dataProvider: DataProvider;
@@ -80,10 +81,12 @@ function RenderedResourceElements({
 
 export function SchemaDrivenAdminApp({
   appConfig,
+  layout,
   resourcePages,
   children,
 }: {
   appConfig: AdminAppConfig;
+  layout?: ComponentType<LayoutProps>;
   resourcePages: ResourcePages[];
   children?: ReactNode;
 }) {
@@ -144,6 +147,7 @@ export function SchemaDrivenAdminApp({
         <Admin
           dataProvider={bootstrap.dataProvider}
           disableTelemetry
+          layout={layout}
           title={appConfig.title}
         >
           {children}
