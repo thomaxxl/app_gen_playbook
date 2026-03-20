@@ -117,6 +117,10 @@ npm run test:e2e
 npm run capture:ui-previews
 ```
 
+Inside the playbook, the preferred browser-driving wrapper for those commands
+is the repo-local `playwright-skill`. The app commands above remain the
+generated app's own test/capture entrypoints.
+
 `npm run capture:ui-previews` saves intentional success-case screenshots for
 product review. When the app still lives inside the playbook repo, the default
 output path is `../runs/current/evidence/ui-previews/`. In a standalone app

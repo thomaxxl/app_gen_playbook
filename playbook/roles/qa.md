@@ -55,6 +55,11 @@ The QA agent MUST:
   execution context
 - perform basic user testing against the real running app, not only file or
   route inspection
+- ignore mobile/narrow-screen issues unless the run-owned UX artifacts
+  explicitly kept mobile in scope
+- use the repo-local `playwright-skill` as the default browser automation lane
+  for live QA checks, screenshot review support, and reproducible browser
+  walkthroughs
 - fail the review if the frontend is blank, visibly crashed, flickering from
   obvious request loops, or showing runtime error surfaces
 - fail the review if the backend logs or live behavior show unhandled runtime
@@ -66,6 +71,14 @@ The QA agent MUST:
   alone as a substitute for live QA
 - record the tested paths, observed results, and any blockers in
   `../../runs/current/evidence/qa-delivery-review.md`
+- when QA passes, use the canonical pass vocabulary in
+  `qa-delivery-review.md`:
+  - `qa_decision: pass`
+  - `run_sh_validation: pass`
+  - `basic_user_testing: pass`
+  - `frontend_runtime_errors: pass`
+  - `backend_runtime_errors: pass`
+  - `metadata_leakage: pass-on-tested-surfaces`
 - create downstream inbox notes for the owning roles when QA fails
 - approve delivery only when the app behaves as a usable product surface
 

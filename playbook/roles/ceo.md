@@ -112,6 +112,12 @@ The CEO role MUST:
   provisioning, credentials, network access, or a policy decision the agents
   cannot make after local playbook, runner, artifact, and `app/` repair paths
   have been exhausted
+- treat any fatal tagged `fatal-error-operator-escalation` as outside the CEO
+  unblock lane; those failures are routed straight to operator handling and do
+  not require CEO repair attempts
+- in particular, missing or unusable required Python/npm dependency state is
+  not a CEO repair lane; package install/use failures should already be tagged
+  for direct operator escalation
 - approve or reject any pending non-success playbook termination before the
   orchestrator exits by either restoring progress, writing
   `runs/current/orchestrator/operator-action-required.md`, or writing

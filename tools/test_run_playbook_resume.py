@@ -28,12 +28,12 @@ def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:
     (repo_root / "runs" / "current" / "evidence").mkdir(parents=True, exist_ok=True)
     (repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md").write_text(
         "---\nstatus: ready-for-handoff\n---\n\n"
-        "- qa_decision: approved\n"
-        "- run_sh_validation: passed\n"
-        "- basic_user_testing: passed\n"
-        "- frontend_runtime_errors: none\n"
-        "- backend_runtime_errors: none\n"
-        "- metadata_leakage: none\n"
+        "- qa_decision: pass\n"
+        "- run_sh_validation: pass\n"
+        "- basic_user_testing: pass\n"
+        "- frontend_runtime_errors: pass\n"
+        "- backend_runtime_errors: pass\n"
+        "- metadata_leakage: pass-on-tested-surfaces\n"
         "- review_summary: final qa pass approved\n",
         encoding="utf-8",
     )
@@ -70,6 +70,89 @@ def browser_fallback_signature_for_test(
 
 
 class RunPlaybookResumeTests(unittest.TestCase):
+    def test_resume_missing_current_run_becomes_operator_escalation(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("run requires operator action", result.stderr)
+            self.assertTrue((repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").exists())
+            operator_action = (
+                repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("fatal-error-operator-escalation", operator_action)
+            self.assertIn("Cannot resume because runs/current/ does not exist.", operator_action)
+
+    def test_resume_phase6_empty_admin_yaml_becomes_operator_escalation(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "artifacts" / "architecture").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "reference").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "reference" / "admin.yaml").write_text("\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"phase-6-integration-review","change_id":""}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md").write_text(
+                textwrap.dedent(
+                    """\
+                    ---
+                    owner: architect
+                    phase: phase-6-integration-review
+                    status: blocked
+                    last_updated_by: architect
+                    ---
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(tools_dir / "session_registry.py", "#!/usr/bin/env python3\nraise SystemExit(0)\n")
+            write_executable(tools_dir / "reconcile_worker_state.py", "#!/usr/bin/env python3\nraise SystemExit(0)\n")
+            write_executable(tools_dir / "check_run_recoverability.py", "#!/usr/bin/env python3\nraise SystemExit(0)\n")
+            write_executable(tools_dir / "checkpoint_run_state.py", "#!/usr/bin/env python3\nraise SystemExit(0)\n")
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("run requires operator action", result.stderr)
+            operator_action = (
+                repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("fatal-error-operator-escalation", operator_action)
+            self.assertIn("app/reference/admin.yaml exists but is empty", operator_action)
+
     def test_resume_does_not_queue_product_acceptance_when_integration_review_is_blocked(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
 
@@ -794,10 +877,13 @@ class RunPlaybookResumeTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 1, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
             self.assertIn("error: run requires operator action", result.stderr)
-            self.assertIn("Execution environment preflight failed before run startup.", result.stderr)
+            self.assertIn("execution environment preflight failed before run startup", result.stderr.lower())
             operator_action = repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md"
             self.assertTrue(operator_action.exists())
-            self.assertIn("execution-prereqs.md", operator_action.read_text(encoding="utf-8"))
+            operator_action_text = operator_action.read_text(encoding="utf-8")
+            self.assertIn("execution-prereqs.md", operator_action_text)
+            self.assertIn("fatal-error-operator-escalation", operator_action_text)
+            self.assertIn("missing node_modules", operator_action_text)
 
     def test_resume_clears_stale_execution_prereq_operator_action_when_prereqs_are_now_ready(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]

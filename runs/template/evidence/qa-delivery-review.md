@@ -16,3 +16,16 @@ starter_status: pending-review-evidence
 - backend_runtime_errors: pending
 - metadata_leakage: pending
 - review_summary: pending
+
+Accepted pass values for final approval are:
+
+- `qa_decision: pass`
+- `run_sh_validation: pass`
+- `basic_user_testing: pass`
+- `frontend_runtime_errors: pass`
+- `backend_runtime_errors: pass`
+- `metadata_leakage: pass-on-tested-surfaces`
+
+Legacy-compatible equivalents such as `approved`, `passed`, and `none` are
+also accepted by the runner, but QA should prefer the `pass` vocabulary above
+for new reviews.

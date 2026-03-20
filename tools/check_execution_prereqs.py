@@ -17,8 +17,7 @@ from pathlib import Path
 
 PORT_BIND_RETRY_ATTEMPTS = 20
 PORT_BIND_RETRY_DELAY_SECONDS = 0.5
-
-
+REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 @dataclass
 class CheckResult:
     name: str
@@ -58,6 +57,59 @@ def frontend_tool_path(repo_root: Path, name: str) -> Path:
 
 def runtime_environment() -> str:
     return os.environ.get("PLAYBOOK_RUNTIME_ENV", "host").strip() or "host"
+
+
+def repo_declared_skill_names(repo_root: Path) -> list[str]:
+    skills_root = repo_root / "skills"
+    if not skills_root.exists():
+        return []
+    names: list[str] = []
+    for skill_file in sorted(skills_root.glob("*/SKILL.md")):
+        names.append(skill_file.parent.name)
+    return names
+
+
+def repo_skill_install_hint(repo_root: Path, skill_name: str) -> str:
+    source_dir = repo_root / "skills" / skill_name
+    install_dir = repo_root / ".codex" / "skills" / skill_name
+    return (
+        f"missing repo skill '{skill_name}'. Install it before startup, for example:\n"
+        f"    mkdir -p {repo_root / '.codex' / 'skills'}\n"
+        f"    ln -s {source_dir} {install_dir}\n"
+        f"  or:\n"
+        f"    cp -a {source_dir} {install_dir}"
+    )
+
+
+def check_repo_local_skills(repo_root: Path) -> CheckResult:
+    declared_skills = repo_declared_skill_names(repo_root)
+    expected_skills = sorted(set(declared_skills).union(REQUIRED_REPO_SKILLS))
+
+    missing: list[str] = []
+    installed: list[str] = []
+    for skill_name in expected_skills:
+        installed_skill = repo_root / ".codex" / "skills" / skill_name / "SKILL.md"
+        if installed_skill.exists():
+            installed.append(skill_name)
+        else:
+            missing.append(skill_name)
+
+    if not missing:
+        return CheckResult(
+            "repo_skills",
+            "ok",
+            "repo-local skills installed: " + ", ".join(installed),
+        )
+
+    detail_lines = [
+        "required repo-local skills must be installed from skills/ into .codex/skills",
+        f"required default skills: {', '.join(REQUIRED_REPO_SKILLS)}",
+        f"missing repo-local skills from .codex/skills: {', '.join(missing)}",
+    ]
+    for skill_name in missing:
+        detail_lines.append(repo_skill_install_hint(repo_root, skill_name))
+    return CheckResult("repo_skills", "blocked", "\n".join(detail_lines))
+
 
 def check_local_socket_capability() -> CheckResult:
     sock: socket.socket | None = None
@@ -332,6 +384,7 @@ def main() -> int:
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),
+        check_repo_local_skills(repo_root),
         check_local_socket_capability(),
         check_port_bind(repo_root),
         check_playwright_screenshot(repo_root),

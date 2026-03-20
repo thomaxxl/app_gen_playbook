@@ -154,6 +154,7 @@ RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"
 DELIVERY_APPROVED_MD="$ORCH_ROOT/delivery-approved.md"
+FATAL_ERROR_OPERATOR_ESCALATION_TAG="fatal-error-operator-escalation"
 RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
 BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES="$ORCH_ROOT/browser-fallback-product-acceptance.signatures"
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
@@ -308,19 +309,19 @@ maybe_backup_current_run_before_new() {
       n|no|"")
         fatal_exit \
           "new run blocked by existing runs/current" \
-          "A previous run exists at runs/current.\n\nUse one of:\n- run with --mode new and accept backup\n- manually archive or remove runs/current\n- run with --resume"
+          "fatal-error-operator-escalation\n\nA previous run exists at runs/current.\n\nUse one of:\n- run with --mode new and accept backup\n- manually archive or remove runs/current\n- run with --resume"
         ;;
       *)
         fatal_exit \
           "invalid response for current-run backup prompt" \
-          "Please answer y or n when asked to back up runs/current."
+          "fatal-error-operator-escalation\n\nPlease answer y or n when asked to back up runs/current."
         ;;
     esac
   else
     if [[ "$PLAYBOOK_YOLO" -ne 1 ]]; then
       fatal_exit \
         "new run blocked by existing runs/current" \
-        "No interactive TTY is available to confirm backup. Re-run with --yolo to auto-backup before a new run, or manually archive/remove runs/current."
+        "fatal-error-operator-escalation\n\nNo interactive TTY is available to confirm backup. Re-run with --yolo to auto-backup before a new run, or manually archive/remove runs/current."
     fi
   fi
 
@@ -328,7 +329,7 @@ maybe_backup_current_run_before_new() {
   if ! backup_output="$("$SCRIPT_DIR/save_run.sh" --name "pre-new-run" 2>&1)"; then
     fatal_exit \
       "failed to back up existing runs/current" \
-      "Save step failed before running reset_current_run.py.\n\n$backup_output"
+      "fatal-error-operator-escalation\n\nSave step failed before running reset_current_run.py.\n\n$backup_output"
   fi
 
   backup_path="$(tail -n 1 <<< "$backup_output" | awk '{print $NF}')"
@@ -766,6 +767,10 @@ enforce_startup_execution_prereqs() {
     detail="$detail"
   fi
 
+  if dependency_failure_requires_operator_escalation "$detail"; then
+    detail="${FATAL_ERROR_OPERATOR_ESCALATION_TAG}"$'\n\n'"Prerequisite artifact:\n- ${output_path#$ROOT/}\n\n$detail"
+  fi
+
   mkdir -p "$ORCH_ROOT"
   cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
 # Operator Action Required
@@ -779,6 +784,8 @@ Required checks:
 - backend dependency/runtime availability
 - frontend dependency availability
 - frontend preview entrypoint presence
+- required repo-local skills are installed from skills/ into .codex/skills/
+  (`playwright-skill` and `openapi-to-admin-yaml`)
 - local socket creation / loopback capability in the current execution context
 - localhost port binding in the current execution context
 - Playwright screenshot capability
@@ -1391,12 +1398,12 @@ EOF
 qa_delivery_review_approved() {
   [[ -f "$QA_DELIVERY_REVIEW_MD" ]] || return 1
   grep -Eq '^status:[[:space:]]*(ready-for-handoff|approved)$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?qa_decision:[[:space:]]*approved[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?run_sh_validation:[[:space:]]*passed[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?basic_user_testing:[[:space:]]*passed[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?frontend_runtime_errors:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?backend_runtime_errors:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?metadata_leakage:[[:space:]]*none[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?qa_decision:[[:space:]]*(approved|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?run_sh_validation:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?basic_user_testing:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?frontend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?backend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?metadata_leakage:[[:space:]]*(none|pass-on-tested-surfaces)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?review_summary:[[:space:]]*.+$' "$QA_DELIVERY_REVIEW_MD" || return 1
 }
 
@@ -1592,9 +1599,49 @@ set_run_status() {
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
 }
 
+fatal_error_requires_operator_escalation() {
+  local title="$1"
+  local body="$2"
+  grep -Fqi "$FATAL_ERROR_OPERATOR_ESCALATION_TAG" <<<"$title"$'\n'"$body"
+}
+
+write_operator_action_required_for_fatal_escalation() {
+  local title="$1"
+  local body="$2"
+  mkdir -p "$ORCH_ROOT"
+  cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
+# Operator Action Required
+
+Playbook execution hit a fatal condition that is explicitly marked for direct
+operator handling.
+
+Tag:
+- $FATAL_ERROR_OPERATOR_ESCALATION_TAG
+
+Reason:
+- $title
+
+Notes:
+- this tagged fatal path bypasses CEO recovery review
+- resolve the underlying operator-owned issue, then update or remove this file
+  and resume the run if appropriate
+
+$body
+EOF
+}
+
+dependency_failure_requires_operator_escalation() {
+  local detail="$1"
+  grep -Eqi '(`python_venv`:\s*`blocked`|`node_packages`:\s*`blocked`|`repo_skills`:\s*`blocked`|missing backend python|dependency imports failed|missing node_modules|missing vite executable|missing playwright executable|missing repo-local skills|missing playwright-skill|missing openapi-to-admin-yaml)' <<<"$detail"
+}
+
 fatal_exit() {
   local title="$1"
   local body="$2"
+  if fatal_error_requires_operator_escalation "$title" "$body"; then
+    write_operator_action_required_for_fatal_escalation "$title" "$body"
+    operator_action_required_exit
+  fi
   log "fatal: $title"
   append_run_remark "$title" "$body"
   set_run_status "interrupted"
@@ -1815,6 +1862,44 @@ clear_pause_requested_on_resume() {
   return 0
 }
 
+run_status_current_phase() {
+  [[ -f "$RUN_STATUS_JSON" ]] || return 1
+  python3 - "$RUN_STATUS_JSON" <<'PY'
+from __future__ import annotations
+import json, sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+payload = json.loads(path.read_text(encoding="utf-8"))
+print(str(payload.get("current_phase", "")).strip())
+PY
+}
+
+phase6_integration_review_active() {
+  local current_phase=""
+  current_phase="$(run_status_current_phase || true)"
+  [[ "$current_phase" == "phase-6-integration-review" ]] && return 0
+
+  local integration_review="$RUN_ROOT/artifacts/architecture/integration-review.md"
+  [[ -f "$integration_review" ]] || return 1
+  grep -Eq '^phase:[[:space:]]*phase-6-integration-review$' "$integration_review" || return 1
+  grep -Eq '^status:[[:space:]]*(in-progress|blocked|ready-for-handoff|approved)$' "$integration_review"
+}
+
+admin_yaml_is_empty() {
+  local admin_yaml="$ROOT/app/reference/admin.yaml"
+  [[ -f "$admin_yaml" ]] || return 1
+  [[ -z "$(tr -d '[:space:]' < "$admin_yaml")" ]]
+}
+
+enforce_phase6_admin_yaml_nonempty() {
+  phase6_integration_review_active || return 0
+  admin_yaml_is_empty || return 0
+  fatal_exit \
+    "phase-6 integration review blocked by empty admin.yaml" \
+    "fatal-error-operator-escalation\n\nPhase 6 integration review cannot continue because app/reference/admin.yaml exists but is empty.\n\nRequired operator action:\n- restore or regenerate app/reference/admin.yaml\n- if the file is generated, restart the backend and regenerate it from the live /jsonapi.json input\n- then resume the run"
+}
+
 stall_exit() {
   local reason="$1"
   local completion_detail="$2"
@@ -1869,6 +1954,17 @@ attempt_ceo_termination_review() {
   local reason="$1"
   local detail="$2"
   local ceo_pending note_path
+
+  if fatal_error_requires_operator_escalation "$reason" "$detail"; then
+    write_operator_action_required_for_fatal_escalation "$reason" "$detail"
+    append_recovery_log \
+      "Operator Escalation Tagged Fatal" \
+      "Tagged fatal bypassed CEO review.\n\nReason:\n- $reason\n\nDetail:\n$detail"
+    append_run_remark \
+      "Operator Escalation Tagged Fatal" \
+      "Tagged fatal bypassed CEO review.\n\nReason:\n- $reason\n\nDetail:\n$detail"
+    return 2
+  fi
 
   [[ -d "$STATE_ROOT/ceo" ]] || return 2
   ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
@@ -2423,6 +2519,8 @@ maybe_enforce_dependency_provisioning_preflight() {
   if detail="$(dependency_provisioning_preflight 2>&1)"; then
     return 0
   fi
+
+  detail="${FATAL_ERROR_OPERATOR_ESCALATION_TAG}"$'\n\n'"$detail"
 
   mkdir -p "$ORCH_ROOT"
   cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
@@ -3299,20 +3397,20 @@ seed_new_run() {
 }
 
 seed_change_run() {
-  [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "Expected existing runs/current/ for $RUN_MODE_NAME."
-  [[ -d "$ROOT/app" ]] || fatal_exit "missing app baseline" "Expected existing app/ for $RUN_MODE_NAME."
+  [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "fatal-error-operator-escalation\n\nExpected existing runs/current/ for $RUN_MODE_NAME."
+  [[ -d "$ROOT/app" ]] || fatal_exit "missing app baseline" "fatal-error-operator-escalation\n\nExpected existing app/ for $RUN_MODE_NAME."
   ensure_current_run_shared_state
 
   rm -f "$DELIVERY_APPROVED_MD" "$CEO_DELIVERY_VALIDATION_MD"
 
   if ! baseline_output="$(python3 "$ROOT/tools/check_baseline_alignment.py" --repo-root "$ROOT" 2>&1)"; then
-    fatal_exit "baseline alignment precheck failed" "$baseline_output"
+    fatal_exit "baseline alignment precheck failed" "fatal-error-operator-escalation\n\n$baseline_output"
   fi
 
   if ! python3 "$ROOT/tools/prepare_iteration_workspace.py" --repo-root "$ROOT" >/dev/null 2>&1; then
     fatal_exit \
       "iteration workspace bootstrap failed" \
-      "Could not prepare the accepted portable baseline or change workspace for the requested iteration run."
+      "fatal-error-operator-escalation\n\nCould not prepare the accepted portable baseline or change workspace for the requested iteration run."
   fi
 
   cp "$INPUT_SRC" "$RUN_ROOT/input.md"
@@ -3343,7 +3441,7 @@ seed_change_run() {
 }
 
 prepare_resume() {
-  [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "Cannot resume because runs/current/ does not exist."
+  [[ -d "$RUN_ROOT" ]] || fatal_exit "missing current run" "fatal-error-operator-escalation\n\nCannot resume because runs/current/ does not exist."
   ensure_current_run_shared_state
   mkdir -p "$EVIDENCE_ROOT"
   python3 "$ROOT/tools/session_registry.py" init --registry "$SESSIONS_JSON" >/dev/null
@@ -3370,6 +3468,7 @@ PY
   reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
+  enforce_phase6_admin_yaml_nonempty
   clear_execution_prereqs_operator_action_required || true
   clear_superseded_operator_action_required || true
   clear_host_verified_operator_action_required || true
@@ -3389,6 +3488,7 @@ main_loop() {
 
   while true; do
     maybe_reexec_if_runtime_surface_changed "main-loop heartbeat" || true
+    enforce_phase6_admin_yaml_nonempty
     did_work=0
 
     if clear_superseded_operator_action_required; then

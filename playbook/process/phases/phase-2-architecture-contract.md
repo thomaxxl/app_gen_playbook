@@ -18,6 +18,10 @@ Convert product requirements into a stable cross-layer contract.
 - define generated vs copied vs custom files
 - define whether domain adaptation is required beyond the starter trio
 - define `admin.yaml` ownership and contract
+- define whether `admin.yaml` is hand-maintained, skill-generated, or
+  skill-generated then manually refined, with the Codex
+  `openapi-to-admin-yaml` skill as the default generation lane when backend
+  discovery/OpenAPI is the source
 - define query/search expectations the frontend relies on
 - define test obligations by layer
 - define whether dependency handling is `clean-install` or

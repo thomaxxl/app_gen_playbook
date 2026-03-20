@@ -193,10 +193,20 @@ and SHOULD cover:
 
 - backend venv availability
 - frontend `node_modules` availability
+- required repo-local skills are installed from
+  `app_gen_playbook/skills/` into `app_gen_playbook/.codex/skills/`
+  at minimum:
+  - `playwright-skill`
+  - `openapi-to-admin-yaml`
 - local socket creation / loopback capability
 - localhost port bind capability
 - Playwright screenshot capture capability
 - Docker availability as an optional check
+
+If a required repo-local skill is missing, the startup prerequisite artifact
+MUST surface a concrete install recommendation using the local repo copy
+under `app_gen_playbook/skills/<name>` and the matching install target under
+`app_gen_playbook/.codex/skills/<name>`.
 
 Before entering the main control loop for a run that already has
 `app/frontend/package.json`, the orchestrator MUST run that execution
@@ -224,6 +234,10 @@ For browser-level launcher proof, the playbook SHOULD maintain:
 The repository SHOULD provide a host-capable capture helper such as:
 
 - `tools/capture_frontend_browser_proof.py`
+
+That helper SHOULD use the repo-local `playwright-skill` as the default
+browser-driving lane when the skill is available, rather than relying on
+unstructured direct Playwright invocations.
 
 When the generated app exposes `npm run capture:ui-previews`, that helper
 SHOULD treat the app-provided capture script as the canonical screenshot
@@ -258,6 +272,24 @@ termination unless the terminating artifact was already produced by CEO.
 Worker-launch failures, Codex execution failures, and role-turn timeouts are
 also runner-owned non-success paths and MUST follow the same CEO review rule
 before the orchestrator exits.
+
+Exception: if the fatal reason or detail is explicitly tagged with
+`fatal-error-operator-escalation`, the orchestrator MUST bypass CEO review and
+write `runs/current/orchestrator/operator-action-required.md` directly. That
+tag means the failure is operator-owned or invocation/state-owned and is not a
+CEO repair lane.
+
+One explicit tagged case is Phase 6 integration review with an empty
+`app/reference/admin.yaml`. When Phase 6 is active and that file exists but is
+empty, the orchestrator MUST raise a tagged fatal operator escalation instead
+of asking CEO to repair the run.
+
+Another explicit tagged case is dependency/package failure. If startup
+execution preflight or dependency-provisioning preflight shows that required
+Python or npm dependencies cannot be installed, located, imported, or used,
+the orchestrator MUST raise a tagged fatal operator escalation instead of
+asking CEO to repair that dependency state.
+
 CEO approval of termination is expressed by either:
 
 - restoring progress so the run continues
@@ -270,6 +302,10 @@ delivery validation followed by explicit CEO delivery approval.
 The QA validation MUST include:
 
 - a `runs/current/evidence/qa-delivery-review.md` artifact
+- canonical pass fields in that artifact using the QA pass vocabulary
+  (`qa_decision: pass`, `run_sh_validation: pass`,
+  `basic_user_testing: pass`, `frontend_runtime_errors: pass`,
+  `backend_runtime_errors: pass`, `metadata_leakage: pass-on-tested-surfaces`)
 - a real `app/run.sh` validation path
 - basic user testing against the live app
 - explicit confirmation that the frontend is not blank, crashed, or still

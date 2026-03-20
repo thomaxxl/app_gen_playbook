@@ -13,6 +13,12 @@ This file defines the minimum backend validation checklist.
 
 ## Contract validation
 
+- when `reference/admin.yaml` is generated from backend discovery or
+  OpenAPI-derived input, the Codex `openapi-to-admin-yaml` skill is the
+  default generation lane unless the run-owned architecture explicitly records
+  a different approved method
+- when that skill is used, the generation input MUST come from the live
+  FastAPI `/jsonapi.json` exposed by the running backend
 - route-discovery reconciliation derives live collection paths from
   `app.routes`, `app.openapi()`, `/jsonapi.json`, or an equivalent approved
   source after model exposure and before `reference/admin.yaml` is treated as

@@ -18,7 +18,9 @@ Design the user journey and page behavior before implementation diverges.
 - define form grouping, content clarity, and field-level guidance
 - define loading/error/empty states
 - define success and destructive-confirmation behavior
-- define responsive expectations and mobile fallbacks
+- define responsive expectations and mobile fallbacks only if the run
+  explicitly chooses to care about mobile; otherwise mobile may be ignored for
+  now
 - define accessibility-visible behavior and any higher-risk accessibility notes
 - define custom-page behavior
 - define relationship display patterns
@@ -50,7 +52,8 @@ Design the user journey and page behavior before implementation diverges.
   defaulting to a raw React-admin grid as the first impression
 - the visible icon system and icon mapping decisions are documented in
   `iconography.md` even when the run keeps the default icon wrapper behavior
-- responsive behavior is documented for the critical flows
+- responsive/mobile behavior is documented only when the run explicitly keeps
+  mobile in scope; otherwise mobile may be ignored and is non-blocking
 - accessibility baseline expectations and any non-default route-level notes are
   documented
 - any mirrored frontend validation is traceable to approved business-rule IDs

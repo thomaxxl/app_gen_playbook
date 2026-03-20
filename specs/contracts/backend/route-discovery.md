@@ -9,12 +9,17 @@ The implementation MUST follow this sequence:
 
 1. choose provisional `admin.yaml endpoint` values from
    `../../architecture/resource-naming.md`
-2. generate backend code and `reference/admin.yaml`
-3. start the backend
-4. query the running backend to discover live collection paths and JSON:API
+2. generate backend code
+3. start the FastAPI backend
+4. query the running backend's `/jsonapi.json` and related live routes to
+   discover collection paths and JSON:API
    wire `type` values
-5. compare those live values with `admin.yaml`
-6. if they differ, update `admin.yaml` and any dependent tests or frontend
+5. generate or refresh `reference/admin.yaml` through the Codex
+   `openapi-to-admin-yaml` skill when the file is being derived from
+   OpenAPI-shaped backend discovery rather than hand-maintained as a custom
+   exception
+6. compare those live values with `admin.yaml`
+7. if they differ, update `admin.yaml` and any dependent tests or frontend
    wiring so the checked-in contract matches the running backend
 
 The implementation MUST NOT leave this reconciliation implicit.
@@ -26,6 +31,9 @@ of:
 
 - `/jsonapi.json`
 - live collection responses such as `GET /api/...?...`
+
+When the Codex `openapi-to-admin-yaml` skill is used, its default source input
+MUST be the live `/jsonapi.json` served by the running FastAPI backend.
 
 ## Test requirement
 

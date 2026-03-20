@@ -82,6 +82,46 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertIn("sandbox runtime mode defers Playwright browser-launch validation", result.detail)
 
+    def test_check_repo_local_skills_requires_default_repo_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            result = check_execution_prereqs.check_repo_local_skills(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("playwright-skill", result.detail)
+        self.assertIn("openapi-to-admin-yaml", result.detail)
+
+    def test_check_repo_local_skills_reports_missing_install_hint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            skill_file = repo_root / "skills" / "openapi-to-admin-yaml" / "SKILL.md"
+            skill_file.parent.mkdir(parents=True, exist_ok=True)
+            skill_file.write_text("# skill\n", encoding="utf-8")
+
+            result = check_execution_prereqs.check_repo_local_skills(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("openapi-to-admin-yaml", result.detail)
+        self.assertIn("ln -s", result.detail)
+        self.assertIn(".codex/skills", result.detail)
+
+    def test_check_repo_local_skills_accepts_installed_required_repo_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for skill_name in ("openapi-to-admin-yaml", "playwright-skill"):
+                source_skill = repo_root / "skills" / skill_name / "SKILL.md"
+                installed_skill = repo_root / ".codex" / "skills" / skill_name / "SKILL.md"
+                source_skill.parent.mkdir(parents=True, exist_ok=True)
+                installed_skill.parent.mkdir(parents=True, exist_ok=True)
+                source_skill.write_text("# source\n", encoding="utf-8")
+                installed_skill.write_text("# installed\n", encoding="utf-8")
+
+            result = check_execution_prereqs.check_repo_local_skills(repo_root)
+
+        self.assertEqual(result.status, "ok")
+        self.assertIn("openapi-to-admin-yaml", result.detail)
+        self.assertIn("playwright-skill", result.detail)
+
     def test_render_markdown_uses_checkbox_style(self) -> None:
         result_ok = CheckResult("python_venv", "ok", "all good")
         result_blocked = CheckResult("node_packages", "blocked", "missing node_modules")

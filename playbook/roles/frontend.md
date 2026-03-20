@@ -17,7 +17,7 @@ undocumented backend or rules assumptions.
 - content and microcopy clarity
 - loading/error/empty states
 - accessibility-visible behavior
-- responsive behavior decisions
+- responsive behavior decisions when mobile is explicitly in scope
 - landing/custom pages
 - frontend build readiness
 - frontend-side validation notes
@@ -58,6 +58,9 @@ The Frontend agent MUST treat:
 - `../../specs/contracts/frontend/accessibility.md`
 
 as core implementation contract, not as optional polish material.
+
+Unless the run-owned UX artifacts explicitly put mobile in scope, mobile UX
+and narrow-screen behavior may be ignored for now and are non-blocking.
 
 After the core reads above, the Frontend agent MUST load only the enabled
 feature packs assigned to the frontend role by the load plan. Disabled or
@@ -177,9 +180,12 @@ preview screenshots and place them under `../../runs/current/evidence/ui-preview
 Typical cases include new or changed entry pages, custom views, relationship
 dialogs or tabs, and meaningful form-layout changes. Backend-only or otherwise
 non-visible work does not require preview capture. The Frontend agent MUST
-use `npm run capture:ui-previews` when the generated app provides it, and MUST
-update `../../runs/current/evidence/ui-previews/manifest.md` so Product can
-review the saved files directly.
+use the repo-local `playwright-skill` as the default browser-driving lane for
+that capture work. When the generated app provides `npm run capture:ui-previews`,
+the skill SHOULD drive that app-provided capture flow rather than inventing an
+unrelated browser script. The Frontend agent MUST update
+`../../runs/current/evidence/ui-previews/manifest.md` so Product can review the
+saved files directly.
 
 The Frontend agent MUST treat preview capture as content-validation work, not
 as blind image export. The capture flow MUST assert meaningful visible content

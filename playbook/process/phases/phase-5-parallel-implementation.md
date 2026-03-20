@@ -110,6 +110,9 @@ business-rule behavior, or route meaning.
 - implement models and relationships
 - expose SAFRS resources
 - implement startup/bootstrap lifecycle
+- generate or refresh `reference/admin.yaml` through the Codex
+  `openapi-to-admin-yaml` skill when the file is being derived from backend
+  discovery or OpenAPI-shaped input
 - run route discovery after exposure and reconcile `reference/admin.yaml`
   against the live collection paths before frontend bootstrap is treated as
   stable

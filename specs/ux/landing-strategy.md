@@ -130,13 +130,16 @@ which appear later in the page.
 
 ## Responsive behavior
 
-The real artifact MUST define:
+If the run explicitly keeps mobile in scope, the real artifact MUST define:
 
 - narrow-screen section order
 - summary-card collapse behavior
 - button stacking behavior
 - whether quick actions collapse into a menu, list, or stacked cards
 - what MUST remain visible in the first mobile viewport
+
+If the run does not keep mobile in scope, this section may explicitly say
+`mobile ignored for now` and that is non-blocking.
 
 ## State behavior
 
@@ -161,6 +164,7 @@ The real artifact MUST include concrete checks for:
   proof cue
 - the first viewport is led by a hero/landing section rather than a
   React-admin resource grid
-- the mobile layout preserves the purpose statement and primary CTA
+- when mobile is in scope, the mobile layout preserves the purpose statement
+  and primary CTA
 - the entry page remains coherent when summary counts or recent-item data are
   empty

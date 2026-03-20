@@ -183,6 +183,10 @@ agent MUST explicitly resolve and record:
 8. route-discovery reconciliation
    - how live collection paths will be discovered and reconciled against
      `reference/admin.yaml` before frontend and delivery validation
+   - whether the Codex `openapi-to-admin-yaml` skill is the generation lane
+     for the initial or refreshed `reference/admin.yaml`
+   - how the backend will be started so the skill can read the live FastAPI
+     `/jsonapi.json` schema as its source input
 9. SAFRS exposure reconciliation
    - which DB-backed tables and relationships are exposed through SAFRS by
      default, which are approved exceptions, and how live `/jsonapi.json`
@@ -210,6 +214,13 @@ run-owned backend-design artifacts, especially:
 
 If the business-rules catalog is too vague to implement, the Backend agent
 MUST send the ambiguity back upstream instead of inventing rule meaning.
+
+When `reference/admin.yaml` is generated or materially refreshed from backend
+discovery or OpenAPI-derived input, the Backend agent SHOULD use the Codex
+`openapi-to-admin-yaml` skill as the default generation lane instead of
+hand-authoring the file from scratch. The default input to that skill is the
+live `/jsonapi.json` served by the running FastAPI backend, not a stale
+checked-in schema snapshot.
 
 ## Escalation targets
 

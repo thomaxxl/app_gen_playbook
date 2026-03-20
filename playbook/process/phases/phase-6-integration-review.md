@@ -54,9 +54,11 @@ readiness note in:
 - when the run materially changes visible UI and browser execution is
   available, capture Playwright preview screenshots under
   `runs/current/evidence/ui-previews/`
+- use the repo-local `playwright-skill` as the default browser automation lane
+  for that live verification and capture work
 - when the generated app provides `npm run capture:ui-previews`, use that
-  script as the canonical preview-capture path instead of inventing separate
-  route-level screenshots
+  script through the Playwright skill as the canonical preview-capture path
+  instead of inventing separate route-level screenshots
 - reject screenshot evidence that only proves file creation; the manifest and
   reviewed images must prove meaningful visible content was rendered
 - validate the captured screenshots yourself as Architect and record
@@ -76,9 +78,10 @@ readiness note in:
 - verify packaged route behavior when packaging is in scope
 - verify docs match what was built
 - reject undocumented business-rule drift
-- verify Playwright is installed for the generated app and install it only
-  when the active dependency-provisioning policy allows dependency creation
-- run the basic Playwright smoke suite as the final pre-delivery step
+- verify the required Playwright skill/runtime lane is available and install or
+  provision it only when the active dependency-provisioning policy allows that
+- run the basic Playwright smoke suite as the final pre-delivery step, with
+  the skill as the preferred browser-driving wrapper
 - populate the full quality evidence pack under `runs/current/evidence/quality/`
 - write `runs/current/evidence/quality/data-sourcing-audit.md` and explicitly
   call out any hardcoded dynamic-data violations or confirm none were found
@@ -132,6 +135,9 @@ readiness note in:
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
+- `app/reference/admin.yaml` is present and non-empty; an empty file at Phase 6
+  is an operator-escalation fatal because integration review cannot validate a
+  missing frontend contract surface
 - the app is proven to boot and at least one generated list view is proven to
   render correct live data rather than only the initialized shell
 - required entry and custom pages are actual product surfaces, not contract,

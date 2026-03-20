@@ -100,7 +100,10 @@ that execution path and justification must also be documented.
 If the run was resumed after interruption, the recovery outcome MUST be
 recorded in run evidence or `runs/current/remarks.md`.
 
-If Playwright or its browser runtime was missing, the operator must install it
-before the final smoke run instead of skipping that gate.
+If browser-level verification is required, the playbook SHOULD use the
+repo-local `playwright-skill` as the default browser-driving lane. If the
+skill, Playwright runtime, or browser runtime was missing, the operator must
+install or provision it before the final smoke run instead of skipping that
+gate.
 
 If one layer works only because another layer guessed, the feature is not done.

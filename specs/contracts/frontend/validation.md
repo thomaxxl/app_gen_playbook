@@ -2,6 +2,10 @@
 
 This file defines the minimum frontend validation checklist for generated apps.
 
+For now, mobile and narrow-screen UX are optional unless the run-owned UX
+artifacts explicitly put them in scope. Desktop/browser validation remains the
+blocking delivery baseline.
+
 The frontend MUST NOT invent new business rules. It MAY mirror only the subset
 of approved rules whose `Frontend Mirror` field is not `none` in:
 
@@ -94,7 +98,8 @@ frontend package template before treating the playbook baseline as current.
 - every custom page defines loading, empty, and error states
 - every empty state includes a visible next step or explanation
 - form pages show grouped structure when the run-owned UX artifacts require it
-- critical flows remain usable at narrow widths
+- critical flows remain usable at narrow widths only when the run explicitly
+  keeps mobile/narrow-screen behavior in scope
 - keyboard and focus smoke checks exist for the core form and dialog flows
 - every mirrored frontend validation maps to an approved rule ID in
   `../../runs/current/artifacts/product/business-rules.md`
@@ -150,7 +155,8 @@ Typical trigger cases:
 - new or changed `Home`, `Landing`, or other entry surfaces
 - new or changed custom views, dashboards, or charts
 - relationship dialog or relationship-tab behavior changes
-- meaningful form-layout, responsive-layout, or iconography changes
+- meaningful form-layout, responsive-layout, or iconography changes, when
+  mobile/responsive behavior is in scope for the run
 
 Backend-only or otherwise non-visible work does not require preview
 screenshots. If preview capture would normally be appropriate but is skipped
@@ -192,11 +198,24 @@ executable contract for the frontend starter.
 ## Mandatory Playwright smoke validation
 
 Before delivery, the generated app MUST pass a browser-level Playwright smoke
-suite with at least this flow:
+suite with at least this flow.
 
-1. verify `npx playwright --version` works from `app/frontend/`
-2. if Playwright or its browser runtime is missing, install it before
-   continuing, for example with `npx playwright install chromium`
+The default operator/agent lane for browser automation in this playbook is the
+repo-local Codex skill at `app_gen_playbook/.codex/skills/playwright-skill`.
+When the playbook asks an agent to do browser-level verification, screenshot
+capture, or live UX inspection, the agent SHOULD use that skill rather than an
+ad hoc Playwright invocation. The generated app's own `npm run test:e2e` and
+`npm run capture:ui-previews` commands remain the app-facing smoke and capture
+entrypoints, but the browser-driving wrapper for role instructions is the
+Playwright skill.
+
+The smoke run must cover at least this flow:
+
+1. verify the required Playwright environment is available, with
+   `playwright-skill` as the preferred browser-driver lane
+2. if the skill, Playwright runtime, or browser runtime is missing, install or
+   provision it before continuing rather than silently skipping browser
+   validation
 3. start the app on fixed ports
 4. wait for backend `/healthz` and frontend `/app/`
 5. open `/app/#/Home`
@@ -209,7 +228,8 @@ suite with at least this flow:
     CTA
 11. assert the first meaningful visible section is a hero/landing surface
     rather than a resource grid
-12. switch to a narrow viewport and assert the primary CTA remains discoverable
+12. when mobile is in scope, switch to a narrow viewport and assert the
+    primary CTA remains discoverable
 13. if the app includes `Landing.tsx`, assert the landing page loads without
    the bootstrap-error or landing-error screen
 14. assert the key seeded collection request returns `200`

@@ -5,6 +5,12 @@ See also:
 - [../../../specs/contracts/backend/README.md](../../../specs/contracts/backend/README.md)
 - [../../../specs/contracts/frontend/README.md](../../../specs/contracts/frontend/README.md)
 
+When this file is derived from backend discovery or OpenAPI-shaped input, the
+preferred playbook lane is the Codex `openapi-to-admin-yaml` skill. Treat
+manual editing as the refinement step after generation, not the default first
+step. The default generation input is the live `/jsonapi.json` served by the
+running FastAPI backend.
+
 Starter example shape:
 
 ```yaml
