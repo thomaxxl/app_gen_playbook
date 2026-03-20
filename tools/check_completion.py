@@ -51,6 +51,7 @@ REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/quality/test-results.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/quality-summary.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/coverage-report.md", "architect", "phase-6-integration-review"),
+    ("runs/current/evidence/quality/review-plan.json", "architect", "phase-6-integration-review"),
 )
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}

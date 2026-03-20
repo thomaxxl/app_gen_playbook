@@ -123,8 +123,13 @@ def write_required_phase6_evidence(repo_root: Path) -> None:
         "runs/current/evidence/quality/ui-copy-audit.md",
         "runs/current/evidence/quality/test-results.md",
         "runs/current/evidence/quality/quality-summary.md",
+        "runs/current/evidence/quality/coverage-report.md",
     ):
         write_file(repo_root / relative, "# evidence\n")
+    write_file(
+        repo_root / "runs/current/evidence/quality/review-plan.json",
+        '{\n  "starter_status": "pending-review-evidence",\n  "surfaces": []\n}\n',
+    )
 
 
 class RecoverRunQueueTests(unittest.TestCase):

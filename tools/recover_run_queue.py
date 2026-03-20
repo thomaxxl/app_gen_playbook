@@ -289,6 +289,27 @@ REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
             "playbook/process/quality-gates.md",
         ),
     ),
+    (
+        "architect",
+        "runs/current/evidence/quality/coverage-report.md",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
+    (
+        "architect",
+        "runs/current/evidence/quality/review-plan.json",
+        "missing",
+        (
+            "playbook/task-bundles/integration-review.yaml",
+            "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+            "playbook/process/phases/phase-6-integration-review.md",
+            "playbook/process/quality-gates.md",
+        ),
+    ),
 )
 
 PHASE_REQUIRED_READS = {
