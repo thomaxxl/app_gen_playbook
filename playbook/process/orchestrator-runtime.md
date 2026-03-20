@@ -538,8 +538,8 @@ MUST treat it as a high-priority drain request:
 - stop claiming new inbox work
 - then exit cleanly
 
-A later `scripts/run_playbook.sh --resume` MUST archive that pause file and
-continue from the current run state.
+A later `scripts/run_playbook.sh` startup, including `--resume`, MUST archive
+that pause file before the runner enters the main control loop.
 
 If the operator writes `runs/current/orchestrator/kill-requested.md`, the
 orchestrator MUST stop immediately, terminate playbook-managed processes, and
@@ -570,9 +570,10 @@ When `--resume` is used, the orchestrator MUST:
   consistent
 - rebuild from repo state when session continuity is missing or unsafe
 - archive `runs/current/orchestrator/pause-requested.md` if it exists, because
-  `--resume` is an explicit operator decision to continue
+  runner startup is an explicit operator decision to continue
 - archive `runs/current/orchestrator/kill-requested.md` if it exists, because
-  `--resume` is an explicit operator decision to continue after a forced stop
+  runner startup is an explicit operator decision to continue after a forced
+  stop
 - run a queue-recovery pass before continuing normal scheduling when
   completion still fails
 

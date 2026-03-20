@@ -108,8 +108,9 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('RUNNER_PID_FILE="$ORCH_ROOT/runner.pid"', script)
         self.assertIn('pause_requested_exit()', script)
         self.assertIn('kill_requested_exit()', script)
-        self.assertIn('clear_pause_requested_on_resume()', script)
-        self.assertIn('clear_kill_requested_on_resume()', script)
+        self.assertIn('clear_pause_requested_on_startup()', script)
+        self.assertIn('clear_kill_requested_on_startup()', script)
+        self.assertIn('clear_steering_requests_on_startup()', script)
         self.assertIn('register_runner_pid()', script)
         self.assertIn('pending_inflight_role()', script)
         self.assertIn('pause_drain_in_progress()', script)
@@ -119,6 +120,10 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('blocked_exit "run requires operator action" "$body"', script)
         self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
         self.assertIn('if run_recovery_pass; then', script)
+        self.assertLess(
+            script.rindex("clear_steering_requests_on_startup"),
+            script.rindex("register_runner_pid"),
+        )
         main_loop_index = script.index("while true; do")
         self.assertLess(
             script.index('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', main_loop_index),

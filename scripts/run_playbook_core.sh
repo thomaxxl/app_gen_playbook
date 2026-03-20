@@ -1721,7 +1721,8 @@ Pause file:
 Resume later with:
 - bash scripts/run_playbook.sh --resume
 
-The next resume automatically archives the pause request and continues.
+The next playbook startup automatically archives the pause request before the
+runner enters the main control loop.
 
 $(cat "$PAUSE_REQUESTED_MD")
 EOF
@@ -1744,6 +1745,9 @@ Kill file:
 
 Resume later with:
 - bash scripts/run_playbook.sh --resume
+
+The next playbook startup automatically archives the kill request before the
+runner enters the main control loop.
 
 $(cat "$KILL_REQUESTED_MD")
 EOF
@@ -1880,41 +1884,49 @@ clear_completed_run_operator_action_required() {
   return 0
 }
 
-clear_pause_requested_on_resume() {
+clear_pause_requested_on_startup() {
   [[ -f "$PAUSE_REQUESTED_MD" ]] || return 1
 
   local archive_dir="$EVIDENCE_ROOT/pause-archive"
   local stamp archived_path
   mkdir -p "$archive_dir"
   stamp="$(date -u +%Y%m%d-%H%M%S)"
-  archived_path="$archive_dir/pause-requested.resume-cleared.${stamp}.md"
+  archived_path="$archive_dir/pause-requested.startup-cleared.${stamp}.md"
   mv "$PAUSE_REQUESTED_MD" "$archived_path"
-  log "pause-requested-cleared-on-resume archived=${archived_path#$ROOT/}"
+  log "pause-requested-cleared-on-startup archived=${archived_path#$ROOT/}"
   append_recovery_log \
-    "Pause Request Cleared On Resume" \
-    "Archived pause request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+    "Pause Request Cleared On Startup" \
+    "Archived stale pause request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
   append_run_remark \
-    "Pause Request Cleared On Resume" \
-    "Archived pause request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+    "Pause Request Cleared On Startup" \
+    "Archived stale pause request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
   return 0
 }
 
-clear_kill_requested_on_resume() {
+clear_kill_requested_on_startup() {
   [[ -f "$KILL_REQUESTED_MD" ]] || return 1
 
   local archive_dir="$EVIDENCE_ROOT/kill-archive"
   local stamp archived_path
   mkdir -p "$archive_dir"
   stamp="$(date -u +%Y%m%d-%H%M%S)"
-  archived_path="$archive_dir/kill-requested.resume-cleared.${stamp}.md"
+  archived_path="$archive_dir/kill-requested.startup-cleared.${stamp}.md"
   mv "$KILL_REQUESTED_MD" "$archived_path"
-  log "kill-requested-cleared-on-resume archived=${archived_path#$ROOT/}"
+  log "kill-requested-cleared-on-startup archived=${archived_path#$ROOT/}"
   append_recovery_log \
-    "Kill Request Cleared On Resume" \
-    "Archived kill request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+    "Kill Request Cleared On Startup" \
+    "Archived stale kill request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
   append_run_remark \
-    "Kill Request Cleared On Resume" \
-    "Archived kill request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+    "Kill Request Cleared On Startup" \
+    "Archived stale kill request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
+  return 0
+}
+
+clear_steering_requests_on_startup() {
+  [[ -d "$RUN_ROOT" ]] || return 0
+
+  clear_kill_requested_on_startup || true
+  clear_pause_requested_on_startup || true
   return 0
 }
 
@@ -3621,9 +3633,6 @@ PY
   clear_host_verified_operator_action_required || true
   clear_browser_fallback_operator_action_required || true
   clear_completed_run_operator_action_required || true
-  clear_kill_requested_on_resume || true
-  clear_pause_requested_on_resume || true
-
   if ! check_completion >/dev/null 2>&1; then
     run_recovery_pass || true
   fi
@@ -3918,6 +3927,7 @@ else
   seed_change_run
 fi
 
+clear_steering_requests_on_startup
 register_runner_pid
 start_dashboard_sidecar
 main_loop

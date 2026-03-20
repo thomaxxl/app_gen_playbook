@@ -161,8 +161,9 @@ If the steering request is "pause" or "stop for now", the CEO MUST:
   depends on a true external blocker
 
 The orchestrator will drain current in-flight work, then exit cleanly when
-`pause-requested.md` exists. The next `scripts/run_playbook.sh --resume` will
-archive that pause file and continue from the current run state.
+`pause-requested.md` exists. The next `scripts/run_playbook.sh` startup,
+including `--resume`, will archive that pause file before the runner enters
+the main control loop.
 
 ## Completion rule
 

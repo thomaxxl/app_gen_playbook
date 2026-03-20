@@ -1114,7 +1114,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertIn("playbook run complete", result.stderr)
             self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "pause-requested.md").exists())
             archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "pause-archive"
-            archived = list(archive_dir.glob("pause-requested.resume-cleared.*.md"))
+            archived = list(archive_dir.glob("pause-requested.startup-cleared.*.md"))
             self.assertTrue(archived)
 
     def test_resume_clears_kill_requested_and_continues(self) -> None:
@@ -1191,7 +1191,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertIn("playbook run complete", result.stderr)
             self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "kill-requested.md").exists())
             archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "kill-archive"
-            archived = list(archive_dir.glob("kill-requested.resume-cleared.*.md"))
+            archived = list(archive_dir.glob("kill-requested.startup-cleared.*.md"))
             self.assertTrue(archived)
 
     def test_resume_clears_stale_operator_action_when_run_is_already_complete(self) -> None:
