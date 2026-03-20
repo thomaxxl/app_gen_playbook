@@ -10,6 +10,8 @@ from jsonschema import Draft202012Validator, RefResolver
 
 from contracts.models import PolicyError
 
+VIRTUAL_MILESTONE_PHASES = {"final-delivery-approval"}
+
 
 @dataclass(frozen=True)
 class SdlcRegistry:
@@ -98,6 +100,29 @@ def compile_sdlc_registry(repo_root: Path, *, generated_at: str) -> SdlcRegistry
         overlays[overlay_id] = payload
 
     milestones: dict[str, dict[str, Any]] = {}
+    milestones_root = policy_root / "sdlc" / "milestones"
+    for path in sorted(milestones_root.glob("*.yaml")):
+        payload = _load_yaml(path)
+        _validate(payload, milestone_schema, path)
+        milestone_id = str(payload["id"])
+        if milestone_id in milestones:
+            raise PolicyError(f"duplicate SDLC milestone id: {milestone_id}")
+        milestone_phase = str(payload.get("phase") or "")
+        if milestone_phase not in phases and milestone_phase not in VIRTUAL_MILESTONE_PHASES:
+            raise PolicyError(f"milestone {milestone_id} references unknown phase {milestone_phase}")
+        for unlocked_phase_id in payload.get("unlocks_phases", []) or []:
+            if unlocked_phase_id not in phases:
+                raise PolicyError(
+                    f"milestone {milestone_id} unlocks unknown phase {unlocked_phase_id}"
+                )
+        milestones[milestone_id] = payload
+
+    known_step_ids = {
+        str(step["id"])
+        for payload in phases.values()
+        for step in payload.get("steps", [])
+    }
+
     for phase_id, payload in phases.items():
         milestone_id = str(payload.get("exit_milestone") or "")
         if not milestone_id:
@@ -121,7 +146,19 @@ def compile_sdlc_registry(repo_root: Path, *, generated_at: str) -> SdlcRegistry
             ],
         }
         _validate(milestone_payload, milestone_schema, policy_root / "sdlc" / "milestones" / f"{milestone_id}.derived.yaml")
+        if milestone_id in milestones:
+            continue
         milestones[milestone_id] = milestone_payload
+
+    for milestone_id, payload in milestones.items():
+        for step_id in payload.get("achieved_when", {}).get("all_steps_pass", []) or []:
+            if step_id not in known_step_ids:
+                raise PolicyError(f"milestone {milestone_id} references unknown step {step_id}")
+
+    for lifecycle_id, lifecycle in lifecycles.items():
+        for milestone_id in lifecycle.get("milestones", []):
+            if milestone_id not in milestones:
+                raise PolicyError(f"lifecycle {lifecycle_id} references unknown milestone {milestone_id}")
 
     return SdlcRegistry(
         generated_at=generated_at,

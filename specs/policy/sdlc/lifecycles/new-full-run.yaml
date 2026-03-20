@@ -24,6 +24,7 @@ milestones:
   - M6-quality-gate-passed
   - M7-acceptance-gate-passed
   - M8-qa-gate-passed
+  - M9-delivery-approved
 allowed_overlays:
   - security
 runtime_extension_paths:

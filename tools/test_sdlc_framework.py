@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from contracts.models import PolicyError
 from contracts.check_phase_transition import main as check_phase_transition_main
 from contracts.compile_sdlc_registry import main as compile_sdlc_registry_main
 from contracts.evaluate_sdlc import compute_sdlc_state
@@ -24,6 +25,7 @@ class SdlcFrameworkTests(unittest.TestCase):
         self.assertIn("new-full-run", registry.lifecycles)
         self.assertIn("phase-6-integration-review", registry.phases)
         self.assertIn("M6-quality-gate-passed", registry.milestones)
+        self.assertIn("M9-delivery-approved", registry.milestones)
         self.assertIn("security", registry.overlays)
 
     def test_resolve_sdlc_plan_for_new_run(self) -> None:
@@ -79,6 +81,34 @@ class SdlcFrameworkTests(unittest.TestCase):
             self.assertTrue(
                 (self.repo_root / "runs/current/policy/attestations/ATT-example.yaml").exists()
             )
+
+    def test_resolve_plan_rejects_invalid_runtime_extension_step(self) -> None:
+        extensions_dir = self.repo_root / "runs/current/policy/extensions"
+        extensions_dir.mkdir(parents=True, exist_ok=True)
+        extension_path = extensions_dir / "ZZ-invalid-test-extension.yaml"
+        extension_path.write_text(
+            yaml.safe_dump(
+                {
+                    "id": "INVALID-TEST-EXTENSION",
+                    "phase": "phase-6-integration-review",
+                    "insert_steps": [
+                        {
+                            "title": "Missing required step id should fail",
+                            "kind": "review",
+                            "owners": ["architect"],
+                            "requiredness": "required",
+                        }
+                    ],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        try:
+            with self.assertRaises(PolicyError):
+                resolve_plan(self.repo_root, run_mode="new-full-run", overlays=[])
+        finally:
+            extension_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+id: M9-delivery-approved
+title: Final delivery approval achieved
+phase: final-delivery-approval
+kind: gate
+owners:
+  - ceo
+  - orchestrator
+achieved_when:
+  all_steps_pass:
+    - P8-QA-DELIVERY-REVIEW
+  required_outputs:
+    - runs/current/evidence/ceo-delivery-validation.md
+    - runs/current/orchestrator/delivery-approved.md
+    - runs/current/APP_DONE
+blocks_transition: true
+unlocks_phases: []

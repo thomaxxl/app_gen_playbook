@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from jsonschema import Draft202012Validator
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -45,6 +46,8 @@ def _load_runtime_extension(path: Path) -> dict[str, Any]:
 
 def resolve_plan(repo_root: Path, *, run_mode: str, overlays: list[str] | None = None) -> dict[str, Any]:
     registry = compile_sdlc_registry(repo_root, generated_at=utc_now())
+    step_schema = json.loads((repo_root / "specs" / "policy" / "schema" / "sdlc-step.schema.json").read_text(encoding="utf-8"))
+    step_validator = Draft202012Validator(step_schema)
     lifecycle_id = normalize_run_mode(run_mode)
     if lifecycle_id not in registry.lifecycles:
         raise PolicyError(f"unknown SDLC lifecycle {lifecycle_id}")
@@ -74,6 +77,14 @@ def resolve_plan(repo_root: Path, *, run_mode: str, overlays: list[str] | None =
             insert_steps = extension.get("insert_steps") or []
             if not isinstance(insert_steps, list):
                 raise PolicyError(f"runtime extension {path} has non-list insert_steps")
+            for index, step in enumerate(insert_steps):
+                errors = sorted(step_validator.iter_errors(step), key=lambda item: list(item.absolute_path))
+                if errors:
+                    first = errors[0]
+                    location = ".".join(str(part) for part in first.absolute_path) or "<root>"
+                    raise PolicyError(
+                        f"runtime extension {path} step {index} failed SDLC step schema validation at {location}: {first.message}"
+                    )
             phase_map[phase_id].setdefault("steps", []).extend(insert_steps)
             runtime_extensions.append(
                 {
