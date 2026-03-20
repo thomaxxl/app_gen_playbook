@@ -11,9 +11,20 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/architecture/integration-review.md
   - runs/current/artifacts/product/acceptance-review.md
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/workflows.md
+  - runs/current/artifacts/product/acceptance-criteria.md
+  - runs/current/artifacts/product/custom-pages.md
+  - runs/current/artifacts/product/traceability-matrix.md
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/custom-view-specs.md
   - runs/current/evidence/contract-samples.md
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/ui-previews/manifest.md
+  - runs/current/evidence/quality/coverage-report.md
+  - runs/current/evidence/quality/review-plan.json
   - runs/current/evidence/quality/ui-copy-audit.md
   - runs/current/evidence/quality/test-results.md
   - runs/current/evidence/quality/quality-summary.md

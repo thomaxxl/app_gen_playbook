@@ -41,6 +41,8 @@ dist/
 build/
 **/build/
 coverage/
+!tools/validators/coverage/
+!tools/validators/coverage/**
 playwright-report/
 test-results/
 *.tsbuildinfo

@@ -11,6 +11,9 @@ the sidecar policy registry under `specs/policy/`, especially:
 - `specs/policy/requirements/evidence-core.yaml`
 - `specs/policy/requirements/frontend-core.yaml`
 - `specs/policy/requirements/backend-core.yaml`
+- `specs/policy/requirements/product-scope-core.yaml`
+- `specs/policy/requirements/ux-coverage-core.yaml`
+- `specs/policy/requirements/gate-coverage-core.yaml`
 - `specs/policy/profiles/gate-quality.yaml`
 - `specs/policy/profiles/gate-acceptance.yaml`
 
@@ -46,6 +49,8 @@ The run is blocked if any of these are true:
   blocked-environment path
 - captured UI preview screenshots exist but were not analyzed for visible
   content by Frontend, Architect, and Product Manager
+- a required `must` story, visible route, required custom page, or Home CTA
+  target is missing from delivered or reviewed coverage
 - the independent QA delivery review is missing, still placeholder, or failed
 - the required quality evidence pack is missing, still placeholder, blocked
   without explanation, or contradictory
@@ -64,6 +69,7 @@ Required files:
 - `ui-copy-audit.md`
 - `test-results.md`
 - `quality-summary.md`
+- `coverage-report.md`
 
 Phase 6 also depends on:
 

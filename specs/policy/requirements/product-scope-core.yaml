@@ -1,0 +1,42 @@
+id: product-scope-core
+title: Product scope coverage requirements
+description: Executable rules for story, page, and route completeness.
+requirements:
+  - id: PROD-SCOPE-001
+    title: Frontend implements required visible routes and CTA targets
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: product-scope-core
+    profiles:
+      - frontend-core
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    owner_roles:
+      - frontend
+      - architect
+      - product_manager
+      - qa
+    source_docs:
+      - specs/product/traceability-matrix.md
+      - playbook/process/phases/phase-1-product-definition.md
+      - playbook/process/phases/phase-3-ux-and-interaction-design.md
+      - playbook/process/phases/phase-6-integration-review.md
+      - playbook/process/phases/phase-7-product-acceptance.md
+    description: >
+      Required visible PM workspace routes and Home CTA targets must be present
+      in the delivered frontend.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/coverage/validate_frontend_route_coverage.py
+    evidence:
+      required_files:
+        - runs/current/evidence/quality/coverage-report.md
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Implement the missing required routes or align the Product/UX scope
+      contract before delivery.

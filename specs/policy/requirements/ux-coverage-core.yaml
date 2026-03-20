@@ -1,0 +1,40 @@
+id: ux-coverage-core
+title: UX coverage requirements
+description: Executable rules for reviewed preview coverage.
+requirements:
+  - id: UX-COV-001
+    title: Reviewed screenshots cover required PM workspace routes
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: ux-coverage-core
+    profiles:
+      - evidence-core
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+    owner_roles:
+      - frontend
+      - architect
+      - product_manager
+    source_docs:
+      - specs/contracts/frontend/validation.md
+      - playbook/process/phases/phase-3-ux-and-interaction-design.md
+      - playbook/process/phases/phase-6-integration-review.md
+      - playbook/process/phases/phase-7-product-acceptance.md
+    description: >
+      The approved preview manifest must cover all preview-required PM
+      workspace routes, not only a reviewed subset.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/coverage/validate_preview_coverage.py
+    evidence:
+      required_files:
+        - runs/current/evidence/ui-previews/manifest.md
+        - runs/current/evidence/quality/review-plan.json
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Capture and review the missing required surfaces, then update the preview
+      manifest and coverage report.

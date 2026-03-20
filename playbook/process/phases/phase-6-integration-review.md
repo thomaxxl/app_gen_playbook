@@ -103,6 +103,7 @@ readiness note in:
 - `runs/current/evidence/quality/ui-copy-audit.md`
 - `runs/current/evidence/quality/test-results.md`
 - `runs/current/evidence/quality/quality-summary.md`
+- `runs/current/evidence/quality/coverage-report.md`
 - updated `runs/current/artifacts/architecture/decision-log.md` when new
   cross-layer decisions are
   required
@@ -135,6 +136,8 @@ readiness note in:
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
+- `runs/current/evidence/quality/coverage-report.md` proves required story,
+  page, and route coverage rather than only reviewed subset quality
 - `app/reference/admin.yaml` is present and non-empty; an empty file at Phase 6
   is an operator-escalation fatal because integration review cannot validate a
   missing frontend contract surface
@@ -194,3 +197,6 @@ Integration review fails when:
   expose the required resources through real SAFRS model registration
 - the backend replaced required ORM-backed resource implementation with
   raw-SQL-only or row-mapper handlers without an approved exception
+- a required visible route, custom page, or Home CTA target from the UX scope
+  contract is missing or drifted
+- the approved preview manifest omits required PM workspace routes

@@ -18,3 +18,6 @@ The real artifact MUST record:
 - cross-layer findings
 - verification references
 - unresolved issues
+- `## Story Coverage`
+- `## Page Coverage`
+- `## Route Coverage`

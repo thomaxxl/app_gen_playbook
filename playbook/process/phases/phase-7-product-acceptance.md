@@ -74,6 +74,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   backlog cycle
 - the acceptance record cites the actual reviewed user-facing pages and the
   evidence used to judge them
+- the acceptance artifact includes explicit Story/Page/Route coverage sections
+  instead of only prose narrative
 - accepted delivery is handed to QA for an independent final validation pass
   before CEO approval
 - if UI previews were captured, acceptance cites the reviewed screenshot files
@@ -102,3 +104,5 @@ Acceptance fails when:
   SAFRS JSON:API surface
 - required DB-backed resource delivery bypasses the approved ORM lane without
   an explicit documented exception
+- a `must` story, required custom page, or required visible route is accepted
+  without explicit cited evidence

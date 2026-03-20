@@ -30,6 +30,7 @@ Turn business intent into an implementable product definition.
 - `runs/current/artifacts/product/domain-glossary.md`
 - `runs/current/artifacts/product/business-rules.md`
 - `runs/current/artifacts/product/custom-pages.md`
+- `runs/current/artifacts/product/traceability-matrix.md`
 - `runs/current/artifacts/product/acceptance-criteria.md`
 - `runs/current/artifacts/product/sample-data.md`
 - `runs/current/artifacts/product/assumptions-and-open-questions.md`
@@ -48,4 +49,6 @@ Turn business intent into an implementable product definition.
   for downstream roles to stop guessing about CRUD, search, menu exposure, and
   key relationships
 - sample-data and assumptions artifacts exist
+- every `must` story is mapped in `traceability-matrix.md` to workflow IDs,
+  page IDs, route IDs, and required review obligations
 - the product package is marked `ready-for-handoff` or `approved`

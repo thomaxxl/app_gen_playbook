@@ -9,7 +9,12 @@ required_phase:
   - playbook/process/phases/phase-5-parallel-implementation.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/workflows.md
+  - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/architecture/overview.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/data-sourcing-contract.md
@@ -18,6 +23,7 @@ required_artifacts:
   - runs/current/artifacts/ux/navigation.md
   - runs/current/artifacts/ux/screen-inventory.md
   - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/evidence/quality/review-plan.json
 conditional_artifacts:
   custom_pages:
     - runs/current/artifacts/product/custom-pages.md
@@ -26,11 +32,11 @@ conditional_artifacts:
     - specs/features/uploads/README.md
 reference_only:
   - runs/current/artifacts/product/sample-data.md
-  - runs/current/artifacts/product/resource-behavior-matrix.md
   - runs/current/artifacts/backend-design/query-behavior.md
 writable_targets:
   - runs/current/artifacts/ux/**
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/ui-previews/**
+  - runs/current/evidence/compiled/**
   - runs/current/role-state/frontend/**
   - app/frontend/**

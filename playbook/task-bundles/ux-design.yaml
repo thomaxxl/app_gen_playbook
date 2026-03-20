@@ -9,6 +9,11 @@ required_phase:
   - playbook/process/phases/phase-3-ux-and-interaction-design.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/workflows.md
+  - runs/current/artifacts/product/acceptance-criteria.md
+  - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/product/resource-inventory.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/overview.md
@@ -20,7 +25,7 @@ conditional_artifacts:
     - runs/current/artifacts/product/custom-pages.md
 reference_only:
   - runs/current/artifacts/product/sample-data.md
-  - runs/current/artifacts/product/acceptance-criteria.md
 writable_targets:
   - runs/current/artifacts/ux/**
+  - runs/current/evidence/quality/review-plan.json
   - runs/current/role-state/frontend/**

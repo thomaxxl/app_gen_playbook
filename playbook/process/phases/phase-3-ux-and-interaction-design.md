@@ -38,6 +38,7 @@ Design the user journey and page behavior before implementation diverges.
 - `runs/current/artifacts/ux/field-visibility-matrix.md`
 - `runs/current/artifacts/ux/custom-view-specs.md`
 - `runs/current/artifacts/ux/state-handling.md`
+- `runs/current/evidence/quality/review-plan.json`
 
 ## Exit criteria
 
@@ -61,5 +62,7 @@ Design the user journey and page behavior before implementation diverges.
 - backend understands frontend data needs
 - screen and custom-view specs explicitly identify which user-visible data must
   come from the API
+- `review-plan.json` covers every required visible route from the Product + UX
+  scope contract
 - the `runs/current/artifacts/ux/` package is marked `ready-for-handoff` or
   `approved`

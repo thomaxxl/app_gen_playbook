@@ -10,6 +10,11 @@ required_phase:
   - playbook/process/quality-gates.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/workflows.md
+  - runs/current/artifacts/product/acceptance-criteria.md
+  - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/architecture/overview.md
   - runs/current/artifacts/architecture/integration-boundary.md
@@ -33,6 +38,8 @@ required_artifacts:
   - runs/current/evidence/quality/ui-copy-audit.md
   - runs/current/evidence/quality/test-results.md
   - runs/current/evidence/quality/quality-summary.md
+  - runs/current/evidence/quality/coverage-report.md
+  - runs/current/evidence/quality/review-plan.json
 conditional_artifacts:
   custom_pages:
     - runs/current/artifacts/product/custom-pages.md
@@ -42,6 +49,7 @@ reference_only:
 writable_targets:
   - runs/current/artifacts/architecture/**
   - runs/current/evidence/contract-samples.md
+  - runs/current/evidence/compiled/**
   - runs/current/evidence/frontend-browser-proof.md
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/ui-previews/**

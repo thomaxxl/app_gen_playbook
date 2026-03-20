@@ -18,6 +18,9 @@ The real artifact MUST record:
 - criteria check
 - evidence references
 - deferred items, if any
+- `## Story Coverage`
+- `## Page Coverage`
+- `## Route Coverage`
 - explicit review of the entry page, required custom pages, and at least one
   generated resource flow
 - comparison against `landing-strategy.md`, `screen-inventory.md`, and

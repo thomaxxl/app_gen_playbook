@@ -1,0 +1,95 @@
+id: gate-coverage-core
+title: Gate coverage requirements
+description: Executable rules for gate artifact completeness and QA route coverage.
+requirements:
+  - id: GATE-COV-001
+    title: Integration review contains required coverage sections
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: gate-coverage-core
+    profiles:
+      - phase-6-integration-review
+      - gate-quality
+      - role-architect
+    owner_roles:
+      - architect
+    source_docs:
+      - specs/architecture/integration-review.md
+      - playbook/process/phases/phase-6-integration-review.md
+    description: >
+      The integration review artifact must include structured story, page, and
+      route coverage sections.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/coverage/validate_integration_review_coverage.py
+    evidence:
+      required_files:
+        - runs/current/artifacts/architecture/integration-review.md
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Add the missing coverage sections and cite the relevant evidence.
+  - id: GATE-COV-002
+    title: Acceptance review contains required coverage sections
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: gate-coverage-core
+    profiles:
+      - phase-7-product-acceptance
+      - gate-acceptance
+      - role-product-manager
+    owner_roles:
+      - product_manager
+    source_docs:
+      - specs/product/acceptance-review.md
+      - playbook/process/phases/phase-7-product-acceptance.md
+    description: >
+      The acceptance review artifact must include structured story, page, and
+      route coverage sections.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/coverage/validate_acceptance_review_coverage.py
+    evidence:
+      required_files:
+        - runs/current/artifacts/product/acceptance-review.md
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Add the missing coverage sections and cite the relevant evidence.
+  - id: GATE-COV-003
+    title: QA review documents live coverage for required PM workspace routes
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: gate-coverage-core
+    profiles:
+      - phase-8-qa-pre-delivery-validation
+      - role-qa
+      - gate-acceptance
+    owner_roles:
+      - qa
+    source_docs:
+      - playbook/roles/qa.md
+      - playbook/process/phases/phase-8-qa-pre-delivery-validation.md
+    description: >
+      QA must document live testing for all required PM workspace routes, not
+      only the previously reviewed subset.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/coverage/validate_qa_review_coverage.py
+    evidence:
+      required_files:
+        - runs/current/evidence/qa-delivery-review.md
+        - runs/current/evidence/quality/review-plan.json
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Expand QA to the full required route set and update the review artifact.

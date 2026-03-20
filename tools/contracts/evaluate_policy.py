@@ -18,6 +18,11 @@ from contracts.load_context import normalized_repo_root
 from contracts.resolve_active_policy import resolve_policy
 from contracts.result_schema import make_result
 from validators.artifacts.validate_artifact_metadata_contract import collect_issues as collect_artifact_metadata_issues
+from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
+from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
+from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
+from validators.coverage.validate_preview_coverage import collect_issues as collect_preview_coverage_issues
+from validators.coverage.validate_qa_review_coverage import collect_issues as collect_qa_review_coverage_issues
 
 
 def legacy_dependency_provisioning(repo_root: Path) -> tuple[bool, str]:
@@ -90,6 +95,61 @@ def evaluate_requirement(repo_root: Path, requirement: dict[str, Any]) -> dict[s
             severity=severity,
             summary="dependency provisioning policy passed" if ok else "dependency provisioning policy failed",
             details=[] if ok else [{"path": "app/.runtime.local.env", "location": "", "message": detail or "dependency provisioning check failed"}],
+            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+        )
+
+    if entrypoint == "tools/validators/coverage/validate_frontend_route_coverage.py":
+        issues = collect_frontend_route_coverage_issues(repo_root)
+        return make_result(
+            requirement_id=requirement_id,
+            status="fail" if issues else "pass",
+            severity=severity,
+            summary=f"{len(issues)} frontend coverage issue(s)" if issues else "frontend route coverage passed",
+            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
+            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+        )
+
+    if entrypoint == "tools/validators/coverage/validate_preview_coverage.py":
+        issues = collect_preview_coverage_issues(repo_root)
+        return make_result(
+            requirement_id=requirement_id,
+            status="fail" if issues else "pass",
+            severity=severity,
+            summary=f"{len(issues)} preview coverage issue(s)" if issues else "preview coverage passed",
+            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
+            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+        )
+
+    if entrypoint == "tools/validators/coverage/validate_integration_review_coverage.py":
+        issues = collect_integration_review_coverage_issues(repo_root)
+        return make_result(
+            requirement_id=requirement_id,
+            status="fail" if issues else "pass",
+            severity=severity,
+            summary=f"{len(issues)} integration review coverage issue(s)" if issues else "integration review coverage passed",
+            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
+            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+        )
+
+    if entrypoint == "tools/validators/coverage/validate_acceptance_review_coverage.py":
+        issues = collect_acceptance_review_coverage_issues(repo_root)
+        return make_result(
+            requirement_id=requirement_id,
+            status="fail" if issues else "pass",
+            severity=severity,
+            summary=f"{len(issues)} acceptance review coverage issue(s)" if issues else "acceptance review coverage passed",
+            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
+            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+        )
+
+    if entrypoint == "tools/validators/coverage/validate_qa_review_coverage.py":
+        issues = collect_qa_review_coverage_issues(repo_root)
+        return make_result(
+            requirement_id=requirement_id,
+            status="fail" if issues else "pass",
+            severity=severity,
+            summary=f"{len(issues)} QA review coverage issue(s)" if issues else "QA review coverage passed",
+            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
             evidence_paths=requirement.get("evidence", {}).get("required_files", []),
         )
 

@@ -26,6 +26,8 @@ This phase begins only after:
   tested flows
 - review saved UI preview screenshots when present, but do not treat them as a
   substitute for live testing
+- execute the required route review plan and document live coverage for each
+  required visible PM workspace route
 - reopen the owning role when QA finds a real defect
 
 ## Outputs
@@ -39,4 +41,6 @@ This phase begins only after:
 - no visible frontend crash or blank-screen defect remains
 - no visible metadata/debug shell leakage remains
 - no obvious backend runtime error remains during QA-tested flows
+- QA documents route-by-route live coverage for the required PM workspace, not
+  only a prior reviewed subset
 - QA either approves delivery or reopens the run with explicit owner handoffs
