@@ -43,6 +43,8 @@ build/
 coverage/
 !tools/validators/coverage/
 !tools/validators/coverage/**
+tools/validators/coverage/__pycache__/
+tools/validators/coverage/**/*.py[cod]
 playwright-report/
 test-results/
 *.tsbuildinfo
