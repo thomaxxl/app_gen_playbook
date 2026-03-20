@@ -1,7 +1,10 @@
 # Python
+.venv
 .venv/
+venv
 venv/
 backend/.venv/
+backend/venv
 backend/.deps/
 backend/**/__pycache__/
 backend/**/*.py[cod]
