@@ -2936,6 +2936,19 @@ archive_duplicate_queue_trace() {
   log "queue-duplicate-archived role=$runtime_role source=$source_lane archived=${archived_path#$ROOT/}"
 }
 
+archive_stale_correction_queue_traces() {
+  local changed=1
+  local source_path archived_path replacement_path
+
+  while IFS=$'\t' read -r source_path archived_path replacement_path; do
+    [[ -n "$source_path" ]] || continue
+    log "queue-stale-correction-archived source=$source_path archived=$archived_path replacement=$replacement_path"
+    changed=0
+  done < <(python3 "$ROOT/tools/archive_stale_correction_notes.py" --repo-root "$ROOT")
+
+  return "$changed"
+}
+
 archive_legacy_deployment_duplicate() {
   local duplicate_path="$1"
   local lane="$2"
@@ -3034,6 +3047,10 @@ normalize_queue_state() {
   fi
 
   if quarantine_noncanonical_queue_traces; then
+    changed=0
+  fi
+
+  if archive_stale_correction_queue_traces; then
     changed=0
   fi
 

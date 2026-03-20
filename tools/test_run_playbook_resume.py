@@ -1344,6 +1344,162 @@ class RunPlaybookResumeTests(unittest.TestCase):
                 "# Run Notes\n\n",
             )
 
+    def test_resume_archives_stale_backend_correction_when_newer_architect_handoff_exists(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "backend" / "inbox").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "backend" / "processed").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "architect" / "inbox").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "architect" / "processed").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"","change_id":"CR-123"}\n',
+                encoding="utf-8",
+            )
+            correction_path = (
+                repo_root
+                / "runs"
+                / "current"
+                / "role-state"
+                / "backend"
+                / "inbox"
+                / "20260320-115400-from-orchestrator-to-backend-handoff-correction.md"
+            )
+            correction_path.write_text(
+                textwrap.dedent(
+                    """\
+                    from: orchestrator
+                    to: backend
+                    topic: handoff-correction
+
+                    ## Required Reads
+                    - runs/current/role-state/architect/processed/20260320-110057-from-backend-to-architect-change-backend-design-delta.md
+
+                    ## Notes
+                    - downstream receiver was: architect
+                    """
+                ),
+                encoding="utf-8",
+            )
+            (
+                repo_root
+                / "runs"
+                / "current"
+                / "role-state"
+                / "architect"
+                / "processed"
+                / "20260320-110057-from-backend-to-architect-change-backend-design-delta.md"
+            ).write_text(
+                textwrap.dedent(
+                    """\
+                    from: backend
+                    to: architect
+                    topic: change-backend-design-delta
+                    change_id: CR-123
+
+                    ## Gate Status
+                    - pass
+                    """
+                ),
+                encoding="utf-8",
+            )
+            (
+                repo_root
+                / "runs"
+                / "current"
+                / "role-state"
+                / "architect"
+                / "inbox"
+                / "20260320-125225-from-backend-to-architect-change-backend-design-delta-correction.md"
+            ).write_text(
+                textwrap.dedent(
+                    """\
+                    from: backend
+                    to: architect
+                    topic: handoff-correction
+                    change_id: CR-123
+
+                    ## Gate Status
+                    - pass
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "archive_stale_correction_notes.py",
+                (source_repo / "tools" / "archive_stale_correction_notes.py").read_text(encoding="utf-8"),
+            )
+            write_executable(
+                tools_dir / "orchestrator_common.py",
+                (source_repo / "tools" / "orchestrator_common.py").read_text(encoding="utf-8"),
+            )
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 is not ready')\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                "#!/usr/bin/env python3\nprint('run is complete')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0", "PYTHONPATH": str(tools_dir)}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("queue-stale-correction-archived", result.stderr)
+            self.assertFalse(correction_path.exists())
+            archived = list(
+                (repo_root / "runs" / "current" / "role-state" / "backend" / "processed").glob(
+                    "20260320-115400-from-orchestrator-to-backend-handoff-correction.stale-correction-superseded-*.md"
+                )
+            )
+            self.assertTrue(archived)
+
     def test_resume_archives_orchestrator_progress_note_and_recovers_without_ceo(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
 

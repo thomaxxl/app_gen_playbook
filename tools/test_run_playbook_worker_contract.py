@@ -120,6 +120,8 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('blocked_exit "run requires operator action" "$body"', script)
         self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
         self.assertIn('if run_recovery_pass; then', script)
+        self.assertIn('archive_stale_correction_queue_traces()', script)
+        self.assertIn('python3 "$ROOT/tools/archive_stale_correction_notes.py" --repo-root "$ROOT"', script)
         self.assertLess(
             script.rindex("clear_steering_requests_on_startup"),
             script.rindex("register_runner_pid"),

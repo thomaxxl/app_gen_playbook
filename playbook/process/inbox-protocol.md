@@ -42,6 +42,9 @@ Example:
 - Blocked items remain in `inbox/` only if they are still actionable.
 - If a blocked item is no longer actionable, move it to `processed/` and emit a
   follow-up handoff to the next responsible agent.
+- If a newer pending downstream handoff supersedes the practical purpose of an
+  older `handoff-correction` note, archive the stale correction note instead of
+  reopening the sender again.
 
 ## Special file
 

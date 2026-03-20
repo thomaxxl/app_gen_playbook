@@ -657,6 +657,10 @@ If the handoff is invalid, the orchestrator MUST:
 - record the rejection in `runs/current/remarks.md` and
   `runs/current/evidence/orchestrator/recovery-log.md`
 
+If a newer pending sender-to-receiver handoff already exists for the same
+thread, the orchestrator MUST archive the older correction note instead of
+reopening the sender on stale validation output.
+
 ## Stall detection
 
 The orchestrator MUST detect a stalled run.
