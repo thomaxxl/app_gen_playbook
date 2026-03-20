@@ -1,8 +1,5 @@
 id: role-architect
 title: Architect active policy
 includes:
-  - process-core
   - architecture-core
   - evidence-core
-  - frontend-core
-  - backend-core

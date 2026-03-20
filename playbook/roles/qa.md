@@ -55,6 +55,7 @@ The QA agent MUST:
   execution context
 - perform basic user testing against the real running app, not only file or
   route inspection
+- treat QA as a completeness gate, not only a smoke/runtime pass
 - ignore mobile/narrow-screen issues unless the run-owned UX artifacts
   explicitly kept mobile in scope
 - use the repo-local `playwright-skill` as the default browser automation lane
@@ -69,6 +70,10 @@ The QA agent MUST:
   language
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
+- verify the required visible PM workspace routes from the current review plan,
+  not only whichever subset was already screenshot-reviewed earlier
+- fail the review if required PM routes are missing, silently substituted by a
+  generic shell, or absent from the documented live QA route coverage
 - record the tested paths, observed results, and any blockers in
   `../../runs/current/evidence/qa-delivery-review.md`
 - when QA passes, use the canonical pass vocabulary in

@@ -2,3 +2,5 @@ id: product-core
 title: Product core policy
 includes:
   - process-core
+  - product-scope-core
+  - ux-coverage-core

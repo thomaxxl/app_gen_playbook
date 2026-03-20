@@ -20,6 +20,7 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("PROC-ARTMETA-001", registry.requirements)
         self.assertIn("EVID-GATE-001", registry.requirements)
         self.assertIn("gate-quality", registry.profiles)
+        self.assertIn("tools/check_completion.py", registry.validators)
 
     def test_resolve_policy_for_acceptance_includes_gate_profiles(self) -> None:
         payload = resolve_policy(
@@ -34,6 +35,22 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("role-product-manager", payload["active_profiles"])
         self.assertIn("gate-acceptance", payload["active_profiles"])
         self.assertIn("EVID-GATE-001", payload["active_requirement_ids"])
+        self.assertIn("PROD-SCOPE-001", payload["active_requirement_ids"])
+        self.assertIn("UX-COV-001", payload["active_requirement_ids"])
+        self.assertIn("GATE-COV-002", payload["active_requirement_ids"])
+
+    def test_resolve_policy_for_qa_phase_includes_qa_coverage(self) -> None:
+        payload = resolve_policy(
+            self.repo_root,
+            role="qa",
+            phase="phase-8-qa-pre-delivery-validation",
+            run_mode="new",
+            gate="acceptance",
+            features=[],
+            profiles=[],
+        )
+        self.assertIn("role-qa", payload["active_profiles"])
+        self.assertIn("GATE-COV-003", payload["active_requirement_ids"])
 
     def test_evaluate_metadata_requirement_passes_on_repo(self) -> None:
         registry = compile_registry(self.repo_root)

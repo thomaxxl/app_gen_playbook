@@ -1,0 +1,4 @@
+id: product-scope-core
+title: Product scope enforcement
+requirement_ids:
+  - PROD-SCOPE-001

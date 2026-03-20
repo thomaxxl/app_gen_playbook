@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import subprocess
 import sys
@@ -11,22 +12,71 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from check_backend_orm_safrs import audit_backend_orm_safrs
-from check_completion import collect_blockers
-from check_frontend_usability import collect_issues as collect_frontend_issues
 from contracts.load_context import normalized_repo_root
+from contracts.models import compile_registry
 from contracts.resolve_active_policy import resolve_policy
 from contracts.result_schema import make_result
-from validators.artifacts.validate_artifact_metadata_contract import collect_issues as collect_artifact_metadata_issues
-from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
-from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
-from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
-from validators.coverage.validate_preview_coverage import collect_issues as collect_preview_coverage_issues
-from validators.coverage.validate_qa_review_coverage import collect_issues as collect_qa_review_coverage_issues
+def _load_callable(module_name: str, callable_name: str):
+    module = importlib.import_module(module_name)
+    return getattr(module, callable_name)
 
 
-def legacy_dependency_provisioning(repo_root: Path) -> tuple[bool, str]:
-    script_path = repo_root / "tools" / "check_dependency_provisioning.py"
+def _apply_issue_list_adapter(
+    *,
+    repo_root: Path,
+    requirement: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    collector = _load_callable(str(config["module"]), str(config["callable"]))
+    issues = collector(repo_root)
+    message_field = str(config["message_field"])
+    path_field = str(config.get("path_field", "path"))
+    location_field = str(config.get("location_field", "location"))
+    details = [
+        {
+            "path": str(item.get(path_field, "")),
+            "location": str(item.get(location_field, "")),
+            "message": str(item.get(message_field, "")),
+        }
+        for item in issues
+    ]
+    evidence_paths = sorted({detail["path"] for detail in details if detail["path"]}) or requirement.get("evidence", {}).get("required_files", [])
+    return make_result(
+        requirement_id=str(requirement["id"]),
+        status="fail" if details else "pass",
+        severity=str(requirement["severity"]),
+        summary=str(config["summary_fail_template"]).format(count=len(details)) if details else str(config["summary_pass"]),
+        details=details,
+        evidence_paths=evidence_paths,
+    )
+
+
+def _apply_string_list_adapter(
+    *,
+    repo_root: Path,
+    requirement: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    collector = _load_callable(str(config["module"]), str(config["callable"]))
+    issues = collector(repo_root)
+    details = [{"path": str(config["default_path"]), "location": "", "message": str(issue)} for issue in issues]
+    return make_result(
+        requirement_id=str(requirement["id"]),
+        status="fail" if details else "pass",
+        severity=str(requirement["severity"]),
+        summary=str(config["summary_fail_template"]).format(count=len(details)) if details else str(config["summary_pass"]),
+        details=details,
+        evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+    )
+
+
+def _apply_subprocess_check_adapter(
+    *,
+    repo_root: Path,
+    requirement: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    script_path = repo_root / str(requirement["validator"]["entrypoint"])
     completed = subprocess.run(
         [sys.executable, str(script_path), "--repo-root", str(repo_root)],
         capture_output=True,
@@ -34,130 +84,34 @@ def legacy_dependency_provisioning(repo_root: Path) -> tuple[bool, str]:
         check=False,
     )
     detail = (completed.stdout or completed.stderr).strip()
-    return completed.returncode == 0, detail
-
-
-def evaluate_requirement(repo_root: Path, requirement: dict[str, Any]) -> dict[str, Any]:
-    requirement_id = str(requirement["id"])
-    validator = requirement["validator"]
-    entrypoint = str(validator["entrypoint"])
-    severity = str(requirement["severity"])
-
-    if entrypoint == "tools/validators/artifacts/validate_artifact_metadata_contract.py":
-        issues = collect_artifact_metadata_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} artifact metadata consistency issue(s)" if issues else "artifact metadata guidance is internally consistent",
-            details=[{"path": issue["path"], "location": issue.get("location", ""), "message": issue["message"]} for issue in issues],
-            evidence_paths=sorted({issue["path"] for issue in issues}) or requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/check_completion.py":
-        blockers = collect_blockers(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if blockers else "pass",
-            severity=severity,
-            summary=f"{len(blockers)} completion blocker(s)" if blockers else "canonical completion gate passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in blockers],
-            evidence_paths=sorted({item["path"] for item in blockers}) or requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/check_frontend_usability.py":
-        issues = collect_frontend_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} frontend usability issue(s)" if issues else "frontend usability guard passed",
-            details=[{"path": "app/frontend/src", "location": "", "message": issue} for issue in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/check_backend_orm_safrs.py":
-        issues = audit_backend_orm_safrs(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} backend ORM/SAFRS issue(s)" if issues else "backend ORM/SAFRS audit passed",
-            details=[{"path": "app/backend/src/my_app", "location": "", "message": issue} for issue in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/check_dependency_provisioning.py":
-        ok, detail = legacy_dependency_provisioning(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="pass" if ok else "fail",
-            severity=severity,
-            summary="dependency provisioning policy passed" if ok else "dependency provisioning policy failed",
-            details=[] if ok else [{"path": "app/.runtime.local.env", "location": "", "message": detail or "dependency provisioning check failed"}],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/validators/coverage/validate_frontend_route_coverage.py":
-        issues = collect_frontend_route_coverage_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} frontend coverage issue(s)" if issues else "frontend route coverage passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/validators/coverage/validate_preview_coverage.py":
-        issues = collect_preview_coverage_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} preview coverage issue(s)" if issues else "preview coverage passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/validators/coverage/validate_integration_review_coverage.py":
-        issues = collect_integration_review_coverage_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} integration review coverage issue(s)" if issues else "integration review coverage passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/validators/coverage/validate_acceptance_review_coverage.py":
-        issues = collect_acceptance_review_coverage_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} acceptance review coverage issue(s)" if issues else "acceptance review coverage passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
-    if entrypoint == "tools/validators/coverage/validate_qa_review_coverage.py":
-        issues = collect_qa_review_coverage_issues(repo_root)
-        return make_result(
-            requirement_id=requirement_id,
-            status="fail" if issues else "pass",
-            severity=severity,
-            summary=f"{len(issues)} QA review coverage issue(s)" if issues else "QA review coverage passed",
-            details=[{"path": item["path"], "location": "", "message": item["reason"]} for item in issues],
-            evidence_paths=requirement.get("evidence", {}).get("required_files", []),
-        )
-
+    ok = completed.returncode == 0
     return make_result(
-        requirement_id=requirement_id,
+        requirement_id=str(requirement["id"]),
+        status="pass" if ok else "fail",
+        severity=str(requirement["severity"]),
+        summary=str(config["summary_pass"]) if ok else str(config["summary_fail_template"]),
+        details=[] if ok else [{"path": str(config["default_path"]), "location": "", "message": detail or "subprocess policy check failed"}],
+        evidence_paths=requirement.get("evidence", {}).get("required_files", []),
+    )
+
+
+def evaluate_requirement(repo_root: Path, requirement: dict[str, Any], registry=None) -> dict[str, Any]:
+    if registry is None:
+        registry = compile_registry(repo_root)
+    entrypoint = str(requirement["validator"]["entrypoint"])
+    config = dict(registry.validators.get(entrypoint, {}))
+    adapter = str(config.get("adapter", ""))
+    if adapter == "issue_list":
+        return _apply_issue_list_adapter(repo_root=repo_root, requirement=requirement, config=config)
+    if adapter == "string_list":
+        return _apply_string_list_adapter(repo_root=repo_root, requirement=requirement, config=config)
+    if adapter == "subprocess_check":
+        return _apply_subprocess_check_adapter(repo_root=repo_root, requirement=requirement, config=config)
+    return make_result(
+        requirement_id=str(requirement["id"]),
         status="skipped",
-        severity=severity,
-        summary=f"no evaluator adapter implemented for {entrypoint}",
+        severity=str(requirement["severity"]),
+        summary=f"no registered evaluator adapter implemented for {entrypoint}",
     )
 
 
@@ -205,6 +159,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = normalized_repo_root(args.repo_root)
+    registry = compile_registry(repo_root)
     payload = resolve_policy(
         repo_root,
         role=args.role,
@@ -215,7 +170,7 @@ def main() -> int:
         profiles=args.profile,
     )
 
-    results = [evaluate_requirement(repo_root, requirement) for requirement in payload["requirements"].values()]
+    results = [evaluate_requirement(repo_root, requirement, registry=registry) for requirement in payload["requirements"].values()]
     report = {
         "context": {
             "role": payload.get("role"),

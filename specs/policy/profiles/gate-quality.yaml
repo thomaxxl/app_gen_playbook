@@ -4,3 +4,6 @@ includes:
   - evidence-core
   - frontend-core
   - backend-core
+  - product-scope-core
+  - ux-coverage-core
+  - gate-coverage-core

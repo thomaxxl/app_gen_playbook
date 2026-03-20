@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/validator-registry.schema.json",
+  "type": "object",
+  "required": ["id", "title", "validators"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "validators": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["adapter"],
+        "properties": {
+          "adapter": {
+            "type": "string",
+            "enum": ["issue_list", "string_list", "subprocess_check"]
+          },
+          "module": { "type": "string", "minLength": 1 },
+          "callable": { "type": "string", "minLength": 1 },
+          "default_path": { "type": "string" },
+          "path_field": { "type": "string" },
+          "message_field": { "type": "string" },
+          "location_field": { "type": "string" },
+          "summary_pass": { "type": "string" },
+          "summary_fail_template": { "type": "string" }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": { "adapter": { "const": "issue_list" } },
+              "required": ["adapter"]
+            },
+            "then": {
+              "required": ["module", "callable", "message_field", "summary_pass", "summary_fail_template"]
+            }
+          },
+          {
+            "if": {
+              "properties": { "adapter": { "const": "string_list" } },
+              "required": ["adapter"]
+            },
+            "then": {
+              "required": ["module", "callable", "default_path", "summary_pass", "summary_fail_template"]
+            }
+          },
+          {
+            "if": {
+              "properties": { "adapter": { "const": "subprocess_check" } },
+              "required": ["adapter"]
+            },
+            "then": {
+              "required": ["default_path", "summary_pass", "summary_fail_template"]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

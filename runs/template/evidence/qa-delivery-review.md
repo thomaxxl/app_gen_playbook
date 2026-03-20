@@ -17,6 +17,14 @@ starter_status: pending-review-evidence
 - metadata_leakage: pending
 - review_summary: pending
 
+Required live coverage content for a pass review:
+
+- cite the required visible PM workspace routes from
+  `runs/current/evidence/quality/review-plan.json`
+- document route-by-route live QA coverage for those required routes
+- record whether any required route was missing, generically substituted, or
+  blocked by CTA drift
+
 Accepted pass values for final approval are:
 
 - `qa_decision: pass`

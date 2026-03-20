@@ -2,3 +2,7 @@ id: architecture-core
 title: Architecture core policy
 includes:
   - process-core
+  - backend-core
+  - product-scope-core
+  - ux-coverage-core
+  - gate-coverage-core

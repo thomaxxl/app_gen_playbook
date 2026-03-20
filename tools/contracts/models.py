@@ -20,6 +20,7 @@ class PolicyRegistry:
     requirements: dict[str, dict[str, Any]]
     profiles: dict[str, dict[str, Any]]
     requirement_sets: dict[str, dict[str, Any]]
+    validators: dict[str, dict[str, Any]]
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -27,6 +28,7 @@ class PolicyRegistry:
             "requirements": self.requirements,
             "profiles": self.profiles,
             "requirement_sets": self.requirement_sets,
+            "validators": self.validators,
         }
 
 
@@ -70,6 +72,7 @@ def compile_registry(repo_root: Path) -> PolicyRegistry:
     policy_root = repo_root / "specs" / "policy"
     requirement_schema = load_schema(policy_root / "schema" / "requirement.schema.json")
     profile_schema = load_schema(policy_root / "schema" / "profile.schema.json")
+    validator_registry_schema = load_schema(policy_root / "schema" / "validator-registry.schema.json")
 
     requirements: dict[str, dict[str, Any]] = {}
     requirement_sets: dict[str, dict[str, Any]] = {}
@@ -113,11 +116,24 @@ def compile_registry(repo_root: Path) -> PolicyRegistry:
                     f"requirement {requirement_id} references unknown profile {profile_id}"
                 )
 
+    validators_path = policy_root / "validators" / "registry.yaml"
+    validators: dict[str, dict[str, Any]] = {}
+    if validators_path.exists():
+        payload = load_yaml(validators_path)
+        validate_against_schema(payload, validator_registry_schema, validators_path)
+        validators = {str(entrypoint): dict(config) for entrypoint, config in (payload.get("validators") or {}).items()}
+
+    for requirement_id, requirement in requirements.items():
+        entrypoint = str(requirement["validator"]["entrypoint"])
+        if entrypoint not in validators:
+            raise PolicyError(f"requirement {requirement_id} references unregistered validator {entrypoint}")
+
     return PolicyRegistry(
         generated_at=utc_now(),
         requirements=dict(sorted(requirements.items())),
         profiles=dict(sorted(profiles.items())),
         requirement_sets=dict(sorted(requirement_sets.items())),
+        validators=dict(sorted(validators.items())),
     )
 
 
@@ -136,4 +152,5 @@ def load_compiled_registry(path: Path) -> PolicyRegistry:
         requirements=dict(payload["requirements"]),
         profiles=dict(payload["profiles"]),
         requirement_sets=dict(payload.get("requirement_sets", {})),
+        validators=dict(payload.get("validators", {})),
     )

@@ -6,3 +6,6 @@ includes:
   - frontend-core
   - backend-core
   - deployment-core
+  - product-scope-core
+  - ux-coverage-core
+  - gate-coverage-core

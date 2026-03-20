@@ -1,0 +1,79 @@
+id: validator-registry
+title: Registered policy evaluator adapters
+validators:
+  tools/validators/artifacts/validate_artifact_metadata_contract.py:
+    adapter: issue_list
+    module: validators.artifacts.validate_artifact_metadata_contract
+    callable: collect_issues
+    path_field: path
+    message_field: message
+    location_field: location
+    summary_pass: artifact metadata guidance is internally consistent
+    summary_fail_template: "{count} artifact metadata consistency issue(s)"
+  tools/check_completion.py:
+    adapter: issue_list
+    module: check_completion
+    callable: collect_blockers
+    path_field: path
+    message_field: reason
+    summary_pass: canonical completion gate passed
+    summary_fail_template: "{count} completion blocker(s)"
+  tools/check_frontend_usability.py:
+    adapter: string_list
+    module: check_frontend_usability
+    callable: collect_issues
+    default_path: app/frontend/src
+    summary_pass: frontend usability guard passed
+    summary_fail_template: "{count} frontend usability issue(s)"
+  tools/check_backend_orm_safrs.py:
+    adapter: string_list
+    module: check_backend_orm_safrs
+    callable: audit_backend_orm_safrs
+    default_path: app/backend/src/my_app
+    summary_pass: backend ORM/SAFRS audit passed
+    summary_fail_template: "{count} backend ORM/SAFRS issue(s)"
+  tools/check_dependency_provisioning.py:
+    adapter: subprocess_check
+    default_path: app/.runtime.local.env
+    summary_pass: dependency provisioning policy passed
+    summary_fail_template: dependency provisioning policy failed
+  tools/validators/coverage/validate_frontend_route_coverage.py:
+    adapter: issue_list
+    module: validators.coverage.validate_frontend_route_coverage
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend route coverage passed
+    summary_fail_template: "{count} frontend coverage issue(s)"
+  tools/validators/coverage/validate_preview_coverage.py:
+    adapter: issue_list
+    module: validators.coverage.validate_preview_coverage
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: preview coverage passed
+    summary_fail_template: "{count} preview coverage issue(s)"
+  tools/validators/coverage/validate_integration_review_coverage.py:
+    adapter: issue_list
+    module: validators.coverage.validate_integration_review_coverage
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: integration review coverage passed
+    summary_fail_template: "{count} integration review coverage issue(s)"
+  tools/validators/coverage/validate_acceptance_review_coverage.py:
+    adapter: issue_list
+    module: validators.coverage.validate_acceptance_review_coverage
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: acceptance review coverage passed
+    summary_fail_template: "{count} acceptance review coverage issue(s)"
+  tools/validators/coverage/validate_qa_review_coverage.py:
+    adapter: issue_list
+    module: validators.coverage.validate_qa_review_coverage
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: QA review coverage passed
+    summary_fail_template: "{count} QA review coverage issue(s)"

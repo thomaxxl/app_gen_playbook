@@ -19,6 +19,7 @@ This phase begins only after:
 
 - run `app/run.sh` and confirm the app boots successfully
 - perform basic user testing against the live app
+- compile or read the current scope facts and review plan before testing
 - verify the frontend is not blank, crashed, or stuck in obvious request loops
 - verify the frontend is not exposing metadata, contract recovery copy, route
   inventory, or other internal/debug content
@@ -28,6 +29,8 @@ This phase begins only after:
   substitute for live testing
 - execute the required route review plan and document live coverage for each
   required visible PM workspace route
+- treat missing required routes, CTA drift, or generic substitution of required
+  PM workspace surfaces as blocking QA failures unless explicitly waived
 - reopen the owning role when QA finds a real defect
 
 ## Outputs
@@ -43,4 +46,6 @@ This phase begins only after:
 - no obvious backend runtime error remains during QA-tested flows
 - QA documents route-by-route live coverage for the required PM workspace, not
   only a prior reviewed subset
+- QA validates completeness of the required PM route/page set, not only runtime
+  survivability of a narrow smoke subset
 - QA either approves delivery or reopens the run with explicit owner handoffs

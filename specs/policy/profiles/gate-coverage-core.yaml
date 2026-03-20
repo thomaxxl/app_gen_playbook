@@ -1,0 +1,6 @@
+id: gate-coverage-core
+title: Gate coverage enforcement
+requirement_ids:
+  - GATE-COV-001
+  - GATE-COV-002
+  - GATE-COV-003

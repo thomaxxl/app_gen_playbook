@@ -4,3 +4,4 @@ includes:
   - process-core
   - evidence-core
   - product-core
+  - gate-coverage-core

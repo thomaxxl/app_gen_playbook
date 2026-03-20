@@ -1,0 +1,4 @@
+id: ux-coverage-core
+title: UX coverage enforcement
+requirement_ids:
+  - UX-COV-001
