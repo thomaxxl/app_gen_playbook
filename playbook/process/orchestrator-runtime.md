@@ -519,9 +519,18 @@ That rule allows an operator to steer a live run by writing a normal inbox
 message directly into the CEO lane without modifying the runner process itself.
 
 If CEO writes `runs/current/orchestrator/pause-requested.md`, the orchestrator
-MUST stop the run cleanly instead of continuing normal dispatch. A later
-`scripts/run_playbook.sh --resume` MUST archive that pause file and continue
-from the current run state.
+MUST treat it as a high-priority drain request:
+
+- finish only the work that is already in `inflight`
+- stop claiming new inbox work
+- then exit cleanly
+
+A later `scripts/run_playbook.sh --resume` MUST archive that pause file and
+continue from the current run state.
+
+If the operator writes `runs/current/orchestrator/kill-requested.md`, the
+orchestrator MUST stop immediately, terminate playbook-managed processes, and
+exit without waiting for additional queue work or CEO approval.
 
 The orchestrator MUST NOT start a long-lived background worker through command
 substitution or any other construct that runs the starter in a subshell and
@@ -549,6 +558,8 @@ When `--resume` is used, the orchestrator MUST:
 - rebuild from repo state when session continuity is missing or unsafe
 - archive `runs/current/orchestrator/pause-requested.md` if it exists, because
   `--resume` is an explicit operator decision to continue
+- archive `runs/current/orchestrator/kill-requested.md` if it exists, because
+  `--resume` is an explicit operator decision to continue after a forced stop
 - run a queue-recovery pass before continuing normal scheduling when
   completion still fails
 

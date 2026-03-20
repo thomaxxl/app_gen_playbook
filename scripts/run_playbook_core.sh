@@ -153,6 +153,8 @@ ORCH_ROOT="$RUN_ROOT/orchestrator"
 RUN_STATUS_JSON="$ORCH_ROOT/run-status.json"
 OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"
 PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"
+KILL_REQUESTED_MD="$ORCH_ROOT/kill-requested.md"
+RUNNER_PID_FILE="$ORCH_ROOT/runner.pid"
 DELIVERY_APPROVED_MD="$ORCH_ROOT/delivery-approved.md"
 FATAL_ERROR_OPERATOR_ESCALATION_TAG="fatal-error-operator-escalation"
 RUNTIME_ENVIRONMENT_JSON="$ORCH_ROOT/runtime-environment.json"
@@ -285,6 +287,11 @@ append_recovery_log() {
   local title="$1"
   local body="$2"
   append_markdown_log_entry "$EVIDENCE_ROOT/recovery-log.md" "# Recovery Log" "$title" "$body"
+}
+
+register_runner_pid() {
+  mkdir -p "$ORCH_ROOT"
+  printf '%s\n' "$$" > "$RUNNER_PID_FILE"
 }
 
 maybe_backup_current_run_before_new() {
@@ -1497,6 +1504,13 @@ stop_dashboard_sidecar() {
 }
 
 cleanup_background_processes() {
+  if [[ -f "$RUNNER_PID_FILE" ]]; then
+    local recorded_pid=""
+    recorded_pid="$(tr -d '[:space:]' < "$RUNNER_PID_FILE" 2>/dev/null || true)"
+    if [[ "$recorded_pid" == "$$" ]]; then
+      rm -f "$RUNNER_PID_FILE"
+    fi
+  fi
   stop_dashboard_sidecar
   if [[ -n "$app_runtime_pid" ]] && kill -0 "$app_runtime_pid" 2>/dev/null; then
     kill -- "-$app_runtime_pid" 2>/dev/null || kill "$app_runtime_pid" 2>/dev/null || true
@@ -1717,6 +1731,28 @@ EOF
   pause_exit "run paused by operator request" "$body"
 }
 
+kill_requested_exit() {
+  local body
+  if [[ -f "$KILL_REQUESTED_MD" ]]; then
+    body=$(
+      cat <<EOF
+The run was terminated immediately by an operator kill request.
+
+Kill file:
+- ${KILL_REQUESTED_MD#$ROOT/}
+
+Resume later with:
+- bash scripts/run_playbook.sh --resume
+
+$(cat "$KILL_REQUESTED_MD")
+EOF
+    )
+  else
+    body="The run was terminated by an operator kill request, but no kill-requested file was present."
+  fi
+  pause_exit "run stopped by operator kill request" "$body"
+}
+
 host_runtime_verification_field_ok() {
   local field="$1"
   [[ -f "$HOST_RUNTIME_VERIFICATION_MD" ]] || return 1
@@ -1859,6 +1895,25 @@ clear_pause_requested_on_resume() {
   append_run_remark \
     "Pause Request Cleared On Resume" \
     "Archived pause request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+  return 0
+}
+
+clear_kill_requested_on_resume() {
+  [[ -f "$KILL_REQUESTED_MD" ]] || return 1
+
+  local archive_dir="$EVIDENCE_ROOT/kill-archive"
+  local stamp archived_path
+  mkdir -p "$archive_dir"
+  stamp="$(date -u +%Y%m%d-%H%M%S)"
+  archived_path="$archive_dir/kill-requested.resume-cleared.${stamp}.md"
+  mv "$KILL_REQUESTED_MD" "$archived_path"
+  log "kill-requested-cleared-on-resume archived=${archived_path#$ROOT/}"
+  append_recovery_log \
+    "Kill Request Cleared On Resume" \
+    "Archived kill request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
+  append_run_remark \
+    "Kill Request Cleared On Resume" \
+    "Archived kill request:\n- ${archived_path#$ROOT/}\n\nResume continued from current run state."
   return 0
 }
 
@@ -2724,12 +2779,16 @@ PY
 }
 
 pending_actionable_count() {
+  local requested_lane="${1:-}"
   local count=0
   local role_dir lane path
 
   while IFS= read -r role_dir; do
     [[ -n "$role_dir" ]] || continue
     for lane in inbox inflight; do
+      if [[ -n "$requested_lane" && "$lane" != "$requested_lane" ]]; then
+        continue
+      fi
       for path in "$role_dir/$lane"/*.md; do
         [[ -f "$path" ]] || continue
         count=$((count + 1))
@@ -3038,6 +3097,41 @@ pending_operator_priority_role() {
   printf '%s\n' "$best_role"
 }
 
+pending_inflight_role() {
+  local role_dir role_name runtime_role
+  local queue_line path best_role="" best_name=""
+
+  while IFS= read -r role_dir; do
+    [[ -n "$role_dir" ]] || continue
+    role_name="$(basename "$role_dir")"
+    [[ "$role_name" == "orchestrator" ]] && continue
+    runtime_role="$(runtime_role_from_label "$role_name" 2>/dev/null || true)"
+    [[ -n "$runtime_role" ]] || continue
+
+    queue_line="$(oldest_role_queue_file inflight "$role_dir")"
+    [[ -n "$queue_line" ]] || continue
+    path="${queue_line#*::}"
+    if [[ -z "$best_name" || "$(basename "$path")" < "$best_name" ]]; then
+      best_name="$(basename "$path")"
+      best_role="$runtime_role"
+    fi
+  done < <(canonical_queue_dirs)
+
+  [[ -n "$best_role" ]] || return 1
+  printf '%s\n' "$best_role"
+}
+
+pause_drain_in_progress() {
+  [[ "$(pending_actionable_count inflight)" -gt 0 ]] && return 0
+  if [[ -n "$frontend_pid" ]] && kill -0 "$frontend_pid" 2>/dev/null; then
+    return 0
+  fi
+  if [[ -n "$backend_pid" ]] && kill -0 "$backend_pid" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 newer_pending_operator_override_path() {
   local role_dir path newest=""
 
@@ -3328,8 +3422,18 @@ worker_loop() {
   local runtime_role="$1"
   shift
   local ignore_roles=("$@")
+  local runtime_role_dir
+  runtime_role_dir="$(role_state_dir "$runtime_role")"
 
   while true; do
+    if [[ -f "$KILL_REQUESTED_MD" ]]; then
+      break
+    fi
+
+    if [[ -f "$PAUSE_REQUESTED_MD" ]] && ! find "$runtime_role_dir/inflight" -maxdepth 1 -name '*.md' -type f | grep -q .; then
+      break
+    fi
+
     if check_completion >/dev/null 2>&1; then
       break
     fi
@@ -3474,6 +3578,7 @@ PY
   clear_host_verified_operator_action_required || true
   clear_browser_fallback_operator_action_required || true
   clear_completed_run_operator_action_required || true
+  clear_kill_requested_on_resume || true
   clear_pause_requested_on_resume || true
 
   if ! check_completion >/dev/null 2>&1; then
@@ -3483,13 +3588,33 @@ PY
 
 main_loop() {
   local parallel_started=0
-  local did_work completion_detail="" priority_role operator_priority_role stall_key liveness_output
+  local did_work completion_detail="" priority_role operator_priority_role inflight_role stall_key liveness_output
   priority_role="$TARGET_ROLE"
 
   while true; do
     maybe_reexec_if_runtime_surface_changed "main-loop heartbeat" || true
     enforce_phase6_admin_yaml_nonempty
     did_work=0
+
+    if [[ -f "$KILL_REQUESTED_MD" ]]; then
+      kill_requested_exit
+    fi
+
+    if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+      inflight_role="$(pending_inflight_role || true)"
+      if [[ -n "$inflight_role" ]]; then
+        maybe_enforce_dependency_provisioning_preflight "$inflight_role"
+        if run_role_once_with_runtime_reload_guard "$inflight_role"; then
+          LAST_STALL_SIGNATURE=""
+          continue
+        fi
+      fi
+      if pause_drain_in_progress; then
+        sleep "$POLL_SECONDS"
+        continue
+      fi
+      pause_requested_exit
+    fi
 
     if clear_superseded_operator_action_required; then
       did_work=1
@@ -3527,6 +3652,9 @@ main_loop() {
       maybe_enforce_dependency_provisioning_preflight "$operator_priority_role"
       if run_role_once_with_runtime_reload_guard "$operator_priority_role"; then
         LAST_STALL_SIGNATURE=""
+        if [[ -f "$KILL_REQUESTED_MD" ]]; then
+          kill_requested_exit
+        fi
         continue
       fi
     fi
@@ -3707,5 +3835,6 @@ else
   seed_change_run
 fi
 
+register_runner_pid
 start_dashboard_sidecar
 main_loop

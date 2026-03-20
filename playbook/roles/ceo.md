@@ -154,13 +154,15 @@ cycle.
 If the steering request is "pause" or "stop for now", the CEO MUST:
 
 - write `runs/current/orchestrator/pause-requested.md`
+- treat it as a high-priority drain request
+- allow only already in-flight work to finish; do not start new inbox work
 - explain why the run was paused and what should happen next
 - avoid writing `operator-action-required.md` unless the pause request also
   depends on a true external blocker
 
-The orchestrator will exit cleanly when `pause-requested.md` exists, and the
-next `scripts/run_playbook.sh --resume` will archive that pause file and
-continue from the current run state.
+The orchestrator will drain current in-flight work, then exit cleanly when
+`pause-requested.md` exists. The next `scripts/run_playbook.sh --resume` will
+archive that pause file and continue from the current run state.
 
 ## Completion rule
 

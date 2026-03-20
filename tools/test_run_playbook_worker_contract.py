@@ -104,8 +104,15 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
 
         self.assertIn('OPERATOR_ACTION_REQUIRED_MD="$ORCH_ROOT/operator-action-required.md"', script)
         self.assertIn('PAUSE_REQUESTED_MD="$ORCH_ROOT/pause-requested.md"', script)
+        self.assertIn('KILL_REQUESTED_MD="$ORCH_ROOT/kill-requested.md"', script)
+        self.assertIn('RUNNER_PID_FILE="$ORCH_ROOT/runner.pid"', script)
         self.assertIn('pause_requested_exit()', script)
+        self.assertIn('kill_requested_exit()', script)
         self.assertIn('clear_pause_requested_on_resume()', script)
+        self.assertIn('clear_kill_requested_on_resume()', script)
+        self.assertIn('register_runner_pid()', script)
+        self.assertIn('pending_inflight_role()', script)
+        self.assertIn('pause_drain_in_progress()', script)
         self.assertIn('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', script)
         self.assertIn('operator_action_required_exit()', script)
         self.assertIn('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', script)
@@ -114,11 +121,11 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if run_recovery_pass; then', script)
         main_loop_index = script.index("while true; do")
         self.assertLess(
-            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
             script.index('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', main_loop_index),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
         )
         self.assertLess(
-            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
+            script.index('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', main_loop_index),
             script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
         )
 
@@ -300,7 +307,8 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('CORE_SCRIPT="$SCRIPT_DIR/run_playbook_core.sh"', script)
         self.assertIn('if [[ "${1:-}" == "--ceo-delivery-validate" ]]; then', script)
         self.assertIn('ceo_delivery_validate()', script)
-        self.assertIn('RUN_SH_EXIT_ON_READY=1', script)
+        self.assertIn('RUN_SH_VALIDATE_FRONTEND_URL="$frontend_url"', script)
+        self.assertIn('RUN_SH_VALIDATE_BACKEND_URL="$backend_url"', script)
         self.assertIn('exec bash "$CORE_SCRIPT" "$@"', script)
 
     def test_wrapper_attempts_ceo_repair_when_core_has_syntax_errors(self) -> None:
