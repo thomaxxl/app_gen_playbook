@@ -1,0 +1,36 @@
+id: phase-6-integration-review
+title: Phase 6 - Integration review
+owners:
+  - architect
+purpose: Prove the app works as an integrated product against product, architecture, UX, and backend contracts.
+entry_milestones:
+  - M5-implementation-ready-for-integration
+exit_milestone: M6-quality-gate-passed
+required_outputs:
+  - runs/current/artifacts/architecture/integration-review.md
+  - runs/current/evidence/contract-samples.md
+  - runs/current/evidence/frontend-browser-proof.md
+  - runs/current/evidence/ui-previews/manifest.md
+  - runs/current/evidence/frontend-usability.md
+  - runs/current/evidence/quality/coverage-report.md
+steps:
+  - id: P6-INTEGRATION-REVIEW
+    title: Integration review and quality evidence complete
+    kind: review
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/architecture/integration-review.md
+        - runs/current/evidence/contract-samples.md
+        - runs/current/evidence/frontend-browser-proof.md
+        - runs/current/evidence/ui-previews/manifest.md
+        - runs/current/evidence/frontend-usability.md
+        - runs/current/evidence/quality/coverage-report.md
+    requirements:
+      - EVID-GATE-001
+      - PROD-SCOPE-001
+      - UX-COV-001
+      - GATE-COV-001
+      - BE-SAFRS-ORM-001
+    waivable: false

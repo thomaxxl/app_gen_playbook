@@ -1,0 +1,30 @@
+id: phase-3-ux-and-interaction-design
+title: Phase 3 - UX and interaction design
+owners:
+  - frontend
+purpose: Define the required route, page, CTA, state, and review coverage model before implementation drifts.
+entry_milestones:
+  - M2-architecture-package-ready
+exit_milestone: M3-ux-package-ready
+required_outputs:
+  - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/custom-view-specs.md
+  - runs/current/artifacts/ux/state-handling.md
+  - runs/current/evidence/quality/review-plan.json
+steps:
+  - id: P3-UX-PACKAGE
+    title: UX package and review plan complete
+    kind: design
+    owners: [frontend, architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/ux/navigation.md
+        - runs/current/artifacts/ux/landing-strategy.md
+        - runs/current/artifacts/ux/screen-inventory.md
+        - runs/current/artifacts/ux/custom-view-specs.md
+        - runs/current/artifacts/ux/state-handling.md
+        - runs/current/evidence/quality/review-plan.json
+    waivable: false

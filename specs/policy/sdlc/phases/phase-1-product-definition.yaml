@@ -1,0 +1,34 @@
+id: phase-1-product-definition
+title: Phase 1 - Product definition
+owners:
+  - product_manager
+purpose: Produce an implementable product contract with stories, resources, rules, and acceptance hooks.
+entry_milestones:
+  - M0-framing-ready
+exit_milestone: M1-product-package-ready
+required_outputs:
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/resource-inventory.md
+  - runs/current/artifacts/product/resource-behavior-matrix.md
+  - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/product/custom-pages.md
+  - runs/current/artifacts/product/traceability-matrix.md
+  - runs/current/artifacts/product/acceptance-criteria.md
+  - runs/current/artifacts/product/sample-data.md
+steps:
+  - id: P1-PRODUCT-PACKAGE
+    title: Product package complete
+    kind: specification
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/product/user-stories.md
+        - runs/current/artifacts/product/resource-inventory.md
+        - runs/current/artifacts/product/resource-behavior-matrix.md
+        - runs/current/artifacts/product/business-rules.md
+        - runs/current/artifacts/product/custom-pages.md
+        - runs/current/artifacts/product/traceability-matrix.md
+        - runs/current/artifacts/product/acceptance-criteria.md
+        - runs/current/artifacts/product/sample-data.md
+    waivable: false

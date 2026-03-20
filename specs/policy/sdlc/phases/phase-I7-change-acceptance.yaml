@@ -1,0 +1,20 @@
+id: phase-I7-change-acceptance
+title: Phase I7 - Change acceptance
+owners:
+  - product_manager
+purpose: Accept the changed implementation, update change history, and promote the refreshed baseline.
+entry_milestones:
+  - MI6-regression-gate-passed
+exit_milestone: MI7-change-accepted-and-promoted
+required_outputs:
+  - runs/current/artifacts/product/acceptance-review.md
+steps:
+  - id: PI7-CHANGE-ACCEPTANCE
+    title: Change acceptance complete
+    kind: review
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/product/acceptance-review.md
+    waivable: false

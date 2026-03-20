@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/sdlc-phase.schema.json",
+  "title": "SDLC Phase",
+  "type": "object",
+  "required": ["id", "title", "owners", "purpose", "steps"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "purpose": { "type": "string", "minLength": 1 },
+    "entry_milestones": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "exit_milestone": { "type": "string", "minLength": 1 },
+    "required_outputs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "sdlc-step.schema.json" }
+    }
+  },
+  "additionalProperties": false
+}

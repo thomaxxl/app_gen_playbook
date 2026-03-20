@@ -1,0 +1,27 @@
+id: security
+title: Optional security overlay
+enabled_by_default: false
+applies_to:
+  run_modes:
+    - new-full-run
+    - iterative-change-run
+    - app-only-hotfix
+phases:
+  - phase-1-product-definition
+  - phase-2-architecture-contract
+  - phase-4-backend-design-and-rules-mapping
+  - phase-5-parallel-implementation
+  - phase-6-integration-review
+  - phase-8-qa-pre-delivery-validation
+steps:
+  - id: SEC-P2-THREAT-MODEL
+    title: Threat model and trust boundary review
+  - id: SEC-P4-AUTHZ-MATRIX
+    title: Authorization matrix and security backend design
+  - id: SEC-P5-SAST
+    title: Static analysis and dependency scan
+  - id: SEC-P6-SECURITY-REVIEW
+    title: Security review of integrated delivery
+  - id: SEC-P8-SECURITY-QA-SMOKE
+    title: Security-sensitive QA smoke checks
+default_enforcement: advisory

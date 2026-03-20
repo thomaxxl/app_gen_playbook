@@ -1,0 +1,31 @@
+id: iterative-change-run
+title: Iterative change lifecycle
+run_mode: iterative-change-run
+description: Lifecycle for authoritative change packets against an accepted baseline.
+phases:
+  - phase-I0-baseline-alignment
+  - phase-I1-change-intake-and-triage
+  - phase-I2-product-and-scope-delta
+  - phase-I3-architecture-and-contract-delta
+  - phase-I4-design-delta
+  - phase-I5-implementation-delta
+  - phase-I6-integration-and-regression-review
+  - phase-I7-change-acceptance
+milestones:
+  - MI0-baseline-trust-restored
+  - MI1-change-classified
+  - MI2-product-delta-ready
+  - MI3-architecture-delta-ready
+  - MI4-design-delta-ready
+  - MI5-delta-ready-for-regression-review
+  - MI6-regression-gate-passed
+  - MI7-change-accepted-and-promoted
+allowed_overlays:
+  - security
+runtime_extension_paths:
+  - runs/current/policy/extensions/*.yaml
+merge_policy:
+  allow_additive_steps: true
+  allow_step_strengthening: true
+  allow_step_removal: false
+  allow_requirement_weakening: false

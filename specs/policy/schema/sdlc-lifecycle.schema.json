@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/sdlc-lifecycle.schema.json",
+  "title": "SDLC Lifecycle",
+  "type": "object",
+  "required": ["id", "title", "run_mode", "phases"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "run_mode": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "milestones": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "allowed_overlays": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "runtime_extension_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "merge_policy": {
+      "type": "object",
+      "properties": {
+        "allow_additive_steps": { "type": "boolean" },
+        "allow_step_strengthening": { "type": "boolean" },
+        "allow_step_removal": { "type": "boolean" },
+        "allow_requirement_weakening": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,20 @@
+id: hotfix-phase-h3-close-or-escalate
+title: Hotfix phase H3 - Close or escalate
+owners:
+  - architect
+purpose: Close the hotfix or escalate it into an iterative change run if it affected design state.
+entry_milestones:
+  - H2-hotfix-regression-verified
+exit_milestone: H3-hotfix-closed-or-escalated
+required_outputs:
+  - runs/current/orchestrator/run-status.json
+steps:
+  - id: H3-HOTFIX-CLOSE
+    title: Hotfix closed or escalated
+    kind: lifecycle-control
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/orchestrator/run-status.json
+    waivable: false

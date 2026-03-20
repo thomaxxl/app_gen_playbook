@@ -1,0 +1,35 @@
+id: new-full-run
+title: New full run lifecycle
+run_mode: new-full-run
+description: Canonical lifecycle for fresh app generation.
+phases:
+  - pre-run-controls
+  - phase-0-intake-and-framing
+  - phase-1-product-definition
+  - phase-2-architecture-contract
+  - phase-3-ux-and-interaction-design
+  - phase-4-backend-design-and-rules-mapping
+  - phase-5-parallel-implementation
+  - phase-6-integration-review
+  - phase-7-product-acceptance
+  - phase-8-qa-pre-delivery-validation
+milestones:
+  - LC-04-initial-checkpoint-created
+  - M0-framing-ready
+  - M1-product-package-ready
+  - M2-architecture-package-ready
+  - M3-ux-package-ready
+  - M4-backend-design-ready
+  - M5-implementation-ready-for-integration
+  - M6-quality-gate-passed
+  - M7-acceptance-gate-passed
+  - M8-qa-gate-passed
+allowed_overlays:
+  - security
+runtime_extension_paths:
+  - runs/current/policy/extensions/*.yaml
+merge_policy:
+  allow_additive_steps: true
+  allow_step_strengthening: true
+  allow_step_removal: false
+  allow_requirement_weakening: false

@@ -1,0 +1,20 @@
+id: phase-I4-design-delta
+title: Phase I4 - Design delta
+owners:
+  - frontend
+purpose: Update UX and interaction design artifacts only where the change requires it.
+entry_milestones:
+  - MI3-architecture-delta-ready
+exit_milestone: MI4-design-delta-ready
+required_outputs:
+  - runs/current/artifacts/ux/navigation.md
+steps:
+  - id: PI4-DESIGN-DELTA
+    title: Design delta package complete
+    kind: design
+    owners: [frontend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/ux/navigation.md
+    waivable: false

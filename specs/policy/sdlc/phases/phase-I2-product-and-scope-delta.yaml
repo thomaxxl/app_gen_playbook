@@ -1,0 +1,20 @@
+id: phase-I2-product-and-scope-delta
+title: Phase I2 - Product and scope delta
+owners:
+  - product_manager
+purpose: Record the changed stories, workflows, rules, and acceptance consequences for an iterative run.
+entry_milestones:
+  - MI1-change-classified
+exit_milestone: MI2-product-delta-ready
+required_outputs:
+  - runs/current/artifacts/product/user-stories.md
+steps:
+  - id: PI2-PRODUCT-DELTA
+    title: Product delta package complete
+    kind: specification
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/product/user-stories.md
+    waivable: false

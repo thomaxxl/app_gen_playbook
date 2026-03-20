@@ -1,0 +1,27 @@
+id: phase-7-product-acceptance
+title: Phase 7 - Product acceptance
+owners:
+  - product_manager
+purpose: Confirm the delivered system satisfies the intended user stories, pages, routes, and acceptance criteria in user terms.
+entry_milestones:
+  - M6-quality-gate-passed
+exit_milestone: M7-acceptance-gate-passed
+required_outputs:
+  - runs/current/artifacts/product/acceptance-review.md
+steps:
+  - id: P7-PRODUCT-ACCEPTANCE
+    title: Product acceptance review complete
+    kind: review
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/product/acceptance-review.md
+    requirements:
+      - EVID-GATE-001
+      - GATE-COV-002
+      - PROD-SCOPE-001
+      - UX-COV-001
+    manual_attestation:
+      required: true
+    waivable: false

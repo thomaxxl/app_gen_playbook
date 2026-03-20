@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/attestation.schema.json",
+  "title": "SDLC Attestation",
+  "type": "object",
+  "required": ["id", "subject", "reviewer", "decision", "evidence", "timestamp"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "subject": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["step", "milestone", "requirement", "phase"] },
+        "id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "decision": {
+      "type": "string",
+      "enum": ["approved", "accepted", "rejected", "waived", "advisory-pass"]
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "notes": { "type": "string" },
+    "timestamp": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

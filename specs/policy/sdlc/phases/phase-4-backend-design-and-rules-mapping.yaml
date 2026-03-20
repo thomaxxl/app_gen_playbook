@@ -1,0 +1,28 @@
+id: phase-4-backend-design-and-rules-mapping
+title: Phase 4 - Backend design and rules mapping
+owners:
+  - backend
+purpose: Map product and architecture into models, resources, rules, and backend test obligations.
+entry_milestones:
+  - M2-architecture-package-ready
+exit_milestone: M4-backend-design-ready
+required_outputs:
+  - runs/current/artifacts/backend-design/model-design.md
+  - runs/current/artifacts/backend-design/relationship-map.md
+  - runs/current/artifacts/backend-design/resource-exposure-policy.md
+  - runs/current/artifacts/backend-design/query-behavior.md
+  - runs/current/artifacts/backend-design/test-plan.md
+steps:
+  - id: P4-BACKEND-DESIGN
+    title: Backend design package complete
+    kind: design
+    owners: [backend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/backend-design/model-design.md
+        - runs/current/artifacts/backend-design/relationship-map.md
+        - runs/current/artifacts/backend-design/resource-exposure-policy.md
+        - runs/current/artifacts/backend-design/query-behavior.md
+        - runs/current/artifacts/backend-design/test-plan.md
+    waivable: false

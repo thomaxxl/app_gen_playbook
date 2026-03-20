@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/sdlc-step.schema.json",
+  "title": "SDLC Step",
+  "type": "object",
+  "required": ["id", "title", "kind", "owners", "requiredness"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "minLength": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "requiredness": {
+      "type": "string",
+      "enum": ["required", "optional", "advisory"]
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "required_files": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requirements": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z0-9-]+$" }
+    },
+    "manual_attestation": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "waivable": { "type": "boolean" },
+    "reopen_downstream": {
+      "type": "object",
+      "properties": {
+        "phases": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

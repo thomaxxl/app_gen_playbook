@@ -1,0 +1,32 @@
+id: phase-2-architecture-contract
+title: Phase 2 - Architecture contract
+owners:
+  - architect
+purpose: Convert product intent into a stable cross-layer design contract.
+entry_milestones:
+  - M1-product-package-ready
+exit_milestone: M2-architecture-package-ready
+required_outputs:
+  - runs/current/artifacts/architecture/overview.md
+  - runs/current/artifacts/architecture/integration-boundary.md
+  - runs/current/artifacts/architecture/route-and-entry-model.md
+  - runs/current/artifacts/architecture/runtime-bom.md
+  - runs/current/artifacts/architecture/dependency-provisioning.md
+  - runs/current/artifacts/architecture/capability-profile.md
+  - runs/current/artifacts/architecture/load-plan.md
+steps:
+  - id: P2-ARCHITECTURE-PACKAGE
+    title: Architecture package complete
+    kind: specification
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/architecture/overview.md
+        - runs/current/artifacts/architecture/integration-boundary.md
+        - runs/current/artifacts/architecture/route-and-entry-model.md
+        - runs/current/artifacts/architecture/runtime-bom.md
+        - runs/current/artifacts/architecture/dependency-provisioning.md
+        - runs/current/artifacts/architecture/capability-profile.md
+        - runs/current/artifacts/architecture/load-plan.md
+    waivable: false

@@ -1,0 +1,18 @@
+id: phase-I0-baseline-alignment
+title: Phase I0 - Baseline alignment
+owners:
+  - architect
+purpose: Restore trust in the accepted baseline when current app state or accepted artifacts have drifted.
+exit_milestone: MI0-baseline-trust-restored
+required_outputs:
+  - runs/current/changes
+steps:
+  - id: PI0-BASELINE-ALIGNMENT
+    title: Baseline trust restored
+    kind: recovery
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/changes
+    waivable: false

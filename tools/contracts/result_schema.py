@@ -3,7 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 
-VALID_STATUSES = {"pass", "fail", "warning", "skipped"}
+VALID_STATUSES = {
+    "pending",
+    "ready",
+    "in_progress",
+    "blocked",
+    "pass",
+    "fail",
+    "warning",
+    "waived",
+    "not_applicable",
+    "superseded",
+    "skipped",
+}
 
 
 def make_result(

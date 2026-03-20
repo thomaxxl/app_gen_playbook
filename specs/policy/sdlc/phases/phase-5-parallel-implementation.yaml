@@ -1,0 +1,34 @@
+id: phase-5-parallel-implementation
+title: Phase 5 - Parallel implementation
+owners:
+  - frontend
+purpose: Implement the generated app against the approved contracts and produce implementation evidence.
+entry_milestones:
+  - M3-ux-package-ready
+  - M4-backend-design-ready
+exit_milestone: M5-implementation-ready-for-integration
+required_outputs:
+  - app/run.sh
+  - app/reference/admin.yaml
+steps:
+  - id: P5-FRONTEND-IMPLEMENTATION
+    title: Frontend implementation and verification complete
+    kind: implementation
+    owners: [frontend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - app/frontend/src/App.tsx
+        - app/frontend/package.json
+    waivable: false
+  - id: P5-BACKEND-IMPLEMENTATION
+    title: Backend implementation and verification complete
+    kind: implementation
+    owners: [backend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - app/backend/src/my_app/fastapi_app.py
+        - app/reference/admin.yaml
+        - app/run.sh
+    waivable: false

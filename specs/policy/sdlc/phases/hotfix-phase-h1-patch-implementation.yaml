@@ -1,0 +1,20 @@
+id: hotfix-phase-h1-patch-implementation
+title: Hotfix phase H1 - Patch implementation
+owners:
+  - frontend
+purpose: Apply the minimal safe implementation patch in the hotfix lane.
+entry_milestones:
+  - H0-hotfix-eligibility-proven
+exit_milestone: H1-hotfix-patch-applied
+required_outputs:
+  - app/run.sh
+steps:
+  - id: H1-HOTFIX-PATCH
+    title: Hotfix patch applied
+    kind: implementation
+    owners: [frontend, backend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - app/run.sh
+    waivable: false

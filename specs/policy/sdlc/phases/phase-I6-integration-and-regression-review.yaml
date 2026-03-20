@@ -1,0 +1,20 @@
+id: phase-I6-integration-and-regression-review
+title: Phase I6 - Integration and regression review
+owners:
+  - architect
+purpose: Verify the changed implementation still matches authoritative artifacts and does not regress accepted behavior.
+entry_milestones:
+  - MI5-delta-ready-for-regression-review
+exit_milestone: MI6-regression-gate-passed
+required_outputs:
+  - runs/current/artifacts/architecture/integration-review.md
+steps:
+  - id: PI6-REGRESSION-REVIEW
+    title: Regression review complete
+    kind: review
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/architecture/integration-review.md
+    waivable: false

@@ -1,0 +1,20 @@
+id: hotfix-phase-h2-regression-verification
+title: Hotfix phase H2 - Regression verification
+owners:
+  - qa
+purpose: Run the smallest safe verification set for a hotfix.
+entry_milestones:
+  - H1-hotfix-patch-applied
+exit_milestone: H2-hotfix-regression-verified
+required_outputs:
+  - runs/current/evidence/qa-delivery-review.md
+steps:
+  - id: H2-HOTFIX-REGRESSION
+    title: Hotfix regression verification complete
+    kind: review
+    owners: [qa]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/qa-delivery-review.md
+    waivable: false

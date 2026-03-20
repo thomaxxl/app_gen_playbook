@@ -1,0 +1,6 @@
+id: sdlc-validator-registry
+title: SDLC validator registry bridge
+description: >
+  The SDLC layer reuses the shared policy validator registry at
+  `specs/policy/validators/registry.yaml`. SDLC steps reference requirements,
+  and requirements resolve validators through the shared registry.

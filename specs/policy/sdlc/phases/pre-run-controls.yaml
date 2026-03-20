@@ -1,0 +1,46 @@
+id: pre-run-controls
+title: Pre-run lifecycle controls
+owners:
+  - orchestrator
+purpose: Establish run mode, workspace, runtime preflight, and initial checkpoint state before phase entry.
+exit_milestone: LC-04-initial-checkpoint-created
+required_outputs:
+  - runs/current/orchestrator/run-status.json
+steps:
+  - id: LC-01-RUN-MODE
+    title: Run mode selected and recorded
+    kind: lifecycle-control
+    owners: [orchestrator]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/orchestrator/run-status.json
+    waivable: false
+  - id: LC-02-WORKSPACE
+    title: Workspace initialized
+    kind: lifecycle-control
+    owners: [orchestrator]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/remarks.md
+        - runs/current/notes.md
+    waivable: false
+  - id: LC-03-PREFLIGHT
+    title: Execution preflight passed
+    kind: lifecycle-control
+    owners: [deployment]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/devops/execution-prereqs.md
+    waivable: false
+  - id: LC-04-CHECKPOINT
+    title: Initial checkpoint state created
+    kind: lifecycle-control
+    owners: [orchestrator]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/orchestrator/run-status.json
+    waivable: false

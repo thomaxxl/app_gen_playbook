@@ -1,0 +1,20 @@
+id: phase-I5-implementation-delta
+title: Phase I5 - Implementation delta
+owners:
+  - frontend
+purpose: Apply the approved implementation delta in owned subtrees and produce updated evidence.
+entry_milestones:
+  - MI4-design-delta-ready
+exit_milestone: MI5-delta-ready-for-regression-review
+required_outputs:
+  - app/run.sh
+steps:
+  - id: PI5-IMPLEMENTATION-DELTA
+    title: Implementation delta complete
+    kind: implementation
+    owners: [frontend, backend]
+    requiredness: required
+    outputs:
+      artifacts:
+        - app/run.sh
+    waivable: false

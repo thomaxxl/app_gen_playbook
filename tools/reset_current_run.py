@@ -97,6 +97,20 @@ def reset_current_run(repo_root: Path) -> Path:
     runtime_state_dir = current_dir / "orchestrator"
     (runtime_state_dir / "workers").mkdir(parents=True, exist_ok=True)
     (runtime_state_dir / "sessions").mkdir(parents=True, exist_ok=True)
+    (runtime_state_dir / "sdlc-events.jsonl").write_text("", encoding="utf-8")
+    (runtime_state_dir / "sdlc-plan.yaml").write_text(
+        "generated_at: null\nlifecycle_id: null\nphase_order: []\nphases: []\nmilestones: []\n",
+        encoding="utf-8",
+    )
+    (runtime_state_dir / "sdlc-state.yaml").write_text(
+        "generated_at: null\nrun_mode: null\ncurrent_phase: null\nsteps: {}\nphases: {}\nmilestones: {}\n",
+        encoding="utf-8",
+    )
+
+    policy_dir = current_dir / "policy"
+    (policy_dir / "extensions").mkdir(parents=True, exist_ok=True)
+    (policy_dir / "waivers").mkdir(parents=True, exist_ok=True)
+    (policy_dir / "attestations").mkdir(parents=True, exist_ok=True)
 
     remarks_path = current_dir / "remarks.md"
     remarks_path.write_text(

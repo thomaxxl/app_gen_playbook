@@ -1,0 +1,20 @@
+id: phase-I3-architecture-and-contract-delta
+title: Phase I3 - Architecture and contract delta
+owners:
+  - architect
+purpose: Record the changed cross-layer contract and reopened lanes for an iterative run.
+entry_milestones:
+  - MI2-product-delta-ready
+exit_milestone: MI3-architecture-delta-ready
+required_outputs:
+  - runs/current/artifacts/architecture/overview.md
+steps:
+  - id: PI3-ARCHITECTURE-DELTA
+    title: Architecture delta package complete
+    kind: design
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/architecture/overview.md
+    waivable: false

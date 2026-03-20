@@ -1,0 +1,24 @@
+id: phase-0-intake-and-framing
+title: Phase 0 - Intake and framing
+owners:
+  - product_manager
+purpose: Turn the incoming request into an explicit first-version framing with assumptions and exclusions.
+entry_milestones:
+  - LC-04-initial-checkpoint-created
+exit_milestone: M0-framing-ready
+required_outputs:
+  - runs/current/artifacts/product/input-interpretation.md
+  - runs/current/artifacts/product/research-notes.md
+  - runs/current/artifacts/product/brief.md
+steps:
+  - id: P0-FRAMING-PACKAGE
+    title: Framing package authored
+    kind: specification
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/artifacts/product/brief.md
+        - runs/current/artifacts/product/research-notes.md
+        - runs/current/artifacts/product/input-interpretation.md
+    waivable: false

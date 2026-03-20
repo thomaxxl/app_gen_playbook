@@ -1,0 +1,26 @@
+id: phase-8-qa-pre-delivery-validation
+title: Phase 8 - QA pre-delivery validation
+owners:
+  - qa
+purpose: Independently validate the delivered app before final delivery approval.
+entry_milestones:
+  - M7-acceptance-gate-passed
+exit_milestone: M8-qa-gate-passed
+required_outputs:
+  - runs/current/evidence/qa-delivery-review.md
+steps:
+  - id: P8-QA-DELIVERY-REVIEW
+    title: QA delivery review complete
+    kind: review
+    owners: [qa]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/qa-delivery-review.md
+    requirements:
+      - EVID-GATE-001
+      - GATE-COV-003
+      - DEP-PROVISIONING-001
+    manual_attestation:
+      required: true
+    waivable: false

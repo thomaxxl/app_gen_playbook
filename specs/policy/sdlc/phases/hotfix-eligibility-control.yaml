@@ -1,0 +1,18 @@
+id: hotfix-eligibility-control
+title: Hotfix control H0 - Eligibility
+owners:
+  - architect
+purpose: Prove a requested hotfix does not change authoritative design state and can remain in the hotfix lane.
+exit_milestone: H0-hotfix-eligibility-proven
+required_outputs:
+  - runs/current/orchestrator/run-status.json
+steps:
+  - id: H0-HOTFIX-ELIGIBILITY
+    title: Hotfix eligibility proven
+    kind: lifecycle-control
+    owners: [architect]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/orchestrator/run-status.json
+    waivable: false

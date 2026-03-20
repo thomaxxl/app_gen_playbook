@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/sdlc-milestone.schema.json",
+  "title": "SDLC Milestone",
+  "type": "object",
+  "required": ["id", "title", "phase", "kind", "owners"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "phase": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "enum": ["gate", "milestone", "control"] },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "achieved_when": {
+      "type": "object",
+      "properties": {
+        "all_steps_pass": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "required_outputs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blocks_transition": { "type": "boolean" },
+    "unlocks_phases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

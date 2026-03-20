@@ -1,0 +1,23 @@
+id: app-only-hotfix
+title: App-only hotfix lifecycle
+run_mode: app-only-hotfix
+description: Constrained lifecycle for implementation-only hotfixes that do not change authoritative design state.
+phases:
+  - hotfix-eligibility-control
+  - hotfix-phase-h1-patch-implementation
+  - hotfix-phase-h2-regression-verification
+  - hotfix-phase-h3-close-or-escalate
+milestones:
+  - H0-hotfix-eligibility-proven
+  - H1-hotfix-patch-applied
+  - H2-hotfix-regression-verified
+  - H3-hotfix-closed-or-escalated
+allowed_overlays:
+  - security
+runtime_extension_paths:
+  - runs/current/policy/extensions/*.yaml
+merge_policy:
+  allow_additive_steps: true
+  allow_step_strengthening: true
+  allow_step_removal: false
+  allow_requirement_weakening: false

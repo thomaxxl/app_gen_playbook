@@ -1,0 +1,20 @@
+id: phase-I1-change-intake-and-triage
+title: Phase I1 - Change intake and triage
+owners:
+  - product_manager
+purpose: Turn an iterative request into an authoritative change packet with the correct lane classification.
+entry_milestones:
+  - MI0-baseline-trust-restored
+exit_milestone: MI1-change-classified
+required_outputs:
+  - runs/current/changes
+steps:
+  - id: PI1-CHANGE-CLASSIFICATION
+    title: Change packet classified
+    kind: specification
+    owners: [product_manager]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/changes
+    waivable: false
