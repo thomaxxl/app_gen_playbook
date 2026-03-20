@@ -84,6 +84,9 @@ humans and keeps agent context bounded during automated runs.
 For a new run:
 
 1. Prepare a short input brief as markdown.
+   It does not need to be complete; the Product Manager is expected to
+   research the topic, fill in missing product detail, and document domain
+   best practices and first-version defaults in the run-owned artifacts.
 2. Start the orchestrator:
 
 ```bash

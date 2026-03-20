@@ -5,6 +5,10 @@ inventory, workflows, business-rule intent, custom-page purpose, acceptance
 criteria, sample-data expectations, and final screenshot-content approval
 during acceptance.
 
+The initial brief may be incomplete. Product Manager is responsible for
+researching the topic, filling product gaps, and documenting domain best
+practices and sensible first-version defaults before handoff.
+
 Always load:
 
 - `global-core.md`

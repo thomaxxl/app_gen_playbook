@@ -6,8 +6,15 @@ Turn the current run brief into a usable product definition for the rest of
 the pipeline.
 
 Sparse input is not a blocker. The Product Manager MUST research the domain,
-choose a coherent first-version framing, normalize terminology, and convert
-incomplete briefs into explicit product artifacts.
+fill in missing product detail, choose a coherent first-version framing,
+normalize terminology, and convert incomplete briefs into explicit product
+artifacts.
+
+The initial prompt is an input signal, not a complete specification. When the
+brief is underspecified, ambiguous, or missing domain detail, the Product
+Manager MUST actively research the topic, infer a defensible first-version
+scope, and bring domain best practices and default conventions into the owned
+product artifacts instead of handing downstream roles a sparse brief.
 
 ## Owns
 
@@ -19,6 +26,7 @@ incomplete briefs into explicit product artifacts.
 - custom-page purpose
 - acceptance criteria
 - sample-data expectations
+- researched domain conventions and best-practice defaults
 - product-level assumptions and open questions
 
 ## Runtime files
@@ -163,6 +171,12 @@ Research and framing artifacts MUST separate:
 - input-derived facts
 - research-derived conventions
 - assumptions introduced to keep the run moving
+
+The Product Manager MUST NOT treat the user brief as self-sufficient when it
+plainly is not. If the input leaves gaps around expected workflows, standard
+domain behavior, common operating constraints, or baseline usability
+expectations, those gaps MUST be closed through explicit research and
+documented product decisions before handoff.
 
 Use the generic product templates under
 [../../specs/product/README.md](../../specs/product/README.md) when producing

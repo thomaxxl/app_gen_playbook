@@ -23,6 +23,8 @@ Classify that input using `../input-policy.md`.
 
 - classify input completeness level
 - research the domain if the brief is sparse or ambiguous
+- research baseline domain conventions, user expectations, and best-practice
+  defaults when the brief does not specify them
 - decide whether the app intent is explicit or inference-led
 - choose the smallest coherent first-version framing that fits the house style
 - identify primary users
@@ -54,6 +56,8 @@ Classify that input using `../input-policy.md`.
 - main resources are named
 - critical workflows are identified
 - sparse input has been actively interpreted rather than merely classified
+- missing domain detail has been replaced with researched conventions,
+  explicit first-version choices, or documented assumptions
 - assumptions caused by sparse input are written down
 - the proposed framing is stable enough to continue into Phase 1 without
   downstream guessing

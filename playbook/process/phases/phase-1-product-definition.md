@@ -9,6 +9,8 @@ Turn business intent into an implementable product definition.
 ## Activities
 
 - write user stories or scenarios
+- research domain best practices and standard workflow expectations when the
+  brief is incomplete or silent
 - define list/detail/edit/create needs per resource
 - define resource inventory, CRUD surface, and key relationships explicitly
 - define success and failure criteria
@@ -16,6 +18,8 @@ Turn business intent into an implementable product definition.
 - define sample data expectations
 - define required custom pages
 - record assumptions and unresolved questions explicitly
+- replace brief-level gaps with researched product decisions, explicit
+  conventions, or clearly documented assumptions before handoff
 
 ## Outputs
 
@@ -49,6 +53,9 @@ Turn business intent into an implementable product definition.
   for downstream roles to stop guessing about CRUD, search, menu exposure, and
   key relationships
 - sample-data and assumptions artifacts exist
+- missing brief detail has been resolved into researched conventions,
+  documented best-practice defaults, or explicit assumptions that downstream
+  roles can follow without guessing
 - every `must` story is mapped in `traceability-matrix.md` to workflow IDs,
   page IDs, route IDs, and required review obligations
 - the product package is marked `ready-for-handoff` or `approved`
