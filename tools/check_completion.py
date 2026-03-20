@@ -20,6 +20,7 @@ from check_backend_orm_safrs import audit_backend_orm_safrs
 
 READY_ARTIFACT_STATUSES = {"ready-for-handoff", "approved"}
 NON_FINAL_ARTIFACT_STATUSES = {"blocked", "draft", "in-progress", "interrupted", "superseded", "unknown"}
+CORE_DEVOPS_ARTIFACTS = {"README.md", "execution-prereqs.md"}
 REQUIRED_APP_OUTPUTS = (
     ("app/.gitignore", "deployment"),
     ("app/README.md", "architect"),
@@ -151,15 +152,15 @@ def likely_alias_hint(repo_root: Path, required_path: Path) -> str:
 
 def is_optional_devops_active(repo_root: Path) -> bool:
     devops_artifacts_dir = repo_root / "runs" / "current" / "artifacts" / "devops"
-    if any(path.name != "README.md" for path in devops_artifacts_dir.glob("*.md")):
+    if any(path.name not in CORE_DEVOPS_ARTIFACTS for path in devops_artifacts_dir.glob("*.md")):
         return True
 
     for deployment_dir in all_role_state_dirs(repo_root, "deployment"):
         inbox_dir = deployment_dir / "inbox"
-        processed_dir = deployment_dir / "processed"
+        inflight_dir = deployment_dir / "inflight"
         if (
             (inbox_dir.exists() and any(inbox_dir.iterdir()))
-            or (processed_dir.exists() and any(processed_dir.iterdir()))
+            or (inflight_dir.exists() and any(inflight_dir.iterdir()))
         ):
             return True
     return False

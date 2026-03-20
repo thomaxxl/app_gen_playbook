@@ -45,6 +45,52 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertNotIn("app/Dockerfile", paths)
             self.assertNotIn("app/docker-compose.yml", paths)
 
+    def test_execution_prereqs_alone_do_not_activate_optional_devops_completion_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/devops/execution-prereqs.md",
+                "# Execution Environment Prerequisites\n\n- `playwright_screenshot`: `ok` (required)\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("missing-optional-devops-verification", kinds)
+
+    def test_processed_devops_history_does_not_keep_optional_devops_completion_gate_active(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/devops/execution-prereqs.md",
+                "# Execution Environment Prerequisites\n\n- `playwright_screenshot`: `ok` (required)\n",
+            )
+            write_file(
+                repo_root / "runs/current/role-state/devops/processed/20260319-192140-from-orchestrator-to-deployment-recovery.md",
+                "from: orchestrator\nto: devops\ntopic: recovery\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("missing-optional-devops-verification", kinds)
+
     def test_reports_blocked_architect_integration_work(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
