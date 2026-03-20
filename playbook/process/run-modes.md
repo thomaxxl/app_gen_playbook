@@ -41,12 +41,19 @@ Behavior:
 - existing `app/` is the implementation baseline
 - current accepted artifacts under `runs/current/artifacts/` are the local
   design baseline
+- iteration startup MUST clear stale completion markers such as
+  `runs/current/APP_DONE` and prior delivery-approval artifacts so the run is
+  visibly reopened
 - `app/docs/playbook-baseline/current/` is the portable accepted baseline for
   later iteration bootstrap
 - candidate design changes live under `runs/current/changes/<change_id>/candidate/artifacts/**`
 - the accepted baseline does not change until Phase I7 promotion
 - matching the current app to the accepted baseline does NOT make the change a
   no-op when the request is explicitly challenging that accepted baseline
+- Product Manager owns the first change-run decision. The status surface MUST
+  reopen at Phase I1/I2 and MUST NOT show the app as complete until Product
+  Manager has classified the iteration prompt and the active change packet is
+  accepted
 
 ## `app-only-hotfix`
 

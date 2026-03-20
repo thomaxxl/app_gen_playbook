@@ -23,6 +23,8 @@ The orchestrator MUST:
 - create a fresh local `runs/current/` from `runs/template/` for a new full
   run
 - seed the Product Manager inbox from the supplied brief or change request
+- reinitialize iteration runs so stale completion state does not leak into the
+  next change cycle
 - process exactly one inbox message per Codex role invocation
 - keep durable run state in artifacts, inbox traces, and role-local
   `context.md`
@@ -218,6 +220,22 @@ prerequisite check and stop immediately with `operator-action-required.md` if
 any required check fails. Recording a blocked prerequisite artifact is not
 enough; the run MUST NOT proceed into role dispatch until the current
 execution context validates.
+
+For `iterative-change-run` and `app-only-hotfix`, iteration startup MUST also:
+
+- clear stale completion markers such as `runs/current/APP_DONE`
+- clear stale delivery approval artifacts such as
+  `runs/current/orchestrator/delivery-approved.md` and
+  `runs/current/evidence/ceo-delivery-validation.md`
+- reset the visible run status to active change intake rather than leaving the
+  report on a prior full-run completion state
+
+The status report for an active change run MUST treat the current change
+packet as authoritative. It MUST NOT show the app as complete merely because
+the accepted baseline artifacts from the prior delivery are complete. Product
+Manager is responsible for deciding which gates are reopened from the
+iteration prompt, and the reported current phase SHOULD reflect that
+change-packet decision.
 
 If execution preflight fails, the orchestrator MUST:
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -61,6 +62,29 @@ PHASE_LABELS = {
     "phase-6-integration-review": "Phase 6 - Integration review",
     "phase-7-product-acceptance": "Phase 7 - Product acceptance",
     "phase-8-qa-pre-delivery-validation": "Phase 8 - QA pre-delivery validation",
+    "phase-I0-baseline-alignment": "Phase I0 - Baseline alignment",
+    "phase-I1-change-intake-and-triage": "Phase I1 - Change intake and triage",
+    "phase-I2-product-and-scope-delta": "Phase I2 - Product and scope delta",
+    "phase-I3-architecture-and-contract-delta": "Phase I3 - Architecture and contract delta",
+    "phase-I4-design-delta": "Phase I4 - Design delta",
+    "phase-I5-implementation-delta": "Phase I5 - Implementation delta",
+    "phase-I6-integration-and-regression-review": "Phase I6 - Integration and regression review",
+    "phase-I7-change-acceptance": "Phase I7 - Change acceptance",
+}
+
+CHANGE_RUN_MODES = {"iterative-change-run", "app-only-hotfix"}
+CHANGE_PHASE_ORDER = (
+    "phase-I1-change-intake-and-triage",
+    "phase-I2-product-and-scope-delta",
+    "phase-I3-architecture-and-contract-delta",
+    "phase-I4-design-delta",
+    "phase-I5-implementation-delta",
+    "phase-I6-integration-and-regression-review",
+    "phase-I7-change-acceptance",
+)
+CHANGE_GATE_ALIASES = {
+    "phase-I5-frontend-implementation-delta": "phase-I5-implementation-delta",
+    "phase-I5-backend-implementation-delta": "phase-I5-implementation-delta",
 }
 
 STATUS_SCORES = {
@@ -111,6 +135,96 @@ def latest_file_mtime(path: Path) -> str:
     if latest_ts <= 0.0:
         return ""
     return datetime.fromtimestamp(latest_ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def active_change_root(repo_root: Path, run_status: dict[str, Any]) -> Path | None:
+    change_id = str(run_status.get("change_id", "")).strip()
+    if not change_id:
+        return None
+    return repo_root / "runs" / "current" / "changes" / change_id
+
+
+def change_promotion_accepted(change_root: Path | None) -> bool:
+    if change_root is None:
+        return False
+    promotion_path = change_root / "promotion.yaml"
+    if not promotion_path.exists():
+        return False
+    text = promotion_path.read_text(encoding="utf-8")
+    match = re.search(r"^accepted_at:\s*['\"]?([^'\"]*)['\"]?\s*$", text, flags=re.MULTILINE)
+    if not match:
+        return False
+    return bool(match.group(1).strip())
+
+
+def change_run_pending(repo_root: Path, run_status: dict[str, Any]) -> bool:
+    mode = str(run_status.get("mode", "")).strip()
+    if mode not in CHANGE_RUN_MODES:
+        return False
+    if str(run_status.get("status", "")).strip() == "complete":
+        return False
+    return not change_promotion_accepted(active_change_root(repo_root, run_status))
+
+
+def parse_reopened_gates(change_root: Path | None) -> list[str]:
+    if change_root is None:
+        return []
+    reopened_path = change_root / "reopened-gates.md"
+    if not reopened_path.exists():
+        return []
+    text = reopened_path.read_text(encoding="utf-8")
+    candidates = re.findall(r"phase-I[0-7][A-Za-z0-9-]*", text)
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        normalized = CHANGE_GATE_ALIASES.get(candidate, candidate)
+        if normalized not in CHANGE_PHASE_ORDER:
+            continue
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        ordered.append(normalized)
+    return ordered
+
+
+def role_has_pending_work(roles: dict[str, dict[str, Any]], role: str) -> bool:
+    payload = roles.get(role, {})
+    return bool(payload.get("inbox_count", 0) or payload.get("inflight_count", 0))
+
+
+def compute_change_run_phase(
+    repo_root: Path,
+    run_status: dict[str, Any],
+    roles: dict[str, dict[str, Any]],
+) -> str:
+    if role_has_pending_work(roles, "product_manager"):
+        return "phase-I1-change-intake-and-triage"
+
+    reopened_gates = parse_reopened_gates(active_change_root(repo_root, run_status))
+    if not reopened_gates:
+        return "phase-I2-product-and-scope-delta"
+
+    if role_has_pending_work(roles, "architect"):
+        for phase in ("phase-I3-architecture-and-contract-delta", "phase-I4-design-delta"):
+            if phase in reopened_gates:
+                return phase
+
+    if role_has_pending_work(roles, "frontend") or role_has_pending_work(roles, "backend"):
+        for phase in ("phase-I5-implementation-delta", "phase-I6-integration-and-regression-review"):
+            if phase in reopened_gates:
+                return phase
+
+    if role_has_pending_work(roles, "qa"):
+        return "phase-I7-change-acceptance"
+
+    for phase in CHANGE_PHASE_ORDER:
+        if phase == "phase-I2-product-and-scope-delta" and any(
+            candidate != "phase-I2-product-and-scope-delta" for candidate in reopened_gates
+        ):
+            continue
+        if phase in reopened_gates:
+            return phase
+    return "phase-I7-change-acceptance"
 
 
 def queue_summary(repo_root: Path) -> dict[str, dict[str, Any]]:
@@ -275,13 +389,19 @@ def evidence_summary(repo_root: Path) -> dict[str, Any]:
 
 
 def compute_current_phase(
+    repo_root: Path,
     run_status: dict[str, Any],
+    roles: dict[str, dict[str, Any]],
     phases: dict[str, dict[str, Any]],
     completion_complete: bool,
 ) -> str:
+    explicit = str(run_status.get("current_phase", "")).strip()
+    if change_run_pending(repo_root, run_status):
+        if explicit:
+            return explicit
+        return compute_change_run_phase(repo_root, run_status, roles)
     if completion_complete or str(run_status.get("status", "")).strip() == "complete":
         return "complete"
-    explicit = str(run_status.get("current_phase", "")).strip()
     if explicit:
         return explicit
     ordered = [
@@ -341,6 +461,7 @@ def stage_progress(phases: dict[str, dict[str, Any]], phase5_ready: bool) -> dic
 
 def report_payload(repo_root: Path) -> dict[str, Any]:
     run_status = load_json(repo_root / "runs" / "current" / "orchestrator" / "run-status.json")
+    roles = queue_summary(repo_root)
     workers = {}
     workers_root = repo_root / "runs" / "current" / "orchestrator" / "workers"
     if workers_root.exists():
@@ -350,7 +471,20 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
     phases = phase_summary(repo_root)
     phase5_blockers = collect_phase5_blockers(repo_root)
     completion_blockers = collect_blockers(repo_root)
-    current_phase = compute_current_phase(run_status, phases, not completion_blockers)
+    change_pending = change_run_pending(repo_root, run_status)
+    if change_pending:
+        change_root = active_change_root(repo_root, run_status)
+        blocker_path = change_root / "promotion.yaml" if change_root else repo_root / "runs" / "current" / "orchestrator" / "run-status.json"
+        completion_blockers = list(completion_blockers)
+        completion_blockers.append(
+            {
+                "kind": "active-change-run-pending",
+                "path": blocker_path.relative_to(repo_root).as_posix(),
+                "phase": "phase-I1-change-intake-and-triage",
+                "reason": "active iteration/change run pending; Product Manager must confirm reopened phases before the run can be considered complete",
+            }
+        )
+    current_phase = compute_current_phase(repo_root, run_status, roles, phases, not completion_blockers)
     payload = {
         "generated_at": utc_now(),
         "repo_root": str(repo_root),
@@ -367,7 +501,7 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
             "complete": not completion_blockers,
             "blockers": completion_blockers,
         },
-        "roles": queue_summary(repo_root),
+        "roles": roles,
         "workers": workers,
         "artifacts": artifact_area_summary(repo_root),
         "phases": phases,

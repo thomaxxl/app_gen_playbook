@@ -1775,11 +1775,17 @@ architect_blocked_integration_pending() {
 
 set_run_status() {
   local status="$1"
-  python3 "$ROOT/tools/checkpoint_run_state.py" set-run-status \
-    --repo-root "$ROOT" \
-    --status "$status" \
-    --mode "$RUN_MODE_NAME" \
-    --change-id "$ACTIVE_CHANGE_ID" >/dev/null
+  local args=(
+    set-run-status
+    --repo-root "$ROOT"
+    --status "$status"
+    --mode "$RUN_MODE_NAME"
+    --change-id "$ACTIVE_CHANGE_ID"
+  )
+  if [[ $# -ge 2 ]]; then
+    args+=(--current-phase "$2")
+  fi
+  python3 "$ROOT/tools/checkpoint_run_state.py" "${args[@]}" >/dev/null
 }
 
 fatal_error_requires_operator_escalation() {
@@ -3746,7 +3752,7 @@ seed_change_run() {
   [[ -d "$ROOT/app" ]] || fatal_exit "missing app baseline" "fatal-error-operator-escalation\n\nExpected existing app/ for $RUN_MODE_NAME."
   ensure_current_run_shared_state
 
-  rm -f "$DELIVERY_APPROVED_MD" "$CEO_DELIVERY_VALIDATION_MD"
+  rm -f "$RUN_ROOT/APP_DONE" "$DELIVERY_APPROVED_MD" "$CEO_DELIVERY_VALIDATION_MD"
 
   if ! baseline_output="$(python3 "$ROOT/tools/check_baseline_alignment.py" --repo-root "$ROOT" 2>&1)"; then
     fatal_exit "baseline alignment precheck failed" "fatal-error-operator-escalation\n\n$baseline_output"
@@ -3778,6 +3784,7 @@ seed_change_run() {
     --repo-root "$ROOT" \
     --mode "$RUN_MODE_NAME" \
     --change-id "$ACTIVE_CHANGE_ID" >/dev/null
+  set_run_status "active" "phase-I1-change-intake-and-triage"
   maybe_auto_pivot_runtime_env_to_sandbox || true
   write_runtime_environment_metadata
   reset_runner_runtime_surface_fingerprint

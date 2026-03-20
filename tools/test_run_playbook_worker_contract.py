@@ -55,6 +55,12 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
         )
 
+    def test_iterative_change_runs_clear_done_state_and_restart_at_change_intake(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('rm -f "$RUN_ROOT/APP_DONE" "$DELIVERY_APPROVED_MD" "$CEO_DELIVERY_VALIDATION_MD"', script)
+        self.assertIn('set_run_status "active" "phase-I1-change-intake-and-triage"', script)
+
     def test_runner_registers_qa_as_pre_delivery_role(self) -> None:
         script = self.runner_core()
 
