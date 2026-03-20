@@ -8,16 +8,24 @@ requirements:
     normative: MUST
     severity: error
     family: product-scope-core
-    profiles:
-      - frontend-core
-      - phase-6-integration-review
-      - phase-7-product-acceptance
-      - phase-8-qa-pre-delivery-validation
     owner_roles:
       - frontend
       - architect
       - product_manager
       - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - product_manager
+        - qa
+      phases:
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
     source_docs:
       - specs/product/traceability-matrix.md
       - playbook/process/phases/phase-1-product-definition.md

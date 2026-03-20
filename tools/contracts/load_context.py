@@ -14,21 +14,25 @@ ROLE_PROFILE_ALIASES = {
     "deployment": "role-devops",
     "devops": "role-devops",
     "qa": "role-qa",
+    "ceo": "role-ceo",
 }
 
 RUN_MODE_PROFILE_ALIASES = {
     "new": "run-fresh",
+    "new-full-run": "run-fresh",
     "fresh-run": "run-fresh",
     "fresh": "run-fresh",
     "iterate": "run-iterative-change",
     "iterative-change-run": "run-iterative-change",
     "iterative-change": "run-iterative-change",
     "hotfix": "run-hotfix",
+    "app-only-hotfix": "run-hotfix",
 }
 
 GATE_PROFILE_ALIASES = {
     "quality": "gate-quality",
     "acceptance": "gate-acceptance",
+    "delivery": "gate-delivery",
 }
 
 

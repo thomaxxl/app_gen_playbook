@@ -198,6 +198,7 @@ ACTIVE_CHANGE_ID=""
 LAST_STALL_SIGNATURE=""
 ENSURE_WORKER_PID_RESULT=""
 RUNNER_RUNTIME_SURFACE_FINGERPRINT=""
+POLICY_EVALUATION_LAST_OUTPUT=""
 
 export PLAYBOOK_RUNTIME_ENV
 export PLAYBOOK_RUNTIME_ENV_SOURCE
@@ -2450,6 +2451,48 @@ check_completion() {
   python3 "$ROOT/tools/check_completion.py" --repo-root "$ROOT"
 }
 
+policy_gate_evaluation() {
+  local role="$1"
+  local phase="$2"
+  local gate="${3:-}"
+  local cmd=(
+    python3 "$ROOT/tools/contracts/evaluate_policy.py"
+    --repo-root "$ROOT"
+    --role "$role"
+    --phase "$phase"
+    --run-mode "$RUN_MODE_NAME"
+    --json
+  )
+  if [[ -n "$gate" ]]; then
+    cmd+=(--gate "$gate")
+  fi
+  POLICY_EVALUATION_LAST_OUTPUT="$("${cmd[@]}" 2>&1)"
+}
+
+enforce_policy_gate_context() {
+  local label="$1"
+  local role="$2"
+  local phase="$3"
+  local gate="${4:-}"
+
+  if policy_gate_evaluation "$role" "$phase" "$gate"; then
+    log "policy-gate-passed label=$label role=$role phase=$phase gate=${gate:-none}"
+    return 0
+  fi
+
+  if [[ "$(pending_actionable_count)" -gt 0 ]]; then
+    log "policy-gate-blocked label=$label role=$role phase=$phase gate=${gate:-none}"
+    append_run_remark \
+      "Policy Gate Blocked" \
+      "Policy evaluation blocked gate context:\n- label: $label\n- role: $role\n- phase: $phase\n- gate: ${gate:-none}\n\nEvaluator output:\n$POLICY_EVALUATION_LAST_OUTPUT"
+    return 1
+  fi
+
+  fatal_exit \
+    "$label policy gate failed" \
+    "Mandatory policy evaluation failed for the following gate context.\n\n- label: $label\n- role: $role\n- phase: $phase\n- gate: ${gate:-none}\n\nEvaluator output:\n$POLICY_EVALUATION_LAST_OUTPUT"
+}
+
 check_orchestrator_liveness() {
   python3 "$ROOT/tools/check_orchestrator_liveness.py" \
     --repo-root "$ROOT" \
@@ -3664,6 +3707,22 @@ main_loop() {
     fi
 
     if completion_detail="$(check_completion 2>&1)"; then
+      if ! enforce_policy_gate_context \
+        "integration-review" \
+        "architect" \
+        "phase-6-integration-review" \
+        "quality"; then
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
+      if ! enforce_policy_gate_context \
+        "product-acceptance" \
+        "product_manager" \
+        "phase-7-product-acceptance" \
+        "acceptance"; then
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
       if ! qa_delivery_review_approved; then
         if attempt_qa_delivery_review "$completion_detail"; then
           LAST_STALL_SIGNATURE=""
@@ -3672,13 +3731,37 @@ main_loop() {
         LAST_STALL_SIGNATURE=""
         continue
       fi
+      if ! enforce_policy_gate_context \
+        "qa-delivery-review" \
+        "qa" \
+        "phase-8-qa-pre-delivery-validation" \
+        "quality"; then
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
       if ! delivery_approved; then
         if attempt_ceo_delivery_approval "$completion_detail"; then
+          if ! enforce_policy_gate_context \
+            "final-delivery-approval" \
+            "ceo" \
+            "phase-8-qa-pre-delivery-validation" \
+            "delivery"; then
+            LAST_STALL_SIGNATURE=""
+            continue
+          fi
           touch "$RUN_ROOT/APP_DONE"
           set_run_status "complete"
           log "playbook run complete"
           break
         fi
+        LAST_STALL_SIGNATURE=""
+        continue
+      fi
+      if ! enforce_policy_gate_context \
+        "final-delivery-approval" \
+        "ceo" \
+        "phase-8-qa-pre-delivery-validation" \
+        "delivery"; then
         LAST_STALL_SIGNATURE=""
         continue
       fi

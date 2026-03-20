@@ -22,6 +22,19 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def ensure_compiled_facts(repo_root: Path) -> None:
+    from contracts.compile_run_facts import compile_run_facts
+
+    compile_run_facts(repo_root)
+
+
+def load_compiled_fact(repo_root: Path, filename: str, key: str) -> tuple[dict[str, Any], list[str], str]:
+    ensure_compiled_facts(repo_root)
+    path = repo_root / "runs" / "current" / "facts" / filename
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return dict(payload.get(key) or {}), list(payload.get("issues") or []), path.relative_to(repo_root).as_posix()
+
+
 def read_text(path: Path) -> str:
     if not path.exists():
         return ""

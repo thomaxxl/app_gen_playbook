@@ -8,14 +8,21 @@ requirements:
     normative: MUST
     severity: error
     family: ux-coverage-core
-    profiles:
-      - evidence-core
-      - phase-6-integration-review
-      - phase-7-product-acceptance
     owner_roles:
       - frontend
       - architect
       - product_manager
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - product_manager
+      phases:
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+      gates:
+        - quality
+        - acceptance
     source_docs:
       - specs/contracts/frontend/validation.md
       - playbook/process/phases/phase-3-ux-and-interaction-design.md

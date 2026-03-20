@@ -1,0 +1,4 @@
+id: delivery-core
+title: Delivery core policy
+requirement_ids:
+  - DELIV-GATE-001

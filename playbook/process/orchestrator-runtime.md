@@ -41,6 +41,8 @@ The orchestrator MUST:
 - refuse to declare completion while required run-owned artifacts remain
   missing, stub, or blocked, or while required generated-app outputs under
   `app/` are still absent
+- run the YAML policy engine as a blocking control before integration review,
+  product acceptance, QA closure, and final delivery approval
 - stop early with an operator-action block when the active run requires
   pre-provisioned dependency reuse but the declared dependency roots are
   missing or incomplete
@@ -254,6 +256,17 @@ When preview capture succeeds, the resulting manifest SHOULD still mark the
 role validations as pending until Frontend, Architect, and Product Manager
 have reviewed the captured images. The orchestrator may generate the preview
 artifact, but it MUST NOT treat file creation alone as final preview evidence.
+
+Before closing these lifecycle choke points, the orchestrator MUST run:
+
+- `python3 tools/contracts/compile_requirements.py`
+- `python3 tools/contracts/compile_run_facts.py`
+- `python3 tools/contracts/evaluate_policy.py --role <role> --phase <phase> --run-mode <run-mode> --gate <gate>`
+
+Those policy evaluations MUST be treated as blocking prerequisites, not as
+best-effort reporting helpers. The resulting reports MUST be written under
+`runs/current/evidence/validation/` using context-addressed filenames rather
+than overwriting a single `policy-report.json`.
 
 If `runs/current/artifacts/devops/execution-prereqs.md` proves
 `playwright_screenshot: ok` and the generated app exposes

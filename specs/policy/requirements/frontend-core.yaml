@@ -8,17 +8,24 @@ requirements:
     normative: MUST_NOT
     severity: error
     family: frontend-core
-    profiles:
-      - frontend-core
-      - gate-quality
-      - phase-6-integration-review
-      - phase-7-product-acceptance
-      - phase-8-qa-pre-delivery-validation
     owner_roles:
       - frontend
       - architect
       - product_manager
       - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - product_manager
+        - qa
+      phases:
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
     source_docs:
       - specs/contracts/frontend/validation.md
       - playbook/process/quality-gates.md

@@ -77,3 +77,11 @@ validators:
     message_field: reason
     summary_pass: QA review coverage passed
     summary_fail_template: "{count} QA review coverage issue(s)"
+  tools/validators/policy/validate_delivery_approval.py:
+    adapter: issue_list
+    module: validators.policy.validate_delivery_approval
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: delivery approval artifacts passed
+    summary_fail_template: "{count} delivery approval issue(s)"

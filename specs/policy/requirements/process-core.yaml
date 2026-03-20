@@ -8,8 +8,6 @@ requirements:
     normative: MUST
     severity: error
     family: process-core
-    profiles:
-      - process-core
     owner_roles:
       - product_manager
       - architect

@@ -17,9 +17,35 @@
     "approved_by": {"type": "string", "minLength": 1},
     "status": {
       "type": "string",
-      "enum": ["approved", "expired", "superseded"]
+      "enum": ["approved", "expired", "superseded", "rejected"]
     },
-    "scope": {"type": "object"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "phases": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "gates": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "run_modes": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "paths": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "expires_at": {"type": "string", "minLength": 1},
     "evidence": {
       "type": "array",
       "items": {"type": "string"}

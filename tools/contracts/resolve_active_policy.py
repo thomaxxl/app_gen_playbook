@@ -22,12 +22,24 @@ from contracts.load_context import (
 from contracts.models import PolicyError, compile_registry
 
 
-def profile_matches_context(requirement: dict[str, Any], *, phase: str | None, run_mode: str | None, gate: str | None, features: list[str]) -> bool:
+def profile_matches_context(
+    requirement: dict[str, Any],
+    *,
+    role: str | None,
+    phase: str | None,
+    run_mode: str | None,
+    gate: str | None,
+    features: list[str],
+) -> bool:
     applies_when = requirement.get("applies_when") or {}
+    roles = set(applies_when.get("roles") or [])
     phases = set(applies_when.get("phases") or [])
     run_modes = set(applies_when.get("run_modes") or [])
     gates = set(applies_when.get("gates") or [])
     features_any = set(applies_when.get("features_any") or [])
+    normalized_role = None if role is None else role.replace("-", "_")
+    if roles and (normalized_role is None or (normalized_role not in roles and role not in roles)):
+        return False
     if phases and (phase is None or phase not in phases):
         return False
     if run_modes and (run_mode is None or run_mode not in run_modes):
@@ -84,6 +96,7 @@ def resolve_policy(
             requirement = registry.requirements[str(requirement_id)]
             if profile_matches_context(
                 requirement,
+                role=role,
                 phase=phase,
                 run_mode=run_mode,
                 gate=gate,

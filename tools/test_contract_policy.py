@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from contracts.compile_requirements import display_path
+from contracts.compile_run_facts import compile_run_facts
 from contracts.models import compile_registry
 from contracts.resolve_active_policy import resolve_policy
 from contracts.evaluate_policy import evaluate_requirement
@@ -19,8 +21,11 @@ class ContractPolicyTests(unittest.TestCase):
         registry = compile_registry(self.repo_root)
         self.assertIn("PROC-ARTMETA-001", registry.requirements)
         self.assertIn("EVID-GATE-001", registry.requirements)
+        self.assertIn("DELIV-GATE-001", registry.requirements)
         self.assertIn("gate-quality", registry.profiles)
+        self.assertIn("gate-delivery", registry.profiles)
         self.assertIn("tools/check_completion.py", registry.validators)
+        self.assertIn("tools/validators/policy/validate_delivery_approval.py", registry.validators)
 
     def test_resolve_policy_for_acceptance_includes_gate_profiles(self) -> None:
         payload = resolve_policy(
@@ -45,17 +50,40 @@ class ContractPolicyTests(unittest.TestCase):
             role="qa",
             phase="phase-8-qa-pre-delivery-validation",
             run_mode="new",
-            gate="acceptance",
+            gate="quality",
             features=[],
             profiles=[],
         )
         self.assertIn("role-qa", payload["active_profiles"])
         self.assertIn("GATE-COV-003", payload["active_requirement_ids"])
 
+    def test_resolve_policy_for_ceo_delivery_gate_includes_delivery_requirement(self) -> None:
+        payload = resolve_policy(
+            self.repo_root,
+            role="ceo",
+            phase="phase-8-qa-pre-delivery-validation",
+            run_mode="new-full-run",
+            gate="delivery",
+            features=[],
+            profiles=[],
+        )
+        self.assertIn("role-ceo", payload["active_profiles"])
+        self.assertIn("gate-delivery", payload["active_profiles"])
+        self.assertIn("DELIV-GATE-001", payload["active_requirement_ids"])
+
     def test_evaluate_metadata_requirement_passes_on_repo(self) -> None:
         registry = compile_registry(self.repo_root)
         result = evaluate_requirement(self.repo_root, registry.requirements["PROC-ARTMETA-001"])
         self.assertEqual(result["status"], "pass")
+
+    def test_compile_run_facts_writes_canonical_fact_names(self) -> None:
+        summary, _issues = compile_run_facts(self.repo_root)
+        output_paths = set(summary["output_paths"])
+        self.assertIn("runs/current/facts/product-scope.json", output_paths)
+        self.assertIn("runs/current/facts/frontend-surface.json", output_paths)
+        self.assertIn("runs/current/facts/review-plan.json", output_paths)
+        self.assertIn("runs/current/facts/evidence-index.json", output_paths)
+        self.assertIn("runs/current/facts/gate-state.json", output_paths)
 
     def test_compile_display_path_allows_external_output(self) -> None:
         self.assertEqual(

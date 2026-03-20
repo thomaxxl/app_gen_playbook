@@ -1,0 +1,43 @@
+id: delivery-core
+title: Delivery approval requirements
+description: Executable rules for CEO final delivery approval.
+requirements:
+  - id: DELIV-GATE-001
+    title: Final delivery approval artifacts are present and successful
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: delivery-core
+    owner_roles:
+      - ceo
+      - qa
+      - deployment
+    applies_when:
+      roles:
+        - ceo
+      phases:
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - delivery
+    source_docs:
+      - playbook/roles/ceo.md
+      - playbook/process/orchestrator-runtime.md
+      - playbook/process/done.md
+    description: >
+      Final delivery cannot be treated as approved until the CEO delivery
+      validation artifact is successful and the orchestrator delivery approval
+      note is present.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_delivery_approval.py
+    evidence:
+      required_files:
+        - runs/current/evidence/ceo-delivery-validation.md
+        - runs/current/orchestrator/delivery-approved.md
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Re-run CEO delivery validation, confirm app/run.sh passes, and rewrite
+      the delivery approval artifact with the canonical approved shape.

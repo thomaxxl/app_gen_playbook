@@ -66,12 +66,12 @@
           "enum": ["error", "warning", "info"]
         },
         "family": {"type": "string", "minLength": 1},
-        "profiles": {"$ref": "#/$defs/stringArray"},
         "owner_roles": {"$ref": "#/$defs/stringArray"},
         "applies_when": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "roles": {"$ref": "#/$defs/stringArray"},
             "run_modes": {"$ref": "#/$defs/stringArray"},
             "phases": {"$ref": "#/$defs/stringArray"},
             "gates": {"$ref": "#/$defs/stringArray"},

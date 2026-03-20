@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-gen-playbook.local/specs/policy/schema/result.schema.json",
+  "title": "Policy Evaluation Result",
+  "type": "object",
+  "required": [
+    "requirement_id",
+    "status",
+    "severity",
+    "validator_id",
+    "context",
+    "summary",
+    "details",
+    "evidence_paths",
+    "input_hashes",
+    "attestations",
+    "timestamp"
+  ],
+  "properties": {
+    "requirement_id": { "type": "string", "pattern": "^[A-Z0-9-]+$" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "ready",
+        "in_progress",
+        "blocked",
+        "pass",
+        "fail",
+        "warning",
+        "waived",
+        "not_applicable",
+        "superseded",
+        "skipped",
+        "manual_review_required",
+        "error"
+      ]
+    },
+    "severity": { "type": "string", "minLength": 1 },
+    "validator_id": { "type": "string", "minLength": 1 },
+    "context": {
+      "type": "object",
+      "required": ["role", "phase", "run_mode", "gate"],
+      "properties": {
+        "role": { "type": ["string", "null"] },
+        "phase": { "type": ["string", "null"] },
+        "run_mode": { "type": ["string", "null"] },
+        "gate": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "details": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "input_hashes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "waived": { "type": "boolean" },
+    "waiver": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "object" }
+      ]
+    },
+    "attestations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "timestamp": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

@@ -73,6 +73,8 @@ def compile_registry(repo_root: Path) -> PolicyRegistry:
     requirement_schema = load_schema(policy_root / "schema" / "requirement.schema.json")
     profile_schema = load_schema(policy_root / "schema" / "profile.schema.json")
     validator_registry_schema = load_schema(policy_root / "schema" / "validator-registry.schema.json")
+    attestation_schema_path = policy_root / "schema" / "attestation.schema.json"
+    waiver_schema_path = policy_root / "schema" / "waiver.schema.json"
 
     requirements: dict[str, dict[str, Any]] = {}
     requirement_sets: dict[str, dict[str, Any]] = {}
@@ -109,13 +111,6 @@ def compile_registry(repo_root: Path) -> PolicyRegistry:
                     f"profile {profile_id} references unknown requirement {requirement_id}"
                 )
 
-    for requirement_id, requirement in requirements.items():
-        for profile_id in requirement.get("profiles", []) or []:
-            if profile_id not in profiles:
-                raise PolicyError(
-                    f"requirement {requirement_id} references unknown profile {profile_id}"
-                )
-
     validators_path = policy_root / "validators" / "registry.yaml"
     validators: dict[str, dict[str, Any]] = {}
     if validators_path.exists():
@@ -127,6 +122,26 @@ def compile_registry(repo_root: Path) -> PolicyRegistry:
         entrypoint = str(requirement["validator"]["entrypoint"])
         if entrypoint not in validators:
             raise PolicyError(f"requirement {requirement_id} references unregistered validator {entrypoint}")
+
+    referenced_requirement_ids: set[str] = set()
+    for payload in profiles.values():
+        referenced_requirement_ids.update(str(requirement_id) for requirement_id in payload.get("requirement_ids", []))
+    for requirement_id, requirement in requirements.items():
+        if requirement_id not in referenced_requirement_ids:
+            raise PolicyError(f"requirement {requirement_id} has no activation path through any profile")
+        applies_when = requirement.get("applies_when") or {}
+        family = str(requirement.get("family", ""))
+        if family.startswith("gate-"):
+            if not (applies_when.get("gates") or []):
+                raise PolicyError(f"gate requirement {requirement_id} must declare applies_when.gates")
+            if not (applies_when.get("phases") or []):
+                raise PolicyError(f"gate requirement {requirement_id} must declare applies_when.phases")
+            if not (applies_when.get("roles") or []):
+                raise PolicyError(f"gate requirement {requirement_id} must declare applies_when.roles")
+        if requirement.get("manual_attestation", {}).get("required") and not attestation_schema_path.exists():
+            raise PolicyError(f"requirement {requirement_id} requires manual attestation but attestation schema is missing")
+        if requirement.get("exceptions", {}).get("allowed") and not waiver_schema_path.exists():
+            raise PolicyError(f"requirement {requirement_id} allows waivers but waiver schema is missing")
 
     return PolicyRegistry(
         generated_at=utc_now(),

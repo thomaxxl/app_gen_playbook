@@ -8,12 +8,15 @@ requirements:
     normative: MUST
     severity: error
     family: gate-coverage-core
-    profiles:
-      - phase-6-integration-review
-      - gate-quality
-      - role-architect
     owner_roles:
       - architect
+    applies_when:
+      roles:
+        - architect
+      phases:
+        - phase-6-integration-review
+      gates:
+        - quality
     source_docs:
       - specs/architecture/integration-review.md
       - playbook/process/phases/phase-6-integration-review.md
@@ -38,12 +41,15 @@ requirements:
     normative: MUST
     severity: error
     family: gate-coverage-core
-    profiles:
-      - phase-7-product-acceptance
-      - gate-acceptance
-      - role-product-manager
     owner_roles:
       - product_manager
+    applies_when:
+      roles:
+        - product_manager
+      phases:
+        - phase-7-product-acceptance
+      gates:
+        - acceptance
     source_docs:
       - specs/product/acceptance-review.md
       - playbook/process/phases/phase-7-product-acceptance.md
@@ -68,12 +74,15 @@ requirements:
     normative: MUST
     severity: error
     family: gate-coverage-core
-    profiles:
-      - phase-8-qa-pre-delivery-validation
-      - role-qa
-      - gate-acceptance
     owner_roles:
       - qa
+    applies_when:
+      roles:
+        - qa
+      phases:
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
     source_docs:
       - playbook/roles/qa.md
       - playbook/process/phases/phase-8-qa-pre-delivery-validation.md

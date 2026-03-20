@@ -1,0 +1,6 @@
+id: role-ceo
+title: CEO active policy
+includes:
+  - process-core
+  - deployment-core
+  - delivery-core

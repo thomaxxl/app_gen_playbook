@@ -8,17 +8,23 @@ requirements:
     normative: MUST
     severity: error
     family: backend-core
-    profiles:
-      - backend-core
-      - gate-quality
-      - phase-4-backend-design-and-rules-mapping
-      - phase-6-integration-review
-      - phase-7-product-acceptance
-      - phase-8-qa-pre-delivery-validation
     owner_roles:
       - backend
       - architect
       - qa
+    applies_when:
+      roles:
+        - backend
+        - architect
+        - qa
+      phases:
+        - phase-4-backend-design-and-rules-mapping
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
     source_docs:
       - specs/contracts/backend/validation.md
       - playbook/process/quality-gates.md

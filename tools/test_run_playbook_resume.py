@@ -21,6 +21,22 @@ def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
     scripts_dir.mkdir(parents=True, exist_ok=True)
     for script_name in ("run_playbook.sh", "run_playbook_core.sh"):
         shutil.copy2(source_repo / "scripts" / script_name, scripts_dir / script_name)
+    contracts_dir = repo_root / "tools" / "contracts"
+    contracts_dir.mkdir(parents=True, exist_ok=True)
+    write_executable(
+        contracts_dir / "evaluate_policy.py",
+        textwrap.dedent(
+            """\
+            #!/usr/bin/env python3
+            import json
+            import sys
+
+            json.dump({"results": [], "context": {}, "facts": {"ok": True, "issue_count": 0, "output_paths": []}}, sys.stdout)
+            sys.stdout.write("\\n")
+            raise SystemExit(0)
+            """
+        ),
+    )
 
 
 def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:

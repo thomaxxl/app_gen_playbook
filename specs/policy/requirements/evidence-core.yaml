@@ -8,18 +8,25 @@ requirements:
     normative: MUST
     severity: error
     family: evidence-core
-    profiles:
-      - evidence-core
-      - gate-quality
-      - gate-acceptance
-      - phase-6-integration-review
-      - phase-7-product-acceptance
-      - phase-8-qa-pre-delivery-validation
     owner_roles:
       - architect
       - product_manager
       - qa
       - ceo
+    applies_when:
+      roles:
+        - architect
+        - product_manager
+        - qa
+        - ceo
+      phases:
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
+        - delivery
     source_docs:
       - playbook/process/quality-gates.md
       - playbook/process/done.md

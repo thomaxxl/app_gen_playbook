@@ -10,11 +10,9 @@ if __package__ in {None, ""}:
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from coverage.common import normalized_repo_root, read_text  # type: ignore[import-not-found]
-    from coverage.generate_review_plan import generate_review_plan_payload  # type: ignore[import-not-found]
+    from coverage.common import load_compiled_fact, normalized_repo_root, read_text  # type: ignore[import-not-found]
 else:
-    from .common import normalized_repo_root, read_text
-    from .generate_review_plan import generate_review_plan_payload
+    from .common import load_compiled_fact, normalized_repo_root, read_text
 
 
 REVIEWED_SURFACE_RE = re.compile(r"(?m)^\s*-\s*`[^`]+`\s+at\s+`(/app/#/[^`]+)`")
@@ -22,9 +20,9 @@ REVIEWED_SURFACE_RE = re.compile(r"(?m)^\s*-\s*`[^`]+`\s+at\s+`(/app/#/[^`]+)`")
 
 def collect_issues(repo_root) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
-    plan, plan_issues = generate_review_plan_payload(repo_root)
+    plan, plan_issues, plan_path = load_compiled_fact(repo_root, "review-plan.json", "review_plan")
     for message in plan_issues:
-        issues.append({"path": "runs/current/evidence/quality/review-plan.json", "reason": message})
+        issues.append({"path": plan_path, "reason": message})
 
     manifest_path = repo_root / "runs" / "current" / "evidence" / "ui-previews" / "manifest.md"
     if not manifest_path.exists():

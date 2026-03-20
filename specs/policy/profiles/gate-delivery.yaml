@@ -1,0 +1,5 @@
+id: gate-delivery
+title: Delivery gate policy
+includes:
+  - delivery-core
+  - deployment-core

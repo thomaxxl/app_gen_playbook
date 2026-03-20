@@ -8,14 +8,20 @@ requirements:
     normative: MUST
     severity: error
     family: deployment-core
-    profiles:
-      - deployment-core
-      - role-devops
-      - phase-8-qa-pre-delivery-validation
     owner_roles:
       - deployment
       - qa
       - ceo
+    applies_when:
+      roles:
+        - deployment
+        - qa
+        - ceo
+      phases:
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - delivery
     source_docs:
       - playbook/roles/devops.md
       - playbook/process/orchestrator-runtime.md

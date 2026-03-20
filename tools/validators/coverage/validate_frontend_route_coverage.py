@@ -9,25 +9,23 @@ if __package__ in {None, ""}:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from coverage.common import normalized_repo_root  # type: ignore[import-not-found]
-    from coverage.compile_product_scope import compile_product_scope_payload  # type: ignore[import-not-found]
-    from coverage.extract_frontend_surface_registry import (  # type: ignore[import-not-found]
-        extract_frontend_surface_registry_payload,
-    )
+    from coverage.common import load_compiled_fact, normalized_repo_root  # type: ignore[import-not-found]
 else:
-    from .common import normalized_repo_root
-    from .compile_product_scope import compile_product_scope_payload
-    from .extract_frontend_surface_registry import extract_frontend_surface_registry_payload
+    from .common import load_compiled_fact, normalized_repo_root
 
 
 def collect_issues(repo_root: Path) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
-    scope, scope_issues = compile_product_scope_payload(repo_root)
-    registry, registry_issues = extract_frontend_surface_registry_payload(repo_root)
+    scope, scope_issues, scope_path = load_compiled_fact(
+        repo_root, "product-scope.json", "product_scope"
+    )
+    registry, registry_issues, registry_path = load_compiled_fact(
+        repo_root, "frontend-surface.json", "frontend_surface"
+    )
     for message in scope_issues:
-        issues.append({"path": "runs/current/artifacts/product/traceability-matrix.md", "reason": message})
+        issues.append({"path": scope_path, "reason": message})
     for message in registry_issues:
-        issues.append({"path": "app/frontend/src", "reason": message})
+        issues.append({"path": registry_path, "reason": message})
 
     delivered_paths = {route["path"] for route in registry["routes"]}
     for route in scope["required_visible_routes"]:
