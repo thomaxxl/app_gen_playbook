@@ -17,14 +17,20 @@ htmlcov/
 tmp/
 
 # Local Python environments and install targets
+.venv
 .venv/
 .venv*/
 **/.venv/
+**/.venv
 **/.venv*/
+venv
 venv/
 **/venv/
+**/venv
+env
 env/
 **/env/
+**/env
 .deps/
 # Common frontend/build/runtime outputs
 # Frontend/runtime artifacts
