@@ -306,6 +306,16 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertEqual(set(targets), {"backend"})
             backend_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["backend"]}
             self.assertEqual(backend_paths, {"app/backend/src/my_app"})
+            backend_phases = {need.phase for need in targets["backend"]}
+            self.assertEqual(backend_phases, {"phase-5-parallel-implementation"})
+
+            created = write_recovery_notes(repo_root, targets, "test-change")
+            self.assertEqual(len(created), 1)
+            note = created[0].read_text(encoding="utf-8")
+            self.assertIn("playbook/task-bundles/backend-implementation.yaml", note)
+            self.assertIn("playbook/process/phases/phase-5-parallel-implementation.md", note)
+            self.assertNotIn("playbook/task-bundles/integration-review.yaml", note)
+            self.assertNotIn("playbook/process/phases/phase-6-integration-review.md", note)
 
     def test_acceptance_review_is_only_requeued_after_other_core_roles_are_quiescent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

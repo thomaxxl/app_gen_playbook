@@ -3836,7 +3836,9 @@ PY
   clear_browser_fallback_operator_action_required || true
   clear_completed_run_operator_action_required || true
   if ! check_completion >/dev/null 2>&1; then
-    run_recovery_pass || true
+    if [[ "$(pending_actionable_count)" -eq 0 ]]; then
+      run_recovery_pass || true
+    fi
   fi
 }
 

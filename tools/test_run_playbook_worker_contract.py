@@ -31,9 +31,10 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('if run_role_once_with_runtime_reload_guard "ceo"; then', script)
         self.assertIn("orchestrator generated invalid recovery note", script)
         self.assertIn("grep -Eqi '^(from|sender):[[:space:]]*orchestrator[[:space:]]*$' \"$path\"", script)
+        main_loop_index = script.index("main_loop() {")
         self.assertLess(
-            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then'),
-            script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then'),
+            script.index('if run_role_once_with_runtime_reload_guard "ceo"; then', main_loop_index),
+            script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', main_loop_index),
         )
 
     def test_runner_schedules_periodic_ceo_progress_audits(self) -> None:
@@ -147,6 +148,10 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('blocked_exit "run requires operator action" "$body"', script)
         self.assertIn('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', script)
         self.assertIn('if run_recovery_pass; then', script)
+        startup_completion_index = script.index('if ! check_completion >/dev/null 2>&1; then')
+        startup_recovery_guard_index = script.index('if [[ "$(pending_actionable_count)" -eq 0 ]]; then', startup_completion_index)
+        startup_recovery_index = script.index('run_recovery_pass || true', startup_completion_index)
+        self.assertLess(startup_recovery_guard_index, startup_recovery_index)
         self.assertIn('archive_stale_correction_queue_traces()', script)
         self.assertIn('python3 "$ROOT/tools/archive_stale_correction_notes.py" --repo-root "$ROOT"', script)
         self.assertLess(

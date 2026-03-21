@@ -188,6 +188,12 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
 )
+
+COMPLETION_BLOCKER_RECOVERY_PHASE_OVERRIDES = {
+    # Completion can observe this from phase 6, but repairing generated backend
+    # source is phase-5 implementation work.
+    "app/backend/src/my_app": "phase-5-parallel-implementation",
+}
 ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "missing-generated-app-output",
     "missing-required-evidence-output",
@@ -444,11 +450,14 @@ def extra_reads_for_completion_blocker(path: str) -> tuple[str, ...]:
         return (
             "playbook/task-bundles/backend-implementation.yaml",
             "playbook/process/phases/phase-5-parallel-implementation.md",
-            "playbook/process/phases/phase-6-integration-review.md",
             "runs/current/artifacts/backend-design/resource-exposure-policy.md",
         )
 
     return ()
+
+
+def recovery_phase_for_completion_blocker(path: str, phase: str) -> str:
+    return COMPLETION_BLOCKER_RECOVERY_PHASE_OVERRIDES.get(path, phase)
 
 
 def collect_completion_blocker_needs(repo_root: Path) -> list[ArtifactNeed]:
@@ -469,7 +478,7 @@ def collect_completion_blocker_needs(repo_root: Path) -> list[ArtifactNeed]:
         needs.append(
             ArtifactNeed(
                 role=role,
-                phase=phase,
+                phase=recovery_phase_for_completion_blocker(relative_path, phase),
                 path=repo_root / relative_path,
                 reason=reason,
                 extra_reads=extra_reads_for_completion_blocker(relative_path),
