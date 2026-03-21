@@ -123,6 +123,67 @@ class CoverageValidatorTests(unittest.TestCase):
             issues = collect_qa_review_coverage_issues(repo_root)
             self.assertTrue(any("N007" in issue["reason"] for issue in issues))
 
+    def test_frontend_route_coverage_prefers_active_change_candidate_navigation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            write(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{\n  "change_id": "CR-TEST-001"\n}\n',
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-001/candidate/artifacts/product/custom-pages.md",
+                "\n".join(
+                    [
+                        "| Page ID | Purpose | Intended user | Why generated resource pages are insufficient | Entry behavior | Required data | Key actions or links | Success criteria |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| PAGE-CR-001 Run Overview | Purpose | PM | no | default | data | actions | success |",
+                        "| PAGE-CR-004 Handoffs & Messages | Purpose | PM | no | nav | data | actions | success |",
+                    ]
+                )
+                + "\n",
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-001/candidate/artifacts/ux/navigation.md",
+                "\n".join(
+                    [
+                        "| Route ID | Path | Label | Visibility | Implementation | Role | Purpose | Entry cue | Trigger | Back target | Primary action | Secondary action | Accessibility | Responsive | Delivery mode | Notes |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| N201 | `/#/overview` | Run Overview | visible | custom | primary-entry | purpose | cue | trigger | back | primary | secondary | a11y | responsive | custom | note |",
+                        "| N202 | `/#/handoffs` | Handoffs & Messages | visible | custom | support | purpose | cue | trigger | back | primary | secondary | a11y | responsive | custom | note |",
+                    ]
+                )
+                + "\n",
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-001/candidate/artifacts/ux/landing-strategy.md",
+                "# Landing Strategy Delta\n\n- Primary CTA: open the pending handoff queue for the current run.\n",
+            )
+            write(
+                repo_root / "app/frontend/src/App.tsx",
+                'import { CustomRoutes } from "react-admin";\n'
+                'import { Route } from "react-router-dom";\n'
+                'export default function App(){return <CustomRoutes><Route path="/overview" element={null} /><Route path="/handoffs" element={null} /></CustomRoutes>;}\n',
+            )
+            write(
+                repo_root / "app/frontend/src/Home.tsx",
+                'export default function Home(){ const primaryRoute = "/handoffs"; return null; }\n',
+            )
+
+            payload, issues = compile_product_scope_payload(repo_root)
+            self.assertEqual(issues, [])
+            self.assertIn(
+                "runs/current/changes/CR-TEST-001/candidate/artifacts/ux/navigation.md",
+                payload["source_paths"],
+            )
+            self.assertEqual(
+                [route["path"] for route in payload["required_visible_routes"]],
+                ["/app/#/overview", "/app/#/handoffs"],
+            )
+
+            route_issues = collect_frontend_route_coverage_issues(repo_root)
+            self.assertEqual(route_issues, [])
+
 
 if __name__ == "__main__":
     unittest.main()

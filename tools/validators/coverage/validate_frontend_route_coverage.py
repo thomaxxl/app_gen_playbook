@@ -38,19 +38,23 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
             )
 
     allowed_cta_targets = set(scope["allowed_home_primary_cta_targets"])
-    delivered_cta_targets = set(registry["home_primary_cta_targets"])
-    if not delivered_cta_targets:
-        issues.append({"path": "app/frontend/src/Home.tsx", "reason": "Home primary CTA target could not be determined"})
-    elif not delivered_cta_targets.issubset(allowed_cta_targets):
-        issues.append(
-            {
-                "path": "app/frontend/src/Home.tsx",
-                "reason": (
-                    "Home primary CTA target drift: delivered "
-                    f"{sorted(delivered_cta_targets)} but UX allows {sorted(allowed_cta_targets)}"
-                ),
-            }
-        )
+    cta_validation_required = bool(allowed_cta_targets) or any(
+        route["path"] == "/app/#/Home" for route in scope["required_visible_routes"]
+    )
+    if cta_validation_required:
+        delivered_cta_targets = set(registry["home_primary_cta_targets"])
+        if not delivered_cta_targets:
+            issues.append({"path": "app/frontend/src/Home.tsx", "reason": "Home primary CTA target could not be determined"})
+        elif not delivered_cta_targets.issubset(allowed_cta_targets):
+            issues.append(
+                {
+                    "path": "app/frontend/src/Home.tsx",
+                    "reason": (
+                        "Home primary CTA target drift: delivered "
+                        f"{sorted(delivered_cta_targets)} but UX allows {sorted(allowed_cta_targets)}"
+                    ),
+                }
+            )
 
     return issues
 
