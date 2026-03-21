@@ -2929,11 +2929,7 @@ run_codex_fresh() {
   local cmd=(
     codex exec
   )
-  if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then
-    cmd+=(--dangerously-bypass-approvals-and-sandbox)
-  else
-    cmd+=(--full-auto)
-  fi
+  cmd+=(--dangerously-bypass-approvals-and-sandbox)
   cmd+=(
     --json
     --cd "$role_cwd"
@@ -2957,11 +2953,7 @@ run_codex_resume() {
   local cmd=(
     codex exec resume
   )
-  if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then
-    cmd+=(--dangerously-bypass-approvals-and-sandbox)
-  else
-    cmd+=(--full-auto)
-  fi
+  cmd+=(--dangerously-bypass-approvals-and-sandbox)
   cmd+=(
     --json
     --output-last-message "$result_file"

@@ -106,9 +106,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
 
         self.assertIn("PLAYBOOK_YOLO=0", script)
         self.assertIn("    --yolo)", script)
-        self.assertIn('if [[ "$PLAYBOOK_YOLO" -eq 1 ]]; then', script)
         self.assertIn('cmd+=(--dangerously-bypass-approvals-and-sandbox)', script)
-        self.assertIn('cmd+=(--full-auto)', script)
         self.assertNotIn('cmd+=(--yolo)', script)
 
     def test_runner_passes_reasoning_effort_via_codex_config(self) -> None:

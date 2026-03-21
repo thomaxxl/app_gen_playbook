@@ -181,8 +181,15 @@ For interrupted-run continuation:
 ./scripts/run_playbook.sh --resume
 ```
 
-If you want only CEO recovery/intervention turns to use Codex `--yolo`, start
-the runner with:
+The runner now launches all role turns with unrestricted Codex execution so
+that localhost/runtime validation is not blocked by the worker sandbox.
+
+The `--yolo` flag is retained for compatibility and still propagates through
+the runner lifecycle, but it no longer changes whether role turns bypass the
+Codex sandbox.
+
+If you still want to preserve the existing command shape, you can start the
+runner with:
 
 ```bash
 ./scripts/run_playbook.sh --resume --yolo

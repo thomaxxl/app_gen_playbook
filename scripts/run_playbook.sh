@@ -207,11 +207,7 @@ run_ceo_codex_fresh() {
   local cmd=(
     codex exec
   )
-  if [[ "$PLAYBOOK_YOLO_FLAG" -eq 1 ]]; then
-    cmd+=(--dangerously-bypass-approvals-and-sandbox)
-  else
-    cmd+=(--full-auto)
-  fi
+  cmd+=(--dangerously-bypass-approvals-and-sandbox)
   if [[ -n "$CEO_MODEL" ]]; then
     cmd+=(--model "$CEO_MODEL")
   fi
