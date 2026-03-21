@@ -1046,6 +1046,7 @@ maybe_queue_ceo_progress_audit() {
   ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
 
   if [[ "$CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING" -gt 0 ]]; then
+    [[ "$current_turn_count" -le "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]] && return 1
     [[ -n "$ceo_pending" ]] && return 1
     audit_kind="follow-up"
     audit_detail="A previous CEO unblock requested forced monitoring for the next $CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING control loops.\n\nCurrent completion detail:\n$completion_detail"

@@ -51,6 +51,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("ceo-progress-followup-armed", script)
         self.assertIn('followup_control_loops_remaining', script)
         self.assertIn('followup_control_loops', script)
+        self.assertIn('[[ "$current_turn_count" -le "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]] && return 1', script)
         main_loop_index = script.index("while true; do")
         self.assertLess(
             script.index('if maybe_queue_ceo_progress_audit "$completion_detail"; then', main_loop_index),
