@@ -49,6 +49,8 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("maybe_queue_ceo_progress_audit()", script)
         self.assertIn("topic: progress-audit", script)
         self.assertIn("ceo-progress-followup-armed", script)
+        self.assertIn('followup_control_loops_remaining', script)
+        self.assertIn('followup_control_loops', script)
         main_loop_index = script.index("while true; do")
         self.assertLess(
             script.index('if maybe_queue_ceo_progress_audit "$completion_detail"; then', main_loop_index),

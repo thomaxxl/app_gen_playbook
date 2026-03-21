@@ -1009,8 +1009,24 @@ EOF
 capture_ceo_progress_followup_request() {
   [[ -f "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD" ]] || return 1
 
-  local loops
-  loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
+  local loops fallback_loops
+  fallback_loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
+  loops="$(awk -F':[[:space:]]*' '
+    $1 == "followup_control_loops_remaining" {
+      print $2
+      found = 1
+      exit
+    }
+    $1 == "followup_control_loops" && fallback == "" {
+      fallback = $2
+    }
+    END {
+      if (!found && fallback != "") {
+        print fallback
+      }
+    }
+  ' "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD")"
+  loops="$(sanitize_nonnegative_integer "$loops" "$fallback_loops")"
   load_ceo_progress_audit_state
   CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING="$loops"
   write_ceo_progress_audit_state
