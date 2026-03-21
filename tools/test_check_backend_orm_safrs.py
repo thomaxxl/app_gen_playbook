@@ -65,6 +65,57 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
 
             self.assertEqual(audit_backend_orm_safrs(repo_root), [])
 
+    def test_accepts_flask_safrs_db_model_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/database.py",
+                "\n".join(
+                    [
+                        "import safrs",
+                        "db = safrs.DB",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/models.py",
+                "\n".join(
+                    [
+                        "from safrs import SAFRSBase",
+                        "from .database import db",
+                        "class Project(SAFRSBase, db.Model):",
+                        "    Id = db.Column(db.Integer, primary_key=True)",
+                        "EXPOSED_MODELS = (Project,)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/__init__.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "from safrs.fastapi import SafrsFastAPI",
+                        "from .models import EXPOSED_MODELS",
+                        "def create_app():",
+                        "    app = FastAPI()",
+                        '    api = SafrsFastAPI(app, prefix="/api")',
+                        "    for model in EXPOSED_MODELS:",
+                        "        api.expose_object(model)",
+                        "    return app",
+                    ]
+                )
+                + "\n",
+            )
+
+            self.assertEqual(audit_backend_orm_safrs(repo_root), [])
+
     def test_rejects_fastapi_openapi_masquerading_as_jsonapi(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

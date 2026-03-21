@@ -250,6 +250,9 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('> "$prompt_tmp"; then', script)
         self.assertIn('rm -f "$prompt_tmp"', script)
         self.assertIn('mv "$prompt_tmp" "$prompt_file"', script)
+        self.assertIn('if [[ ! -s "$prompt_file" ]]; then', script)
+        self.assertIn('failed to build a non-empty role prompt', script)
+        self.assertIn('if ! build_prompt "$runtime_role" "$display_role" "$role_file" "$message_path" "$prompt_file"; then', script)
 
     def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
         script = self.runner_core()

@@ -56,18 +56,27 @@ def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
 
     issues: list[str] = []
 
-    has_safrs_api = "from safrs.fastapi.api import SafrsFastAPI" in combined and "SafrsFastAPI(" in combined
+    has_safrs_api = (
+        (
+            "from safrs.fastapi.api import SafrsFastAPI" in combined
+            or "from safrs.fastapi import SafrsFastAPI" in combined
+        )
+        and "SafrsFastAPI(" in combined
+    )
     has_exposed_models = "EXPOSED_MODELS" in combined and ".expose_object(" in combined
     has_safrs_models = "SAFRSBase" in combined
     has_orm_base = (
         "declarative_base(" in combined
         or "DeclarativeBase" in combined
         or "class Base(" in combined
+        or re.search(r"class\s+\w+\([^)]*\bdb\.Model\b", combined) is not None
+        or "db = safrs.DB" in combined
     )
     has_orm_mapping = bool(
         re.search(r"\bMapped\s*\[", combined)
         or "mapped_column(" in combined
         or "relationship(" in combined
+        or "db.Column(" in combined
         or re.search(r"class\s+\w+\([^)]*\bBase\b", combined)
     )
     masquerades_jsonapi = 'openapi_url="/jsonapi.json"' in fastapi_text and not has_safrs_api

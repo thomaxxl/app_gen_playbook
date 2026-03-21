@@ -2690,6 +2690,10 @@ build_prompt() {
   fi
 
   mv "$prompt_tmp" "$prompt_file"
+  if [[ ! -s "$prompt_file" ]]; then
+    rm -f "$prompt_file"
+    return 1
+  fi
 }
 
 extract_summary() {
@@ -3672,7 +3676,14 @@ run_role_once() {
     --repo-root "$ROOT" \
     --output "$snapshot_file" >/dev/null
 
-  build_prompt "$runtime_role" "$display_role" "$role_file" "$message_path" "$prompt_file"
+  if ! build_prompt "$runtime_role" "$display_role" "$role_file" "$message_path" "$prompt_file"; then
+    handle_role_codex_failure \
+      "$runtime_role" \
+      "$message_base" \
+      "$message_path" \
+      "failed to build a non-empty role prompt"
+    return 0
+  fi
 
   local run_error=0
 
