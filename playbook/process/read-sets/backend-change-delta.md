@@ -19,6 +19,10 @@ Use the matching stage-specific manifest, not both by default:
 For SAFRS-backed DB API changes, the selected stage-specific manifest is also
 the required load path for `../../../skills/safrs-api-design/SKILL.md`.
 
+For LogicBank-backed rule design, rule implementation, or rule-exception
+changes, the selected stage-specific manifest is also the required load path
+for `../../../skills/logicbank-rules-design/SKILL.md`.
+
 After these reads, load only the current change-workspace files, the active
 role-load manifest when it exists, the exact backend-design and architecture
 artifacts explicitly affected by the change, and the `app/backend/` or

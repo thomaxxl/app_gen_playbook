@@ -62,6 +62,9 @@ The run is blocked if any of these are true:
 - required relationship labels, tabs, or dialogs are missing where the
   approved UX and frontend contracts require them
 - approved rule IDs do not have the required backend test coverage
+- ordinary transactional business rules are implemented primarily through
+  endpoint/service/frontend enforcement without a documented LogicBank-lane
+  exception
 - the final Playwright smoke validation is missing without a documented
   blocked-environment path
 - captured UI preview screenshots exist but were not analyzed for visible

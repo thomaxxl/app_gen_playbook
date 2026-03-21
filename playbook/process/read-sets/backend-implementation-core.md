@@ -21,6 +21,7 @@ Required startup reads:
 - `../../../specs/references/safrs/RPC.md`
 - `../../../specs/references/safrs/Instances-without-a-SQLAlchemy-model.md`
 - `../../../specs/contracts/rules/README.md`
+- `../../../skills/logicbank-rules-design/SKILL.md`
 - `../../../specs/contracts/backend/validation.md`
 - `../../../specs/contracts/backend/verification-fallbacks.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`

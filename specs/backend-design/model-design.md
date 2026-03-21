@@ -32,6 +32,8 @@ The real artifact MUST also define:
 - internal or non-exposed concepts and why they are not exposed
 - same-target multiple-reference cases and the distinct semantic names used
 - persisted derived fields versus runtime-only values
+- for every derived persisted field, whether it is maintained by `copy`,
+  `formula`, `sum`, `count`, custom logic, or left out of scope
 - any resource whose mutability is limited relative to normal CRUD
 - for every resource whose `Exposed` value is `yes`, how that resource becomes
   a true `SAFRSBase` model in `EXPOSED_MODELS` instead of a hand-built JSON

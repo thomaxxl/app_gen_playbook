@@ -18,6 +18,10 @@ semantics:
 The agent MUST NOT load every file by default. It MUST load only the parts
 needed for the current task.
 
+For any task that resolves `rule-mapping.md`, edits `app/rules/**`, proposes
+custom Python rule behavior, or verifies LogicBank event/API behavior, the
+agent MUST also load `../../../skills/logicbank-rules-design/SKILL.md`.
+
 The agent MUST load these files first:
 
 For the starter domain:
@@ -50,6 +54,10 @@ The agent MAY load these files on demand:
   only when the current task is implementing `app/rules/rules.py`,
   resolving `backend-design/rule-mapping.md`, verifying actual LogicBank API
   behavior, or adding advanced event-driven rule logic
+
+The skill above is the default day-to-day rule-selection guide. This contract
+directory and the advanced LogicBank reference still own normative
+enforcement, lifecycle, and verification expectations.
 
 The agent MUST NOT load `logicbank-reference.md` for unrelated backend work.
 That file exists to keep advanced LogicBank knowledge confined and out of the

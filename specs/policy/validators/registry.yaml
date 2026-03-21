@@ -64,6 +64,22 @@ validators:
     message_field: reason
     summary_pass: frontend SAFRS relationship consumption contract passed
     summary_fail_template: "{count} frontend relationship consumption issue(s)"
+  tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_lane_issues:
+    adapter: issue_list
+    module: validators.policy.validate_logicbank_policy_contracts
+    callable: collect_logicbank_lane_issues
+    path_field: path
+    message_field: reason
+    summary_pass: LogicBank lane-selection contract passed
+    summary_fail_template: "{count} LogicBank lane-selection issue(s)"
+  tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_artifact_issues:
+    adapter: issue_list
+    module: validators.policy.validate_logicbank_policy_contracts
+    callable: collect_logicbank_artifact_issues
+    path_field: path
+    message_field: reason
+    summary_pass: LogicBank backend-design artifact contract passed
+    summary_fail_template: "{count} LogicBank artifact issue(s)"
   tools/check_dependency_provisioning.py:
     adapter: subprocess_check
     default_path: app/.runtime.local.env

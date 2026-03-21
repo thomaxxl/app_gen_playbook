@@ -68,6 +68,11 @@ The implementation MUST NOT activate LogicBank at import time.
 Activation belongs in application startup, where tests and launchers can
 control it explicitly.
 
+Custom endpoints that perform writes MUST still use the shared ORM session
+factory and normal flush/commit path. They MUST NOT bypass the rule layer by
+writing outside the transaction boundary documented by
+`../../../skills/logicbank-rules-design/SKILL.md`.
+
 ## Repeated app creation in tests
 
 Starter tests may create multiple app instances in one pytest process.

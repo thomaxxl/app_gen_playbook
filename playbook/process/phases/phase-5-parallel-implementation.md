@@ -119,6 +119,8 @@ business-rule behavior, or route meaning.
   against the live collection paths before frontend bootstrap is treated as
   stable
 - implement rules and validation
+- implement approved rule choices in the shared LogicBank/backend rule layer,
+  not primarily in transport handlers or frontend validation
 - implement the run-owned bootstrap and sample-data plan
 - implement tests
 - ensure generated dependency manifests are concrete before install

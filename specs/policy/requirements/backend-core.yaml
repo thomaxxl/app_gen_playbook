@@ -226,3 +226,86 @@ requirements:
     remediation: >
       Restore canonical SAFRS relationship consumption rules in the frontend
       contracts and runtime templates.
+  - id: BE-RULES-LOGICBANK-001
+    title: LogicBank declarative lane is the default rule-selection path
+    class: artifact_shape
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - backend
+      - architect
+    applies_when:
+      roles:
+        - backend
+        - architect
+      phases:
+        - phase-4-backend-design-and-rules-mapping
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - skills/logicbank-rules-design/SKILL.md
+      - specs/contracts/rules/README.md
+      - specs/contracts/rules/patterns.md
+      - specs/contracts/rules/lifecycle.md
+      - specs/contracts/rules/validation.md
+      - playbook/roles/backend.md
+      - playbook/roles/architect.md
+    description: >
+      Business-rule design and review must load the LogicBank skill and force
+      authors to evaluate the declarative Rule.copy/formula/sum/count/
+      constraint lane before endpoint/service/event/custom-Python
+      alternatives.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_lane_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Restore the LogicBank skill to the backend and architect read path and
+      reassert the declarative decision order in the rules contracts.
+  - id: BE-RULES-EVID-001
+    title: Rule-mapping artifacts record the LogicBank lane and proof
+    class: artifact_shape
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - backend
+      - architect
+    applies_when:
+      roles:
+        - backend
+        - architect
+      phases:
+        - phase-4-backend-design-and-rules-mapping
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - specs/backend-design/rule-mapping.md
+      - specs/backend-design/model-design.md
+      - specs/backend-design/test-plan.md
+      - playbook/process/quality-gates.md
+    description: >
+      The backend-design artifacts must record the chosen LogicBank lane,
+      exception reason, and API/ORM proof expectations instead of leaving
+      business-rule implementation as generic prose.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_artifact_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Extend the rule-mapping, model-design, and test-plan templates so
+      LogicBank lane choice and proof obligations are explicit.

@@ -29,6 +29,9 @@ and tests.
   list/show/include/filter/drill-down behavior
 - define per-resource readonly and mutability policy
 - map approved rule IDs to LogicBank patterns, backend enforcement, and tests
+- evaluate each approved rule ID against `Rule.copy`, `Rule.formula`,
+  `Rule.sum`, `Rule.count`, `Rule.constraint`, and declarative chaining before
+  approving advanced/custom alternatives
 - define derived vs stored fields
 - define per-resource query commitments
 - define any backend read-model, aggregate, or metadata endpoints required by
@@ -55,6 +58,8 @@ and tests.
   deferred, or omitted
 - every exposed resource has an explicit mutability policy
 - every approved rule ID maps to backend implementation and backend tests
+- every approved rule ID records the chosen LogicBank lane or justified
+  exception before coding starts
 - every frontend-visible field maps to backend truth
 - every frontend-needed query behavior is either committed or explicitly out
   of scope

@@ -199,6 +199,12 @@ this rule:
 - every documented exception names the rejected canonical SAFRS lane and why
   it was insufficient
 
+When reviewing backend rule exceptions, the Architect MUST require documented
+evidence that the approved business rule was evaluated against the default
+LogicBank declarative lane defined by
+`../../skills/logicbank-rules-design/SKILL.md` before approving
+endpoint/service/event/custom-Python alternatives.
+
 The Architect MUST hand work back to Product Manager when a decision would
 change users, scope, workflows, or required custom pages as product behavior.
 

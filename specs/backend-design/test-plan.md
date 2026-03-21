@@ -32,6 +32,7 @@ The real artifact MUST define:
 9. query/search/filter verification per resource
 10. bootstrap/idempotency tests
 11. fallback verification behavior if the preferred HTTP path is gated
+12. activation proof on the real app session factory
 
 ## Required CRUD/query table
 
@@ -52,3 +53,6 @@ The real artifact MUST also identify:
   on
 - the representative ORM model/relationship proof for every resource or
   relationship that should use the default ORM lane
+- for every rule-bearing resource, representative create/update/delete/reparent
+  stories, invalid mutation stories, API-path proof, ORM-path proof, and
+  activation proof

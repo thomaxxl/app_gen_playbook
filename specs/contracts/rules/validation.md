@@ -29,6 +29,11 @@ Across those stories, validate:
 - persisted derived targets stay synchronized with the declared `Rule.copy`
   and `Rule.formula` behavior
 
+Where relevant, the tests MUST also distinguish:
+
+- snapshot semantics (`Rule.copy`)
+- live recompute semantics (`Rule.formula`)
+
 ## API-path validation
 
 At least one invalid mutation MUST be tested through the API surface, not only
@@ -46,6 +51,13 @@ same session factory the app uses in production.
 
 This proves the rules are attached to the real session/commit path rather than
 only to the transport layer.
+
+Aggregate-bearing runs MUST also prove aggregate maintenance across create,
+update, delete, and reparent flows when those flows are in scope.
+
+The validation set MUST include proof that LogicBank activation occurred on
+the real app session factory rather than on a test-only or helper-only
+session.
 
 ## Rule-mapping coverage note
 

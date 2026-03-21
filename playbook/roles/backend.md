@@ -259,6 +259,13 @@ run-owned backend-design artifacts, especially:
 If the business-rules catalog is too vague to implement, the Backend agent
 MUST send the ambiguity back upstream instead of inventing rule meaning.
 
+When mapping approved business-rule IDs to implementation, the Backend agent
+MUST load and apply `../../skills/logicbank-rules-design/SKILL.md` before
+choosing custom Python, endpoint-layer validation, raw-SQL recompute helpers,
+or advanced LogicBank events. The Backend agent MUST first evaluate the rule
+against `Rule.copy`, `Rule.formula`, `Rule.sum`, `Rule.count`,
+`Rule.constraint`, and declarative chaining.
+
 When `reference/admin.yaml` is generated or materially refreshed from backend
 discovery or OpenAPI-derived input, the Backend agent SHOULD use the Codex
 `openapi-to-admin-yaml` skill as the default generation lane instead of

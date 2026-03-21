@@ -100,6 +100,22 @@ Use `Rule.formula` when the business meaning is:
 If a run uses both patterns, the backend rule mapping SHOULD record that
 semantic choice explicitly.
 
+## Required rule decision order
+
+For each approved business rule, the default selection order is:
+
+1. `Rule.copy`
+2. `Rule.formula`
+3. `Rule.sum`
+4. `Rule.count`
+5. `Rule.constraint`
+6. declarative chaining of the patterns above
+7. advanced LogicBank pattern with documented exception
+8. custom Python as last resort
+
+The implementation MUST NOT skip directly to endpoint/service/event/custom
+code without recording why the earlier declarative lanes were insufficient.
+
 ## Visibility rule
 
 The implementation MUST NOT hide required LogicBank dependencies in helper-only
@@ -128,3 +144,15 @@ expressible that way, such as:
 - external calls
 
 Those side effects are out of scope for the starter contract in this playbook.
+
+## Anti-patterns to reject
+
+Reject designs that:
+
+- enforce transactional invariants only in endpoint handlers
+- recompute aggregates manually in CRUD handlers for ordinary write flows
+- rely on frontend-only validation for invalid transactional states
+- use raw-SQL mutation helpers as the primary aggregate-maintenance lane
+- introduce advanced LogicBank events when `Rule.copy`, `Rule.formula`,
+  `Rule.sum`, `Rule.count`, `Rule.constraint`, or declarative chaining would
+  suffice

@@ -30,6 +30,10 @@ The agent MUST NOT load this file for:
 This file exists to keep advanced LogicBank knowledge confined so it can later
 move to a narrower role without widening the default backend read path.
 
+`../../../skills/logicbank-rules-design/SKILL.md` is the default day-to-day
+rule-selection guide. This file remains the advanced reference, not the first
+stop for ordinary rule-mapping work.
+
 ## Source hierarchy
 
 Use this precedence order when LogicBank docs disagree:
