@@ -60,6 +60,19 @@ The Architect MAY classify such data as `api-read-model` or `api-meta` only
 when the run-owned artifacts record why ordinary SAFRS resource exposure is not
 the right primary contract for that surface.
 
+For any persisted DB-backed entity or relationship that users or operators need
+to list, inspect, filter, sort, include, or drill into, the real artifact MUST
+also record why the need was not satisfied by:
+
+- the normal SAFRS resource endpoint
+- the normal SAFRS relationship endpoint
+- `include=...`
+- `@jsonapi_attr`
+- `@jsonapi_rpc`
+
+`JABase` or another stateless/service endpoint is an explicit exception lane
+and requires a named architecture exception.
+
 ## Required table
 
 The real artifact MUST include a table with at least these columns:
@@ -77,6 +90,8 @@ The real artifact MUST define:
   API metadata
 - which DB-backed tables and relationships default to SAFRS resource exposure
   and which documented exceptions are allowed to bypass that default
+- for every documented exception, which canonical SAFRS lane was rejected and
+  why
 - when SAFRS-native mechanisms such as `jsonapi_attr` or `jsonapi_rpc` are the
   preferred way to expose dynamic non-column or operational data
 - which values MAY stay static in the frontend bundle

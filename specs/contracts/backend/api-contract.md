@@ -15,6 +15,8 @@ The generated app relies on these SAFRS/backend behaviors staying stable:
 - canonical schema URL `/jsonapi.json`
 - ordinary persisted resource delivery coming from real ORM-backed SAFRS
   resources, not hand-built JSON stand-ins
+- ordinary persisted relationship delivery coming from real ORM-backed SAFRS
+  relationship URLs and include paths, not custom summary endpoints
 - `/jsonapi.json` representing real SAFRS-backed resource discovery, not only
   a renamed FastAPI OpenAPI document
 - include support for declared relationship names
@@ -29,18 +31,20 @@ The generated app relies on these SAFRS/backend behaviors staying stable:
 - JSON:API `id` is serialized as a string on the wire
 - database primary keys may still be integer columns internally
 
-## SAFRS-specific starter assumption
+## Relationship read and write rule
 
-The starter app intentionally relies on one SAFRS convenience behavior:
+The starter app MAY keep scalar foreign-key columns such as `collection_id`
+and `status_id` as a write convenience.
 
-- foreign-key columns such as `collection_id` and `status_id` are exposed as
-  scalar writable attributes
+That does not change the canonical read contract:
 
-This is a SAFRS-specific assumption for the starter templates. It is not being
-presented as generic JSON:API doctrine.
-
-If a future generator variant wants to stay more relationship-oriented, that
-variant must change the client/provider and test templates together.
+- canonical read, drill-down, and related-record inspection for DB
+  relationships come from SAFRS relationship URLs and/or `include=...`
+- a scalar FK attribute is not permission to invent a side endpoint that
+  re-exports related DB information outside the owning resource's SAFRS
+  surface
+- if a relationship is intentionally not public, the run-owned design must
+  record that as an explicit SAFRS decision and replacement contract
 
 ## Runtime discovery rule
 

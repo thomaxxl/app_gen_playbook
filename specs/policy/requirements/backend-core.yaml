@@ -1,8 +1,8 @@
 id: backend-core
 title: Backend core requirements
-description: Existing backend route-exposure enforcement registered as policy.
+description: SAFRS-first backend and relationship exposure enforcement.
 requirements:
-  - id: BE-SAFRS-ORM-001
+  - id: BE-SAFRS-RESOURCE-001
     title: DB-backed resources use real SAFRS and ORM exposure
     class: route_exposure
     normative: MUST
@@ -12,11 +12,13 @@ requirements:
       - backend
       - architect
       - qa
+      - product_manager
     applies_when:
       roles:
         - backend
         - architect
         - qa
+        - product_manager
       phases:
         - phase-4-backend-design-and-rules-mapping
         - phase-6-integration-review
@@ -45,3 +47,175 @@ requirements:
     remediation: >
       Restore mapped ORM models and real SAFRS exposure, or record a narrow
       architecture waiver for the non-SAFRS exception.
+  - id: BE-SAFRS-REL-001
+    title: Exposed relationships have live SAFRS route and include proof
+    class: route_exposure
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - backend
+      - architect
+      - qa
+      - product_manager
+    applies_when:
+      roles:
+        - backend
+        - architect
+        - qa
+        - product_manager
+      phases:
+        - phase-4-backend-design-and-rules-mapping
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
+    source_docs:
+      - specs/backend-design/relationship-map.md
+      - specs/backend-design/test-plan.md
+      - specs/contracts/backend/validation.md
+    description: >
+      Exposed relationships must be backed by live relationship-route and
+      include-path proof, not only by broad resource-level claims.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_relationship_exposure_issues
+    evidence:
+      required_files:
+        - runs/current/artifacts/backend-design/relationship-map.md
+        - runs/current/evidence/contract-samples.md
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Add representative relationship and include proofs, or narrow the
+      claimed relationship exposure contract.
+  - id: BE-SAFRS-MECHANISM-001
+    title: SAFRS mechanism preference is explicit
+    class: artifact_shape
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - backend
+      - architect
+    applies_when:
+      roles:
+        - backend
+        - architect
+      phases:
+        - phase-4-backend-design-and-rules-mapping
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/backend/data-sourcing.md
+      - specs/contracts/backend/api-contract.md
+      - specs/contracts/backend/query-contract.md
+      - playbook/roles/backend.md
+    description: >
+      The playbook must force authors to evaluate SAFRS resource,
+      relationship, include, jsonapi_attr, and jsonapi_rpc lanes before
+      inventing custom DB-backed APIs.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_mechanism_preference_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Restore the SAFRS-first decision chain in the backend contracts and role
+      guidance.
+  - id: BE-SAFRS-EXC-001
+    title: SAFRS exceptions are documented explicitly
+    class: artifact_shape
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - architect
+      - backend
+    applies_when:
+      roles:
+        - architect
+        - backend
+      phases:
+        - phase-2-architecture-contract
+        - phase-4-backend-design-and-rules-mapping
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - specs/architecture/data-sourcing-contract.md
+      - specs/architecture/integration-boundary.md
+      - specs/architecture/resource-classification.md
+      - specs/backend-design/model-design.md
+      - specs/backend-design/resource-exposure-policy.md
+      - specs/backend-design/relationship-map.md
+    description: >
+      Every non-default API lane for DB-backed data must name the rejected
+      SAFRS option and the replacement contract.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_exception_handling_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Add explicit SAFRS-lane rejection and replacement-contract fields to the
+      architecture and backend-design artifacts.
+  - id: FE-SAFRS-REL-001
+    title: Frontend relationship reads prefer canonical SAFRS surfaces
+    class: cross_artifact_consistency
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - frontend
+      - architect
+      - backend
+      - qa
+      - product_manager
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - backend
+        - qa
+        - product_manager
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+        - acceptance
+    source_docs:
+      - specs/contracts/frontend/admin-yaml-contract.md
+      - specs/contracts/frontend/record-shape.md
+      - specs/contracts/frontend/relationship-ui.md
+    description: >
+      Read-side frontend relationship behavior must prefer include data and
+      canonical relationship routes over custom side endpoints.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_frontend_relationship_consumption_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Restore canonical SAFRS relationship consumption rules in the frontend
+      contracts and runtime templates.

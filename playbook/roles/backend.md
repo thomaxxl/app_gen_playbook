@@ -134,6 +134,16 @@ Backend agent MUST:
 - ensure route discovery shows it in the live `/jsonapi.json` contract
 - expose the documented relationships needed for list/show/include behavior
 
+For any persisted DB-backed entity or relationship that users or operators
+need to list, inspect, filter, sort, include, or drill into, the Backend
+agent MUST treat the canonical API surface as:
+
+- a mapped SQLAlchemy model or relationship
+- exposed through SAFRS resource and relationship URLs
+
+Custom read-model, summary, dashboard, or `/api/ops/` endpoints MAY
+supplement that surface, but they MUST NOT replace it.
+
 The Backend agent MUST NOT treat a plain FastAPI app as compliant merely
 because it serves a document at `/jsonapi.json`. That path counts only when the
 backend is wired through `SafrsFastAPI` and the required resources come from
@@ -143,12 +153,38 @@ Custom `/api/ops/` or other read-model endpoints MAY supplement those
 resources, but they MUST NOT replace the required SAFRS exposure for
 appropriate DB-backed tables and relationships.
 
-When the backend is SAFRS-based and the required dynamic data does not map
-directly to stored model columns, the Backend agent MUST review the SAFRS
-documentation and available local examples for `jsonapi_attr` and
-`jsonapi_rpc` before inventing a custom workaround. Those mechanisms are
-approved ways to expose dynamic, computed, or operational data that still
-belongs on the API side.
+When the backend is SAFRS-based and the task touches DB-backed relationship
+design, computed attribute exposure, or any custom endpoint proposal, the
+Backend agent MUST read the mandatory SAFRS reference set and review the
+`jsonapi_attr`, `jsonapi_rpc`, relationship, include, and `JABase` lanes
+before inventing a custom workaround.
+
+Before approving a non-default API lane for DB-backed data, the Backend agent
+MUST answer this decision tree in order:
+
+1. Is this persisted DB row data? Use a real SAFRS resource.
+2. Is this a DB relationship between exposed resources? Use a real ORM
+   relationship plus the generated SAFRS relationship URL, and declare the
+   include path.
+3. Is this a derived field that belongs on the resource representation? Use
+   `@jsonapi_attr`.
+4. Is this an explicit action or service-like operation? Use `@jsonapi_rpc`.
+5. Only if none of those fit should the design consider `JABase`, a read-model
+   endpoint, or another custom API surface, and that choice needs a documented
+   exception.
+
+The required rejected-lane check is explicit:
+
+- could the need be satisfied by the normal SAFRS resource endpoint?
+- could the need be satisfied by the normal SAFRS relationship endpoint?
+- could the need be satisfied by `include=...`?
+- could the need be satisfied by `jsonapi_attr`?
+- could the need be satisfied by `jsonapi_rpc`?
+
+If a relationship is intentionally not public, that MUST be a documented SAFRS
+decision using normal SAFRS controls such as hidden relationships or
+relationship item-mode choices. It MUST NOT be an implicit omission followed by
+custom substitute endpoints.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
@@ -191,6 +227,9 @@ agent MUST explicitly resolve and record:
    - which DB-backed tables and relationships are exposed through SAFRS by
      default, which are approved exceptions, and how live `/jsonapi.json`
      evidence will prove that implementation matches the run-owned design
+   - for each exception, which canonical SAFRS lane was rejected and why:
+     resource, relationship URL, `include=...`, `jsonapi_attr`, `jsonapi_rpc`,
+     or `JABase`
 10. ORM implementation reconciliation
    - which DB-backed tables and relationships are implemented as mapped
      SQLAlchemy ORM models by default, which exceptions are approved, and how

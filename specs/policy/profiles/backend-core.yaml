@@ -1,4 +1,8 @@
 id: backend-core
 title: Backend core policy
 requirement_ids:
-  - BE-SAFRS-ORM-001
+  - BE-SAFRS-RESOURCE-001
+  - BE-SAFRS-REL-001
+  - BE-SAFRS-MECHANISM-001
+  - BE-SAFRS-EXC-001
+  - FE-SAFRS-REL-001

@@ -67,3 +67,20 @@ default is true SAFRS JSON:API exposure. Custom read-model or operational
 endpoints supplement that surface; they do not replace it unless the
 run-owned architecture and backend-design artifacts explicitly document an
 exception.
+
+For any persisted DB-backed entity or relationship that users or operators
+need to list, inspect, filter, sort, include, or drill into, the canonical
+API surface MUST be a mapped SQLAlchemy model or relationship exposed through
+SAFRS.
+
+Before approving a custom endpoint for DB-backed data, the design MUST
+document why the need cannot be satisfied by:
+
+- the normal SAFRS resource endpoint
+- the normal SAFRS relationship endpoint
+- `include=...`
+- `@jsonapi_attr`
+- `@jsonapi_rpc`
+
+`JABase` is an explicit exception lane and requires a documented architecture
+exception.

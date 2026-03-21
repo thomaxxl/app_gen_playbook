@@ -56,6 +56,11 @@ Example:
 
 Relationship names in `include` MUST match ORM relationship names exactly.
 
+Ordinary related reads MUST prefer SAFRS include paths and relationship URLs.
+The frontend and backend MUST NOT assume a custom summary endpoint is the
+normal read contract for a DB relationship when the same relationship exists in
+SAFRS.
+
 ## Filtering
 
 Supported SAFRS modes:
@@ -121,6 +126,10 @@ behavior, the run-owned `query-behavior.md` artifact MUST define:
 - what remains out of scope in v1
 
 The frontend MUST NOT assume an extra ad hoc `/search` endpoint.
+
+The frontend MUST also NOT assume an extra ad hoc relationship-summary or
+related-record endpoint for ordinary DB-backed related reads when a canonical
+SAFRS relationship URL or `include=...` path exists.
 
 ## Validation behavior
 

@@ -31,6 +31,9 @@ This file defines the minimum backend validation checklist.
 - every relationship marked `Exposed relationship = yes` in
   `../../../runs/current/artifacts/backend-design/relationship-map.md` is
   proven through live SAFRS resource payloads or related routes
+- every exposed relationship also has a representative live relationship URL
+  proof and a representative `include=...` proof when the frontend depends on
+  that include path
 - every ordinary persisted table-backed resource that the run-owned design
   treats as ORM-backed is implemented through mapped SQLAlchemy ORM classes and
   relationships rather than only raw-SQL or row-mapper handlers
@@ -50,6 +53,9 @@ This file defines the minimum backend validation checklist.
 - custom `/api/ops/` or other read-model endpoints MAY supplement the resource
   contract, but MUST NOT replace SAFRS exposure for appropriate DB-backed
   tables or relationships
+- when a custom endpoint for DB-backed data exists, the run-owned design and
+  evidence must record why the need was not satisfied by a normal SAFRS
+  resource, relationship URL, `include=...`, `jsonapi_attr`, or `jsonapi_rpc`
 - raw SQL or hand-built row adapters MAY supplement aggregate/read-model
   endpoints, but MUST NOT replace the normal ORM lane for appropriate
   DB-backed resources

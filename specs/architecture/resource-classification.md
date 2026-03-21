@@ -18,9 +18,9 @@ version at `../../runs/current/artifacts/architecture/resource-classification.md
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | Replace this row |
+| Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Canonical SAFRS lane | Relationship-native? | Exception required | Replacement contract | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | resource / relationship / include / jsonapi_attr / jsonapi_rpc | yes/no | yes/no | replace or none | Replace this row |
 
 Allowed `Class` values SHOULD be selected from:
 
@@ -43,3 +43,6 @@ modeled either way and record:
 
 The real artifact MUST record any candidate resources that were explicitly
 deferred from the first version.
+
+For any DB-backed concept that does not use the ordinary SAFRS lane, the real
+artifact MUST also record which canonical SAFRS option was rejected and why.

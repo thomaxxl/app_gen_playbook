@@ -17,9 +17,9 @@ version at `../../runs/current/artifacts/backend-design/model-design.md`.
 
 The real artifact MUST include a table with this shape:
 
-| Resource | Exposed | Table | Core stored fields | Derived persisted fields | Relationship fields | Read-only fields | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `<resource>` | `yes/no/internal/singleton/deferred` | `<table_name>` | `<field list>` | `<field list or none>` | `<relationship list>` | `<field list or none>` | `<notes>` |
+| Resource | Exposed | SAFRS model? | EXPOSED_MODELS entry | Table | Core stored fields | Derived persisted fields | ORM relationship fields | Uses jsonapi_attr? | Uses jsonapi_rpc? | Read-only fields | Exception id | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `<resource>` | `yes/no/internal/singleton/deferred` | `yes/no` | `yes/no` | `<table_name>` | `<field list>` | `<field list or none>` | `<relationship list>` | `yes/no with field list` | `yes/no with method list` | `<field list or none>` | `<exception id or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row. It MUST NOT leave the table
 empty or implied.
@@ -36,6 +36,9 @@ The real artifact MUST also define:
 - for every resource whose `Exposed` value is `yes`, how that resource becomes
   a true `SAFRSBase` model in `EXPOSED_MODELS` instead of a hand-built JSON
   substitute
+- for every resource, whether ordinary SAFRS resource, relationship,
+  `jsonapi_attr`, or `jsonapi_rpc` satisfies the need before an exception is
+  considered
 - for every persisted table-backed resource, whether it is implemented as a
   mapped SQLAlchemy ORM model or an approved exception, and why
 

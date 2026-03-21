@@ -18,6 +18,14 @@ does not invent product scope, UX behavior, or packaging decisions.
 Load UX or optional feature-pack material only when the current task requires
 it and the load plan allows it.
 
+Backend decision tree:
+
+- persisted DB row data => SAFRS resource
+- DB relationship => ORM relationship plus SAFRS relationship URL/include
+- computed resource field => `jsonapi_attr`
+- explicit operation => `jsonapi_rpc`
+- anything else => documented exception such as `JABase`
+
 Full docs:
 
 - `../../roles/backend.md`

@@ -16,9 +16,9 @@ version at `../../runs/current/artifacts/backend-design/relationship-map.md`.
 
 The real artifact MUST include a table with this shape:
 
-| From resource | To resource | FK column | Relationship name | Cardinality | Nullable | Delete behavior | Exposed relationship | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<from>` | `<to>` | `<fk>` | `<orm relationship>` | `<one-to-many / many-to-one / many-to-many>` | `<yes/no>` | `<cascade/restrict/set null/etc.>` | `<yes/no>` | `<notes>` |
+| From resource | To resource | FK column | Relationship name | Cardinality | Nullable | Delete behavior | Exposed relationship | Canonical relationship URL | Canonical include path | Hidden via SAFRS? | relationship_item_mode | Replacement contract if not exposed | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `<from>` | `<to>` | `<fk>` | `<orm relationship>` | `<one-to-many / many-to-one / many-to-many>` | `<yes/no>` | `<cascade/restrict/set null/etc.>` | `<yes/no>` | `<url or none>` | `<include path or none>` | `<yes/no>` | `<default / items / links / none>` | `<contract or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row.
 
@@ -30,6 +30,7 @@ The real artifact MUST also define:
 - exact foreign-key nullability rules
 - exact delete behavior and enforcement layer
 - any internal relationship that exists for rules/bootstrap but is not exposed
+- for any non-public relationship, which SAFRS control hides it and why
 
 If both source and target are SAFRS-exposed resources and the approved UI or
 review flows need the relationship for list/show/include/filter/drill-down

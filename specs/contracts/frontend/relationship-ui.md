@@ -14,6 +14,21 @@ reference frontend does:
 - forms MUST still write scalar foreign-key ids through standard
   `ReferenceInput` controls
 
+For writes, scalar FK ids may remain the canonical form value if that keeps
+starter CRUD simple.
+
+For reads, the frontend MUST prefer, in order:
+
+1. embedded related objects from `include=...`
+2. parent relationship endpoints
+3. id-based fallback fetches
+
+Relationship tabs and related-record dialogs MUST be backed by canonical SAFRS
+relationship metadata and relationship routes when those exist.
+
+The generated frontend MUST never require a custom endpoint merely to show
+DB-backed related data that SAFRS already exposes under the parent resource.
+
 Relationship tabs and related-record popups are the default generated
 frontend behavior. A generated app MUST implement them unless the current run
 explicitly records a different UX decision in its run-owned artifacts.
@@ -252,7 +267,8 @@ parent/child links when a more useful detail list exists.
 ## Custom views
 
 If a custom page surfaces relationships, it SHOULD reuse the same label
-resolution and summary behavior as the generated runtime.
+resolution and summary behavior as the generated runtime and SHOULD prefer
+canonical relationship routes and include paths over bespoke side endpoints.
 
 At minimum, a custom page MUST NOT show raw foreign-key ids when the same
 screen could reasonably show the related resource `user_key`.

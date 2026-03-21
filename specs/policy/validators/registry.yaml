@@ -32,6 +32,38 @@ validators:
     default_path: app/backend/src/my_app
     summary_pass: backend ORM/SAFRS audit passed
     summary_fail_template: "{count} backend ORM/SAFRS issue(s)"
+  tools/validators/policy/validate_safrs_policy_contracts.py::collect_relationship_exposure_issues:
+    adapter: issue_list
+    module: validators.policy.validate_safrs_policy_contracts
+    callable: collect_relationship_exposure_issues
+    path_field: path
+    message_field: reason
+    summary_pass: relationship exposure evidence passed
+    summary_fail_template: "{count} relationship exposure issue(s)"
+  tools/validators/policy/validate_safrs_policy_contracts.py::collect_mechanism_preference_issues:
+    adapter: issue_list
+    module: validators.policy.validate_safrs_policy_contracts
+    callable: collect_mechanism_preference_issues
+    path_field: path
+    message_field: reason
+    summary_pass: SAFRS mechanism preference contract passed
+    summary_fail_template: "{count} SAFRS mechanism preference issue(s)"
+  tools/validators/policy/validate_safrs_policy_contracts.py::collect_exception_handling_issues:
+    adapter: issue_list
+    module: validators.policy.validate_safrs_policy_contracts
+    callable: collect_exception_handling_issues
+    path_field: path
+    message_field: reason
+    summary_pass: SAFRS exception-handling contract passed
+    summary_fail_template: "{count} SAFRS exception-handling issue(s)"
+  tools/validators/policy/validate_safrs_policy_contracts.py::collect_frontend_relationship_consumption_issues:
+    adapter: issue_list
+    module: validators.policy.validate_safrs_policy_contracts
+    callable: collect_frontend_relationship_consumption_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend SAFRS relationship consumption contract passed
+    summary_fail_template: "{count} frontend relationship consumption issue(s)"
   tools/check_dependency_provisioning.py:
     adapter: subprocess_check
     default_path: app/.runtime.local.env

@@ -13,6 +13,15 @@ This helper module centralizes the Northwind-style relationship UI contract.
 The generated runtime SHOULD keep relationship-specific behavior here rather
 than scattering it across list/show components.
 
+Read-side rule:
+
+- prefer embedded related objects from canonical `include=...`
+- otherwise prefer the canonical SAFRS parent relationship route
+- only then fall back to `dataProvider.getOne(...)` by id
+
+This helper MUST NOT become a reason to invent side endpoints for ordinary
+DB-backed related data that SAFRS already exposes.
+
 Required exports SHOULD include:
 
 - `getRecordRelationValue(...)`
@@ -250,6 +259,8 @@ Implementation notes:
   metadata-driven summary rendering
 - the dialog opener MUST call both `preventDefault()` and `stopPropagation()`
   so it does not trigger datagrid row navigation
+- id-based `dataProvider.getOne(...)` fallback is acceptable only after the
+  runtime has tried embedded include data and canonical relationship metadata
 - the list/show runtime MUST use this module instead of ad hoc per-page
   relationship rendering
 - the runtime SHOULD keep `getDefaultRelationshipTabIndex(...)` here so the

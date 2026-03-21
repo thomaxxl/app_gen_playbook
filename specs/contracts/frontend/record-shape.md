@@ -8,7 +8,8 @@ frontend.
 - The primary key MUST be normalized to `id`
 - All other attribute keys MUST preserve the exact backend/admin.yaml field names
 - The runtime MUST NOT perform automatic case conversion
-- Reference fields MUST remain scalar ids in the normalized record
+- Reference fields MUST remain scalar ids in the normalized record as the
+  canonical write shape
 - Read-only embedded related objects MAY also be present at
   `record[relationshipName]` or `record["rel_" + relationshipName]`
 - Embedded related objects MUST be treated as optional display aids, not as the
@@ -55,7 +56,8 @@ Related resources are still separate records for canonical fetch/write flows:
   display when available
 - generated relationship rendering MUST remain functional even when embedded
   related objects are absent and normalized relationship metadata is partial
-- custom pages MUST fetch related resources explicitly or reuse the shared
+- custom pages MUST prefer embedded related objects from `include=...`, then
+  canonical relationship routes, then id-based fallback fetches or the shared
   relationship helper when they need readable labels
 - custom pages MUST NOT assume only one embedded-object field name unless they
   control the producer; the shared runtime supports both `relationshipName`
@@ -66,9 +68,11 @@ Related resources are still separate records for canonical fetch/write flows:
 When displaying a related record in a custom view:
 
 1. prefer an embedded related object when one is present
-2. otherwise read the local scalar id field such as `status_id`
-3. fetch the related resource by id
-4. display the related resource's `user_key` field or `label`
+2. otherwise use canonical relationship metadata and the parent relationship
+   route when available
+3. otherwise read the local scalar id field such as `status_id`
+4. fetch the related resource by id as a fallback
+5. display the related resource's `user_key` field or `label`
 
 If normalized schema relationship metadata is incomplete, custom pages SHOULD
 reuse the shared relationship helper instead of inventing their own fallback

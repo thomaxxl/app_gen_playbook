@@ -41,6 +41,9 @@ readiness note in:
 - capture at least one contract sample in `runs/current/evidence/contract-samples.md`
   showing the `admin.yaml endpoint`, matching discovered backend route, and a
   representative JSON:API sample record
+- reject any design or implementation that skipped the normal SAFRS decision
+  tree without documenting why resource, relationship, `include=...`,
+  `jsonapi_attr`, or `jsonapi_rpc` was insufficient
 - verify that DB-backed resources marked as SAFRS-exposed in
   `resource-exposure-policy.md` are actually present in live `/jsonapi.json`
   route discovery and are not replaced by hand-built substitute endpoints
@@ -193,6 +196,9 @@ Integration review fails when:
   for API-backed data retrieval
 - the backend replaced required SAFRS resource or relationship exposure with
   custom summary endpoints or hand-built JSON routes
+- a custom endpoint for DB-backed data was accepted without documenting why
+  normal SAFRS resource, relationship, `include=...`, `jsonapi_attr`, or
+  `jsonapi_rpc` did not fit
 - the backend only renamed FastAPI OpenAPI to `/jsonapi.json` and did not
   expose the required resources through real SAFRS model registration
 - the backend replaced required ORM-backed resource implementation with

@@ -11,6 +11,12 @@ Required startup reads:
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/contracts/backend/README.md`
 - `../../../specs/contracts/backend/data-sourcing.md`
+- `../../../specs/references/safrs/Quickstart-FastAPI.md`
+- `../../../specs/references/safrs/API-Functionality.md`
+- `../../../specs/references/safrs/Relationships-and-Includes.md`
+- `../../../specs/references/safrs/JSON-encoding-and-decoding.md`
+- `../../../specs/references/safrs/RPC.md`
+- `../../../specs/references/safrs/Instances-without-a-SQLAlchemy-model.md`
 - `../../../specs/contracts/rules/README.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`

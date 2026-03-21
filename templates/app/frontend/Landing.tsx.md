@@ -200,6 +200,8 @@ Notes:
 - Do not use the default list/show/edit shell for this route.
 - Resolve foreign-key ids into related labels or `user_key` values whenever
   possible.
+- Prefer embedded related objects from `include=...`, then canonical
+  relationship routes, then id-based fallback fetches for related display.
 - This template now derives its primary CTA from the first registered resource
   instead of a hard-coded starter route, but it remains starter-only overall.
 - If this page participates in the real entry experience, it MUST implement

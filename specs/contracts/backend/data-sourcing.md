@@ -31,9 +31,15 @@ ORM models and relationships. A custom read-model endpoint does not justify
 skipping the ORM for the underlying resource when ordinary resource delivery is
 still appropriate.
 
-In SAFRS-based backends, teams SHOULD also review the SAFRS documentation and
-examples for dynamic-data exposure patterns before inventing ad hoc APIs. In
-particular:
+In SAFRS-based backends, teams MUST review the mandatory SAFRS reference
+material before approving:
+
+- any DB-backed relationship design
+- any computed attribute exposure design
+- any custom endpoint proposal for data that touches a persisted DB-backed
+  concept
+
+In particular:
 
 - `jsonapi_attr` is appropriate for dynamic or computed attributes that belong
   on a resource representation even when they do not come directly from a
@@ -46,9 +52,12 @@ frontend to hardcode substitute values.
 
 Local workspace references currently include:
 
-- `../../../demo/vendor/safrs/README.md`
-- `../../../demo/examples/mini_examples/ex08_rpc.py`
-- `../../../projects/northwind/reference/models_guidance.py`
+- `../../references/safrs/Quickstart-FastAPI.md`
+- `../../references/safrs/API-Functionality.md`
+- `../../references/safrs/Relationships-and-Includes.md`
+- `../../references/safrs/JSON-encoding-and-decoding.md`
+- `../../references/safrs/RPC.md`
+- `../../references/safrs/Instances-without-a-SQLAlchemy-model.md`
 
 ## Backend-owned dynamic classes
 

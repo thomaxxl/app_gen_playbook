@@ -63,9 +63,9 @@ def ensure_paths_exist(repo_root: Path, requirement: dict[str, Any]) -> None:
     for doc in requirement.get("source_docs", []):
         if not (repo_root / doc).exists():
             raise PolicyError(f"{requirement['id']}: missing source doc {doc}")
-    validator_path = requirement["validator"]["entrypoint"]
+    validator_path = str(requirement["validator"]["entrypoint"]).split("::", 1)[0]
     if not (repo_root / validator_path).exists():
-        raise PolicyError(f"{requirement['id']}: missing validator entrypoint {validator_path}")
+        raise PolicyError(f"{requirement['id']}: missing validator entrypoint {requirement['validator']['entrypoint']}")
 
 
 def compile_registry(repo_root: Path) -> PolicyRegistry:

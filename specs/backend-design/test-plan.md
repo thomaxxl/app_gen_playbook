@@ -22,14 +22,16 @@ The real artifact MUST define:
    `resource-exposure-policy.md`
 3. live relationship coverage for every relationship marked exposed in
    `relationship-map.md`
-4. ORM mapping coverage for every persisted table-backed resource that should
+4. one live `include=...` proof for every include path the frontend depends on
+   in `query-behavior.md`
+5. ORM mapping coverage for every persisted table-backed resource that should
    use the normal ORM lane
-5. CRUD happy-path coverage per exposed resource
-6. invalid-state and rule-behavior tests
-7. delete/nullability tests
-8. query/search/filter verification per resource
-9. bootstrap/idempotency tests
-10. fallback verification behavior if the preferred HTTP path is gated
+6. CRUD happy-path coverage per exposed resource
+7. invalid-state and rule-behavior tests
+8. delete/nullability tests
+9. query/search/filter verification per resource
+10. bootstrap/idempotency tests
+11. fallback verification behavior if the preferred HTTP path is gated
 
 ## Required CRUD/query table
 
@@ -46,5 +48,7 @@ The real artifact MUST also identify:
 - the expected live `/jsonapi.json` collection route for every SAFRS-exposed
   resource
 - the representative relationship proof for every exposed relationship
+- the representative include proof for every include path the frontend depends
+  on
 - the representative ORM model/relationship proof for every resource or
   relationship that should use the default ORM lane

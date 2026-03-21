@@ -244,15 +244,25 @@ Overrides:
 
 For `type: reference`:
 
-- store the scalar foreign-key id in the record
+- store the scalar foreign-key id in the record for writes
 - map the foreign-key field to the corresponding relationship metadata when
   the runtime can resolve it
 - use the related resource's `user_key` for display in generated pages
-- allow generated pages to use an embedded related object when present, while
-  still keeping the scalar foreign-key id as the canonical write value
-- fetch related labels explicitly for custom pages or relationship dialogs
+- allow generated pages to use an embedded related object when present through
+  canonical `include=...` support, while still keeping the scalar foreign-key
+  id as the canonical write value
+- prefer, in order, embedded related objects from `include=...`, parent
+  relationship endpoints, then id-based fallback fetches
+- relationship tabs and related-record dialogs should use those parent
+  relationship endpoints before falling back to id-based fetches
+- fetch related labels explicitly for custom pages or relationship dialogs only
+  as a fallback after canonical relationship metadata and relationship routes
+  are exhausted
 - use the explicit `endpoint` mapping from raw `admin.yaml` when search or
   list routing needs the collection URL
+
+The generated frontend MUST NOT require a custom endpoint merely to show
+DB-backed related data that SAFRS already exposes under the parent resource.
 
 If a resource contains multiple reference fields that point to the same target
 resource, each field MUST remain distinct by its own attribute key and label.

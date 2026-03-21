@@ -4,6 +4,11 @@ resources:
     label: Projects
     user_key: slug
     menu_order: 10
+    tab_groups:
+      related:
+        label: Related
+        relationships:
+          - runs
     attributes:
       id:
         type: text
@@ -33,11 +38,33 @@ resources:
     label: Runs
     user_key: run_id_raw
     menu_order: 20
+    tab_groups:
+      related:
+        label: Related
+        relationships:
+          - project
+          - run_phase_status
+          - artifact_packages
+          - artifacts
+          - handoff_messages
+          - blockers
+          - verification_checks
+          - worker_states
+          - orchestrator_events
+          - run_files
+          - change_requests
     attributes:
       id:
         type: text
         readonly: true
         hidden: true
+      project_id:
+        type: reference
+        reference: Project
+        list: true
+        show: true
+        create: true
+        edit: true
       run_id_raw:
         type: text
         list: true

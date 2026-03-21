@@ -32,6 +32,15 @@ hidden repo-local code outside `app_gen_playbook/templates/`.
 list/show pages MUST render foreign keys and related summaries the same way as
 the Northwind reference runtime.
 
+That runtime is relationship-first on the read side:
+
+- prefer embedded related objects from `include=...`
+- otherwise prefer canonical parent relationship routes
+- only then fall back to id-based fetches
+
+Do not invent helper endpoints such as `/api/order_customer_summary` when
+`Order.customer` should already exist as a SAFRS relationship or include path.
+
 `admin/resourceMetadata.ts.md` is equally critical: it MUST synthesize
 relationship metadata from normalized schema, `fkToRelationship`, and raw
 `admin.yaml` so sparse-schema apps do not collapse back to raw-id-only UI.

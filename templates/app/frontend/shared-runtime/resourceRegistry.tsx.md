@@ -525,6 +525,8 @@ Required relationship extension:
   - schema-discovered extra relationships appended afterward
 - generated forms MUST keep scalar foreign-key inputs even though list/show
   rendering uses relationship-aware helpers
+- generated list/show pages MUST prefer embedded include data and canonical
+  relationship routes over custom helper endpoints for related-record reads
 - generated create/edit forms MUST use responsive width heuristics instead of
   rendering every field full-width by default
 - the baseline form-layout heuristics SHOULD be:

@@ -117,6 +117,9 @@ Notes:
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It
   defines the Northwind-style foreign-key display, relationship dialog, and
   show-tab behavior that generated pages MUST reuse.
+- read-side relationship behavior is canonical-SAFRS-first:
+  prefer embedded include data, then parent relationship routes, then id-based
+  fallback fetches.
 - `shared-runtime/admin/resourceMetadata.ts.md` MUST synthesize usable
   relationship metadata even when the normalized schema is partial.
 - `shared-runtime/resourceRegistry.tsx.md` MUST also implement responsive form

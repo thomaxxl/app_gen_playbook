@@ -22,10 +22,18 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("PROC-ARTMETA-001", registry.requirements)
         self.assertIn("EVID-GATE-001", registry.requirements)
         self.assertIn("DELIV-GATE-001", registry.requirements)
+        self.assertIn("BE-SAFRS-REL-001", registry.requirements)
+        self.assertIn("BE-SAFRS-MECHANISM-001", registry.requirements)
+        self.assertIn("BE-SAFRS-EXC-001", registry.requirements)
+        self.assertIn("FE-SAFRS-REL-001", registry.requirements)
         self.assertIn("gate-quality", registry.profiles)
         self.assertIn("gate-delivery", registry.profiles)
         self.assertIn("tools/check_completion.py", registry.validators)
         self.assertIn("tools/validators/policy/validate_delivery_approval.py", registry.validators)
+        self.assertIn(
+            "tools/validators/policy/validate_safrs_policy_contracts.py::collect_relationship_exposure_issues",
+            registry.validators,
+        )
 
     def test_resolve_policy_for_acceptance_includes_gate_profiles(self) -> None:
         payload = resolve_policy(
@@ -43,6 +51,7 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("PROD-SCOPE-001", payload["active_requirement_ids"])
         self.assertIn("UX-COV-001", payload["active_requirement_ids"])
         self.assertIn("GATE-COV-002", payload["active_requirement_ids"])
+        self.assertIn("BE-SAFRS-REL-001", payload["active_requirement_ids"])
 
     def test_resolve_policy_for_qa_phase_includes_qa_coverage(self) -> None:
         payload = resolve_policy(

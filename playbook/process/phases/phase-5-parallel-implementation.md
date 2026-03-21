@@ -109,6 +109,8 @@ business-rule behavior, or route meaning.
 
 - implement models and relationships
 - expose SAFRS resources
+- keep persisted DB-backed relational reads on canonical SAFRS resources,
+  relationship URLs, and include paths rather than helper endpoints
 - implement startup/bootstrap lifecycle
 - generate or refresh `reference/admin.yaml` through the Codex
   `openapi-to-admin-yaml` skill when the file is being derived from backend
@@ -123,6 +125,8 @@ business-rule behavior, or route meaning.
 - implement the preferred HTTP/ASGI verification path
 - implement any approved read-model or metadata endpoints required by the
   architecture data-sourcing contract
+- treat `jsonapi_attr` and `jsonapi_rpc` as the default API-side extension
+  lanes before inventing custom endpoints
 - keep the fallback verification harness available when the preferred path is
   broken
 - if the preferred in-process HTTP path is host-unstable, gate it behind an

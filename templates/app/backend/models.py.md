@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from safrs import SAFRSBase
-from sqlalchemy import JSON, Boolean, Float, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
+
+
+# Declare real SQLAlchemy relationships whenever the domain has a real link.
+# Helper endpoints such as `/api/run_project_summary` do not replace
+# `Run.project`, `Project.runs`, or the corresponding SAFRS relationship URLs.
 
 
 class Project(SAFRSBase, Base):
@@ -16,13 +21,14 @@ class Project(SAFRSBase, Base):
     repo_name: Mapped[str] = mapped_column(String, nullable=False)
     default_branch: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(String, nullable=False)
+    runs: Mapped[list["Run"]] = relationship(back_populates="project")
 
 
 class Run(SAFRSBase, Base):
     __tablename__ = "runs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    project_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), nullable=False)
     run_number: Mapped[int] = mapped_column(Integer, nullable=False)
     mode: Mapped[str] = mapped_column(String, nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
@@ -44,13 +50,15 @@ class Run(SAFRSBase, Base):
     ended_at: Mapped[str | None] = mapped_column(String)
     interrupted_at: Mapped[str | None] = mapped_column(String)
     resumed_at: Mapped[str | None] = mapped_column(String)
+    project: Mapped["Project"] = relationship(back_populates="runs")
+    run_phase_status: Mapped[list["RunPhaseStatus"]] = relationship(back_populates="run")
 
 
 class RunPhaseStatus(SAFRSBase, Base):
     __tablename__ = "run_phase_status"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    run_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"), nullable=False)
     phase_code: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
     raw_status: Mapped[str | None] = mapped_column(String)
@@ -60,6 +68,7 @@ class RunPhaseStatus(SAFRSBase, Base):
     blocker_count: Mapped[int] = mapped_column(Integer, nullable=False)
     focus_summary: Mapped[str | None] = mapped_column(Text)
     raw_payload_json: Mapped[dict | list | None] = mapped_column(JSON)
+    run: Mapped["Run"] = relationship(back_populates="run_phase_status")
 
 
 class ArtifactPackage(SAFRSBase, Base):

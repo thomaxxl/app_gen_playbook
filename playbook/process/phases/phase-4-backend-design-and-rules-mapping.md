@@ -14,6 +14,12 @@ and tests.
 - classify which product concepts become exposed SAFRS resources
 - treat persisted database-backed product or operator concepts as SAFRS
   resources by default unless an explicit documented exception applies
+- run the SAFRS decision tree for every new data need:
+  - persisted row data => SAFRS resource
+  - DB relationship => ORM relationship plus SAFRS relationship URL/include
+  - derived resource field => `jsonapi_attr`
+  - explicit action => `jsonapi_rpc`
+  - anything else => documented exception such as `JABase`
 - define which concepts remain internal, singleton/settings-style, deferred,
   or explicitly omitted
 - design SQLAlchemy models and relationships
@@ -56,6 +62,8 @@ and tests.
   a frontend hardcoded-data fallback
 - every appropriate DB-backed table and relationship has a SAFRS exposure
   decision, and any non-SAFRS exception is explicitly justified
+- every custom endpoint proposal records why ordinary SAFRS resource,
+  relationship, include, `jsonapi_attr`, or `jsonapi_rpc` did not fit
 - every appropriate DB-backed table and relationship has an ORM implementation
   decision, and any raw-SQL or non-ORM exception is explicitly justified
 - no ambiguous lifecycle behavior remains

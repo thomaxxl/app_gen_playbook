@@ -19,6 +19,18 @@ the sidecar policy registry under `specs/policy/`, especially:
 
 ## Hard blockers
 
+SAFRS-first API rule:
+
+- for any persisted DB-backed entity or relationship that users or operators
+  need to list, inspect, filter, sort, include, or drill into, the canonical
+  API surface MUST be a mapped SQLAlchemy model or relationship exposed
+  through SAFRS
+- custom read-model, summary, dashboard, or `/api/ops/` endpoints may
+  supplement that surface, but they MUST NOT replace it
+- if a relationship is intentionally not public, that must be a documented
+  SAFRS decision using hidden relationships or relationship item-mode choices,
+  not an implicit omission followed by a substitute endpoint
+
 The run is blocked if any of these are true:
 
 - a required CRUD path is broken on a must-support resource
@@ -32,6 +44,9 @@ The run is blocked if any of these are true:
 - DB-backed tables or relationships that should be ordinary SAFRS resources are
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception
+- a custom endpoint for DB-backed relational data was approved without
+  documenting why resource, relationship, include, `jsonapi_attr`, or
+  `jsonapi_rpc` was insufficient
 - `/jsonapi.json` exists only as renamed FastAPI OpenAPI while required
   SAFRS-backed resources are missing from real model exposure
 - DB-backed tables or relationships that should be ordinary ORM-backed domain

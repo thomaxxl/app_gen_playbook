@@ -68,6 +68,9 @@ database-backed table or relationship:
 - the default delivery lane is a SAFRS JSON:API resource or relationship
 - the default implementation lane is a mapped SQLAlchemy ORM model and
   relationship, not ad hoc row-dict assembly or raw-SQL-only handlers
+- before approving a custom endpoint for that DB-backed data, roles must
+  document why ordinary SAFRS resource, relationship, `include=...`,
+  `jsonapi_attr`, or `jsonapi_rpc` does not fit
 - Architecture MUST treat that as the default unless the run-owned artifacts
   record an explicit exception and replacement contract
 - Backend MUST NOT replace that default with a custom `/api/ops/` or ad hoc
@@ -82,6 +85,7 @@ database-backed table or relationship:
   singleton/settings-like concepts, pure aggregate/read-model payloads, and
   documented security/performance cases where direct resource exposure is not
   appropriate
+- `JABase` is an explicit exception lane, not a silent shortcut
 
 ## Artifact discipline
 

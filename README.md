@@ -14,6 +14,28 @@ It is primarily intended for:
 If you are an automated agent, read [AGENTS.md](AGENTS.md) instead of relying
 on this file for execution rules.
 
+## Hard API Rule
+
+For any persisted DB-backed entity or relationship that users or operators
+need to list, inspect, filter, sort, include, or drill into, the canonical
+API surface MUST be a mapped SQLAlchemy model or relationship exposed through
+SAFRS.
+
+Custom read-model, summary, dashboard, or `/api/ops/` endpoints MAY
+supplement that surface, but they MUST NOT replace it.
+
+Before approving any custom endpoint for DB-backed data, the design must
+document why the need cannot be satisfied by:
+
+- the normal SAFRS resource endpoint
+- the normal SAFRS relationship endpoint
+- `include=...`
+- `@jsonapi_attr`
+- `@jsonapi_rpc`
+
+`JABase` or other stateless endpoints require an explicit architecture
+exception.
+
 ## What This Repository Contains
 
 - `playbook/`

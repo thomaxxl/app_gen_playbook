@@ -65,6 +65,10 @@ frontend package template before treating the playbook baseline as current.
 - the related-record dialog shows `EDIT` and `VIEW`
 - generated show pages implement relationship tabs unless the run-owned UX
   artifacts explicitly disable or replace them
+- relationship tabs and related-record dialogs use canonical SAFRS
+  relationship metadata and relationship routes when those exist
+- the frontend does not require a custom endpoint merely to show DB-backed
+  related data that SAFRS already exposes under the parent resource
 - absence of related-item tabs or related-record popups is a failure unless a
   run-owned UX artifact explicitly documents the exception
 - generated create/edit forms use responsive width heuristics instead of

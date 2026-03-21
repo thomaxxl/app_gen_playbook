@@ -126,6 +126,30 @@ Architect MAY approve a different lane only when the run-owned architecture
 and backend-design artifacts record a concrete reason and a replacement
 contract.
 
+For any persisted DB-backed entity or relationship that users or operators
+need to list, inspect, filter, sort, include, or drill into, the Architect
+MUST treat the canonical API surface as:
+
+- a mapped SQLAlchemy model or relationship
+- exposed through SAFRS resource and relationship URLs
+
+Custom read-model, summary, dashboard, or `/api/ops/` endpoints MAY
+supplement that surface, but they MUST NOT replace it.
+
+Before approving a custom endpoint or non-default API lane for DB-backed
+data, the Architect MUST record why the need is not satisfied by:
+
+- the normal SAFRS resource endpoint
+- the normal SAFRS relationship endpoint
+- `include=...`
+- `@jsonapi_attr`
+- `@jsonapi_rpc`
+
+If a relationship is intentionally not public, that MUST be a documented SAFRS
+decision using ordinary SAFRS controls such as hidden relationships or
+relationship item-mode choices, not an implicit omission followed by a custom
+substitute endpoint.
+
 During change analysis, if the change packet marks a baseline challenge or
 review-driven delta, the Architect MUST NOT collapse the packet to a no-op
 solely because the current app still matches the accepted baseline. No-op is
@@ -167,6 +191,8 @@ this rule:
   SQLAlchemy ORM models and relationships
 - `/api/ops/` or other custom endpoints supplement but do not replace those
   resources unless an explicit exception is documented
+- every documented exception names the rejected canonical SAFRS lane and why
+  it was insufficient
 
 The Architect MUST hand work back to Product Manager when a decision would
 change users, scope, workflows, or required custom pages as product behavior.

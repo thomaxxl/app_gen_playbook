@@ -18,9 +18,9 @@ version at `../../runs/current/artifacts/backend-design/resource-exposure-policy
 
 The real artifact MUST include a table with this shape:
 
-| Resource | Exposed through SAFRS | Resource class | Default menu presence | List | Show | Create | Edit | Delete | Read-only fields | Derived backend-managed fields | Custom endpoints | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<resource>` | `<yes/no/internal/singleton/deferred>` | `<core/reference/status/etc.>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<field list or none>` | `<field list or none>` | `<endpoint list or none>` | `<notes>` |
+| Resource | Exposed through SAFRS | Canonical SAFRS resource path | Resource class | Default menu presence | List | Show | Create | Edit | Delete | Read-only fields | Derived backend-managed fields | Custom endpoint supplements? | Why ordinary SAFRS is insufficient | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `<resource>` | `<yes/no/internal/singleton/deferred>` | `<resource path or none>` | `<core/reference/status/etc.>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<yes/no>` | `<field list or none>` | `<field list or none>` | `<endpoint list or none>` | `<reason or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row.
 
@@ -32,6 +32,7 @@ The real artifact MUST also define:
 - which concepts are singleton/settings-like and how they are exposed
 - which workflow-heavy resources are technically exposed but not ordinary CRUD
 - any custom endpoint or non-SAFRS handling required by the backend
+- for every exception, which canonical SAFRS lane was rejected and why
 
 ## Default rule
 

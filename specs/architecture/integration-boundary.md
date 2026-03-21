@@ -39,6 +39,16 @@ The real artifact MUST explicitly name any exception where a DB-backed concept
 does not use ordinary SAFRS exposure and MUST record the replacement contract
 and reason.
 
+Every such exception MUST also name the rejected canonical SAFRS option and
+why it was not suitable:
+
+- not a resource
+- not a relationship
+- not satisfiable via `include=...`
+- not a computed resource attribute
+- explicit operation better modeled as RPC
+- only then `JABase` or another custom lane
+
 ## Runtime validation notes
 
 The real artifact MUST record any boundaries that depend on runtime discovery

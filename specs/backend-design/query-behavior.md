@@ -33,3 +33,5 @@ The real artifact MUST also define:
   may depend on
 - any compound search/filter behavior that is supported in v1
 - any query behavior that is explicitly out of scope
+- for every declared include path, the exact ORM relationship name from
+  `relationship-map.md` that backs it
