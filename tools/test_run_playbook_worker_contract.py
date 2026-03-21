@@ -236,6 +236,21 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("--prompt-file", script)
         self.assertIn("--output-file", script)
 
+    def test_runner_suppresses_duplicate_role_launches_while_worker_lease_is_active(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("active_worker_claimed_message()", script)
+        self.assertIn('active_worker_claim="$(active_worker_claimed_message "$runtime_role" || true)"', script)
+        self.assertIn('log "agent-start-suppressed role=$runtime_role active_claimed_message=$active_worker_claim"', script)
+
+    def test_runner_builds_prompts_atomically(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn('prompt_tmp="$(mktemp "${prompt_file}.tmp.XXXXXX")"', script)
+        self.assertIn('> "$prompt_tmp"; then', script)
+        self.assertIn('rm -f "$prompt_tmp"', script)
+        self.assertIn('mv "$prompt_tmp" "$prompt_file"', script)
+
     def test_orchestrator_does_not_reescalate_ceo_originated_notes(self) -> None:
         script = self.runner_core()
 

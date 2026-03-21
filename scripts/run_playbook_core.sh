@@ -2627,21 +2627,69 @@ session_record() {
     --registry "$SESSIONS_JSON" >/dev/null
 }
 
+active_worker_claimed_message() {
+  python3 - "$ROOT" "$1" "$LEASE_SECONDS" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+repo_root = Path(sys.argv[1])
+role = sys.argv[2]
+lease_raw = sys.argv[3]
+lease_seconds = int(lease_raw) if lease_raw.isdigit() else 0
+worker_path = repo_root / "runs" / "current" / "orchestrator" / "workers" / f"{role}.json"
+if not worker_path.exists():
+    raise SystemExit(1)
+
+payload = json.loads(worker_path.read_text(encoding="utf-8"))
+if payload.get("status") != "active":
+    raise SystemExit(1)
+
+heartbeat_raw = str(payload.get("last_heartbeat", "")).strip()
+if not heartbeat_raw:
+    raise SystemExit(1)
+
+heartbeat = datetime.strptime(heartbeat_raw, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+if lease_seconds > 0:
+    age_seconds = (datetime.now(timezone.utc) - heartbeat).total_seconds()
+    if age_seconds > lease_seconds:
+        raise SystemExit(1)
+
+claimed_message = str(payload.get("claimed_message", "")).strip()
+if claimed_message:
+    print(claimed_message)
+else:
+    print("__active__")
+PY
+}
+
 build_prompt() {
   local runtime_role="$1"
   local display_role="$2"
   local role_file="$3"
   local message_path="$4"
   local prompt_file="$5"
+  local prompt_tmp=""
 
-  python3 "$ROOT/tools/build_role_prompt.py" \
+  mkdir -p "$(dirname "$prompt_file")"
+  prompt_tmp="$(mktemp "${prompt_file}.tmp.XXXXXX")"
+
+  if ! python3 "$ROOT/tools/build_role_prompt.py" \
     --repo-root "$ROOT" \
     --runtime-role "$runtime_role" \
     --display-role "$display_role" \
     --role-file "$role_file" \
     --message "$message_path" \
     --mode short \
-    > "$prompt_file"
+    > "$prompt_tmp"; then
+    rm -f "$prompt_tmp"
+    return 1
+  fi
+
+  mv "$prompt_tmp" "$prompt_file"
 }
 
 extract_summary() {
@@ -3552,6 +3600,13 @@ run_role_once() {
   local runtime_role="$1"
   shift
   local ignore_roles=("$@")
+  local active_worker_claim=""
+
+  active_worker_claim="$(active_worker_claimed_message "$runtime_role" || true)"
+  if [[ -n "$active_worker_claim" ]]; then
+    log "agent-start-suppressed role=$runtime_role active_claimed_message=$active_worker_claim"
+    return 1
+  fi
 
   local display_role role_file role_dir message_path
   display_role="$(display_role_for_runtime "$runtime_role")"
