@@ -52,6 +52,8 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn("ceo-progress-followup-armed", script)
         self.assertIn('followup_control_loops_remaining', script)
         self.assertIn('followup_control_loops', script)
+        self.assertIn('current_turn_count="$(count_non_ceo_turn_jsonl_files)"', script)
+        self.assertIn('if [[ "$current_turn_count" -gt "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]]; then', script)
         self.assertIn('[[ "$current_turn_count" -le "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]] && return 1', script)
         main_loop_index = script.index("while true; do")
         self.assertLess(

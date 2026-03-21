@@ -1009,7 +1009,7 @@ EOF
 capture_ceo_progress_followup_request() {
   [[ -f "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD" ]] || return 1
 
-  local loops fallback_loops
+  local loops fallback_loops current_turn_count
   fallback_loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
   loops="$(awk -F':[[:space:]]*' '
     $1 == "followup_control_loops_remaining" {
@@ -1028,7 +1028,11 @@ capture_ceo_progress_followup_request() {
   ' "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD")"
   loops="$(sanitize_nonnegative_integer "$loops" "$fallback_loops")"
   load_ceo_progress_audit_state
+  current_turn_count="$(count_non_ceo_turn_jsonl_files)"
   CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING="$loops"
+  if [[ "$current_turn_count" -gt "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]]; then
+    CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$current_turn_count"
+  fi
   write_ceo_progress_audit_state
   rm -f "$CEO_PROGRESS_FOLLOWUP_REQUESTED_MD"
   log "ceo-progress-followup-armed loops=$loops"
