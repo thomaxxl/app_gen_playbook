@@ -13,6 +13,7 @@ Required startup reads:
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/contracts/backend/README.md`
 - `../../../specs/contracts/backend/data-sourcing.md`
+- `../../../skills/safrs-api-design/SKILL.md`
 - `../../../specs/references/safrs/Quickstart-FastAPI.md`
 - `../../../specs/references/safrs/API-Functionality.md`
 - `../../../specs/references/safrs/Relationships-and-Includes.md`

@@ -145,6 +145,11 @@ data, the Architect MUST record why the need is not satisfied by:
 - `@jsonapi_attr`
 - `@jsonapi_rpc`
 
+When approving a non-SAFRS or non-relationship lane for persisted DB-backed
+data, the Architect MUST require the SAFRS lane analysis defined by
+`../../skills/safrs-api-design/SKILL.md` and a completed exception record in
+the run-owned architecture/backend-design artifacts.
+
 If a relationship is intentionally not public, that MUST be a documented SAFRS
 decision using ordinary SAFRS controls such as hidden relationships or
 relationship item-mode choices, not an implicit omission followed by a custom

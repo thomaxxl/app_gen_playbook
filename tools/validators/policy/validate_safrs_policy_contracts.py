@@ -66,7 +66,20 @@ def collect_relationship_exposure_issues(repo_root: Path) -> list[dict[str, str]
 def collect_mechanism_preference_issues(repo_root: Path) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     required_tokens = {
+        repo_root / "playbook" / "process" / "read-sets" / "backend-design-core.md": [
+            "skills/safrs-api-design/SKILL.md",
+        ],
+        repo_root / "playbook" / "process" / "read-sets" / "backend-implementation-core.md": [
+            "skills/safrs-api-design/SKILL.md",
+        ],
+        repo_root / "playbook" / "process" / "read-sets" / "architect-authoring-core.md": [
+            "skills/safrs-api-design/SKILL.md",
+        ],
+        repo_root / "playbook" / "process" / "read-sets" / "architect-review-core.md": [
+            "skills/safrs-api-design/SKILL.md",
+        ],
         repo_root / "playbook" / "roles" / "backend.md": [
+            "skills/safrs-api-design/SKILL.md",
             "the normal SAFRS resource endpoint",
             "the normal SAFRS relationship endpoint",
             "include=...",
@@ -74,10 +87,25 @@ def collect_mechanism_preference_issues(repo_root: Path) -> list[dict[str, str]]
             "jsonapi_rpc",
             "JABase",
         ],
+        repo_root / "playbook" / "roles" / "architect.md": [
+            "skills/safrs-api-design/SKILL.md",
+            "the normal SAFRS resource endpoint",
+            "the normal SAFRS relationship endpoint",
+            "include=...",
+            "@jsonapi_attr",
+            "@jsonapi_rpc",
+        ],
         repo_root / "specs" / "contracts" / "backend" / "data-sourcing.md": [
+            "skills/safrs-api-design/SKILL.md",
             "jsonapi_attr",
             "jsonapi_rpc",
             "DB-backed relationship design",
+        ],
+        repo_root / "specs" / "contracts" / "backend" / "validation.md": [
+            "jsonapi_attr",
+            "jsonapi_rpc",
+            "relationship URL proof",
+            "exception record",
         ],
         repo_root / "specs" / "contracts" / "backend" / "api-contract.md": [
             "relationship URLs",

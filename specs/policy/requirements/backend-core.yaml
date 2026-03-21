@@ -112,6 +112,11 @@ requirements:
       gates:
         - quality
     source_docs:
+      - skills/safrs-api-design/SKILL.md
+      - playbook/process/read-sets/backend-design-core.md
+      - playbook/process/read-sets/backend-implementation-core.md
+      - playbook/process/read-sets/architect-authoring-core.md
+      - playbook/process/read-sets/architect-review-core.md
       - specs/contracts/backend/data-sourcing.md
       - specs/contracts/backend/api-contract.md
       - specs/contracts/backend/query-contract.md
@@ -119,7 +124,8 @@ requirements:
     description: >
       The playbook must force authors to evaluate SAFRS resource,
       relationship, include, jsonapi_attr, and jsonapi_rpc lanes before
-      inventing custom DB-backed APIs.
+      inventing custom DB-backed APIs, and it must load the SAFRS API design
+      skill through the normal backend and architect read paths.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_mechanism_preference_issues
@@ -152,6 +158,7 @@ requirements:
       gates:
         - quality
     source_docs:
+      - skills/safrs-api-design/SKILL.md
       - specs/architecture/data-sourcing-contract.md
       - specs/architecture/integration-boundary.md
       - specs/architecture/resource-classification.md

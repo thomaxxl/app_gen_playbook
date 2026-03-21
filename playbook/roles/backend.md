@@ -159,6 +159,11 @@ Backend agent MUST read the mandatory SAFRS reference set and review the
 `jsonapi_attr`, `jsonapi_rpc`, relationship, include, and `JABase` lanes
 before inventing a custom workaround.
 
+For DB-backed API-lane decisions in a SAFRS-based app, the Backend agent MUST
+load and apply `../../skills/safrs-api-design/SKILL.md` before approving any
+resource-versus-relationship-versus-include-versus-`jsonapi_attr`-versus-
+`jsonapi_rpc`-versus-exception decision.
+
 Before approving a non-default API lane for DB-backed data, the Backend agent
 MUST answer this decision tree in order:
 

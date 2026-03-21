@@ -16,6 +16,7 @@ Required startup reads:
 - `../../../playbook/summaries/contracts/rules.summary.md`
 - `../../../specs/architecture/README.md`
 - `../../../specs/architecture/data-sourcing-contract.md`
+- `../../../skills/safrs-api-design/SKILL.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 

@@ -47,6 +47,8 @@ The run is blocked if any of these are true:
 - a custom endpoint for DB-backed relational data was approved without
   documenting why resource, relationship, include, `jsonapi_attr`, or
   `jsonapi_rpc` was insufficient
+- a custom DB-backed endpoint exists without quality evidence pointing to the
+  run-owned SAFRS lane audit or explicit exception record
 - `/jsonapi.json` exists only as renamed FastAPI OpenAPI while required
   SAFRS-backed resources are missing from real model exposure
 - DB-backed tables or relationships that should be ordinary ORM-backed domain

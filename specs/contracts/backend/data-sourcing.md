@@ -39,6 +39,10 @@ material before approving:
 - any custom endpoint proposal for data that touches a persisted DB-backed
   concept
 
+Teams MUST also load and apply `../../../skills/safrs-api-design/SKILL.md`
+before approving any alternative lane for persisted DB-backed row,
+relationship, computed-field, or operation design.
+
 In particular:
 
 - `jsonapi_attr` is appropriate for dynamic or computed attributes that belong
@@ -49,6 +53,15 @@ In particular:
 
 Use those capabilities when they fit the contract, instead of pushing the
 frontend to hardcode substitute values.
+
+For persisted DB-backed data, every approved custom endpoint exception MUST
+explain why the need is not satisfied by:
+
+- the ordinary SAFRS resource endpoint
+- the ordinary SAFRS relationship endpoint
+- `include=...`
+- `jsonapi_attr`
+- `jsonapi_rpc`
 
 Local workspace references currently include:
 
