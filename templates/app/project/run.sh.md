@@ -76,6 +76,7 @@ REMOTE="${REMOTE:-}"
 DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+SAFRS_JSONAPI_CLIENT_LOCAL_REPO="$PROJECT_DIR/tmp/safrs-jsonapi-client"
 BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
@@ -131,6 +132,7 @@ frontend_dependencies_ready() {
   fi
 
   [[ -d "$FRONTEND_DIR/node_modules" ]] &&
+  [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]] &&
   [[ -d "$FRONTEND_DIR/node_modules/vite" ]] &&
   [[ -f "$FRONTEND_DIR/node_modules/safrs-jsonapi-client/package.json" ]]
 }
@@ -178,6 +180,7 @@ require_installed_dependencies() {
     else
       missing+=("frontend npm dependencies in frontend/node_modules")
     fi
+    missing+=("local safrs-jsonapi-client checkout in tmp/safrs-jsonapi-client")
   fi
 
   if [[ ${#missing[@]} -eq 0 ]]; then

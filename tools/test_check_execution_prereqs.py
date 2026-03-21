@@ -151,6 +151,9 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
     def test_check_node_modules_uses_configured_node_modules_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
+            safrs_source = repo_root / "app" / "tmp" / "safrs-jsonapi-client" / "package.json"
+            safrs_source.parent.mkdir(parents=True, exist_ok=True)
+            safrs_source.write_text('{"name":"safrs-jsonapi-client"}\n', encoding="utf-8")
             vite_path = repo_root / "app" / "shared" / "node_modules" / ".bin" / "vite"
             vite_path.parent.mkdir(parents=True, exist_ok=True)
             vite_path.write_text("#!/usr/bin/env bash\necho vite/9.9.9 test\n", encoding="utf-8")
@@ -165,9 +168,30 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             self.assertEqual(result.status, "ok")
             self.assertIn("vite/9.9.9 test", result.detail)
 
+    def test_check_node_modules_requires_local_safrs_jsonapi_client_clone(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            vite_path = repo_root / "app" / "shared" / "node_modules" / ".bin" / "vite"
+            vite_path.parent.mkdir(parents=True, exist_ok=True)
+            vite_path.write_text("#!/usr/bin/env bash\necho vite/9.9.9 test\n", encoding="utf-8")
+            vite_path.chmod(0o755)
+            safrs_client = repo_root / "app" / "shared" / "node_modules" / "safrs-jsonapi-client" / "package.json"
+            safrs_client.parent.mkdir(parents=True, exist_ok=True)
+            safrs_client.write_text('{"name":"safrs-jsonapi-client"}\n', encoding="utf-8")
+
+            with unittest.mock.patch.dict("os.environ", {"FRONTEND_NODE_MODULES_DIR": "shared/node_modules"}, clear=False):
+                result = check_execution_prereqs.check_node_modules(repo_root)
+
+            self.assertEqual(result.status, "blocked")
+            self.assertIn("missing local safrs-jsonapi-client checkout", result.detail)
+            self.assertIn("git clone --depth 1 --branch 0.0.1", result.detail)
+
     def test_check_node_modules_requires_safrs_jsonapi_client(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
+            safrs_source = repo_root / "app" / "tmp" / "safrs-jsonapi-client" / "package.json"
+            safrs_source.parent.mkdir(parents=True, exist_ok=True)
+            safrs_source.write_text('{"name":"safrs-jsonapi-client"}\n', encoding="utf-8")
             vite_path = repo_root / "app" / "shared" / "node_modules" / ".bin" / "vite"
             vite_path.parent.mkdir(parents=True, exist_ok=True)
             vite_path.write_text("#!/usr/bin/env bash\necho vite/9.9.9 test\n", encoding="utf-8")

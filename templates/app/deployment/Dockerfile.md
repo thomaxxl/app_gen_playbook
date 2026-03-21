@@ -9,8 +9,14 @@ Minimal same-origin image shape:
 ```dockerfile
 FROM node:24-bookworm-slim AS frontend-build
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /frontend
 COPY frontend/package.json /frontend/package.json
+RUN mkdir -p /tmp \
+    && git clone --depth 1 --branch 0.0.1 https://github.com/thomaxxl/safrs-jsonapi-client /tmp/safrs-jsonapi-client
 RUN npm install
 COPY frontend /frontend
 RUN npm run build
@@ -43,6 +49,9 @@ Notes:
 - Build the frontend in-image for a self-contained deployable image.
 - Build the frontend in a Node `24.x` stage so the runtime Node version is not
   left to distro package defaults.
+- Materialize the approved local `safrs-jsonapi-client` checkout before
+  `npm install`, because the generated frontend depends on
+  `file:../tmp/safrs-jsonapi-client`.
 - Install `nginx.conf` into nginx's active config path, not just `/app/`.
 - Remove distro default nginx sites so the generated app config owns `/`
   instead of the stock welcome page.

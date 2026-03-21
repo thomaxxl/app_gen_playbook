@@ -20,7 +20,7 @@ The maintained baseline MUST NOT be recovered from `examples/`.
 | SQLAlchemy lane | published pip package | Version pin belongs in the run-owned `runtime-bom.md` |
 | Package manager | `npm` for frontend, `pip` for backend | House default |
 | Frontend toolchain | Vite `6.2.2`, TypeScript `5.8.2`, Vitest `2.1.9`, Playwright `1.58.2` | Keep aligned with Node `24.x` |
-| `safrs-jsonapi-client` source rule | default to `https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz` unless the run-owned BOM approves a replacement | No git dependency, no raw source archive |
+| `safrs-jsonapi-client` source rule | default to cloning `https://github.com/thomaxxl/safrs-jsonapi-client` at tag/ref `0.0.1` into local `tmp/safrs-jsonapi-client`, then install from `file:../tmp/safrs-jsonapi-client` | Use a local materialized checkout, not a raw release URL |
 
 ## Baseline rules
 

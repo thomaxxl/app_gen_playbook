@@ -43,10 +43,10 @@ It is intended to read current-run status from the mirrored
 
 - In `clean-install` mode, it installs backend and frontend dependencies
   locally and prepares the Playwright delivery gate.
-- In that install path, `safrs-jsonapi-client` must be present. If it is not
-  already available after the baseline npm install, `install.sh` installs the
-  approved GitHub release asset from `thomaxxl/safrs-jsonapi-client`
-  release `0.0.1`.
+- In that install path, `install.sh` first clones
+  `https://github.com/thomaxxl/safrs-jsonapi-client` at ref `0.0.1` into
+  `tmp/safrs-jsonapi-client`, then installs the frontend with that local
+  checkout as the `safrs-jsonapi-client` source.
 - In `preprovisioned-reuse-only` mode, it validates the prepared dependency
   roots and stops if anything is missing.
 
@@ -191,9 +191,10 @@ Notes:
 - If the app supports uploaded files, also document the logical `/media/...`
   route and make clear that those URLs are logical app routes, not raw storage
   paths.
-- If the frontend depends on `safrs-jsonapi-client`, keep it pinned through an
-  immutable tarball URL or a published registry release. Do not document a git
-  dependency as the default generated-app path.
+- If the frontend depends on `safrs-jsonapi-client`, keep it pinned through the
+  approved local `tmp/safrs-jsonapi-client` checkout backed by the repo/ref in
+  `runtime-bom.md`. Do not document a floating git dependency as the default
+  generated-app path.
 - Document the root container files unconditionally because every generated app
   MUST ship `Dockerfile` and `docker-compose.yml`.
 - Document `.runtime.local.env` only as a local runtime-normalization file, not

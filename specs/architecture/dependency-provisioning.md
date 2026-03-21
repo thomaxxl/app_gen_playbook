@@ -58,6 +58,8 @@ In this mode, the run MAY allow:
 
 - creating `backend/.venv` or installing into `backend/.deps`
 - creating `frontend/node_modules`
+- creating `app/tmp/safrs-jsonapi-client` and cloning the approved repo/ref
+  into it before frontend install
 - running `pip install`, `npm install`, and Playwright preparation commands
 
 ## Preprovisioned reuse-only mode
@@ -74,6 +76,8 @@ In this mode:
   `app/backend/.venv`
 - the approved frontend roots are `FRONTEND_NODE_MODULES_DIR` or an
   already-existing `app/frontend/node_modules`
+- the approved local SAFRS frontend source root is an already-existing
+  `app/tmp/safrs-jsonapi-client`
 - agents MUST verify and reuse those roots
 - agents MUST NOT create a new virtualenv
 - agents MUST NOT run dependency installation commands

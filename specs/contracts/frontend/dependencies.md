@@ -35,7 +35,7 @@ Required runtime dependencies:
 - `@mui/icons-material@7.0.1`
 - `@emotion/react@11.14.0`
 - `@emotion/styled@11.14.1`
-- `safrs-jsonapi-client@https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz`
+- `safrs-jsonapi-client@file:../tmp/safrs-jsonapi-client`
 - `yaml@2.8.1`
 
 Optional but standard for custom figures:
@@ -94,6 +94,11 @@ Required dev dependencies:
 Runtime:
 
 ```bash
+mkdir -p ../tmp
+git clone --depth 1 --branch 0.0.1 \
+  https://github.com/thomaxxl/safrs-jsonapi-client \
+  ../tmp/safrs-jsonapi-client
+
 npm install \
   react@19.1.0 \
   react-dom@19.1.0 \
@@ -104,15 +109,15 @@ npm install \
   @mui/icons-material@7.0.1 \
   @emotion/react@11.14.0 \
   @emotion/styled@11.14.1 \
-  https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz \
+  file:../tmp/safrs-jsonapi-client \
   yaml@2.8.1
 ```
 
 The frontend still owns the SAFRS-specific adapter wiring under
 `src/shared-runtime/admin/`, but the maintained baseline now expects the
-generated app to install `safrs-jsonapi-client` from the approved immutable
-release asset above unless the run-owned `runtime-bom.md` records a different
-approved source.
+generated app to clone `safrs-jsonapi-client` into local `tmp/` and install it
+from that file dependency unless the run-owned `runtime-bom.md` records a
+different approved source.
 
 Optional charts/graphs:
 
@@ -185,11 +190,11 @@ npm install -D \
   - `vitest@2.1.9`
   - `@playwright/test@1.58.2`
 - The starter baseline now includes `safrs-jsonapi-client` from the approved
-  immutable GitHub release asset URL. The generated frontend still owns the
-  run-specific SAFRS adapter wiring under `src/shared-runtime/admin/`.
-- `safrs-jsonapi-client` MUST come from an immutable release asset URL or a
-  published registry release recorded in `runtime-bom.md`. Do not switch to a
-  git dependency or raw source archive.
+  local `tmp/safrs-jsonapi-client` checkout. The generated frontend still owns
+  the run-specific SAFRS adapter wiring under `src/shared-runtime/admin/`.
+- `safrs-jsonapi-client` MUST come from the approved local clone path backed by
+  the repo/ref recorded in `runtime-bom.md`. Do not switch to a floating git
+  dependency or raw source archive.
 - A generated app MUST NOT require an immediate `npm audit fix --force` after
   the initial install just to reach the expected starter baseline. If an audit
   fix changes direct dependency versions, the playbook dependency baseline MUST

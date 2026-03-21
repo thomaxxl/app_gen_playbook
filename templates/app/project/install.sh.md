@@ -48,7 +48,9 @@ PY
 DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
-SAFRS_JSONAPI_CLIENT_RELEASE_URL="${SAFRS_JSONAPI_CLIENT_RELEASE_URL:-https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz}"
+SAFRS_JSONAPI_CLIENT_REPO_URL="${SAFRS_JSONAPI_CLIENT_REPO_URL:-https://github.com/thomaxxl/safrs-jsonapi-client}"
+SAFRS_JSONAPI_CLIENT_REPO_REF="${SAFRS_JSONAPI_CLIENT_REPO_REF:-0.0.1}"
+SAFRS_JSONAPI_CLIENT_LOCAL_REPO="$PROJECT_DIR/tmp/safrs-jsonapi-client"
 BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
@@ -134,6 +136,7 @@ PY
 frontend_dependencies_ready() {
   local node_modules_dir="$1"
   [[ -d "$node_modules_dir" ]] &&
+  [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]] &&
   [[ -d "$node_modules_dir/vite" ]] &&
   [[ -d "$node_modules_dir/react" ]] &&
   [[ -d "$node_modules_dir/react-dom" ]] &&
@@ -141,13 +144,35 @@ frontend_dependencies_ready() {
   [[ -f "$node_modules_dir/safrs-jsonapi-client/package.json" ]]
 }
 
+ensure_safrs_jsonapi_client_repo() {
+  if [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]]; then
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "git is required to clone safrs-jsonapi-client into $SAFRS_JSONAPI_CLIENT_LOCAL_REPO." >&2
+    exit 1
+  fi
+
+  mkdir -p "$PROJECT_DIR/tmp"
+
+  if [[ -e "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO" ]]; then
+    echo "Existing safrs-jsonapi-client checkout is incomplete: $SAFRS_JSONAPI_CLIENT_LOCAL_REPO" >&2
+    echo "Remove it or restore package.json before rerunning ./install.sh." >&2
+    exit 1
+  fi
+
+  echo "Cloning safrs-jsonapi-client $SAFRS_JSONAPI_CLIENT_REPO_REF into $SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
+  git clone --depth 1 --branch "$SAFRS_JSONAPI_CLIENT_REPO_REF" "$SAFRS_JSONAPI_CLIENT_REPO_URL" "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
+}
+
 ensure_safrs_jsonapi_client_installed() {
   if [[ -f "node_modules/safrs-jsonapi-client/package.json" ]]; then
     return 0
   fi
 
-  echo "Installing safrs-jsonapi-client from approved release asset"
-  npm install "$SAFRS_JSONAPI_CLIENT_RELEASE_URL"
+  echo "Installing safrs-jsonapi-client from local tmp checkout"
+  npm install "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
 }
 
 if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
@@ -174,7 +199,7 @@ if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
 
   if ! frontend_dependencies_ready "$FRONTEND_DIR/node_modules"; then
     echo "Frontend dependencies are incomplete in $FRONTEND_DIR/node_modules." >&2
-    echo "Expected vite, react, react-dom, @playwright/test, and safrs-jsonapi-client to already exist." >&2
+    echo "Expected vite, react, react-dom, @playwright/test, the local tmp/safrs-jsonapi-client checkout, and the installed safrs-jsonapi-client package to already exist." >&2
     echo "In preprovisioned-reuse-only mode, ./install.sh will not run npm or Playwright installers." >&2
     exit 1
   fi
@@ -206,6 +231,8 @@ fi
 
 (
   cd "$FRONTEND_DIR"
+  ensure_safrs_jsonapi_client_repo
+
   if [[ -n "${NPM_CONFIG_CACHE:-}" ]]; then
     mkdir -p "$NPM_CONFIG_CACHE"
   elif [[ -n "${HOME:-}" ]]; then

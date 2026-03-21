@@ -83,11 +83,18 @@ Generated frontends MUST:
 - install from the declared package manager only
 - pass `npm install`, `npm run check`, `npm run test`, and `npm run build`
 - build in a runtime compatible with the approved Node version
+- clone the approved `safrs-jsonapi-client` repo/ref into a local temp path
+  before the first frontend `npm install` when that package is sourced from a
+  local checkout
 
 The approved frontend runtime and package source decisions MUST remain aligned
 with:
 
 - `../../runs/current/artifacts/architecture/runtime-bom.md`
+
+Packaging builds that run `npm install` in a clean environment MUST materialize
+the approved local `safrs-jsonapi-client` checkout inside the build context or
+container filesystem before that install step.
 
 ## Backend policy
 

@@ -38,7 +38,7 @@ rather than an external package.
     "react-dom": "19.1.0",
     "react-markdown": "10.1.0",
     "react-router-dom": "6.30.3",
-    "safrs-jsonapi-client": "https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz",
+    "safrs-jsonapi-client": "file:../tmp/safrs-jsonapi-client",
     "yaml": "2.8.1"
   },
   "devDependencies": {
@@ -114,14 +114,15 @@ do not enable raw HTML parsing, do not add `rehype-raw`, and keep external
 link handling explicit and safe.
 
 The starter baseline now includes `safrs-jsonapi-client` from the approved
-GitHub release asset URL above. Keep the generated `app/frontend/package.json`
-on the baseline React-Admin stack and implement SAFRS JSON:API behavior as
-run-owned app code under `src/shared-runtime/admin/`, following the source
-model recorded in `../../../runs/current/artifacts/architecture/runtime-bom.md`.
+local `tmp/safrs-jsonapi-client` checkout above. Keep the generated
+`app/frontend/package.json` on the baseline React-Admin stack and implement
+SAFRS JSON:API behavior as run-owned app code under `src/shared-runtime/admin/`,
+following the source model recorded in
+`../../../runs/current/artifacts/architecture/runtime-bom.md`.
 
-Do not replace that dependency with a git dependency, raw source archive, or a
-different package source unless a later runtime BOM explicitly approves the new
-source and records the exact pin.
+Do not replace that dependency with a floating git dependency, raw source
+archive, or a different package source unless a later runtime BOM explicitly
+approves the new source and records the exact repo/ref or replacement pin.
 
 If the first `npm install` on a newly generated app still requires an
 immediate `npm audit fix --force`, treat that as a stale playbook baseline and

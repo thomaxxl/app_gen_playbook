@@ -18,6 +18,8 @@ from pathlib import Path
 PORT_BIND_RETRY_ATTEMPTS = 20
 PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
+SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
+SAFRS_JSONAPI_CLIENT_REPO_REF = "0.0.1"
 @dataclass
 class CheckResult:
     name: str
@@ -53,6 +55,10 @@ def frontend_node_modules_path(repo_root: Path) -> Path:
 
 def frontend_tool_path(repo_root: Path, name: str) -> Path:
     return frontend_node_modules_path(repo_root) / ".bin" / name
+
+
+def frontend_safrs_jsonapi_client_source_path(repo_root: Path) -> Path:
+    return repo_root / "app" / "tmp" / "safrs-jsonapi-client"
 
 
 def runtime_environment() -> str:
@@ -164,6 +170,22 @@ def check_backend_venv(repo_root: Path) -> CheckResult:
 
 def check_node_modules(repo_root: Path) -> CheckResult:
     node_modules = frontend_node_modules_path(repo_root)
+    safrs_client_source = frontend_safrs_jsonapi_client_source_path(repo_root)
+    safrs_client_source_package = safrs_client_source / "package.json"
+    if not safrs_client_source_package.exists():
+        detail_lines = [
+            f"missing local safrs-jsonapi-client checkout: {safrs_client_source_package}",
+            "create the local tmp checkout before or during frontend install, for example:",
+            f"    mkdir -p {safrs_client_source.parent}",
+            (
+                "    git clone --depth 1 --branch "
+                f"{SAFRS_JSONAPI_CLIENT_REPO_REF} {SAFRS_JSONAPI_CLIENT_REPO_URL} {safrs_client_source}"
+            ),
+        ]
+        if shutil.which("git") is None:
+            detail_lines.append("git executable not found in PATH; install git before cloning the local dependency source")
+        return CheckResult("node_packages", "blocked", "\n".join(detail_lines))
+
     if not node_modules.exists():
         return CheckResult("node_packages", "blocked", f"missing node_modules: {node_modules}")
 
@@ -188,7 +210,7 @@ def check_node_modules(repo_root: Path) -> CheckResult:
         return CheckResult(
             "node_packages",
             "ok",
-            proc.stdout.strip() or f"vite and safrs-jsonapi-client resolved from {node_modules}",
+            proc.stdout.strip() or f"vite and safrs-jsonapi-client resolved from {node_modules} using {safrs_client_source}",
         )
     return CheckResult(
         "node_packages",

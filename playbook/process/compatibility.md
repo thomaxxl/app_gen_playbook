@@ -142,19 +142,18 @@ actually uses in the run-owned `runtime-bom.md`.
 ## Frontend package policy
 
 - keep the frontend dependency set aligned with Node `24+`
-- `safrs-jsonapi-client` SHOULD be pinned through an immutable tarball URL or
-  a published registry release, not a git dependency
-- the preferred non-npm source for `safrs-jsonapi-client` is a GitHub release
-  asset from `thomaxxl/safrs-jsonapi-client`, not a raw `codeload` source
-  archive
-- the current approved default asset is:
-  `https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz`
-- if the selected package artifact references built outputs such as `dist/`
-  that are missing from the installed artifact, the operator MUST replace that
-  artifact with a validated tarball or published release before continuing
-- the operator MUST verify that the chosen release asset exists and that its
-  tag and filename match the intended package version before freezing the app
-  dependency
+- `safrs-jsonapi-client` SHOULD be materialized from a validated local clone,
+  not from a floating git dependency or raw `codeload` source archive
+- the preferred source is a local checkout cloned from
+  `https://github.com/thomaxxl/safrs-jsonapi-client`
+- the current approved default ref is `0.0.1`
+- the generated app SHOULD clone that repo into local
+  `tmp/safrs-jsonapi-client` before the first frontend `npm install`
+- the generated frontend package source SHOULD then be
+  `file:../tmp/safrs-jsonapi-client`
+- if the selected checkout is missing required built outputs such as `dist/`,
+  the operator MUST replace it with a validated checkout or approved override
+  before continuing
 - if the available environment cannot provide the house Node runtime, record an
   explicit compatibility deviation and repin the frontend stack intentionally
   rather than silently mixing incompatible versions
