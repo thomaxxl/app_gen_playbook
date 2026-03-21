@@ -150,6 +150,21 @@ The screenshot files alone are not valid preview evidence. A blank page,
 crashed route, fallback shell, or only generic admin chrome is invalid even if
 PNG files were produced.
 
+## Final QA screenshot evidence
+
+The final QA lane MUST also capture reviewable screenshots for the routes in
+`runs/current/evidence/quality/review-plan.json` that are marked as
+`qa_live_test_required` or `preview_required`.
+
+That final QA screenshot pass MUST produce:
+
+- `runs/current/evidence/ui-previews/qa-manifest.md`
+- screenshot files under `runs/current/evidence/ui-previews/qa/`
+
+The QA review MUST cite that manifest and the screenshot set. QA screenshot
+existence does not replace live testing, but final QA approval is incomplete
+without those screenshots for the required review-plan surfaces.
+
 Typical trigger cases:
 
 - new or changed `Home`, `Landing`, or other entry surfaces

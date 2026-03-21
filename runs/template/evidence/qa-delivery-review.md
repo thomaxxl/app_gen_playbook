@@ -19,6 +19,8 @@ starter_status: pending-review-evidence
 
 Required live coverage content for a pass review:
 
+- cite `runs/current/evidence/ui-previews/qa-manifest.md`
+- cite the saved screenshot files under `runs/current/evidence/ui-previews/qa/`
 - cite the required visible PM workspace routes from
   `runs/current/evidence/quality/review-plan.json`
 - document route-by-route live QA coverage for those required routes

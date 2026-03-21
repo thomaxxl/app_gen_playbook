@@ -147,6 +147,8 @@ actually uses in the run-owned `runtime-bom.md`.
 - the preferred non-npm source for `safrs-jsonapi-client` is a GitHub release
   asset from `thomaxxl/safrs-jsonapi-client`, not a raw `codeload` source
   archive
+- the current approved default asset is:
+  `https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz`
 - if the selected package artifact references built outputs such as `dist/`
   that are missing from the installed artifact, the operator MUST replace that
   artifact with a validated tarball or published release before continuing

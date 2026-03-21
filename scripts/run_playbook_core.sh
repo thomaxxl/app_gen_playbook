@@ -164,6 +164,7 @@ BROWSER_FALLBACK_ACCEPTANCE_SIGNATURES="$ORCH_ROOT/browser-fallback-product-acce
 HOST_RUNTIME_VERIFICATION_MD="$RUN_ROOT/evidence/host-runtime-verification.md"
 FRONTEND_BROWSER_PROOF_MD="$RUN_ROOT/evidence/frontend-browser-proof.md"
 QA_DELIVERY_REVIEW_MD="$RUN_ROOT/evidence/qa-delivery-review.md"
+QA_SCREENSHOT_MANIFEST_MD="$RUN_ROOT/evidence/ui-previews/qa-manifest.md"
 CEO_DELIVERY_VALIDATION_MD="$RUN_ROOT/evidence/ceo-delivery-validation.md"
 RUN_DASHBOARD_ROOT="${RUN_DASHBOARD_ROOT:-$ROOT/run_dashboard}"
 RUN_DASHBOARD_ENABLED="${RUN_DASHBOARD_ENABLED:-1}"
@@ -280,6 +281,23 @@ count_non_ceo_turn_jsonl_files() {
   done < <(find "$jsonl_dir" -maxdepth 1 -type f -name '*.events.jsonl' -print0)
 
   printf '%s\n' "$count"
+}
+
+write_ceo_progress_audit_summary() {
+  local stamp="$1"
+  local audit_kind="$2"
+  local previous_turn_count="$3"
+  local current_turn_count="$4"
+  local summary_path="$ORCH_ROOT/${stamp}-ceo-progress-summary.md"
+
+  python3 "$ROOT/tools/render_ceo_progress_summary.py" \
+    --log "$LOG_FILE" \
+    --previous-count "$previous_turn_count" \
+    --current-count "$current_turn_count" \
+    --audit-kind "$audit_kind" \
+    --output "$summary_path" >/dev/null
+
+  printf '%s\n' "$summary_path"
 }
 
 canonical_queue_dirs() {
@@ -953,9 +971,12 @@ emit_ceo_progress_audit_note() {
   local audit_kind="$1"
   local detail="$2"
   local current_turn_count="$3"
-  local followup_loops="$4"
-  local stamp note_path
+  local previous_turn_count="$4"
+  local followup_loops="$5"
+  local stamp note_path summary_path summary_rel
   stamp="$(date -u +%Y%m%d-%H%M%S)"
+  summary_path="$(write_ceo_progress_audit_summary "$stamp" "$audit_kind" "$previous_turn_count" "$current_turn_count")"
+  summary_rel="${summary_path#$ROOT/}"
   note_path="$STATE_ROOT/ceo/inbox/${stamp}-from-orchestrator-to-ceo-progress-audit.md"
   mkdir -p "$STATE_ROOT/ceo/inbox"
   cat > "$note_path" <<EOF
@@ -969,6 +990,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 - runs/current/remarks.md
 - runs/current/orchestrator/run-status.json
 - runs/current/evidence/orchestrator/logs/orchestrator.log
+- $summary_rel
 - playbook/task-bundles/ceo-stall-intervention.yaml
 - playbook/roles/ceo.md
 
@@ -996,6 +1018,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Notes
 - audit kind: $audit_kind
 - non-CEO turn jsonl count: $current_turn_count
+- executive summary: $summary_rel
 - orchestrator detail: $detail
 - do not treat "busy but advancing" work as blocked; only intervene when the
   run is not making credible forward progress
@@ -1041,20 +1064,21 @@ capture_ceo_progress_followup_request() {
 
 maybe_queue_ceo_progress_audit() {
   local completion_detail="$1"
-  local current_turn_count interval threshold note_path audit_kind audit_detail ceo_pending followup_loops
+  local current_turn_count interval threshold note_path audit_kind audit_detail ceo_pending followup_loops previous_turn_count
 
   load_ceo_progress_audit_state
   current_turn_count="$(count_non_ceo_turn_jsonl_files)"
   interval="$(sanitize_nonnegative_integer "$CEO_PROGRESS_AUDIT_INTERVAL" 25)"
   followup_loops="$(sanitize_nonnegative_integer "$CEO_PROGRESS_FOLLOWUP_LOOPS" 5)"
   ceo_pending="$(find "$STATE_ROOT/ceo" \( -path '*/inbox/*.md' -o -path '*/inflight/*.md' \) -type f | head -n 1 || true)"
+  previous_turn_count="$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT"
 
   if [[ "$CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING" -gt 0 ]]; then
     [[ "$current_turn_count" -le "$CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT" ]] && return 1
     [[ -n "$ceo_pending" ]] && return 1
     audit_kind="follow-up"
     audit_detail="A previous CEO unblock requested forced monitoring for the next $CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING control loops.\n\nCurrent completion detail:\n$completion_detail"
-    note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$followup_loops")"
+    note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$previous_turn_count" "$followup_loops")"
     CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING=$((CEO_PROGRESS_FOLLOWUP_LOOPS_REMAINING - 1))
     CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$current_turn_count"
     write_ceo_progress_audit_state
@@ -1068,7 +1092,7 @@ maybe_queue_ceo_progress_audit() {
 
   audit_kind="periodic"
   audit_detail="The orchestrator has recorded $current_turn_count non-CEO turn JSONL files. Review recent progress and determine whether the run is still advancing credibly.\n\nCurrent completion detail:\n$completion_detail"
-  note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$followup_loops")"
+  note_path="$(emit_ceo_progress_audit_note "$audit_kind" "$audit_detail" "$current_turn_count" "$previous_turn_count" "$followup_loops")"
   CEO_PROGRESS_AUDIT_LAST_JSONL_COUNT="$current_turn_count"
   write_ceo_progress_audit_state
   log "ceo-progress-audit-queued kind=$audit_kind count=$current_turn_count note=${note_path#$ROOT/}"
@@ -1558,6 +1582,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 - runs/current/evidence/contract-samples.md
 - runs/current/evidence/frontend-usability.md
 - runs/current/evidence/ui-previews/manifest.md
+- runs/current/evidence/quality/review-plan.json
 - runs/current/evidence/quality/ui-copy-audit.md
 - runs/current/evidence/quality/test-results.md
 - runs/current/evidence/quality/quality-summary.md
@@ -1566,7 +1591,9 @@ change_id: ${ACTIVE_CHANGE_ID}
 - app/run.sh
 
 ## Requested Outputs
+- run \`cd app/frontend && npm run capture:qa-screenshots\` to save screenshots for every required review-plan surface
 - record the QA review in runs/current/evidence/qa-delivery-review.md
+- make sure runs/current/evidence/ui-previews/qa-manifest.md exists and cites the captured screenshot files
 - run app/run.sh and confirm the delivered app boots
 - perform basic live user testing against the app
 - reject delivery if the frontend is blank, visibly crashed, flickering from obvious request loops, or still exposing metadata/debug/recovery copy
@@ -1586,6 +1613,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 ## Notes
 - QA is a pre-delivery validation lane only; it should not silently patch the app
 - the QA decision must be based on live behavior, not only on prior evidence claims
+- final QA approval is incomplete without the review-plan screenshot set under runs/current/evidence/ui-previews/qa/
 - completion detail:
 ${completion_detail}
 EOF

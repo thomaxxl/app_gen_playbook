@@ -149,6 +149,10 @@ explicitly targeted the CEO role.
 The orchestrator may periodically queue a CEO `topic: progress-audit` note
 after roughly every 25 non-CEO Codex turn JSONL files.
 
+Each such audit should arrive with a small orchestrator-generated executive
+summary under `runs/current/orchestrator/`, capped at 50 words and describing
+recent progress since the last audit.
+
 That periodic review is not a license to micromanage normal work. The CEO
 should:
 

@@ -73,8 +73,9 @@ Suggested copy order:
 50. `tests/vite.config.test.ts.md`
 51. `tests/smoke.e2e.spec.ts.md`
 52. `tests/ui-previews.e2e.spec.ts.md`
-53. `../project/run.sh.md`
-54. `../project/README.app.md`
+53. `tests/qa-screenshots.e2e.spec.ts.md`
+54. `../project/run.sh.md`
+55. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -136,6 +137,9 @@ Notes:
 - `tests/ui-previews.e2e.spec.ts.md` is the reviewable screenshot companion to
   the smoke gate. It SHOULD save success-case PNG files that Product can
   inspect after browser-capable runs.
+- `tests/qa-screenshots.e2e.spec.ts.md` is the final-QA screenshot pass. It
+  SHOULD capture every review-plan route required for live QA and write the
+  QA screenshot manifest used by the Phase 8 QA gate.
 - For non-starter domains, `CustomDashboard.tsx.md` SHOULD be the default
   custom-page starting point. `Landing.tsx.md` remains the starter-domain
   example.

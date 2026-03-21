@@ -43,6 +43,10 @@ It is intended to read current-run status from the mirrored
 
 - In `clean-install` mode, it installs backend and frontend dependencies
   locally and prepares the Playwright delivery gate.
+- In that install path, `safrs-jsonapi-client` must be present. If it is not
+  already available after the baseline npm install, `install.sh` installs the
+  approved GitHub release asset from `thomaxxl/safrs-jsonapi-client`
+  release `0.0.1`.
 - In `preprovisioned-reuse-only` mode, it validates the prepared dependency
   roots and stops if anything is missing.
 

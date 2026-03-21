@@ -171,13 +171,25 @@ def check_node_modules(repo_root: Path) -> CheckResult:
     if not vite_path.exists():
         return CheckResult("node_packages", "blocked", f"missing vite executable: {vite_path}")
 
+    safrs_client_package = node_modules / "safrs-jsonapi-client" / "package.json"
+    if not safrs_client_package.exists():
+        return CheckResult(
+            "node_packages",
+            "blocked",
+            f"missing safrs-jsonapi-client package: {safrs_client_package}",
+        )
+
     proc = subprocess.run(
         [str(vite_path), "--version"],
         capture_output=True,
         text=True,
     )
     if proc.returncode == 0:
-        return CheckResult("node_packages", "ok", proc.stdout.strip() or f"vite resolved from {node_modules}")
+        return CheckResult(
+            "node_packages",
+            "ok",
+            proc.stdout.strip() or f"vite and safrs-jsonapi-client resolved from {node_modules}",
+        )
     return CheckResult(
         "node_packages",
         "blocked",

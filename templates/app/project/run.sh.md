@@ -130,7 +130,9 @@ frontend_dependencies_ready() {
     return 1
   fi
 
-  [[ -d "$FRONTEND_DIR/node_modules" ]] && [[ -d "$FRONTEND_DIR/node_modules/vite" ]]
+  [[ -d "$FRONTEND_DIR/node_modules" ]] &&
+  [[ -d "$FRONTEND_DIR/node_modules/vite" ]] &&
+  [[ -f "$FRONTEND_DIR/node_modules/safrs-jsonapi-client/package.json" ]]
 }
 
 backend_dependencies_ready() {

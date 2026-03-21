@@ -38,6 +38,8 @@ The orchestrator MUST:
   role
 - require an independent QA validation turn after product acceptance and
   before CEO final delivery approval
+- require the final QA lane to save reviewable screenshots for the required
+  review-plan surfaces before delivery approval
 - validate handoff inputs before dispatching the receiver
 - surface canonical output filenames to the active role at prompt time when
   the current phase or task bundle implies them
@@ -213,6 +215,15 @@ MUST surface a concrete copy-install recommendation using the local repo copy
 under `app_gen_playbook/skills/<name>` and the matching install target under
 `app_gen_playbook/.codex/skills/<name>`, for example by recommending
 `cp -a app_gen_playbook/skills/<name> app_gen_playbook/.codex/skills/<name>`.
+
+The repository SHOULD also provide a dedicated QA wrapper under:
+
+- `scripts/run_qa_review.sh`
+
+That wrapper SHOULD run the final QA screenshot capture, ensure
+`runs/current/evidence/ui-previews/qa-manifest.md` exists, and then dispatch a
+single QA review turn so operators can rerun final QA retroactively against an
+existing `runs/current/`.
 
 Before entering the main control loop for a run that already has
 `app/frontend/package.json`, the orchestrator MUST run that execution
@@ -553,6 +564,11 @@ roughly every 25 non-CEO Codex turn JSONL files unless a CEO note is already
 pending. That audit MUST use a normal CEO inbox note with
 `topic: progress-audit` so the usual validation, remarks, and archive rules
 still apply.
+
+Each queued progress audit MUST also create a small executive summary file in
+`runs/current/orchestrator/` describing recent progress since the last audit.
+That summary MUST be capped at 50 words and SHOULD be listed as a required
+read in the generated CEO audit note.
 
 If CEO directly unblocks the run during a periodic progress audit, CEO MAY
 write `runs/current/orchestrator/ceo-progress-followup-requested.md`. When

@@ -140,6 +140,12 @@ authoritative package/source decision record for implementation. The Frontend
 agent MUST NOT leave `safrs-jsonapi-client` unresolved while proceeding with
 implementation.
 
+If the approved frontend install path cannot resolve `safrs-jsonapi-client`
+from existing local dependencies, the generated app MUST install it from the
+approved release asset URL recorded in `runtime-bom.md`. The maintained
+default is the GitHub `0.0.1` release asset from
+`thomaxxl/safrs-jsonapi-client`.
+
 The Frontend agent MUST treat relationship tabs and related-record popups as
 baseline generated-UI behavior. Silence, omission, or a thinner CRUD shell is
 not an override.

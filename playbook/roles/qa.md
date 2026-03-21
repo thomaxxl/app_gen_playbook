@@ -19,6 +19,8 @@ run when core behavior is still broken.
 - explicit review for backend runtime errors during basic usage
 - explicit review for metadata/debug/recovery copy leaking into the frontend
 - `../../runs/current/evidence/qa-delivery-review.md`
+- `../../runs/current/evidence/ui-previews/qa-manifest.md`
+- `../../runs/current/evidence/ui-previews/qa/`
 
 ## Runtime files
 
@@ -35,6 +37,8 @@ Runtime state lives in:
 ## Writable targets
 
 - `../../runs/current/evidence/qa-delivery-review.md`
+- `../../runs/current/evidence/ui-previews/qa-manifest.md`
+- `../../runs/current/evidence/ui-previews/qa/**`
 - `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/role-state/qa/**`
@@ -61,6 +65,9 @@ The QA agent MUST:
 - use the repo-local `playwright-skill` as the default browser automation lane
   for live QA checks, screenshot review support, and reproducible browser
   walkthroughs
+- run the final QA screenshot pass with
+  `cd ../../app/frontend && npm run capture:qa-screenshots` or an equivalent
+  wrapper such as `../../scripts/run_qa_review.sh`
 - fail the review if the frontend is blank, visibly crashed, flickering from
   obvious request loops, or showing runtime error surfaces
 - fail the review if the backend logs or live behavior show unhandled runtime
@@ -70,12 +77,17 @@ The QA agent MUST:
   language
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
+- require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the
+  screenshot files under `../../runs/current/evidence/ui-previews/qa/` before
+  approving delivery
 - verify the required visible PM workspace routes from the current review plan,
   not only whichever subset was already screenshot-reviewed earlier
 - fail the review if required PM routes are missing, silently substituted by a
   generic shell, or absent from the documented live QA route coverage
 - record the tested paths, observed results, and any blockers in
   `../../runs/current/evidence/qa-delivery-review.md`
+- cite `../../runs/current/evidence/ui-previews/qa-manifest.md` and the
+  relevant screenshot files in `qa-delivery-review.md`
 - when QA passes, use the canonical pass vocabulary in
   `qa-delivery-review.md`:
   - `qa_decision: pass`
@@ -97,6 +109,8 @@ The QA agent MUST NOT:
 ## Produces
 
 - `runs/current/evidence/qa-delivery-review.md`
+- `runs/current/evidence/ui-previews/qa-manifest.md`
+- `runs/current/evidence/ui-previews/qa/*.png`
 - downstream inbox notes reopening Product, Architect, Frontend, Backend, or
   DevOps work when QA finds blockers
 - a readiness handoff to CEO only when QA passes

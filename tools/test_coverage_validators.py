@@ -117,11 +117,47 @@ class CoverageValidatorTests(unittest.TestCase):
             repo_root = Path(tmp)
             seed_scope(repo_root)
             write(
+                repo_root / "runs/current/evidence/ui-previews/qa-manifest.md",
+                "# QA Screenshot Manifest\n\ncapture_status: captured\n- reviewed_surfaces:\n  - `N001 Overview` at `/app/#/Home` -> `qa-n001-home.png`\n",
+            )
+            write(
                 repo_root / "runs/current/evidence/qa-delivery-review.md",
-                "- `curl http://127.0.0.1:5180/app/#/Home` -> `200`\n",
+                "- source manifest: `runs/current/evidence/ui-previews/qa-manifest.md`\n- `curl http://127.0.0.1:5180/app/#/Home` -> `200`\n",
             )
             issues = collect_qa_review_coverage_issues(repo_root)
             self.assertTrue(any("N007" in issue["reason"] for issue in issues))
+
+    def test_qa_review_coverage_passes_when_review_and_manifest_cover_required_routes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            write(
+                repo_root / "runs/current/evidence/ui-previews/qa-manifest.md",
+                "\n".join(
+                    [
+                        "# QA Screenshot Manifest",
+                        "",
+                        "capture_status: captured",
+                        "- reviewed_surfaces:",
+                        "  - `N001 Overview` at `/app/#/Home` -> `qa-n001-home.png`",
+                        "  - `N007 Reviews & Approvals` at `/app/#/approvals` -> `qa-n007-approvals.png`",
+                        "",
+                    ]
+                ),
+            )
+            write(
+                repo_root / "runs/current/evidence/qa-delivery-review.md",
+                "\n".join(
+                    [
+                        "- source manifest: `runs/current/evidence/ui-previews/qa-manifest.md`",
+                        "- verified `/app/#/Home` live and reviewed `qa-n001-home.png`",
+                        "- verified `/app/#/approvals` live and reviewed `qa-n007-approvals.png`",
+                        "",
+                    ]
+                ),
+            )
+            issues = collect_qa_review_coverage_issues(repo_root)
+            self.assertEqual(issues, [])
 
     def test_frontend_route_coverage_prefers_active_change_candidate_navigation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

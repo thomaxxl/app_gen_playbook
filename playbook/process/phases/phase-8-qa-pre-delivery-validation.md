@@ -20,6 +20,8 @@ This phase begins only after:
 - run `app/run.sh` and confirm the app boots successfully
 - perform basic user testing against the live app
 - compile or read the current scope facts and review plan before testing
+- capture reviewable QA screenshots for every review-plan surface required for
+  live QA or preview evidence
 - verify the frontend is not blank, crashed, or stuck in obvious request loops
 - verify the frontend is not exposing metadata, contract recovery copy, route
   inventory, or other internal/debug content
@@ -36,6 +38,8 @@ This phase begins only after:
 ## Outputs
 
 - `runs/current/evidence/qa-delivery-review.md`
+- `runs/current/evidence/ui-previews/qa-manifest.md`
+- `runs/current/evidence/ui-previews/qa/*.png`
 
 ## Exit criteria
 
@@ -44,6 +48,8 @@ This phase begins only after:
 - no visible frontend crash or blank-screen defect remains
 - no visible metadata/debug shell leakage remains
 - no obvious backend runtime error remains during QA-tested flows
+- QA screenshot evidence exists for the required review-plan surfaces and is
+  cited in the QA review
 - QA documents route-by-route live coverage for the required PM workspace, not
   only a prior reviewed subset
 - QA validates completeness of the required PM route/page set, not only runtime

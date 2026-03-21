@@ -48,6 +48,7 @@ PY
 DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
+SAFRS_JSONAPI_CLIENT_RELEASE_URL="${SAFRS_JSONAPI_CLIENT_RELEASE_URL:-https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz}"
 BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
@@ -136,7 +137,17 @@ frontend_dependencies_ready() {
   [[ -d "$node_modules_dir/vite" ]] &&
   [[ -d "$node_modules_dir/react" ]] &&
   [[ -d "$node_modules_dir/react-dom" ]] &&
-  [[ -d "$node_modules_dir/@playwright/test" ]]
+  [[ -d "$node_modules_dir/@playwright/test" ]] &&
+  [[ -f "$node_modules_dir/safrs-jsonapi-client/package.json" ]]
+}
+
+ensure_safrs_jsonapi_client_installed() {
+  if [[ -f "node_modules/safrs-jsonapi-client/package.json" ]]; then
+    return 0
+  fi
+
+  echo "Installing safrs-jsonapi-client from approved release asset"
+  npm install "$SAFRS_JSONAPI_CLIENT_RELEASE_URL"
 }
 
 if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
@@ -163,7 +174,7 @@ if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
 
   if ! frontend_dependencies_ready "$FRONTEND_DIR/node_modules"; then
     echo "Frontend dependencies are incomplete in $FRONTEND_DIR/node_modules." >&2
-    echo "Expected vite, react, react-dom, and @playwright/test to already exist." >&2
+    echo "Expected vite, react, react-dom, @playwright/test, and safrs-jsonapi-client to already exist." >&2
     echo "In preprovisioned-reuse-only mode, ./install.sh will not run npm or Playwright installers." >&2
     exit 1
   fi
@@ -225,6 +236,15 @@ fi
     printf '%s\n' "$lock_hash" > "$lock_stamp"
   fi
 
+  ensure_safrs_jsonapi_client_installed
+  lock_source="package-lock.json"
+  if [[ ! -f "$lock_source" ]]; then
+    lock_source="package.json"
+  fi
+  lock_hash="$(file_sha256 "$lock_source")"
+  mkdir -p node_modules
+  printf '%s\n' "$lock_hash" > "$lock_stamp"
+
   if ! npx --no-install playwright --version >/dev/null 2>&1; then
     echo "Playwright CLI not found after npm install. Installing @playwright/test."
     npm install --save-dev @playwright/test
@@ -250,6 +270,9 @@ Notes:
   reinstalling packages on every run.
 - In `clean-install` mode, missing `node_modules` MUST still trigger a full
   frontend install automatically.
+- In `clean-install` mode, if `safrs-jsonapi-client` is still absent after the
+  baseline `npm install`, `install.sh` MUST install it from the approved
+  release asset URL.
 - If repeated local runs should reuse a dependency tree stored outside the app
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to

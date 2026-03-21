@@ -21,6 +21,13 @@ Before any frontend install step begins, the run MUST:
 
 The unresolved template token MUST remain in the template lane only.
 
+The current maintained default for that source is the GitHub release asset:
+
+- `https://github.com/thomaxxl/safrs-jsonapi-client/releases/download/0.0.1/safrs-jsonapi-client-0.1.0.tgz`
+
+unless the run-owned `runtime-bom.md` explicitly records and approves a
+replacement.
+
 It MUST NOT survive into:
 
 - `app/frontend/package.json`

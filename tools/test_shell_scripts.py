@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -19,6 +20,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         scripts = (
             repo_root / "scripts" / "run_playbook.sh",
             repo_root / "scripts" / "run_playbook_core.sh",
+            repo_root / "scripts" / "run_qa_review.sh",
             repo_root / "scripts" / "steer.sh",
             repo_root / "scripts" / "clean.sh",
             repo_root / "scripts" / "save_run.sh",
@@ -246,6 +248,89 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             validation_text = validation_md.read_text(encoding="utf-8")
             self.assertIn("status: ready-for-handoff", validation_text)
             self.assertIn("app/run.sh booted successfully", validation_text)
+
+    def test_run_qa_review_script_captures_then_invokes_single_qa_review(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            scripts_dir = repo_root / "scripts"
+            tools_dir = repo_root / "tools"
+            frontend_dir = repo_root / "app" / "frontend"
+            bin_dir = repo_root / "bin"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            tools_dir.mkdir(parents=True, exist_ok=True)
+            frontend_dir.mkdir(parents=True, exist_ok=True)
+            bin_dir.mkdir(parents=True, exist_ok=True)
+
+            shutil.copy2(source_repo_root / "scripts" / "run_qa_review.sh", scripts_dir / "run_qa_review.sh")
+            (scripts_dir / "run_qa_review.sh").chmod(0o755)
+
+            write_executable(
+                tools_dir / "run_qa_review_once.py",
+                "\n".join(
+                    [
+                        "#!/usr/bin/env python3",
+                        "from __future__ import annotations",
+                        "import argparse",
+                        "from pathlib import Path",
+                        "parser = argparse.ArgumentParser()",
+                        "parser.add_argument('--repo-root', required=True)",
+                        "parser.add_argument('--qa-manifest', required=True)",
+                        "parser.add_argument('--capture-result', required=True)",
+                        "args = parser.parse_args()",
+                        "repo_root = Path(args.repo_root)",
+                        "record = repo_root / 'qa-agent-invocation.txt'",
+                        "record.write_text(f\"manifest={args.qa_manifest}\\nresult={args.capture_result}\\n\", encoding='utf-8')",
+                        "print(repo_root / 'runs/current/role-state/qa/processed/fake.md')",
+                    ]
+                )
+                + "\n",
+            )
+
+            write_executable(
+                bin_dir / "npm",
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        "mkdir -p \"$(dirname \"$QA_SCREENSHOT_MANIFEST\")\" \"$QA_SCREENSHOT_OUTPUT_DIR\"",
+                        "printf '# QA Screenshot Manifest\\n\\ncapture_status: captured\\n- reviewed_surfaces:\\n  - `N001 Overview` at `/app/#/Home` -> `qa-home.png`\\n' > \"$QA_SCREENSHOT_MANIFEST\"",
+                        "touch \"$QA_SCREENSHOT_OUTPUT_DIR/qa-home.png\"",
+                    ]
+                )
+                + "\n",
+            )
+
+            (repo_root / "runs" / "current" / "evidence" / "quality").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state" / "qa" / "processed").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence" / "quality" / "review-plan.json").write_text(
+                '{"surfaces":[{"route_id":"N001","page_label":"Overview","path":"/app/#/Home","qa_live_test_required":true,"preview_required":true}]}\n',
+                encoding="utf-8",
+            )
+            (frontend_dir / "package.json").write_text('{"name":"frontend"}\n', encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(scripts_dir / "run_qa_review.sh")],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}"},
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"run_qa_review.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+            )
+            self.assertTrue((repo_root / "runs" / "current" / "evidence" / "ui-previews" / "qa-manifest.md").is_file())
+            self.assertTrue((repo_root / "qa-agent-invocation.txt").is_file())
+            invocation_text = (repo_root / "qa-agent-invocation.txt").read_text(encoding="utf-8")
+            self.assertIn("manifest=runs/current/evidence/ui-previews/qa-manifest.md", invocation_text)
+            self.assertIn("capture succeeded via npm run capture:qa-screenshots", invocation_text)
 
 
 if __name__ == "__main__":
