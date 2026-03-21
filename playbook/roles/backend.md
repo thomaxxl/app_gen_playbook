@@ -144,6 +144,12 @@ agent MUST treat the canonical API surface as:
 Custom read-model, summary, dashboard, or `/api/ops/` endpoints MAY
 supplement that surface, but they MUST NOT replace it.
 
+When documenting SAFRS or ORM revalidation in remarks, evidence, or handoff
+notes, the Backend agent MUST describe healthy metrics as confirmation that
+the prior fix still holds. Do not phrase healthy route counts, resource
+counts, relationship checks, or reconciled `reference/admin.yaml` evidence as
+if they were newly found blockers.
+
 The Backend agent MUST NOT treat a plain FastAPI app as compliant merely
 because it serves a document at `/jsonapi.json`. That path counts only when the
 backend is wired through `SafrsFastAPI` and the required resources come from

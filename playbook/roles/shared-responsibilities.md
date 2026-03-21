@@ -159,6 +159,11 @@ Each runtime-created `context.md` should include:
 - verification path used
 - implementation evidence such as tested routes, commands, or generated files
 
+When recording verification results in `context.md`, evidence artifacts, or
+`runs/current/remarks.md`, agents MUST state explicitly whether the check
+confirmed a healthy state or exposed a defect. Do not use wording that makes
+success metrics read like an unresolved blocker.
+
 ## Escalation
 
 - If the role cannot proceed without inventing a product or architecture
