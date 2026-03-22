@@ -22,6 +22,8 @@ The real artifact MUST define:
 4. sample-data seed set
 5. idempotency and rerun behavior
 6. data that MUST NOT be seeded automatically
+7. derived-column migration or backfill handling when the run adds new
+   persisted derived fields or request/allocation support tables
 
 ## Required bootstrap table
 

@@ -2,6 +2,20 @@
 
 Use this guide when translating approved business-rule IDs into LogicBank implementation choices.
 
+## First classify the requirement
+
+Ask this before choosing any `Rule.*` pattern:
+
+1. Is this a schema constraint?
+   Use model / database structure first for non-null, uniqueness, required
+   parent/reference, and similar structural guarantees.
+2. Is this a transactional business rule?
+   Use LogicBank for derivations, aggregates, lifecycle invariants, and
+   rollback-worthy validation.
+3. Is this a transport concern?
+   Keep API wrappers thin. Naming, request/response shaping, and endpoint
+   integration must not become the primary business-rule owner.
+
 ## Preferred lane matrix
 
 | Requirement shape | Preferred LogicBank lane | Why | Typical proof |
@@ -50,6 +64,9 @@ Ask:
 
 Do not answer “both.” If the use case genuinely needs both, model two different fields and document them.
 
+If the author has not clearly asked for live propagation, default to
+`Rule.copy` and record that the stored value is a snapshot.
+
 ## Constraint design checklist
 
 Before writing custom imperative validation code, ask:
@@ -92,6 +109,14 @@ separate the decision from the side effect:
 1. derive / validate the business condition declaratively if possible
 2. use an advanced event hook only for the side effect
 3. document why the side effect cannot remain outside the transaction-triggered logic flow
+
+If the side effect uses a request/audit table, response-bearing workflow, or
+integration command object, load `skills/logicbank-request-pattern/SKILL.md`
+instead of hand-rolling a service endpoint.
+
+If the requirement language says allocate, distribute, apportion, or split
+across recipients, load `skills/logicbank-allocation/SKILL.md` before
+designing schema or custom loops.
 
 ## Natural-language logic safety rule
 

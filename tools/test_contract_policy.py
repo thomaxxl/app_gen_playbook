@@ -27,6 +27,7 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("BE-SAFRS-EXC-001", registry.requirements)
         self.assertIn("BE-RULES-LOGICBANK-001", registry.requirements)
         self.assertIn("BE-RULES-EVID-001", registry.requirements)
+        self.assertIn("BE-RULES-RUNTIME-001", registry.requirements)
         self.assertIn("FE-SAFRS-REL-001", registry.requirements)
         self.assertIn("FE-ADAPTER-001", registry.requirements)
         self.assertIn("FE-ADAPTER-004", registry.requirements)
@@ -44,6 +45,10 @@ class ContractPolicyTests(unittest.TestCase):
         )
         self.assertIn(
             "tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_lane_issues",
+            registry.validators,
+        )
+        self.assertIn(
+            "tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_runtime_issues",
             registry.validators,
         )
 

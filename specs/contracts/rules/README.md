@@ -55,6 +55,13 @@ The agent MAY load these files on demand:
   resolving `backend-design/rule-mapping.md`, verifying actual LogicBank API
   behavior, or adding advanced event-driven rule logic
 
+Optional advanced skills are loaded only when the run explicitly needs them:
+
+- `../../../skills/logicbank-request-pattern/SKILL.md`
+- `../../../skills/logicbank-allocation/SKILL.md`
+
+Those skills are not part of the default backend read path.
+
 The skill above is the default day-to-day rule-selection guide. This contract
 directory and the advanced LogicBank reference still own normative
 enforcement, lifecycle, and verification expectations.
@@ -74,6 +81,6 @@ Human-readable business-rule intent is owned by:
 The rules contract in this directory defines executable enforcement only. It
 MUST NOT become a second competing human-readable source of business meaning.
 
-Optional feature packs live under `../../features/` and MUST be loaded only
-when enabled by the run capability profile and assigned to backend/rules work
-in the load plan.
+Optional advanced rule feature packs live under `../../../skills/` and MUST be
+loaded only when enabled by the run capability profile and assigned to
+backend/rules work in the load plan.

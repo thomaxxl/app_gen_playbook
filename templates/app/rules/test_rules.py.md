@@ -209,6 +209,12 @@ Notes:
 
 - Keep this file aligned with the minimum matrix in `rules/validation.md`.
 - Cover at least one API-path failure and multiple ORM-path mutation stories.
+- If the run uses `jsonapi_rpc`, a thin request wrapper, or another approved
+  business entry path, add at least one test through that entry path in
+  addition to the normal ORM/session proof.
+- If the run uses advanced events, Request Pattern, or Allocation, capture a
+  LogicBank trace snippet or equivalent evidence showing the rule/event path
+  actually fired.
 - Discover runtime collection paths and wire `type` values from the running
   backend instead of inferring them from SQL naming conventions.
 - Keep backend test coverage traceable to approved rule IDs from

@@ -20,9 +20,9 @@ that already belongs in `../../runs/current/artifacts/product/business-rules.md`
 
 The real artifact MUST include a table with this shape:
 
-| Rule ID | Backend fields involved | Backend enforcement location | Starter LogicBank patterns considered | Chosen LogicBank pattern | Snapshot vs live semantics | Advanced/custom exception required? | Why declarative rules were insufficient | API behavior | ORM-path proof | API-path proof | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `BR-001` | `<fields>` | `<file/function>` | `<copy/formula/sum/count/constraint chain>` | `<formula/sum/count/copy/constraint/custom>` | `<snapshot/live/none>` | `<yes/no>` | `<reason or none>` | `<save rejected / derived update / none>` | `<test or evidence path>` | `<test or evidence path>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
+| Rule ID | Requirement class | Backend fields involved | Schema prerequisite / migration / backfill plan | Backend enforcement location | Starter LogicBank patterns considered | Chosen LogicBank pattern | Snapshot vs live semantics | Advanced/custom exception required? | Why declarative rules were insufficient | API behavior | ORM-path proof | API-path proof | Business entry-path proof | Logic trace evidence | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `BR-001` | `<schema / transactional / transport>` | `<fields>` | `<plan or none>` | `<file/function>` | `<copy/formula/sum/count/constraint chain>` | `<formula/sum/count/copy/constraint/custom>` | `<snapshot/live/none>` | `<yes/no>` | `<reason or none>` | `<save rejected / derived update / none>` | `<test or evidence path>` | `<test or evidence path>` | `<test/evidence path or none>` | `<trace path or none>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row.
 
@@ -33,11 +33,19 @@ The real artifact MUST also define:
 - which rule IDs are declarative LogicBank rules
 - which rule IDs require custom Python behavior
 - which rule IDs use advanced LogicBank events
+- which rule IDs are actually schema constraints and therefore do not become
+  LogicBank rules
 - which fields are backend-managed because of those rules
 - which rule IDs are explicitly deferred or out of scope
 - when `copy` and `formula` both appear, which rule IDs are snapshot semantics
   versus live-propagation semantics
+- that ambiguous parent/reference propagation defaults to `Rule.copy` unless a
+  live-propagation requirement is explicit
 - which rule IDs have API-path proof and ORM-path proof
+- which rule IDs require business entry-path proof because they use
+  `jsonapi_rpc`, a thin wrapper, or another approved custom entry path
+- which advanced rule IDs include a captured logic trace snippet or equivalent
+  rule-execution evidence
 - for every exception, why declarative LogicBank rules were insufficient
 
 If the run needs LogicBank event handlers or signature-level API verification,

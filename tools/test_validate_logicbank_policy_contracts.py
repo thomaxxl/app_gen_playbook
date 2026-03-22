@@ -7,6 +7,7 @@ from pathlib import Path
 from validators.policy.validate_logicbank_policy_contracts import (
     collect_logicbank_artifact_issues,
     collect_logicbank_lane_issues,
+    collect_logicbank_runtime_issues,
 )
 
 
@@ -22,6 +23,7 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
     def test_static_contract_validators_pass_on_repo(self) -> None:
         self.assertEqual(collect_logicbank_lane_issues(self.repo_root), [])
         self.assertEqual(collect_logicbank_artifact_issues(self.repo_root), [])
+        self.assertEqual(collect_logicbank_runtime_issues(self.repo_root), [])
 
     def test_lane_validator_detects_missing_skill_load(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -52,17 +54,41 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             repo_root = Path(tmp_dir)
             (repo_root / ".git").mkdir()
             for rel, content in (
-                ("specs/backend-design/rule-mapping.md", "Starter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\n"),
-                ("specs/backend-design/model-design.md", "maintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
-                ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\n"),
-                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\n"),
-                ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\n"),
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
+                ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
+                ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
+                ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
+                ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
+                ("specs/contracts/rules/logicbank-reference.md", "calling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\n"),
                 ("app/rules/rules.py", "from logic_bank.logic_bank import LogicBank\n\ndef declare_logic():\n    pass\n"),
             ):
                 write_file(repo_root / rel, content)
 
             issues = collect_logicbank_artifact_issues(repo_root)
             self.assertTrue(any("live rules implementation is missing" in issue["reason"] for issue in issues))
+
+    def test_runtime_validator_detects_missing_advanced_trace_and_tests(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            for rel, content in (
+                ("templates/app/rules/rules.py.md", "def declare_logic():\n    pass\n\ndef activate_logic(session_factory):\n    LogicBank.activate(session=session_factory, activator=declare_logic)\n"),
+                ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
+                (
+                    "app/rules/rules.py",
+                    "from logic_bank.logic_bank import LogicBank\n\n"
+                    "def declare_logic():\n    early_row_event(Foo, calling=handle_foo)\n\n"
+                    "def activate_logic(session_factory):\n    LogicBank.activate(session=session_factory, activator=declare_logic)\n",
+                ),
+            ):
+                write_file(repo_root / rel, content)
+
+            issues = collect_logicbank_runtime_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("logic_row.log", reasons)
+            self.assertIn("dedicated backend rules test file", reasons)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,18 @@ Use this skill when the task touches any of the following:
 
 For SQLAlchemy-backed write logic, start with LogicBank's declarative rule DSL.
 
+Before choosing a LogicBank lane, classify the requirement:
+
+- schema constraint:
+  uniqueness, non-null, required parent/reference, and similar structural
+  guarantees belong in the mapped model / database contract first
+- transactional rule:
+  multi-row derivations, aggregate maintenance, lifecycle invariants, and
+  rollback-worthy business rules belong in LogicBank
+- transport concern:
+  API naming, wrapper shape, response formatting, or frontend ergonomics do
+  not own business enforcement and must stay thin
+
 Do **not** start by writing imperative logic in:
 - FastAPI / Flask endpoints
 - service-layer mutation helpers
@@ -40,6 +52,9 @@ Typical examples:
 - item unit price copied from product unit price
 - child status code copied from a status table
 - invoice line tax rate snapped from the tax table at order time
+
+If the author has not clearly asked for live propagation, use `Rule.copy` and
+record that the value is a snapshot.
 
 ### 2) Live derived column -> `Rule.formula`
 Use `Rule.formula` when the business meaning is:
@@ -107,10 +122,18 @@ If the need is truly outside the starter subset, consider upstream LogicBank / A
 - parent checks
 - copy-row auditing
 - allocation logic
+- request / audit / response-object integration logic
 
 These are **not** the default starter lane in this playbook. Use them only when:
 - the approved rule really needs them, and
 - `rule-mapping.md` explicitly records why the starter subset was insufficient.
+
+When the requirement is a request / audit table or response-bearing integration
+pattern, also load `skills/logicbank-request-pattern/SKILL.md`.
+
+When the requirement is allocation / distribution / split logic across
+provider, recipient, and junction rows, also load
+`skills/logicbank-allocation/SKILL.md`.
 
 ### 8) Custom Python outside LogicBank -> last resort
 Only use custom Python as the primary rule implementation when:
@@ -183,12 +206,16 @@ When using this skill, the backend author must update:
 
 At minimum, `rule-mapping.md` must record:
 - rule ID
+- whether the need was classified as schema constraint, transactional rule, or transport concern
 - business fields involved
 - chosen LogicBank pattern
 - whether the behavior is snapshot vs live
+- schema prerequisite / migration / backfill plan for any newly introduced derived columns
 - backend enforcement location
 - API-visible failure behavior where applicable
 - backend test coverage
+- business entry-path coverage when `jsonapi_rpc`, a thin wrapper, or another approved business entry point is used
+- logic-trace evidence for advanced events, request patterns, allocation, or other non-starter flows
 - whether custom Python or advanced events are used
 - why declarative rules were insufficient, if an exception was needed
 
@@ -199,10 +226,14 @@ Every approved rule set needs proof, not just prose.
 Minimum expectations:
 - at least one invalid-path rule test through the API surface
 - at least one rule test through direct ORM commit
+- if a custom business entry point exists, at least one test through that
+  entry path in addition to normal ORM proof
 - coverage for create / update / delete / reparent / status-change stories when relevant
 - proof that copied / formula / sum / count targets are populated correctly
 - proof that constraint failures roll back cleanly
 - proof that activation occurs on the real app session factory
+- for advanced events or thin wrappers, a logic trace snippet or equivalent
+  evidence showing the rule/event path actually fired
 
 Use `templates/rule-proof-checklist.md` when designing or reviewing that evidence.
 
@@ -217,6 +248,10 @@ Reject designs that:
 - hide rule dependencies in helper code instead of mapped model attributes
 - trust natural-language rule generation without checking the resulting `Rule.*` mapping
 - use advanced LogicBank events when plain `Rule.copy`, `Rule.formula`, `Rule.sum`, `Rule.count`, or `Rule.constraint` would suffice
+- use `Rule.constraint` for requirements that are really schema/nullability/
+  uniqueness/FK design decisions
+- put request / audit business logic into fat service endpoints instead of a
+  thin wrapper plus the rule layer
 
 ## Deliverables in this skill
 

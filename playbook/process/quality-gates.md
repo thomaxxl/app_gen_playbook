@@ -74,6 +74,8 @@ The run is blocked if any of these are true:
 - ordinary transactional business rules are implemented primarily through
   endpoint/service/frontend enforcement without a documented LogicBank-lane
   exception
+- advanced request-pattern or allocation behavior is claimed without logic
+  trace evidence, business entry-path proof, or documented schema changes
 - the final Playwright smoke validation is missing without a documented
   blocked-environment path
 - captured UI preview screenshots exist but were not analyzed for visible

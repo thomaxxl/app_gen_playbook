@@ -29,9 +29,17 @@ and tests.
   list/show/include/filter/drill-down behavior
 - define per-resource readonly and mutability policy
 - map approved rule IDs to LogicBank patterns, backend enforcement, and tests
+- classify each approved requirement as schema constraint, transactional rule,
+  or transport concern before choosing a rule lane
 - evaluate each approved rule ID against `Rule.copy`, `Rule.formula`,
   `Rule.sum`, `Rule.count`, `Rule.constraint`, and declarative chaining before
   approving advanced/custom alternatives
+- default ambiguous parent/reference propagation to `Rule.copy` unless live
+  propagation is explicitly required
+- if the requirement implies request/audit rows or response-bearing wrapper
+  semantics, load `skills/logicbank-request-pattern/SKILL.md`
+- if the requirement implies allocate/distribute/split behavior, load
+  `skills/logicbank-allocation/SKILL.md`
 - define derived vs stored fields
 - define per-resource query commitments
 - define any backend read-model, aggregate, or metadata endpoints required by
@@ -60,6 +68,8 @@ and tests.
 - every approved rule ID maps to backend implementation and backend tests
 - every approved rule ID records the chosen LogicBank lane or justified
   exception before coding starts
+- every derived persisted field records any schema prerequisite, migration, or
+  backfill plan before coding starts
 - every frontend-visible field maps to backend truth
 - every frontend-needed query behavior is either committed or explicitly out
   of scope

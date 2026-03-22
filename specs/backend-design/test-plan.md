@@ -33,6 +33,10 @@ The real artifact MUST define:
 10. bootstrap/idempotency tests
 11. fallback verification behavior if the preferred HTTP path is gated
 12. activation proof on the real app session factory
+13. business entry-path coverage when `jsonapi_rpc`, a thin wrapper, or
+    another approved business entry point is part of the contract
+14. logic-trace evidence for advanced events, request pattern, allocation, or
+    comparable non-starter rule flows
 
 ## Required CRUD/query table
 
@@ -56,3 +60,5 @@ The real artifact MUST also identify:
 - for every rule-bearing resource, representative create/update/delete/reparent
   stories, invalid mutation stories, API-path proof, ORM-path proof, and
   activation proof
+- when a wrapper or advanced entry path exists, representative proof through
+  that business entry point in addition to normal ORM-path proof

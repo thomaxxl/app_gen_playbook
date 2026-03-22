@@ -211,6 +211,15 @@ LogicBank declarative lane defined by
 `../../skills/logicbank-rules-design/SKILL.md` before approving
 endpoint/service/event/custom-Python alternatives.
 
+The Architect MUST also require that the rule was first classified as schema
+constraint, transactional rule, or transport concern, and MUST reject designs
+that push schema constraints or fat transport logic into the LogicBank lane
+without justification.
+
+If live propagation was not explicitly requested for a parent/reference value,
+the Architect SHOULD expect the safe default to be `Rule.copy` with snapshot
+semantics recorded in the backend-design artifacts.
+
 The Architect MUST hand work back to Product Manager when a decision would
 change users, scope, workflows, or required custom pages as product behavior.
 

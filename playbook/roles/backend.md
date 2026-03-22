@@ -269,8 +269,25 @@ When mapping approved business-rule IDs to implementation, the Backend agent
 MUST load and apply `../../skills/logicbank-rules-design/SKILL.md` before
 choosing custom Python, endpoint-layer validation, raw-SQL recompute helpers,
 or advanced LogicBank events. The Backend agent MUST first evaluate the rule
-against `Rule.copy`, `Rule.formula`, `Rule.sum`, `Rule.count`,
+as schema constraint, transactional rule, or transport concern, and only the
+transactional class should continue into the default LogicBank lane.
+
+If the rule remains a transactional rule, the Backend agent MUST first evaluate
+it against `Rule.copy`, `Rule.formula`, `Rule.sum`, `Rule.count`,
 `Rule.constraint`, and declarative chaining.
+
+If the prompt does not clearly ask for live propagation of a parent/reference
+value, the Backend agent MUST default to `Rule.copy` and record that the field
+is a snapshot.
+
+If the run uses advanced request/audit integration or allocation patterns, the
+Backend agent SHOULD also load:
+
+- `../../skills/logicbank-request-pattern/SKILL.md`
+- `../../skills/logicbank-allocation/SKILL.md`
+
+Advanced event or wrapper-based rule flows MUST use `logic_row.log()`-style
+trace evidence and MUST keep transport code thin.
 
 When `reference/admin.yaml` is generated or materially refreshed from backend
 discovery or OpenAPI-derived input, the Backend agent SHOULD use the Codex

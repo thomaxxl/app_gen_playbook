@@ -309,3 +309,49 @@ requirements:
     remediation: >
       Extend the rule-mapping, model-design, and test-plan templates so
       LogicBank lane choice and proof obligations are explicit.
+  - id: BE-RULES-RUNTIME-001
+    title: LogicBank runtime wiring and advanced rule evidence are real
+    class: runtime_behavior
+    normative: MUST
+    severity: error
+    family: backend-core
+    owner_roles:
+      - backend
+      - architect
+      - qa
+    applies_when:
+      roles:
+        - backend
+        - architect
+        - qa
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/rules/validation.md
+      - specs/contracts/rules/logicbank-reference.md
+      - specs/backend-design/rule-mapping.md
+      - specs/backend-design/test-plan.md
+      - templates/app/rules/rules.py.md
+      - templates/app/rules/test_rules.py.md
+    description: >
+      When LogicBank is actually used, the generated runtime, tests, and
+      run-owned rule artifacts must prove real activation, advanced-pattern
+      traceability, and business entry-path coverage instead of leaving the
+      implementation as a documentation-only contract.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_runtime_issues
+    evidence:
+      required_files: []
+    exceptions:
+      allowed: true
+    manual_attestation:
+      required: false
+    remediation: >
+      Restore real LogicBank runtime/test wiring, capture advanced-pattern
+      trace evidence, and update the run-owned rule artifacts with the
+      required proof fields.

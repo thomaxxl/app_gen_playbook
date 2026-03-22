@@ -34,6 +34,9 @@ Where relevant, the tests MUST also distinguish:
 - snapshot semantics (`Rule.copy`)
 - live recompute semantics (`Rule.formula`)
 
+If the author has not clearly asked for live propagation, the tested default
+SHOULD be snapshot semantics via `Rule.copy`.
+
 ## API-path validation
 
 At least one invalid mutation MUST be tested through the API surface, not only
@@ -59,11 +62,24 @@ The validation set MUST include proof that LogicBank activation occurred on
 the real app session factory rather than on a test-only or helper-only
 session.
 
+## Thin-wrapper and advanced-entry validation
+
+If the run uses `jsonapi_rpc`, a thin request wrapper, or another approved
+business entry point, the validation set MUST include at least one creation or
+mutation story through that entry path in addition to normal ORM-path proof.
+
+Thin-wrapper coverage does not replace ordinary CRUD or ORM-path rule proof.
+It supplements it.
+
 ## Rule-mapping coverage note
 
 If a run adds advanced LogicBank patterns beyond the starter subset, the
 validation set SHOULD add at least one test per non-starter pattern documented
 in `runs/current/artifacts/backend-design/rule-mapping.md`.
+
+For advanced events, Request Pattern, Allocation, or similar non-starter
+flows, the validation evidence SHOULD also include a captured LogicBank trace
+snippet or equivalent evidence showing the event/rule path actually fired.
 
 ## Required test file
 

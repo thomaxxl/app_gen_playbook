@@ -63,3 +63,11 @@ Notes:
 - For a real run, keep rule traceability by annotating the implemented rules
   with the corresponding business-rule IDs from
   `runs/current/artifacts/product/business-rules.md`.
+- This starter keeps all rule declarations in one explicit module. Do not
+  cargo-cult upstream `logic_discovery/**` auto-discovery or inside-function
+  import rules into the starter lane unless an optional logic-discovery
+  feature pack is explicitly enabled.
+- If the run uses Request Pattern or Allocation, load the corresponding
+  optional skills and keep advanced event code using `logic_row.log(...)` and
+  `logic_row.new_logic_row(ModelClass)` plus `.insert(...)` rather than
+  `session.add(...)/flush()` inside the flush cycle.

@@ -121,6 +121,8 @@ business-rule behavior, or route meaning.
 - implement rules and validation
 - implement approved rule choices in the shared LogicBank/backend rule layer,
   not primarily in transport handlers or frontend validation
+- if the run uses thin wrappers, request/audit rows, or allocation patterns,
+  keep those entry paths thin and preserve business logic in the rule layer
 - implement the run-owned bootstrap and sample-data plan
 - implement tests
 - ensure generated dependency manifests are concrete before install
@@ -131,6 +133,8 @@ business-rule behavior, or route meaning.
   lanes before inventing custom endpoints
 - keep the fallback verification harness available when the preferred path is
   broken
+- when advanced rule entry paths exist, include at least one test through that
+  path in addition to normal ORM-path proof
 - if the preferred in-process HTTP path is host-unstable, gate it behind an
   explicit environment variable and keep the default backend verification path
   green without manual test selection

@@ -13,13 +13,28 @@ last_updated_by: playbook
 This file is a generic template. The Backend role MUST create the run-owned
 version at `../../runs/current/artifacts/backend-design/model-design.md`.
 
+## Rule and constraint triage
+
+Before choosing LogicBank or custom rule code, the real artifact MUST classify
+each requirement as one of:
+
+- schema constraint:
+  non-null, uniqueness, required-parent/reference, and similar structural
+  guarantees that belong in the mapped model / database contract first
+- transactional rule:
+  derivations, aggregates, lifecycle invariants, and rollback-worthy business
+  validation that belong in LogicBank or an approved advanced rule pattern
+- transport concern:
+  wrapper naming, request/response shape, and client ergonomics that must stay
+  thin and must not own the business rule itself
+
 ## Required resource table
 
 The real artifact MUST include a table with this shape:
 
-| Resource | Exposed | SAFRS model? | EXPOSED_MODELS entry | Table | Core stored fields | Derived persisted fields | ORM relationship fields | Uses jsonapi_attr? | Uses jsonapi_rpc? | Read-only fields | Exception id | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<resource>` | `yes/no/internal/singleton/deferred` | `yes/no` | `yes/no` | `<table_name>` | `<field list>` | `<field list or none>` | `<relationship list>` | `yes/no with field list` | `yes/no with method list` | `<field list or none>` | `<exception id or none>` | `<notes>` |
+| Resource | Exposed | SAFRS model? | EXPOSED_MODELS entry | Table | Core stored fields | Derived persisted fields | Schema prerequisite / migration / backfill | ORM relationship fields | Uses jsonapi_attr? | Uses jsonapi_rpc? | Read-only fields | Exception id | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `<resource>` | `yes/no/internal/singleton/deferred` | `yes/no` | `yes/no` | `<table_name>` | `<field list>` | `<field list or none>` | `<plan or none>` | `<relationship list>` | `yes/no with field list` | `yes/no with method list` | `<field list or none>` | `<exception id or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row. It MUST NOT leave the table
 empty or implied.
@@ -34,6 +49,8 @@ The real artifact MUST also define:
 - persisted derived fields versus runtime-only values
 - for every derived persisted field, whether it is maintained by `copy`,
   `formula`, `sum`, `count`, custom logic, or left out of scope
+- for every derived persisted field, the schema prerequisite / migration /
+  backfill plan for existing rows
 - any resource whose mutability is limited relative to normal CRUD
 - for every resource whose `Exposed` value is `yes`, how that resource becomes
   a true `SAFRSBase` model in `EXPOSED_MODELS` instead of a hand-built JSON
@@ -53,3 +70,9 @@ Persisted database-backed tables that are product-facing or operator-facing
 also default to ORM-backed implementation. Any raw-SQL-only or non-ORM path
 for such a table MUST include an explicit reason and the replacement
 maintenance and validation strategy.
+
+If the run introduces request/audit rows or allocation tables, the Backend
+role SHOULD load the optional repo-local skills:
+
+- `../../../skills/logicbank-request-pattern/SKILL.md`
+- `../../../skills/logicbank-allocation/SKILL.md`

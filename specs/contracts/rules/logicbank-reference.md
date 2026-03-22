@@ -40,7 +40,8 @@ Use this precedence order when LogicBank docs disagree:
 
 1. the playbook's generated-app contract under this `rules/` directory
 2. the installed published `logicbank` package in the current backend runtime
-3. the local LogicBank skill references under
+3. the repo-local summaries under `../../references/logicbank/`
+4. the local LogicBank skill references under
    `../../../skills/logicbank-rules-design/reference/`
 
 The playbook remains the normative generated-app contract.
@@ -132,6 +133,28 @@ That means:
 - at least one invalid-path test MUST go through the API
 - at least one rule test MUST go through direct ORM commit
 
+## Verified compatibility notes
+
+These patterns were verified against the installed `logicbank` package used by
+the backend runtime.
+
+- event callbacks are called as `calling(row=..., old_row=..., logic_row=...)`
+- `logic_row.log("...")` is the preferred trace path for advanced rule/event
+  debugging because it groups output with rule execution and nesting
+- `logic_row.new_logic_row(ModelClass)` takes a model class, returns a
+  `LogicRow`, and is the preferred nested-row creation helper inside rule
+  execution
+- for nested request/audit/allocation rows created during rule execution,
+  prefer `logic_row.new_logic_row(ModelClass)` plus `.insert(reason="...")`
+  instead of `session.add(...)` plus `flush()` inside the flush cycle
+- `early_row_event` is the preferred lane when the same transaction must
+  compute response-bearing fields for the caller
+- `after_flush_row_event` is the preferred lane for fire-and-forget side
+  effects that need flushed ids/state but do not define the immediate response
+  contract
+- thin wrappers may name or initiate a request, but business logic still
+  belongs in the LogicBank path
+
 ## Event usage
 
 Events are advanced LogicBank behavior and MUST remain secondary to the
@@ -152,6 +175,14 @@ When events are necessary, use this guidance:
 If a run needs these patterns, the backend rule mapping MUST document why a
 declarative `Rule.*` pattern was insufficient.
 
+If the run needs Request Pattern behavior, load:
+
+- `../../../skills/logicbank-request-pattern/SKILL.md`
+
+If the run needs allocation/distribution behavior, load:
+
+- `../../../skills/logicbank-allocation/SKILL.md`
+
 ## Advanced patterns stay out of the starter core
 
 The following remain advanced and MUST NOT be folded into the starter contract
@@ -166,6 +197,15 @@ by default:
 If a run needs one of those patterns, that requirement SHOULD be isolated in a
 separate advanced contract or feature lane rather than widening the starter
 rules contract.
+
+## Auto-discovery boundary
+
+The playbook starter path uses a single `app/rules/rules.py` module with
+explicit activation.
+
+Inside-function imports and recursive `logic_discovery/**` auto-discovery
+guidance apply only if an optional logic-discovery feature pack is enabled.
+They are not part of the starter default.
 
 ## Known documentation hazards
 

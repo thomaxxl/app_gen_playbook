@@ -180,3 +180,20 @@ Keep the default starter lane centered on:
 - `Rule.constraint`
 
 Use the advanced patterns only with an explicit documented need.
+
+## 11. Add optional advanced feature skills, not a wider default core
+
+Do not widen the default backend read path for advanced patterns.
+
+Instead, add optional skills that are loaded only when the run-owned
+capability profile or rule mapping needs them:
+
+- `skills/logicbank-request-pattern/SKILL.md`
+  for request/response/audit rows, thin wrappers, and nested request-row
+  creation through `logic_row.new_logic_row(ModelClass)` plus `.insert()`
+- `skills/logicbank-allocation/SKILL.md`
+  for provider/recipient/allocation workflows and schema-first allocation
+  design
+
+Those optional skills should remain out of the Tier 1 default backend and
+architect read sets unless the run explicitly needs them.

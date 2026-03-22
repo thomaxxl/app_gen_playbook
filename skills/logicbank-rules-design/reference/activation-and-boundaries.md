@@ -66,6 +66,9 @@ Constraint failures should produce:
 
 If a custom endpoint must raise a transport-aligned validation error outside `Rule.constraint`, document why the declarative constraint lane was insufficient.
 
+If the endpoint is only a thin request wrapper, it must still rely on the same
+ORM/LogicBank transaction path and should not own the business logic itself.
+
 ## Minimum test matrix
 
 For rule-bearing resources, the default proof set should cover as relevant:
@@ -80,6 +83,9 @@ For rule-bearing resources, the default proof set should cover as relevant:
 - snapshot vs live semantic proof (`copy` vs `formula`)
 - aggregate maintenance proof (`sum` / `count`)
 - activation on the real session factory
+- business entry-path proof when `jsonapi_rpc` or another thin wrapper is part
+  of the contract
+- logic trace evidence for advanced events, request pattern, or allocation
 
 ## Repeated app creation policy
 
@@ -88,3 +94,8 @@ When tests call the app factory multiple times in one process, the implementatio
 - otherwise ensure activation is not duplicated on the same factory
 
 Do not leave repeated activation behavior implicit.
+
+## Advanced-event observability
+
+When advanced events are used, prefer `logic_row.log(...)` over generic app
+logging so the trace remains grouped with rule execution and nesting.

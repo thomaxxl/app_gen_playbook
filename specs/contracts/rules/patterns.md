@@ -21,6 +21,23 @@ The implementation MUST NOT invent decorators or APIs such as:
 
 If generated code is not using documented `Rule.*` APIs, it is out of contract.
 
+## First decision: schema constraint, transactional rule, or transport concern
+
+Before choosing a LogicBank lane, classify the requirement:
+
+1. schema constraint
+   Use mapped-model / database structure first for non-null, uniqueness,
+   required-parent, and similar structural guarantees.
+2. transactional business rule
+   Use LogicBank for derivations, aggregates, rollback-worthy invariants, and
+   multi-row lifecycle behavior.
+3. transport concern
+   Keep API or frontend validation thin. Naming, wrapper shape, and response
+   formatting MUST NOT become the primary owner of business logic.
+
+`Rule.constraint` MUST NOT be the first answer for requirements that are
+really schema/nullability/uniqueness/FK design choices.
+
 ## Starter declaration pattern
 
 The implementation MUST use this starter shape unless a documented deviation
@@ -100,6 +117,9 @@ Use `Rule.formula` when the business meaning is:
 If a run uses both patterns, the backend rule mapping SHOULD record that
 semantic choice explicitly.
 
+If the author has not clearly asked for live propagation, the safe default is
+`Rule.copy`, and the mapping MUST record that the stored value is a snapshot.
+
 ## Required rule decision order
 
 For each approved business rule, the default selection order is:
@@ -144,6 +164,11 @@ expressible that way, such as:
 - external calls
 
 Those side effects are out of scope for the starter contract in this playbook.
+
+Optional advanced skills MAY be loaded when the run explicitly needs them:
+
+- `../../../skills/logicbank-request-pattern/SKILL.md`
+- `../../../skills/logicbank-allocation/SKILL.md`
 
 ## Anti-patterns to reject
 
