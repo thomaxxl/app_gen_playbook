@@ -1,3 +1,8 @@
+---
+name: "safrs-jsonapi-client-frontend"
+description: "Use when the playbook is designing, implementing, reviewing, or validating a React-admin frontend that talks to a SAFRS or ApiLogicServer backend via the canonical safrs-jsonapi-client adapter lane."
+---
+
 # SAFRS JSON:API React-Admin Frontend Skill
 
 ## Purpose

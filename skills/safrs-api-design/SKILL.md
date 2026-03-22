@@ -1,6 +1,6 @@
 ---
-name: safrs-api-design
-description: Use when backend or architecture work touches persisted DB-backed API design in a SAFRS-based app: SQLAlchemy model exposure, relationships, include paths, jsonapi_attr, jsonapi_rpc, or deciding whether a custom endpoint is justified. This skill exists to stop FK-first or ad hoc endpoint design from replacing normal SAFRS resource and relationship surfaces.
+name: "safrs-api-design"
+description: "Use when backend or architecture work touches persisted DB-backed API design in a SAFRS-based app: SQLAlchemy model exposure, relationships, include paths, jsonapi_attr, jsonapi_rpc, or deciding whether a custom endpoint is justified. This skill exists to stop FK-first or ad hoc endpoint design from replacing normal SAFRS resource and relationship surfaces."
 ---
 # SAFRS API Design
 
