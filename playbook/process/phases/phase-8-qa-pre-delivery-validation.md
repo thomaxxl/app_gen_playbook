@@ -31,6 +31,8 @@ This phase begins only after:
   substitute for live testing
 - execute the required route review plan and document live coverage for each
   required visible PM workspace route
+- verify that supported CRUD and search flows are reachable through normal UI
+  navigation and actions, not only through manually typed deep links
 - treat missing required routes, CTA drift, or generic substitution of required
   PM workspace surfaces as blocking QA failures unless explicitly waived
 - reopen the owning role when QA finds a real defect
@@ -54,4 +56,6 @@ This phase begins only after:
   only a prior reviewed subset
 - QA validates completeness of the required PM route/page set, not only runtime
   survivability of a narrow smoke subset
+- QA fails closed when basic user testing only proves reviewer deep links
+  rather than discoverable user flows
 - QA either approves delivery or reopens the run with explicit owner handoffs

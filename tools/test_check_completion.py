@@ -13,17 +13,43 @@ def write_file(path: Path, content: str) -> None:
 
 
 class CheckCompletionTests(unittest.TestCase):
-    def test_terminal_delivery_approval_short_circuits_stale_completion_blockers(self) -> None:
+    def test_terminal_delivery_approval_does_not_hide_blocked_quality_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
             write_file(
                 repo_root / "runs/current/artifacts/architecture/integration-review.md",
-                "owner: architect\nphase: phase-6-integration-review\nstatus: approved\n",
+                "\n".join(
+                    [
+                        "owner: architect",
+                        "phase: phase-6-integration-review",
+                        "status: approved",
+                        "",
+                        "## Story Coverage",
+                        "",
+                        "## Page Coverage",
+                        "",
+                        "## Route Coverage",
+                        "",
+                    ]
+                ),
             )
             write_file(
                 repo_root / "runs/current/artifacts/product/acceptance-review.md",
-                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+                "\n".join(
+                    [
+                        "owner: product_manager",
+                        "phase: phase-7-product-acceptance",
+                        "status: approved",
+                        "",
+                        "## Story Coverage",
+                        "",
+                        "## Page Coverage",
+                        "",
+                        "## Route Coverage",
+                        "",
+                    ]
+                ),
             )
             write_file(
                 repo_root / "runs/current/evidence/qa-delivery-review.md",
@@ -35,6 +61,7 @@ class CheckCompletionTests(unittest.TestCase):
                         "- qa_decision: pass",
                         "- run_sh_validation: pass",
                         "- basic_user_testing: pass",
+                        "- workflow_discoverability: pass",
                         "- frontend_runtime_errors: pass",
                         "- backend_runtime_errors: pass",
                         "- metadata_leakage: pass-on-tested-surfaces",
@@ -50,9 +77,27 @@ class CheckCompletionTests(unittest.TestCase):
                 repo_root / "runs/current/orchestrator/delivery-approved.md",
                 "owner: ceo\nphase: delivery-approval\nstatus: approved\n",
             )
+            write_file(
+                repo_root / "runs/current/evidence/quality/quality-summary.md",
+                "# Quality Summary\n\n## Decision\n\nThe reconciled Phase 6 quality evidence pack is `blocked`.\n",
+            )
 
             blockers = collect_blockers(repo_root)
-            self.assertEqual(blockers, [])
+            self.assertTrue(
+                any("quality summary still says the Phase 6 quality evidence pack is blocked" in blocker["reason"] for blocker in blockers)
+            )
+
+    def test_interrupted_run_status_blocks_completion(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"interrupted","mode":"new-full-run","current_phase":"phase-6-integration-review"}\n',
+            )
+
+            blockers = collect_blockers(repo_root)
+            self.assertTrue(any(blocker["kind"] == "run-status-interrupted" for blocker in blockers))
 
     def test_missing_docker_outputs_are_non_blocking(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

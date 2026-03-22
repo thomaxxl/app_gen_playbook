@@ -47,6 +47,7 @@ def seed_delivery_approval(repo_root: Path, legacy: bool = False) -> None:
         "- qa_decision: pass\n"
         "- run_sh_validation: pass\n"
         "- basic_user_testing: pass\n"
+        "- workflow_discoverability: pass\n"
         "- frontend_runtime_errors: pass\n"
         "- backend_runtime_errors: pass\n"
         "- metadata_leakage: pass-on-tested-surfaces\n"

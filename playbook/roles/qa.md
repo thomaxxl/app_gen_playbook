@@ -60,6 +60,12 @@ The QA agent MUST:
 - perform basic user testing against the real running app, not only file or
   route inspection
 - treat QA as a completeness gate, not only a smoke/runtime pass
+- fail the review if required CRUD or search support only works through
+  manually typed deep links instead of the delivered UI's normal navigation
+  and actions
+- fail the review if a supported collection surface only shows a teaser subset
+  of rows with no pagination, filter/search affordance, or onward
+  show/create/edit path
 - ignore mobile/narrow-screen issues unless the run-owned UX artifacts
   explicitly kept mobile in scope
 - use the repo-local `playwright-skill` as the default browser automation lane
@@ -82,6 +88,8 @@ The QA agent MUST:
   approving delivery
 - verify the required visible PM workspace routes from the current review plan,
   not only whichever subset was already screenshot-reviewed earlier
+- verify that required CRUD/search flows remain discoverable from those routes
+  without reviewer-only URL entry
 - fail the review if required PM routes are missing, silently substituted by a
   generic shell, or absent from the documented live QA route coverage
 - record the tested paths, observed results, and any blockers in
@@ -93,6 +101,7 @@ The QA agent MUST:
   - `qa_decision: pass`
   - `run_sh_validation: pass`
   - `basic_user_testing: pass`
+  - `workflow_discoverability: pass`
   - `frontend_runtime_errors: pass`
   - `backend_runtime_errors: pass`
   - `metadata_leakage: pass-on-tested-surfaces`

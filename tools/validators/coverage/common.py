@@ -11,6 +11,22 @@ from orchestrator_common import resolve_repo_root
 TABLE_SEPARATOR_RE = re.compile(r"^\s*:?-{3,}:?\s*$")
 PRIMARY_CTA_TARGET_RE = re.compile(r"(?im)^-\s*Primary CTA route target:\s*(.+?)\s*$")
 BACKTICK_PATH_RE = re.compile(r"`(/app/#/[^`]+)`")
+QUALITY_SUMMARY_BLOCKED_PATTERNS = (
+    (
+        re.compile(r"(?im)quality evidence pack is `blocked`"),
+        "quality summary still says the Phase 6 quality evidence pack is blocked",
+    ),
+    (
+        re.compile(r"(?im)app cannot enter Product acceptance"),
+        "quality summary still says the app cannot enter Product acceptance",
+    ),
+)
+CRUD_MATRIX_BLOCKED_PATTERNS = (
+    (
+        re.compile(r"(?im)^Current CRUD evidence status:\s*`blocked`\.\s*$"),
+        "CRUD matrix still says CRUD evidence is blocked",
+    ),
+)
 
 
 def normalized_repo_root(value: str | Path) -> Path:
@@ -39,6 +55,34 @@ def read_text(path: Path) -> str:
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
+
+
+def collect_quality_gate_evidence_issues(repo_root: Path) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+
+    quality_summary_path = repo_root / "runs" / "current" / "evidence" / "quality" / "quality-summary.md"
+    quality_summary_text = read_text(quality_summary_path)
+    for pattern, reason in QUALITY_SUMMARY_BLOCKED_PATTERNS:
+        if pattern.search(quality_summary_text):
+            issues.append(
+                {
+                    "path": quality_summary_path.relative_to(repo_root).as_posix(),
+                    "reason": reason,
+                }
+            )
+
+    crud_matrix_path = repo_root / "runs" / "current" / "evidence" / "quality" / "crud-matrix.md"
+    crud_matrix_text = read_text(crud_matrix_path)
+    for pattern, reason in CRUD_MATRIX_BLOCKED_PATTERNS:
+        if pattern.search(crud_matrix_text):
+            issues.append(
+                {
+                    "path": crud_matrix_path.relative_to(repo_root).as_posix(),
+                    "reason": reason,
+                }
+            )
+
+    return issues
 
 
 def parse_markdown_table(path: Path) -> list[dict[str, str]]:

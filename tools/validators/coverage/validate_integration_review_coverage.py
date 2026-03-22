@@ -9,9 +9,13 @@ if __package__ in {None, ""}:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from coverage.common import normalized_repo_root, read_text  # type: ignore[import-not-found]
+    from coverage.common import (  # type: ignore[import-not-found]
+        collect_quality_gate_evidence_issues,
+        normalized_repo_root,
+        read_text,
+    )
 else:
-    from .common import normalized_repo_root, read_text
+    from .common import collect_quality_gate_evidence_issues, normalized_repo_root, read_text
 
 
 REQUIRED_HEADINGS = ("## Story Coverage", "## Page Coverage", "## Route Coverage")
@@ -23,6 +27,7 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
         return [{"path": path.relative_to(repo_root).as_posix(), "reason": "missing integration review artifact"}]
     text = read_text(path)
     issues: list[dict[str, str]] = []
+    issues.extend(collect_quality_gate_evidence_issues(repo_root))
     for heading in REQUIRED_HEADINGS:
         if heading not in text:
             issues.append({"path": path.relative_to(repo_root).as_posix(), "reason": f"integration review is missing required section {heading}"})

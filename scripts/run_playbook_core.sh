@@ -1626,6 +1626,7 @@ qa_delivery_review_approved() {
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?qa_decision:[[:space:]]*(approved|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?run_sh_validation:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?basic_user_testing:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  grep -Eq '^[[:space:]]*(-[[:space:]]*)?workflow_discoverability:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?frontend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?backend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
   grep -Eq '^[[:space:]]*(-[[:space:]]*)?metadata_leakage:[[:space:]]*(none|pass-on-tested-surfaces)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1

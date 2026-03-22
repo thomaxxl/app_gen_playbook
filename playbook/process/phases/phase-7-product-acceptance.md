@@ -44,6 +44,11 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - review business-rule outcomes
 - review field visibility and editability
 - review search/filter/report behavior
+- fail acceptance if required CRUD or search flows depend on manual deep-link
+  entry instead of the delivered navigation and page actions
+- fail acceptance if a collection page only presents a teaser subset of rows
+  with no pagination/filter/search or onward create/edit/show path where the
+  product contract says the resource is supported
 - fail acceptance if DB-backed operator-visible or user-visible data that
   should be ordinary resource data is available only through custom summary
   endpoints instead of the approved SAFRS resource/relationship lane
@@ -82,6 +87,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   rather than only mentioning that previews existed, and the preview manifest
   carries Frontend, Architect, and Product Manager signoff
 - required CRUD paths are accepted based on evidence, not only page existence
+- required CRUD and search behavior is accepted based on discoverable user
+  flows, not only direct route reachability
 - required custom pages behave like product surfaces, not metadata viewers
 - the primary entry surface reads like a landing/hero page rather than a
   generic admin resource list
@@ -95,6 +102,8 @@ Acceptance fails when:
 - visible data conflicts with `sample-data.md`
 - unapproved demo, mock, sample, or starter rows remain visible
 - required CRUD paths are not proven
+- required CRUD or search support exists only through manual URL entry or a
+  hidden reviewer-only route
 - required custom pages are still metadata viewers
 - the first user-facing screen is a generic React-admin list/grid shell
 - user-facing pages still expose implementation or debug language

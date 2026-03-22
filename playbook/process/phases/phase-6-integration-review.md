@@ -31,9 +31,14 @@ readiness note in:
 - verify that API-backed frontend data retrieval uses the approved React-admin
   dataProvider layer instead of direct component-level fetch paths
 - verify frontend behavior against real backend data
+- verify required CRUD and search behavior from normal in-app navigation, not
+  only by typing direct deep links to list/show/form routes
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
   `screen-inventory.md`, and `custom-view-specs.md` when custom pages exist
+- reject collection surfaces that only present a fixed teaser subset of
+  records without the pagination, filter/search, and onward CRUD actions that
+  the run-owned product artifacts require
 - reject entry surfaces that drop users straight into a generated resource
   grid or generic React-admin datagrid instead of a real hero/landing page
 - reject user-facing pages that expose contract/debug/recovery copy instead of
@@ -146,6 +151,9 @@ readiness note in:
   missing frontend contract surface
 - the app is proven to boot and at least one generated list view is proven to
   render correct live data rather than only the initialized shell
+- required CRUD and search flows are discoverable from the delivered UI
+  without manual URL entry when the run-owned product artifacts mark them as
+  supported
 - required entry and custom pages are actual product surfaces, not contract,
   route, or recovery viewers
 - the first user-facing entry surface is a real landing/hero page, not a
@@ -181,6 +189,8 @@ readiness note in:
 Integration review fails when:
 
 - a required CRUD path was not proven
+- a required CRUD or search flow only worked through manual URL entry instead
+  of the delivered UI
 - the app only proved shell loading and not live data rendering
 - visible pages still read like internal shells
 - leftover unapproved demo, mock, or starter data is visible

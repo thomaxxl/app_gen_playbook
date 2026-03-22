@@ -8,7 +8,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from validators.coverage.compile_product_scope import compile_product_scope_payload
+from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
+from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
 from validators.coverage.validate_preview_coverage import collect_issues as collect_preview_coverage_issues
 from validators.coverage.validate_qa_review_coverage import collect_issues as collect_qa_review_coverage_issues
 
@@ -219,6 +221,66 @@ class CoverageValidatorTests(unittest.TestCase):
 
             route_issues = collect_frontend_route_coverage_issues(repo_root)
             self.assertEqual(route_issues, [])
+
+    def test_integration_review_coverage_fails_when_quality_evidence_is_still_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            write(
+                repo_root / "runs/current/artifacts/architecture/integration-review.md",
+                "\n".join(
+                    [
+                        "## Story Coverage",
+                        "",
+                        "## Page Coverage",
+                        "",
+                        "## Route Coverage",
+                        "",
+                    ]
+                ),
+            )
+            write(
+                repo_root / "runs/current/evidence/quality/quality-summary.md",
+                "# Quality Summary\n\n## Decision\n\nThe reconciled Phase 6 quality evidence pack is `blocked`.\n",
+            )
+            write(
+                repo_root / "runs/current/evidence/quality/crud-matrix.md",
+                "# CRUD Matrix\n\n## Gate C status\n\nCurrent CRUD evidence status: `blocked`.\n",
+            )
+
+            issues = collect_integration_review_coverage_issues(repo_root)
+            reasons = [issue["reason"] for issue in issues]
+            self.assertTrue(any("quality evidence pack is blocked" in reason for reason in reasons))
+            self.assertTrue(any("CRUD evidence is blocked" in reason for reason in reasons))
+
+    def test_acceptance_review_coverage_fails_when_quality_evidence_is_still_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            write(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "\n".join(
+                    [
+                        "## Story Coverage",
+                        "",
+                        "## Page Coverage",
+                        "",
+                        "## Route Coverage",
+                        "",
+                    ]
+                ),
+            )
+            write(
+                repo_root / "runs/current/evidence/quality/quality-summary.md",
+                "# Quality Summary\n\n## Decision\n\nThe reconciled Phase 6 quality evidence pack is `blocked`.\n",
+            )
+            write(
+                repo_root / "runs/current/evidence/quality/crud-matrix.md",
+                "# CRUD Matrix\n\n## Gate C status\n\nCurrent CRUD evidence status: `blocked`.\n",
+            )
+
+            issues = collect_acceptance_review_coverage_issues(repo_root)
+            reasons = [issue["reason"] for issue in issues]
+            self.assertTrue(any("quality evidence pack is blocked" in reason for reason in reasons))
+            self.assertTrue(any("CRUD evidence is blocked" in reason for reason in reasons))
 
 
 if __name__ == "__main__":

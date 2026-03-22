@@ -136,6 +136,12 @@ The CEO role MUST:
   `runs/current/evidence/ceo-delivery-validation.md`, and write
   `runs/current/orchestrator/delivery-approved.md` with an explicit
   `status: approved` metadata line
+- before approving successful delivery, fail closed if
+  `runs/current/evidence/quality/quality-summary.md` or
+  `runs/current/evidence/quality/crud-matrix.md` still says `blocked`, or if
+  `runs/current/orchestrator/run-status.json` still says `interrupted`
+- do not treat app boot, URL reachability, or reviewer-only deep-link proof as
+  sufficient delivery validation for required CRUD/search usability
 - keep every intervention visible in `runs/current/remarks.md` and the owned
   files it changes
 - hand control back to the normal owners as soon as the stall is cleared

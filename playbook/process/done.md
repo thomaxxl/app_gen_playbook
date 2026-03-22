@@ -71,6 +71,8 @@ A feature is done only when all of these are true:
 - QA can start the delivered app with `app/run.sh`, exercise basic user flows,
   and confirm that the frontend is not blank, crashed, or metadata-heavy and
   that the backend is not surfacing obvious runtime errors during those flows
+- required CRUD and search flows are discoverable from the delivered UI and do
+  not depend on reviewer-only deep links
 - all core-agent inboxes are empty
 - no core-agent inflight items remain
 - the dormant CEO lane is empty unless a stall intervention is still actively

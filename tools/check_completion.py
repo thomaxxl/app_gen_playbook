@@ -105,6 +105,7 @@ def qa_delivery_review_terminal(repo_root: Path) -> bool:
         re.search(r"(?im)^(?:-\s*)?qa_decision:\s*(approved|pass)\s*$", text),
         re.search(r"(?im)^(?:-\s*)?run_sh_validation:\s*(passed|pass)\s*$", text),
         re.search(r"(?im)^(?:-\s*)?basic_user_testing:\s*(passed|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?workflow_discoverability:\s*(passed|pass)\s*$", text),
         re.search(r"(?im)^(?:-\s*)?frontend_runtime_errors:\s*(none|pass)\s*$", text),
         re.search(r"(?im)^(?:-\s*)?backend_runtime_errors:\s*(none|pass)\s*$", text),
         re.search(r"(?im)^(?:-\s*)?metadata_leakage:\s*(none|pass-on-tested-surfaces)\s*$", text),
@@ -146,6 +147,35 @@ def active_role_queues_present(repo_root: Path) -> bool:
                 if lane_root.exists() and any(lane_root.glob("*.md")):
                     return True
     return False
+
+
+def collect_run_status_issues(repo_root: Path) -> list[dict[str, str]]:
+    path = repo_root / "runs" / "current" / "orchestrator" / "run-status.json"
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return [
+            artifact_blocker(
+                "invalid-run-status",
+                path,
+                repo_root,
+                "run-status.json is not valid JSON",
+            )
+        ]
+
+    status = str(payload.get("status", "")).strip().lower()
+    if status != "interrupted":
+        return []
+    return [
+        artifact_blocker(
+            "run-status-interrupted",
+            path,
+            repo_root,
+            "run-status.json still says interrupted; completion must fail closed until the run is resumed or explicitly completed",
+        )
+    ]
 
 
 def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
@@ -278,10 +308,9 @@ def ui_preview_validation_value(text: str, role: str) -> str:
 
 
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
-    if delivery_approval_terminal(repo_root) and not active_role_queues_present(repo_root):
-        return []
-
     blockers: list[dict[str, str]] = []
+
+    blockers.extend(collect_run_status_issues(repo_root))
 
     acceptance_review = (
         repo_root / "runs" / "current" / "artifacts" / "product" / "acceptance-review.md"

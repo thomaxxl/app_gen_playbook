@@ -348,10 +348,13 @@ The QA validation MUST include:
 - a `runs/current/evidence/qa-delivery-review.md` artifact
 - canonical pass fields in that artifact using the QA pass vocabulary
   (`qa_decision: pass`, `run_sh_validation: pass`,
-  `basic_user_testing: pass`, `frontend_runtime_errors: pass`,
+  `basic_user_testing: pass`, `workflow_discoverability: pass`,
+  `frontend_runtime_errors: pass`,
   `backend_runtime_errors: pass`, `metadata_leakage: pass-on-tested-surfaces`)
 - a real `app/run.sh` validation path
 - basic user testing against the live app
+- explicit confirmation that the required user flows were discoverable through
+  the delivered UI rather than only through manually typed deep links
 - explicit confirmation that the frontend is not blank, crashed, or still
   exposing metadata/debug shells
 - explicit confirmation that the backend did not surface obvious runtime
