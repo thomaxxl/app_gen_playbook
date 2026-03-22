@@ -19,6 +19,7 @@ import {
   Datagrid,
   DateField,
   DateInput,
+  ListContextProvider,
   Edit,
   FunctionField,
   List,
@@ -26,16 +27,17 @@ import {
   NumberField,
   NumberInput,
   ReferenceInput,
-  ReferenceManyField,
   Resource,
   SearchInput,
   Show,
   SimpleForm,
   TextField,
   TextInput,
+  useDataProvider,
+  useList,
   useRecordContext,
 } from "react-admin";
-import type { Schema } from "safrs-jsonapi-client";
+import type { SafrsDataProvider, Schema } from "safrs-jsonapi-client";
 
 import { useAdminSchema, useRawAdminYaml } from "./admin/schemaContext";
 import {
@@ -47,10 +49,14 @@ import {
   useResourceMeta,
 } from "./admin/resourceMetadata";
 import {
+  extractExecuteRecords,
+  getRecordRelationValues,
   getDefaultRelationshipTabIndex,
   getRelatedRecordLabel,
   RelatedRecordDialogLink,
+  resolveRelationshipExecuteRequest,
   SingleRelationshipTab,
+  sortRelatedRecords,
 } from "./relationshipUi";
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -475,15 +481,6 @@ function OverviewGrid({
   );
 }
 
-function buildRelationshipTarget(
-  relationship: ResourceRelationshipMeta,
-  delimiter: string,
-): string {
-  return relationship.fks.length === 1
-    ? relationship.fks[0]
-    : relationship.fks.join(relationship.compositeDelimiter ?? delimiter);
-}
-
 function isBackReferenceItem(
   item: DisplayItem,
   relationship: ResourceRelationshipMeta,
@@ -506,6 +503,8 @@ function ManyRelationshipTab({
   parentResource: string;
   relationship: ResourceRelationshipMeta;
 }) {
+  const dataProvider = useDataProvider() as SafrsDataProvider;
+  const record = useRecordContext<Record<string, unknown>>();
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
   const targetMeta = useMemo(
@@ -519,20 +518,106 @@ function ManyRelationshipTab({
         .slice(0, 8),
     [parentResource, relationship, targetMeta],
   );
-  const target = buildRelationshipTarget(relationship, schema.delimiter);
   const sortField = targetMeta.userKey ?? targetMeta.attributes[0]?.name ?? "id";
+  const executeRequest = useMemo(
+    () => resolveRelationshipExecuteRequest(schema, relationship),
+    [relationship, schema],
+  );
+  const parentId = record?.id;
+  const embeddedRows = useMemo(
+    () => (record ? getRecordRelationValues(record, relationship.name) : []),
+    [record, relationship.name],
+  );
+  const [rows, setRows] = useState<Record<string, unknown>[]>(
+    () => sortRelatedRecords(embeddedRows, sortField),
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (embeddedRows.length > 0) {
+      setRows(sortRelatedRecords(embeddedRows, sortField));
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    if (!executeRequest || parentId === undefined || parentId === null || parentId === "") {
+      setRows([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const load = async () => {
+      try {
+        const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
+          executeRequest.resource,
+          {
+            action: executeRequest.action,
+            id: parentId as string | number,
+            method: "GET",
+          },
+        );
+        if (!cancelled) {
+          setRows(sortRelatedRecords(extractExecuteRecords(routeResult.data), sortField));
+          setLoading(false);
+        }
+      } catch (nextError: unknown) {
+        if (!cancelled) {
+          setRows([]);
+          setLoading(false);
+          setError(nextError instanceof Error ? nextError.message : String(nextError));
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataProvider, embeddedRows, executeRequest, parentId, sortField]);
+
+  const listContext = useList<Record<string, unknown>>({
+    data: rows,
+    isPending: loading,
+    page: 1,
+    perPage: DEFAULT_PAGE_SIZE,
+    resource: relationship.targetResource,
+    sort: { field: sortField, order: "ASC" },
+  });
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <Typography color="error" sx={{ pt: 2 }}>
+        {error}
+      </Typography>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <Typography color="text.secondary" sx={{ pt: 2 }}>
+        No related records.
+      </Typography>
+    );
+  }
 
   return (
-    <ReferenceManyField
-      perPage={DEFAULT_PAGE_SIZE}
-      reference={relationship.targetResource}
-      sort={{ field: sortField, order: "ASC" }}
-      target={target}
-    >
+    <ListContextProvider value={listContext}>
       <Datagrid bulkActionButtons={false} rowClick="show">
         {items.map((item) => renderListField(item, schema))}
       </Datagrid>
-    </ReferenceManyField>
+    </ListContextProvider>
   );
 }
 

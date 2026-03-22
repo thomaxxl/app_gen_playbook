@@ -130,10 +130,6 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
                 "SimpleShowLayout\n",
             )
             write_file(
-                repo_root / "app/frontend/src/shared-runtime/admin/createSafrsJsonApiDataProvider.js",
-                "export function createSafrsJsonApiDataProvider() { return {}; }\n",
-            )
-            write_file(
                 repo_root / "app/frontend/tests/dataProvider.integration.test.ts",
                 "describe('provider', () => {})\n",
             )
@@ -167,12 +163,39 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             (repo_root / ".git").mkdir()
             write_file(
                 repo_root / "app/frontend/tests/smoke.e2e.spec.ts",
-                'test("observer routes load", async ({ page }) => { await page.goto("/app/#/overview"); });\n',
+                'test("generated app loads", async ({ page }) => { await page.goto("/app/"); });\n',
             )
 
             issues = collect_frontend_runtime_issues(repo_root)
             reasons = "\n".join(issue["reason"] for issue in issues)
             self.assertIn("generated Playwright smoke is missing relationship proof token", reasons)
+
+    def test_runtime_validator_rejects_reference_many_field_tomany_lane(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "app/frontend/src/shared-runtime/resourceRegistry.tsx",
+                "\n".join(
+                    (
+                        "function ShowContent() { return null; }",
+                        "function ManyRelationshipTab() { return null; }",
+                        "SingleRelationshipTab",
+                        "RelatedRecordDialogLink",
+                        "<Tabs",
+                        "useDataProvider(",
+                        "useList(",
+                        "<ListContextProvider",
+                        "resolveRelationshipExecuteRequest(",
+                        "extractExecuteRecords(",
+                        "ReferenceManyField",
+                    )
+                ),
+            )
+
+            issues = collect_frontend_runtime_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("ReferenceManyField", reasons)
 
 
 if __name__ == "__main__":

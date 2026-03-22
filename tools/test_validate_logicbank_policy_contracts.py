@@ -142,6 +142,43 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             self.assertIn("logic_row.log", reasons)
             self.assertIn("dedicated backend rules test file", reasons)
 
+    def test_artifact_validator_executes_runtime_verifier_when_backend_runtime_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            for rel, content in (
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
+                ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
+                ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
+                ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
+                ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
+                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
+                ("specs/references/logicbank/README.md", "verified-runtime-notes.md\nverify_logicbank_runtime_contract.py\n"),
+                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\nin-memory smoke transaction\nnested audit-row creation\n"),
+                (
+                    "tools/verify_logicbank_runtime_contract.py",
+                    "\n".join(
+                        (
+                            "import json",
+                            "print(json.dumps({'ok': False, 'failures': ['boom'], 'verified': True}))",
+                            "# Rule.early_row_event",
+                            "# logic_row.new_logic_row",
+                            "# logic_row.log",
+                            '# "verified"',
+                        )
+                    ),
+                ),
+            ):
+                write_file(repo_root / rel, content)
+
+            write_file(repo_root / "app/backend/.venv/bin/python", "# placeholder\n")
+
+            issues = collect_logicbank_artifact_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("runtime verifier reported failures", reasons)
+
 
 if __name__ == "__main__":
     unittest.main()

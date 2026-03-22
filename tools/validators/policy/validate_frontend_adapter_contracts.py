@@ -172,15 +172,17 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 "includePath",
             ],
             repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "relationshipUi.tsx.md": [
-                "resolveExecuteResource",
+                "resolveRelationshipExecuteRequest",
+                "relationshipRouteTemplate",
                 "dataProvider.execute",
                 "parent relationship route",
             ],
             repo_root / "templates" / "app" / "frontend" / "tests" / "smoke.e2e.spec.ts.md": [
-                "observer relationship surfaces resolve through dialog and show-tab paths",
-                "api/runs/${firstRun.id}/project",
-                'getByRole("tab", { name: /project/i })',
-                'getByRole("button", { name: /^EDIT$/i })',
+                "findRelationshipSmokeCandidate",
+                "/ui/admin/admin.yaml",
+                "generated relationship surfaces resolve through a show-tab path",
+                'getByRole("tab"',
+                "/show",
             ],
         },
         "missing frontend relationship-route contract input",
@@ -199,8 +201,9 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 )
             )
         for token in (
-            "resolveExecuteResource",
-            "action: relationship.name",
+            "resolveRelationshipExecuteRequest",
+            "relationshipRouteTemplate",
+            "action: executeRequest.action",
             "dataProvider.execute<",
             "RelatedRecordSummary",
             "SingleRelationshipTab",
@@ -246,6 +249,11 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
             "ManyRelationshipTab",
             "SingleRelationshipTab",
             "RelatedRecordDialogLink",
+            "useDataProvider",
+            "useList",
+            "ListContextProvider",
+            "resolveRelationshipExecuteRequest",
+            "extractExecuteRecords",
         ):
             if token not in runtime_code:
                 issues.append(
@@ -255,6 +263,14 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                         f"resource registry is missing relationship-tab runtime token: {token}",
                     )
                 )
+        if "ReferenceManyField" in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    registry_runtime,
+                    "resource registry still uses ReferenceManyField for tomany tabs instead of the canonical parent relationship route lane",
+                )
+            )
 
     return issues
 
@@ -348,6 +364,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
     if relationship_text:
         runtime_tokens = (
             "getRecordRelationValue(",
+            "getRecordRelationValues(",
+            "resolveRelationshipExecuteRequest(",
             "RelatedRecordSummary(",
             "SingleRelationshipTab(",
             "__included",
@@ -393,7 +411,11 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "SingleRelationshipTab",
             "RelatedRecordDialogLink",
             "<Tabs",
-            "ReferenceManyField",
+            "useDataProvider(",
+            "useList(",
+            "<ListContextProvider",
+            "resolveRelationshipExecuteRequest(",
+            "extractExecuteRecords(",
         ):
             if token not in registry_text:
                 issues.append(
@@ -411,23 +433,14 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
                     "generated resource registry still renders show pages through SimpleShowLayout instead of relationship-tab content",
                 )
             )
-
-    provider_runtime = repo_root / "app" / "frontend" / "src" / "shared-runtime" / "admin" / "createSafrsJsonApiDataProvider.js"
-    provider_text = _read(provider_runtime)
-    if provider_text:
-        for token in (
-            "async execute(resource, params",
-            "actionUrlFor(",
-            "normalizeJsonApiDocument(payload)",
-        ):
-            if token not in provider_text:
-                issues.append(
-                    _issue(
-                        repo_root,
-                        provider_runtime,
-                        f"generated frontend provider is missing execute/runtime token: {token}",
-                    )
+        if "ReferenceManyField" in registry_text:
+            issues.append(
+                _issue(
+                    repo_root,
+                    resource_registry,
+                    "generated resource registry still uses ReferenceManyField for tomany tabs instead of the canonical parent relationship route lane",
                 )
+            )
 
     tests_root = repo_root / "app" / "frontend" / "tests"
     tests_text, test_files = _combined_text(tests_root, "*.ts")
@@ -456,10 +469,10 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
     smoke_text = _read(smoke_test)
     if smoke_text:
         for token in (
-            "observer relationship surfaces resolve through dialog and show-tab paths",
-            "api/runs/${firstRun.id}/project",
-            'getByRole("button", { name: /^EDIT$/i })',
-            'getByRole("tab", { name: /project/i })',
+            "findRelationshipSmokeCandidate",
+            "/ui/admin/admin.yaml",
+            "generated relationship surfaces resolve through a show-tab path",
+            'getByRole("tab"',
             "/show",
         ):
             if token not in smoke_text:

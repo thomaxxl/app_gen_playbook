@@ -244,6 +244,9 @@ Required behavior:
 
 For `tomany` tabs:
 
+- the runtime MUST prefer the canonical parent relationship route derived from
+  relationship metadata and MUST NOT make a reverse child-resource FK query the
+  primary lane
 - the runtime MUST remove obvious back-reference columns that merely restate
   the parent relationship
 - the related list SHOULD sort by the target resource `user_key` when present

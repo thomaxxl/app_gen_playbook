@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
+import subprocess
+import sys
 
 
 def _relative(repo_root: Path, path: Path) -> str:
@@ -24,6 +27,33 @@ def _issue(repo_root: Path, path: Path, reason: str) -> dict[str, str]:
 
 def _normalized(text: str) -> str:
     return re.sub(r"\s+", " ", text)
+
+
+def _backend_runtime_ready(repo_root: Path) -> bool:
+    return (repo_root / "app" / "backend" / ".venv" / "bin" / "python").exists()
+
+
+def _run_logicbank_runtime_verifier(repo_root: Path, script_path: Path) -> str | None:
+    completed = subprocess.run(
+        [sys.executable, str(script_path), "--repo-root", str(repo_root), "--json"],
+        capture_output=True,
+        check=False,
+        cwd=repo_root,
+        text=True,
+    )
+    if completed.returncode != 0:
+        return f"LogicBank runtime verifier failed: {completed.stderr.strip() or completed.stdout.strip()}"
+
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return "LogicBank runtime verifier returned invalid JSON output"
+
+    if not payload.get("ok"):
+        failures = payload.get("failures") or []
+        return f"LogicBank runtime verifier reported failures: {failures}"
+
+    return None
 
 
 def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
@@ -261,6 +291,10 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
                         f"LogicBank verification script is missing executable smoke token: {token}",
                     )
                 )
+        if _backend_runtime_ready(repo_root):
+            verifier_issue = _run_logicbank_runtime_verifier(repo_root, verification_script)
+            if verifier_issue:
+                issues.append(_issue(repo_root, verification_script, verifier_issue))
     return issues
 
 

@@ -260,37 +260,31 @@ The smoke run must cover at least this flow:
    validation
 3. start the app on fixed ports
 4. wait for backend `/healthz` and frontend `/app/`
-5. open `/app/#/Home`
+5. open `/app/`
 6. fail on browser console errors, page errors, and failed same-origin
    network requests
 7. assert `/ui/admin/admin.yaml` returns `200`
-8. assert the Home sidebar entry is visible
-9. assert the Home page loads without the bootstrap-error or home-error
-10. assert the Home page shows a visible title, purpose statement, and primary
-    CTA
-11. assert the first meaningful visible section is a hero/landing surface
-    rather than a resource grid
-12. when mobile is in scope, switch to a narrow viewport and assert the
-    primary CTA remains discoverable
-13. if the app includes `Landing.tsx`, assert the landing page loads without
-   the bootstrap-error or landing-error screen
-14. assert the key seeded collection request returns `200`
-15. navigate to at least one generated resource route and verify a visible
-    seeded list-cell value renders from live backend data
-16. prove generated React-Admin resources are registered as direct `Admin`
-    children by verifying the resource route resolves to a list page rather
-    than a catch-all error route
-17. on at least one generated list route, open a relationship dialog from a
-    readable related label and verify the dialog summary renders
-18. on at least one generated show route, verify a relationship tab renders
-    for a related resource
-19. when the app relies on sparse relationship metadata, verify a `tomany`
-    relationship tab still loads rows through fallback inference
-20. retain trace, screenshot, and video on failure
-21. fail if the primary entry page or required custom pages read like
+8. assert the root page loads without the bootstrap-error or equivalent
+   schema/data-provider failure screen
+9. assert the entry view shows a visible heading or purpose cue instead of a
+   blank shell
+10. when mobile is in scope, switch to a narrow viewport and assert the entry
+    view remains usable
+11. navigate to at least one generated resource route and verify a visible
+    list-cell value renders from live backend data
+12. prove generated React-Admin resources are registered as direct `Admin`
+    children by verifying the resource route resolves to a list or show page
+    rather than a catch-all error route
+13. discover at least one generated show route with a relationship tab and
+    verify the tab renders related content
+14. when the app relies on sparse relationship metadata, verify a `tomany`
+    relationship tab still loads rows through the canonical parent
+    relationship lane or its documented fallback inference
+15. retain trace, screenshot, and video on failure
+16. fail if the primary entry page or required custom pages read like
     developer-facing contract/recovery shells rather than the UX artifacts they
     were supposed to implement
-22. fail if delivery page code bypasses the approved React-admin dataProvider
+17. fail if delivery page code bypasses the approved React-admin dataProvider
     layer for API-backed data retrieval
 
 When the run includes materially changed UI and stable browser execution is
@@ -355,6 +349,8 @@ If the app supports uploaded files:
 - one generated related label opens a dialog without triggering row navigation
 - one related-record dialog loads a summary plus `EDIT` and `VIEW`
 - one generated show route renders a `tomany` relationship tab
+- one generated `tomany` relationship tab proves that rows came from the
+  canonical parent relationship lane rather than a reverse-FK child query
 - one generated show route renders a `toone` relationship summary tab when the
   resource has such a relationship
 - when schema relationship metadata is sparse, one generated show route proves
