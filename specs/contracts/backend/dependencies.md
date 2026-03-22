@@ -20,7 +20,7 @@ Pinned packages:
 - `PyYAML==6.0.3`
 - `pytest==9.0.2`
 - `httpx==0.28.1`
-- `jsonapischema`
+- `jsonschema`
 - `safrs`
 
 Logic/rules dependency:
@@ -50,13 +50,13 @@ pip install \
   PyYAML==6.0.3 \
   pytest==9.0.2 \
   httpx==0.28.1 \
-  jsonapischema
+  jsonschema
 ```
 
 ## Notes
 
 - SAFRS should be installed as a normal pip package, not from git.
-- `jsonapischema` is part of the baseline backend dependency set and MUST be
+- `jsonschema` is part of the baseline backend dependency set and MUST be
   present in the same backend virtualenv the playbook uses for Python tooling.
 - LogicBank should be installed as the normal published pip package.
 - If a project needs stricter reproducibility, pin to a published PyPI release

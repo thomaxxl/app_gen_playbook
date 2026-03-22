@@ -139,7 +139,7 @@ backend_dependencies_ready() {
   local backend_python="$1"
   "$backend_python" - <<'PY' >/dev/null 2>&1
 import fastapi
-import jsonapischema
+import jsonschema
 import logic_bank
 import safrs
 import uvicorn
@@ -214,7 +214,7 @@ if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
 
   if ! backend_dependencies_ready "$BACKEND_VENV_DIR/bin/python"; then
     echo "Backend dependencies are incomplete in $BACKEND_VENV_DIR." >&2
-    echo "Expected fastapi, jsonapischema, logic_bank, safrs, and uvicorn to already be installed." >&2
+    echo "Expected fastapi, jsonschema, logic_bank, safrs, and uvicorn to already be installed." >&2
     exit 1
   fi
 

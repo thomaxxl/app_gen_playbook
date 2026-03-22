@@ -77,7 +77,7 @@ def check_backend(python_path: Path, errors: list[str]) -> None:
     command = [
         str(python_path),
         "-c",
-        "import fastapi, jsonapischema, logic_bank, safrs, uvicorn",
+        "import fastapi, jsonschema, logic_bank, safrs, uvicorn",
     ]
     try:
         completed = subprocess.run(
@@ -92,7 +92,7 @@ def check_backend(python_path: Path, errors: list[str]) -> None:
     if completed.returncode != 0:
         errors.append(
             "backend dependencies are incomplete in "
-            f"{python_path.parent.parent} (expected fastapi, jsonapischema, logic_bank, safrs, uvicorn)"
+            f"{python_path.parent.parent} (expected fastapi, jsonschema, logic_bank, safrs, uvicorn)"
         )
 
 

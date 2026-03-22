@@ -200,6 +200,8 @@ and SHOULD cover:
 
 - backend venv availability, materialization in `clean-install` mode, and
   required backend imports from that same venv
+  the prerequisite script SHOULD create or repair `app/backend/.venv` before
+  treating missing Python dependencies as a blocking failure in that mode
 - frontend `node_modules` availability
 - required repo-local skills are installed from
   `app_gen_playbook/skills/` into `app_gen_playbook/.codex/skills/`

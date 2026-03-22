@@ -145,7 +145,7 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             repo_root = Path(tmp)
             requirements_path = repo_root / "app" / "backend" / "requirements.txt"
             requirements_path.parent.mkdir(parents=True, exist_ok=True)
-            requirements_path.write_text("fastapi\njsonapischema\nsafrs\n", encoding="utf-8")
+            requirements_path.write_text("fastapi\njsonschema\nsafrs\n", encoding="utf-8")
             python_path = repo_root / "app" / "backend" / ".venv" / "bin" / "python"
             venv_dir = python_path.parent.parent
 
@@ -159,7 +159,7 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
                 if command[:4] == [str(python_path), "-m", "pip", "install"]:
                     return subprocess.CompletedProcess(command, 0, "", "")
                 if command[0] == str(python_path) and command[1] == "-c":
-                    self.assertIn("jsonapischema", command[2])
+                    self.assertIn("jsonschema", command[2])
                     return subprocess.CompletedProcess(command, 0, "", "")
                 raise AssertionError(f"unexpected command: {command}")
 
@@ -171,12 +171,47 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             self.assertTrue(python_path.exists())
             self.assertTrue((venv_dir / ".playbook-backend-prereqs.sha256").exists())
 
+    def test_check_backend_venv_repairs_existing_backend_venv_when_imports_fail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            requirements_path = repo_root / "app" / "backend" / "requirements.txt"
+            requirements_path.parent.mkdir(parents=True, exist_ok=True)
+            requirements_path.write_text("fastapi\njsonschema\nsafrs\n", encoding="utf-8")
+            python_path = repo_root / "app" / "backend" / ".venv" / "bin" / "python"
+            python_path.parent.mkdir(parents=True, exist_ok=True)
+            python_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            python_path.chmod(0o755)
+            calls: list[list[str]] = []
+            import_probe_calls = 0
+
+            def fake_run(args, capture_output=False, text=False, **kwargs):
+                nonlocal import_probe_calls
+                command = list(args)
+                calls.append(command)
+                if command[:4] == [str(python_path), "-m", "pip", "install"]:
+                    return subprocess.CompletedProcess(command, 0, "", "")
+                if command[0] == str(python_path) and command[1] == "-c":
+                    import_probe_calls += 1
+                    if import_probe_calls == 1:
+                        return subprocess.CompletedProcess(command, 1, "", "missing import")
+                    self.assertIn("jsonschema", command[2])
+                    return subprocess.CompletedProcess(command, 0, "", "")
+                raise AssertionError(f"unexpected command: {command}")
+
+            with unittest.mock.patch("check_execution_prereqs.subprocess.run", side_effect=fake_run):
+                result = check_execution_prereqs.check_backend_venv(repo_root)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("repaired backend venv dependencies", result.detail)
+            self.assertGreaterEqual(import_probe_calls, 2)
+            self.assertTrue(any(command[:4] == [str(python_path), "-m", "pip", "install"] for command in calls))
+
     def test_check_backend_venv_does_not_install_in_preprovisioned_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             requirements_path = repo_root / "app" / "backend" / "requirements.txt"
             requirements_path.parent.mkdir(parents=True, exist_ok=True)
-            requirements_path.write_text("fastapi\njsonapischema\nsafrs\n", encoding="utf-8")
+            requirements_path.write_text("fastapi\njsonschema\nsafrs\n", encoding="utf-8")
 
             with unittest.mock.patch.dict("os.environ", {"DEPENDENCY_PROVISIONING_MODE": "preprovisioned-reuse-only"}, clear=False):
                 with unittest.mock.patch("check_execution_prereqs.subprocess.run") as mock_run:

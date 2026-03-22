@@ -139,6 +139,7 @@ That prerequisite check MUST cover:
 
 - a usable backend Python venv, including clean-install creation/repair when
   allowed
+  with `app/backend/.venv` treated as the first local materialization target
 - local frontend `node_modules`
 - localhost port bind capability
 - Playwright screenshot capture capability

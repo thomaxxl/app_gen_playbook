@@ -131,7 +131,7 @@ deviation and the chosen workaround before continuing.
 
 - SAFRS: install as a normal pip package
 - LogicBank: install as a normal pip package
-- `jsonapischema`: install into the same backend virtualenv as the rest of the
+- `jsonschema`: install into the same backend virtualenv as the rest of the
   backend stack
 
 The playbook baseline does not recover a SAFRS pin from `examples/`. Each

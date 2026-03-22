@@ -753,7 +753,7 @@ PY
 
   if [[ -x "$backend_python" ]] && "$backend_python" - <<'PY' >/dev/null 2>&1
 import fastapi  # noqa: F401
-import jsonapischema  # noqa: F401
+import jsonschema  # noqa: F401
 import logic_bank  # noqa: F401
 import sqlalchemy  # noqa: F401
 import safrs  # noqa: F401

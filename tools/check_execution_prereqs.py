@@ -23,7 +23,7 @@ REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
 MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
 BACKEND_IMPORT_PROBE = (
-    "import fastapi, httpx, jsonapischema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
+    "import fastapi, httpx, jsonschema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
 )
 
 

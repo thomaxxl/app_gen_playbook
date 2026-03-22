@@ -145,7 +145,7 @@ backend_dependencies_ready() {
 
     "$BACKEND_PYTHON" - <<'PY' >/dev/null 2>&1
 import fastapi
-import jsonapischema
+import jsonschema
 import logic_bank
 import safrs
 import uvicorn
