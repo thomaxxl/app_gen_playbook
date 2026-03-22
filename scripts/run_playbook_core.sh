@@ -3798,17 +3798,15 @@ run_role_once() {
       "Expected context file is missing:"$'\n'"- $role_dir/context.md"
   fi
 
+  role_summary="$(extract_summary "$result_file")"
   if [[ "$runtime_role" == "ceo" ]]; then
     local remarks_after_fingerprint
     remarks_after_fingerprint="$(file_fingerprint "$RUN_ROOT/remarks.md")"
     if [[ "$remarks_after_fingerprint" == "$remarks_before_fingerprint" ]]; then
-      python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
-        --repo-root "$ROOT" \
-        --role "$runtime_role" \
-        --status interrupted >/dev/null
-      fatal_exit \
-        "role $runtime_role did not update remarks.md" \
-        "Expected the CEO intervention to append a diagnosis or unblock note to runs/current/remarks.md."
+      append_run_remark \
+        "CEO Turn Summary (Synthesized)" \
+        "Claimed message:\n- ${message_base}.md\n\nResult artifact:\n- ${result_file#$ROOT/}\n\nSummary:\n- ${role_summary:-no summary recorded}\n\nReason:\n- The CEO turn completed and archived its claimed work, but did not append a remarks entry directly, so the orchestrator synthesized this visibility note."
+      log "ceo-remarks-synthesized message=${message_base}.md"
     fi
     capture_ceo_progress_followup_request || true
   fi
@@ -3819,7 +3817,6 @@ run_role_once() {
     --status complete \
     --claimed-message "" >/dev/null
 
-  role_summary="$(extract_summary "$result_file")"
   log "agent-finish role=$runtime_role message=${message_base}.md summary=$role_summary"
   return 0
 }
