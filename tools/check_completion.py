@@ -16,6 +16,7 @@ from orchestrator_common import (
     resolve_repo_root,
 )
 from check_backend_orm_safrs import audit_backend_orm_safrs
+from validators.coverage.common import collect_quality_gate_evidence_issues
 from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
 from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
@@ -309,6 +310,7 @@ def ui_preview_validation_value(text: str, role: str) -> str:
 
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
+    delivery_terminal = delivery_approval_terminal(repo_root)
 
     blockers.extend(collect_run_status_issues(repo_root))
 
@@ -340,60 +342,75 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 )
             )
 
-    for issue in collect_frontend_route_coverage_issues(repo_root):
-        blockers.append(
-            {
-                "kind": "frontend-route-coverage",
-                "path": issue["path"],
-                "owner": "frontend",
-                "phase": "phase-5-parallel-implementation",
-                "reason": issue["reason"],
-            }
-        )
+    # After terminal delivery approval, stale phase-5 through phase-8 coverage
+    # policy debt must not reopen the completed run, but blocked quality-gate
+    # evidence remains a terminal blocker.
+    if delivery_terminal:
+        for issue in collect_quality_gate_evidence_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "quality-gate-evidence",
+                    "path": issue["path"],
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "reason": issue["reason"],
+                }
+            )
+    else:
+        for issue in collect_frontend_route_coverage_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "frontend-route-coverage",
+                    "path": issue["path"],
+                    "owner": "frontend",
+                    "phase": "phase-5-parallel-implementation",
+                    "reason": issue["reason"],
+                }
+            )
 
-    for issue in collect_preview_coverage_issues(repo_root):
-        blockers.append(
-            {
-                "kind": "preview-coverage",
-                "path": issue["path"],
-                "owner": "architect",
-                "phase": "phase-6-integration-review",
-                "reason": issue["reason"],
-            }
-        )
+        for issue in collect_preview_coverage_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "preview-coverage",
+                    "path": issue["path"],
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "reason": issue["reason"],
+                }
+            )
 
-    for issue in collect_integration_review_coverage_issues(repo_root):
-        blockers.append(
-            {
-                "kind": "integration-review-coverage",
-                "path": issue["path"],
-                "owner": "architect",
-                "phase": "phase-6-integration-review",
-                "reason": issue["reason"],
-            }
-        )
+        for issue in collect_integration_review_coverage_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "integration-review-coverage",
+                    "path": issue["path"],
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "reason": issue["reason"],
+                }
+            )
 
-    for issue in collect_acceptance_review_coverage_issues(repo_root):
-        blockers.append(
-            {
-                "kind": "acceptance-review-coverage",
-                "path": issue["path"],
-                "owner": "product_manager",
-                "phase": "phase-7-product-acceptance",
-                "reason": issue["reason"],
-            }
-        )
+        for issue in collect_acceptance_review_coverage_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "acceptance-review-coverage",
+                    "path": issue["path"],
+                    "owner": "product_manager",
+                    "phase": "phase-7-product-acceptance",
+                    "reason": issue["reason"],
+                }
+            )
 
-    for issue in collect_qa_review_coverage_issues(repo_root):
-        blockers.append(
-            {
-                "kind": "qa-review-coverage",
-                "path": issue["path"],
-                "owner": "qa",
-                "phase": "phase-8-qa-pre-delivery-validation",
-                "reason": issue["reason"],
-            }
-        )
+        for issue in collect_qa_review_coverage_issues(repo_root):
+            blockers.append(
+                {
+                    "kind": "qa-review-coverage",
+                    "path": issue["path"],
+                    "owner": "qa",
+                    "phase": "phase-8-qa-pre-delivery-validation",
+                    "reason": issue["reason"],
+                }
+            )
 
     for required_path, template_meta in required_run_artifact_paths(repo_root):
         owner = str(template_meta.get("owner", "")).strip()
