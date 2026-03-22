@@ -14,6 +14,8 @@ Use the files in this directory as follows:
   `verified-runtime-notes.md`
 - reproducible verification entrypoint:
   `../../tools/verify_logicbank_runtime_contract.py`
+  which now includes a real in-memory LogicBank smoke transaction rather than
+  source inspection alone
 
 For verified runtime behavior, use:
 

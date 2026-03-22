@@ -161,6 +161,19 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             self.assertIn("do not exercise dataProvider.execute", reasons)
             self.assertIn("frontend usability evidence does not mention reviewed relationship", reasons)
 
+    def test_runtime_validator_detects_missing_playwright_relationship_smoke(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "app/frontend/tests/smoke.e2e.spec.ts",
+                'test("observer routes load", async ({ page }) => { await page.goto("/app/#/overview"); });\n',
+            )
+
+            issues = collect_frontend_runtime_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("generated Playwright smoke is missing relationship proof token", reasons)
+
 
 if __name__ == "__main__":
     unittest.main()

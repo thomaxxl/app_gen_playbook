@@ -176,6 +176,12 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 "dataProvider.execute",
                 "parent relationship route",
             ],
+            repo_root / "templates" / "app" / "frontend" / "tests" / "smoke.e2e.spec.ts.md": [
+                "observer relationship surfaces resolve through dialog and show-tab paths",
+                "api/runs/${firstRun.id}/project",
+                'getByRole("tab", { name: /project/i })',
+                'getByRole("button", { name: /^EDIT$/i })',
+            ],
         },
         "missing frontend relationship-route contract input",
     )
@@ -445,6 +451,25 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
                     "generated frontend tests do not mention relationship dialog/tab coverage",
                 )
             )
+
+    smoke_test = tests_root / "smoke.e2e.spec.ts"
+    smoke_text = _read(smoke_test)
+    if smoke_text:
+        for token in (
+            "observer relationship surfaces resolve through dialog and show-tab paths",
+            "api/runs/${firstRun.id}/project",
+            'getByRole("button", { name: /^EDIT$/i })',
+            'getByRole("tab", { name: /project/i })',
+            "/show",
+        ):
+            if token not in smoke_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        smoke_test,
+                        f"generated Playwright smoke is missing relationship proof token: {token}",
+                    )
+                )
 
     usability = repo_root / "runs" / "current" / "evidence" / "frontend-usability.md"
     if _is_non_stub(usability):

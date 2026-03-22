@@ -203,6 +203,7 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "logic_row.new_logic_row(ModelClass)",
             "early_row_event",
             "after_flush_row_event",
+            "real in-memory smoke transaction",
         ],
         repo_root / "specs" / "references" / "logicbank" / "README.md": [
             "verified-runtime-notes.md",
@@ -213,6 +214,8 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "LogicBank.activate",
             "LogicRow.log",
             "LogicRow.new_logic_row",
+            "in-memory smoke transaction",
+            "nested audit-row creation",
         ],
     }
     for path, tokens in required_tokens.items():
@@ -247,6 +250,17 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
                 "LogicBank compatibility contract claims verified runtime behavior without a verification script",
             )
         )
+    else:
+        verification_script_text = _read(verification_script)
+        for token in ("Rule.early_row_event", "logic_row.new_logic_row", "logic_row.log", '"verified"'):
+            if token not in verification_script_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        verification_script,
+                        f"LogicBank verification script is missing executable smoke token: {token}",
+                    )
+                )
     return issues
 
 

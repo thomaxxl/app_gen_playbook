@@ -147,6 +147,9 @@ the backend runtime and are backed by:
 - `logic_row.new_logic_row(ModelClass)` takes a model class, returns a
   `LogicRow`, and is the preferred nested-row creation helper inside rule
   execution
+- the repo-maintained verifier now executes a real in-memory smoke transaction
+  that proves `Rule.copy(...)`, `early_row_event`, `logic_row.log(...)`, and a
+  nested `logic_row.new_logic_row(ModelClass).insert(...)` path together
 - for nested request/audit/allocation rows created during rule execution,
   prefer `logic_row.new_logic_row(ModelClass)` plus `.insert(reason="...")`
   instead of `session.add(...)` plus `flush()` inside the flush cycle

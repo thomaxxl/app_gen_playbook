@@ -25,6 +25,8 @@ of approved rules whose `Frontend Mirror` field is not `none` in:
 - `npm run test:e2e` succeeds
 - `npm run build` succeeds
 - built app loads under `/app/`
+- the Playwright smoke suite includes one live relationship-surface proof
+  against a generated record from the running API
 
 If dependency maintenance changes direct frontend versions during a run, the
 agent MUST sync those versions back into the playbook dependency contract and
@@ -77,6 +79,8 @@ frontend package template before treating the playbook baseline as current.
   relationship metadata and relationship routes when those exist
 - relationship-route behavior is proven on at least one representative
   related-record dialog or tab, not only described in prose
+- the relationship proof above runs in a browser against the generated app, not
+  only through unit tests or static token checks
 - the frontend does not require a custom endpoint merely to show DB-backed
   related data that SAFRS already exposes under the parent resource
 - custom SAFRS methods or raw JSON service calls use
@@ -224,6 +228,9 @@ The starter frontend MUST ship automated tests for:
   path preserves at least one representative scalar field in returned records
 - at least one representative `dataProvider.execute(resource, params)` proof for custom
   SAFRS methods or raw JSON service calls when the delivered app uses them
+- at least one browser-level smoke opens a generated related-record dialog or
+  show-page relationship tab and confirms related content renders from the
+  canonical SAFRS relationship path
 - Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`
 

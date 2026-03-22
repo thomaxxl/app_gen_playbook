@@ -89,10 +89,11 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
                 ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
                 ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
                 ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
-                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\n"),
+                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
                 ("specs/references/logicbank/README.md", "verified-runtime-notes.md\nverify_logicbank_runtime_contract.py\n"),
-                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\n"),
+                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\nin-memory smoke transaction\nnested audit-row creation\n"),
                 ("app/rules/rules.py", "from logic_bank.logic_bank import LogicBank\n\ndef declare_logic():\n    pass\n"),
+                ("tools/verify_logicbank_runtime_contract.py", "Rule.early_row_event\nlogic_row.new_logic_row\nlogic_row.log\n\"verified\"\n"),
             ):
                 write_file(repo_root / rel, content)
 
@@ -111,9 +112,9 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
                 ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
                 ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
                 ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
-                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\n"),
+                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
                 ("specs/references/logicbank/README.md", "verified-runtime-notes.md\nverify_logicbank_runtime_contract.py\n"),
-                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\n"),
+                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\nin-memory smoke transaction\nnested audit-row creation\n"),
             ):
                 write_file(repo_root / rel, content)
 

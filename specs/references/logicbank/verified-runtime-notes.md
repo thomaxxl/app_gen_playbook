@@ -20,6 +20,12 @@ The current verified baseline is:
   helper
 - `early_row_event` is the preferred response-bearing request-pattern lane
 - `after_flush_row_event` is the preferred fire-and-forget side-effect lane
+- the runtime verifier executes a real in-memory smoke transaction that proves:
+  - `Rule.copy(...)` snapshot propagation
+  - `early_row_event` callback invocation with `row`, `old_row`, and `logic_row`
+  - nested audit-row creation through `logic_row.new_logic_row(ModelClass)`
+    plus `.link(...).insert(...)`
+  - `logic_row.log(...)` output inside the same rule trace
 
 This note is a maintained baseline, not the source of truth. If it drifts from
 the installed package, refresh the verification script output and update the
