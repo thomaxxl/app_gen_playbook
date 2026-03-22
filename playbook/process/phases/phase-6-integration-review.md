@@ -36,6 +36,9 @@ readiness note in:
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories are the primary review obligations, while routes and
   pages are the proof surfaces attached to those stories
+- verify at least one independent-test path for every current-release story
+  cited as reviewed in the integration artifact, with routes/pages used only
+  as the visible proof surfaces for those story obligations
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
   `screen-inventory.md`, and `custom-view-specs.md` when custom pages exist
@@ -223,4 +226,5 @@ Integration review fails when:
   current-release story obligations they are supposed to satisfy
 - a required visible route, custom page, or Home CTA target from the UX scope
   contract is missing or drifted
-- the approved preview manifest omits required PM workspace routes
+- the approved preview manifest omits required preview surfaces tied to the
+  current-release story set

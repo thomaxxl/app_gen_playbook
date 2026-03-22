@@ -1,6 +1,6 @@
 id: gate-coverage-core
 title: Gate coverage requirements
-description: Executable rules for gate artifact completeness and QA route coverage.
+description: Executable rules for gate artifact completeness and story-first review coverage.
 requirements:
   - id: GATE-COV-001
     title: Integration review contains required coverage sections
@@ -21,9 +21,9 @@ requirements:
       - specs/architecture/integration-review.md
       - playbook/process/phases/phase-6-integration-review.md
     description: >
-      The integration review artifact must include structured actor, story,
-      story-type, scenario-depth, page, and route coverage sections with
-      concrete cited content.
+      The integration review artifact must include structured story-first
+      coverage sections with concrete cited content. Routes/pages are required
+      as supporting proof surfaces for the reviewed current-release stories.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_integration_review_coverage.py
@@ -55,9 +55,9 @@ requirements:
       - specs/product/acceptance-review.md
       - playbook/process/phases/phase-7-product-acceptance.md
     description: >
-      The acceptance review artifact must include structured actor, story,
-      story-type, scenario-depth, page, and route coverage sections with
-      concrete cited content.
+      The acceptance review artifact must include structured story-first
+      coverage sections with concrete cited content. Routes/pages are required
+      as supporting proof surfaces for the accepted current-release stories.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_acceptance_review_coverage.py
@@ -71,7 +71,7 @@ requirements:
     remediation: >
       Add the missing coverage sections and cite the relevant evidence.
   - id: GATE-COV-003
-    title: QA review documents live coverage for required PM workspace routes
+    title: QA review documents live coverage for required current-release story surfaces
     class: evidence_presence
     normative: MUST
     severity: error
@@ -89,8 +89,9 @@ requirements:
       - playbook/roles/qa.md
       - playbook/process/phases/phase-8-qa-pre-delivery-validation.md
     description: >
-      QA must document live testing for all required PM workspace routes, not
-      only the previously reviewed subset.
+      QA must document live testing for the required current-release stories
+      and the supporting routes/pages used to prove them, not only the
+      previously reviewed subset.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_qa_review_coverage.py

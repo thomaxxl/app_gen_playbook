@@ -89,16 +89,18 @@ The QA agent MUST:
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the
   screenshot files under `../../runs/current/evidence/ui-previews/qa/` before
   approving delivery
-- verify the required visible PM workspace routes from the current review plan,
-  not only whichever subset was already screenshot-reviewed earlier
+- verify the review-plan story obligations first and then verify the
+  supporting visible routes/pages from the same review plan, not only
+  whichever subset was already screenshot-reviewed earlier
 - cite the required current-release story IDs from the same review plan when
   recording what QA actually exercised
 - make sure the QA screenshot manifest and QA review both name the tested story
   IDs, not only the route paths
 - verify that required CRUD/search flows remain discoverable from those routes
   without reviewer-only URL entry
-- fail the review if required PM routes are missing, silently substituted by a
-  generic shell, or absent from the documented live QA route coverage
+- fail the review if a story-required visible route/page is missing, silently
+  substituted by a generic shell, or absent from the documented live QA
+  coverage
 - record the tested paths, observed results, and any blockers in
   `../../runs/current/evidence/qa-delivery-review.md`
 - cite `../../runs/current/evidence/ui-previews/qa-manifest.md` and the

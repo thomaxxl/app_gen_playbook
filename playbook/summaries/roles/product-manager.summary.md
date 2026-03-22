@@ -10,13 +10,18 @@ researching the topic, filling product gaps, and documenting domain best
 practices and sensible first-version defaults before handoff.
 
 `user-stories.md` is a hard contract, not a prose note. Product Manager must
-deliver an actor coverage matrix, normalized capability coverage, a typed
-story-core index, and detailed scenario coverage for every current-release
-`P1` story and every current-release workflow-heavy `P2` story before handoff.
+deliver an actor coverage matrix, mandatory normalized capability coverage, a
+typed story-core index, and a spec-kit-core scenario block for every
+current-release story before handoff. Extended playbook depth remains required
+for every current-release `P1` story and every workflow-heavy current-release
+`P2` story.
 
 Implementation mapping is not part of the story core. Product Manager must use
 `traceability-matrix.md` as the canonical bridge from stories into workflows,
 rules, pages, routes, permissions, sample data, and review evidence.
+
+`story-quality-checklist.md` is a real pre-handoff gate artifact, not an
+optional note.
 
 Always load:
 

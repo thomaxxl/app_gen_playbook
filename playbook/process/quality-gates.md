@@ -33,7 +33,8 @@ SAFRS-first API rule:
 
 The run is blocked if any of these are true:
 
-- a required CRUD path is broken on a must-support resource
+- a required CRUD path is broken on a supported resource that the current
+  release scope still claims to deliver
 - a required CRUD or search flow is only reachable by typing a deep link or
   editing the hash manually instead of through the delivered UI's normal
   navigation and actions
@@ -80,8 +81,9 @@ The run is blocked if any of these are true:
   blocked-environment path
 - captured UI preview screenshots exist but were not analyzed for visible
   content by Frontend, Architect, and Product Manager
-- a required `must` story, visible route, required custom page, or Home CTA
-  target is missing from delivered or reviewed coverage
+- a required current-release story, its supporting visible route or page
+  surface, a required custom page, or the primary CTA target is missing from
+  delivered or reviewed coverage
 - the independent QA delivery review is missing, still placeholder, or failed
 - final QA, CEO delivery approval, or boot-only validation is being used to
   override blocked quality evidence or an interrupted run state

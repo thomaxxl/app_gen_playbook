@@ -21,13 +21,13 @@ Required live coverage content for a pass review:
 
 - cite `runs/current/evidence/ui-previews/qa-manifest.md`
 - cite the saved screenshot files under `runs/current/evidence/ui-previews/qa/`
-- cite the required visible PM workspace routes from
+- cite the story-required visible routes/pages from
   `runs/current/evidence/quality/review-plan.json`
 - cite the required current-release story IDs from that same review plan
 - mention which reviewed screenshots support those story IDs
-- document route-by-route live QA coverage for those required routes
-- record whether any required route was missing, generically substituted, or
-  blocked by CTA drift
+- document the live route/page coverage used to prove those required stories
+- record whether any story-required route/page was missing, generically
+  substituted, or blocked by CTA drift
 
 Accepted pass values for final approval are:
 

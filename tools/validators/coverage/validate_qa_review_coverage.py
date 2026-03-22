@@ -55,14 +55,14 @@ def collect_issues(repo_root) -> list[dict[str, str]]:
             issues.append(
                 {
                     "path": qa_path.relative_to(repo_root).as_posix(),
-                    "reason": f"QA review does not document live coverage for required route {surface['route_id']} at {surface['path']}",
+                    "reason": f"QA review does not document live coverage for required story surface {surface['route_id']} at {surface['path']}",
                 }
             )
         if (surface["qa_live_test_required"] or surface["preview_required"]) and surface["path"] not in qa_manifest_text:
             issues.append(
                 {
                     "path": qa_manifest_path.relative_to(repo_root).as_posix(),
-                    "reason": f"QA screenshot manifest does not cover required route {surface['route_id']} at {surface['path']}",
+                    "reason": f"QA screenshot manifest does not cover required story surface {surface['route_id']} at {surface['path']}",
                 }
             )
     for story in plan.get("stories", plan.get("story_reviews", [])):

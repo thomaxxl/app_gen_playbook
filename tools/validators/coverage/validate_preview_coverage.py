@@ -35,7 +35,7 @@ def collect_issues(repo_root) -> list[dict[str, str]]:
             issues.append(
                 {
                     "path": manifest_path.relative_to(repo_root).as_posix(),
-                    "reason": f"preview manifest is missing required reviewed route {surface['route_id']} at {surface['path']}",
+                    "reason": f"preview manifest is missing required reviewed story surface {surface['route_id']} at {surface['path']}",
                 }
             )
     for story in plan.get("stories", plan.get("story_reviews", [])):

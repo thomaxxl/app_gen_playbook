@@ -11,7 +11,8 @@ Turn business intent into an implementable product definition.
 - write user stories or scenarios
 - build an actor-by-capability coverage matrix instead of a flat story list
 - normalize that breadth into a `Capability Coverage` table keyed by actor and
-  capability band
+  capability band and treat that normalized table as the canonical breadth
+  ledger
 - classify every story with the required story-type taxonomy
 - research domain best practices and standard workflow expectations when the
   brief is incomplete or silent
@@ -26,8 +27,11 @@ Turn business intent into an implementable product definition.
 - map every required current-release story to workflows, rules, resources,
   pages, routes, permissions, sample data, and acceptance IDs in
   `traceability-matrix.md`
-- record detailed scenario coverage for every current-release `P1` story and
-  every current-release workflow-heavy `P2` story
+- record a spec-kit-core scenario block for every current-release story
+- record extended scenario-depth coverage for every current-release `P1` story
+  and every current-release workflow-heavy `P2` story
+- complete `story-quality-checklist.md` as the required pre-handoff quality
+  pass before Architecture starts from the Product package
 - record assumptions and unresolved questions explicitly
 - replace brief-level gaps with researched product decisions, explicit
   conventions, or clearly documented assumptions before handoff
@@ -77,8 +81,11 @@ Turn business intent into an implementable product definition.
 - every primary actor has explicit capability coverage in `user-stories.md`
 - every current-release story has explicit priority, why this priority, and an
   independent test
-- every required detailed story includes happy path, alternate path, negative
-  or validation path, empty-state expectation, and permission context
-- `story-quality-checklist.md` records whether the current-release story set is
-  concrete, testable, and free of hidden implementation leakage
+- every current-release story has a spec-kit-core story block with acceptance
+  scenarios and edge cases
+- every higher-depth story includes happy path, alternate path, negative or
+  validation path, empty-state expectation, and permission context
+- `story-quality-checklist.md` is complete, non-placeholder, and records
+  whether the current-release story set is concrete, testable, breadth-complete,
+  and free of hidden implementation leakage
 - the product package is marked `ready-for-handoff` or `approved`

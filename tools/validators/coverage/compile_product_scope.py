@@ -173,6 +173,8 @@ REQUIRED_STORY_BLOCK_FIELDS = (
     "**Independent Test**:",
     "**Acceptance Scenarios**:",
     "**Edge Cases**:",
+)
+EXTENDED_STORY_BLOCK_FIELDS = (
     "Context / trigger:",
     "Preconditions:",
     "Happy path:",
@@ -285,41 +287,52 @@ def _is_current_release(value: str) -> bool:
     return normalized in {"R1", "CURRENT", "NOW", "MVP"} or normalized.startswith("R1")
 
 
-def _detail_required(priority: str, delivery_class: str, release: str, story_type: str) -> bool:
+def _story_block_required(release: str) -> bool:
+    return _is_current_release(release)
+
+
+def _detail_required(priority: str, release: str, story_type: str) -> bool:
     current_release = _is_current_release(release)
     if priority == "P1":
         return True
-    if priority == "P2":
-        return current_release or story_type in WORKFLOW_HEAVY_STORY_TYPES
-    if delivery_class == "must" and current_release:
+    if priority == "P2" and current_release and story_type in WORKFLOW_HEAVY_STORY_TYPES:
         return True
     return False
 
 
-def _parse_story_detail_section(detail_text: str, story_id: str) -> tuple[dict[str, Any], list[str]]:
+def _parse_story_detail_section(
+    detail_text: str,
+    story_id: str,
+    *,
+    extended_required: bool,
+) -> tuple[dict[str, Any], list[str]]:
     issues: list[str] = []
     parsed: dict[str, Any] = {
         "acceptance_scenario_count": 0,
         "edge_case_count": 0,
     }
     if not detail_text:
-        return parsed, [f"{story_id}: missing required detailed story section"]
+        return parsed, [f"{story_id}: missing required current-release story block"]
     for marker in REQUIRED_STORY_BLOCK_FIELDS:
         if marker not in detail_text:
-            issues.append(f"{story_id}: detailed story section is missing '{marker}'")
+            issues.append(f"{story_id}: current-release story block is missing '{marker}'")
+    if extended_required:
+        for marker in EXTENDED_STORY_BLOCK_FIELDS:
+            if marker not in detail_text:
+                issues.append(f"{story_id}: higher-depth story block is missing '{marker}'")
 
     given_count = detail_text.count("**Given**")
     when_count = detail_text.count("**When**")
     then_count = detail_text.count("**Then**")
     parsed["acceptance_scenario_count"] = min(given_count, when_count, then_count)
     if parsed["acceptance_scenario_count"] <= 0:
-        issues.append(f"{story_id}: detailed story section is missing a concrete Given / When / Then acceptance scenario")
+        issues.append(f"{story_id}: current-release story block is missing a concrete Given / When / Then acceptance scenario")
 
     edge_cases_section = detail_text.split("**Edge Cases**:", 1)
     if len(edge_cases_section) == 2:
         parsed["edge_case_count"] = len(re.findall(r"(?m)^\s*-\s+\S", edge_cases_section[1]))
     if parsed["edge_case_count"] <= 0:
-        issues.append(f"{story_id}: detailed story section does not list any edge cases")
+        issues.append(f"{story_id}: current-release story block does not list any edge cases")
 
     why_priority_match = re.search(r"\*\*Why this priority\*\*:\s*(.+)", detail_text)
     parsed["why_priority"] = why_priority_match.group(1).strip() if why_priority_match else ""
@@ -342,14 +355,13 @@ def _parse_user_story_catalog(
     detail_sections = extract_child_sections(detail_text, 3) if detail_text else {}
 
     issues.extend(_header_issues(coverage_matrix, f"{path.as_posix()} coverage matrix", COVERAGE_MATRIX_COLUMNS))
-    if capability_coverage:
-        issues.extend(
-            _header_issues(
-                capability_coverage,
-                f"{path.as_posix()} capability coverage",
-                CAPABILITY_COVERAGE_COLUMNS,
-            )
+    issues.extend(
+        _header_issues(
+            capability_coverage,
+            f"{path.as_posix()} capability coverage",
+            CAPABILITY_COVERAGE_COLUMNS,
         )
+    )
     issues.extend(
         _header_issues(
             story_index,
@@ -476,35 +488,34 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 }
             )
 
-    if capability_coverage_rows:
-        normalized_capability_coverage = []
-        capability_index = {}
-        for row in capability_coverage_rows:
-            actor = row.get("Actor", "").strip()
-            capability_band = row.get("Capability Band", "").strip()
-            story_ids = parse_csv_values(row.get("Covered by Story IDs", ""))
-            if actor:
-                required_actors.add(actor)
-            if not actor or not capability_band:
-                issues.append("Capability Coverage rows require Actor and Capability Band")
-                continue
-            if capability_band not in CAPABILITY_BANDS:
-                issues.append(f"{actor}: unsupported capability band {capability_band}")
-            if not story_ids:
-                issues.append(f"{actor} / {capability_band}: capability coverage row is missing Story IDs")
-            capability_index[(actor, capability_band)] = list(story_ids)
-            normalized_capability_coverage.append(
-                {
-                    "actor": actor,
-                    "capability_band": capability_band,
-                    "covered_by_story_ids": list(story_ids),
-                }
-            )
-        for row in coverage_matrix_payload:
-            actor = row["actor"]
-            for band, flag in row["capability_bands"].items():
-                if flag == "yes" and (actor, band) not in capability_index:
-                    issues.append(f"{actor}: capability coverage is missing normalized row for {band}")
+    normalized_capability_coverage = []
+    capability_index = {}
+    for row in capability_coverage_rows:
+        actor = row.get("Actor", "").strip()
+        capability_band = row.get("Capability Band", "").strip()
+        story_ids = parse_csv_values(row.get("Covered by Story IDs", ""))
+        if actor:
+            required_actors.add(actor)
+        if not actor or not capability_band:
+            issues.append("Capability Coverage rows require Actor and Capability Band")
+            continue
+        if capability_band not in CAPABILITY_BANDS:
+            issues.append(f"{actor}: unsupported capability band {capability_band}")
+        if not story_ids:
+            issues.append(f"{actor} / {capability_band}: capability coverage row is missing Story IDs")
+        capability_index[(actor, capability_band)] = list(story_ids)
+        normalized_capability_coverage.append(
+            {
+                "actor": actor,
+                "capability_band": capability_band,
+                "covered_by_story_ids": list(story_ids),
+            }
+        )
+    for row in coverage_matrix_payload:
+        actor = row["actor"]
+        for band, flag in row["capability_bands"].items():
+            if flag == "yes" and (actor, band) not in capability_index:
+                issues.append(f"{actor}: capability coverage is missing normalized row for {band}")
 
     story_rows: list[dict[str, Any]] = []
     story_index_by_id: dict[str, dict[str, Any]] = {}
@@ -530,7 +541,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         why_priority = row.get("Why this priority", "").strip()
         independent_test = row.get("Independent Test", "").strip()
         current_release = _is_current_release(release)
-        detail_required = _detail_required(priority, delivery_class, release, story_type)
+        story_block_required = _story_block_required(release)
+        detail_required = _detail_required(priority, release, story_type)
         inline_traceability = {
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
             "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
@@ -543,11 +555,15 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         }
         detail_key = next((key for key in detail_sections if key.startswith(story_id)), "")
         detail_text = detail_sections.get(detail_key, "")
-        detail_metrics, detail_issues = _parse_story_detail_section(detail_text, story_id) if detail_required else (
+        detail_metrics, detail_issues = _parse_story_detail_section(
+            detail_text,
+            story_id,
+            extended_required=detail_required,
+        ) if story_block_required else (
             {"acceptance_scenario_count": 0, "edge_case_count": 0, "why_priority": "", "independent_test": ""},
             [],
         )
-        if detail_required:
+        if story_block_required:
             issues.extend(detail_issues)
 
         story_payload = {
@@ -562,6 +578,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             "why_priority": why_priority,
             "independent_test": independent_test,
             "current_release": current_release,
+            "story_block_required": story_block_required,
             "detail_required": detail_required,
             "acceptance_scenario_count": detail_metrics.get("acceptance_scenario_count", 0),
             "edge_case_count": detail_metrics.get("edge_case_count", 0),
@@ -579,7 +596,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         if not actor:
             issues.append(f"{story_id}: actor is required in story index")
         if priority not in {"P1", "P2", "P3"}:
-            issues.append(f"{story_id}: priority must be P1, P2, or P3 (legacy must/should/could still accepted during transition)")
+            issues.append(f"{story_id}: priority must be P1, P2, or P3")
         if story_type not in ALLOWED_STORY_TYPES:
             issues.append(f"{story_id}: unsupported story type {story_type or '<blank>'}")
         if not story_statement:
@@ -589,7 +606,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         if not independent_test:
             issues.append(f"{story_id}: independent test is required in story index")
 
-        if detail_required:
+        if story_block_required:
             if detail_metrics.get("why_priority") and why_priority and detail_metrics["why_priority"] != why_priority:
                 issues.append(f"{story_id}: why this priority drift between story index and detailed story block")
             if detail_metrics.get("independent_test") and independent_test and detail_metrics["independent_test"] != independent_test:
@@ -706,6 +723,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "preview_required": trace_row["preview_required"],
                 "qa_live_required": trace_row["qa_live_required"],
                 "acceptance_owner": trace_row["acceptance_owner"],
+                "story_block_required": story["story_block_required"],
                 "detail_required": story["detail_required"],
                 "required_checks": list(SCENARIO_CHECKS) if story["detail_required"] else [],
                 "acceptance_scenario_count": story["acceptance_scenario_count"],
@@ -733,7 +751,6 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
 
     payload = {
         "current_release_stories": current_release_story_rows,
-        "must_stories": current_release_story_rows,
         "coverage_matrix": coverage_matrix_payload,
         "capability_coverage": normalized_capability_coverage,
         "story_index": story_rows,

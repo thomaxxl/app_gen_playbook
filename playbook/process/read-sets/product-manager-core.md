@@ -10,6 +10,8 @@ Required startup reads:
 - `../capability-loading.md`
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/product/README.md`
+- `../../../specs/product/story-quality-checklist.md`
+- `../../../specs/product/spec-kit-crosswalk.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 

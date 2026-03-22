@@ -36,7 +36,8 @@ def generate_review_plan_payload(repo_root: Path) -> tuple[dict[str, Any], list[
                 "architect_review_required": True,
                 "product_review_required": True,
                 "qa_live_test_required": any(story.get("qa_live_required") for story in mapped_story_reviews),
-                "sample_depth": "visible-route",
+                "sample_depth": "supporting-surface",
+                "story_primary": True,
                 "story_ids": [story["story_id"] for story in mapped_story_reviews],
                 "story_types": sorted({story["story_type"] for story in mapped_story_reviews if story.get("story_type")}),
                 "required_checks": sorted(

@@ -25,6 +25,9 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories define what must be accepted, and routes/pages are
   the visible proof surfaces attached to those stories
+- verify the cited independent test for each current-release story the
+  acceptance artifact claims is satisfied, using routes/pages as supporting
+  evidence rather than as the primary unit of scope
 - review custom pages
 - compare the actual entry page and required custom pages against
   `runs/current/artifacts/ux/landing-strategy.md`,

@@ -153,17 +153,17 @@ def seed_scope(repo_root: Path) -> None:
 
 
 class CoverageValidatorTests(unittest.TestCase):
-    def test_compile_product_scope_requires_traceability_for_must_stories(self) -> None:
+    def test_compile_product_scope_requires_traceability_for_current_release_stories(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             seed_scope(repo_root)
             payload, issues = compile_product_scope_payload(repo_root)
             self.assertEqual(issues, [])
-            self.assertEqual(len(payload["must_stories"]), 2)
+            self.assertEqual(len(payload["current_release_stories"]), 2)
             self.assertEqual(payload["required_actor_coverage"], ["Approver", "Requester"])
             self.assertIn("approval", payload["story_type_catalog"])
 
-    def test_compile_product_scope_fails_when_must_story_lacks_required_detail(self) -> None:
+    def test_compile_product_scope_fails_when_current_release_story_lacks_required_detail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             seed_scope(repo_root)
@@ -173,7 +173,48 @@ class CoverageValidatorTests(unittest.TestCase):
                 story_text.replace("Empty-state expectation: Empty queue messaging is visible.\n", ""),
             )
             _, issues = compile_product_scope_payload(repo_root)
-            self.assertTrue(any("US-004: detailed story section is missing 'Empty-state expectation:'" in issue for issue in issues))
+            self.assertTrue(any("US-004: higher-depth story block is missing 'Empty-state expectation:'" in issue for issue in issues))
+
+    def test_compile_product_scope_requires_capability_coverage_table(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
+            capability_section = (
+                "## Capability Coverage\n\n"
+                "| Actor | Capability Band | Covered by Story IDs |\n"
+                "| --- | --- | --- |\n"
+                "| Requester | Discover/Search | US-001 |\n"
+                "| Requester | Inspect/Detail | US-001 |\n"
+                "| Approver | Inspect/Detail | US-004 |\n"
+                "| Approver | Workflow/Approval | US-004 |\n"
+                "| Approver | Exception/Recovery | US-004 |\n\n"
+            )
+            write(
+                repo_root / "runs/current/artifacts/product/user-stories.md",
+                story_text.replace(capability_section, ""),
+            )
+
+            _, issues = compile_product_scope_payload(repo_root)
+            self.assertTrue(any("capability coverage is missing or empty" in issue for issue in issues))
+
+    def test_compile_product_scope_requires_story_core_block_for_each_current_release_story(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
+            story_text = story_text.replace(
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. | Pending approvals are the control point before work can continue. | Open one pending approval, approve or reject it, and confirm the queue and audit trail update correctly. |\n",
+                "| US-004 | Approver reviews pending request | Approver | P2 | should | R1 | reporting-search | As an approver, I review pending approvals and record a decision. | Pending approvals are the control point before work can continue. | Open one pending approval, approve or reject it, and confirm the queue and audit trail update correctly. |\n",
+            )
+            start = story_text.index("### US-004 - Approver reviews pending request (Priority: P1)")
+            write(
+                repo_root / "runs/current/artifacts/product/user-stories.md",
+                story_text[:start].rstrip() + "\n",
+            )
+
+            _, issues = compile_product_scope_payload(repo_root)
+            self.assertTrue(any("US-004: missing required current-release story block" in issue for issue in issues))
 
     def test_frontend_route_coverage_fails_on_missing_required_route_and_wrong_cta(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -191,7 +232,7 @@ class CoverageValidatorTests(unittest.TestCase):
             )
             issues = collect_frontend_route_coverage_issues(repo_root)
             reasons = [issue["reason"] for issue in issues]
-            self.assertTrue(any("missing required visible route N007" in reason for reason in reasons))
+            self.assertTrue(any("missing required story-supporting route N007" in reason for reason in reasons))
             self.assertTrue(any("Home primary CTA target drift" in reason for reason in reasons))
 
     def test_preview_coverage_fails_when_manifest_reviews_subset_only(self) -> None:

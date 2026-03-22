@@ -1,9 +1,9 @@
 id: product-scope-core
 title: Product scope coverage requirements
-description: Executable rules for story-core completeness, traceability coverage, and delivered route/page completeness.
+description: Executable rules for story-core completeness, mandatory capability coverage, traceability alignment, and delivered story-surface completeness.
 requirements:
   - id: PROD-SCOPE-001
-    title: Product story scope, traceability, and required routes stay aligned
+    title: Product story scope, traceability, and supporting surfaces stay aligned
     class: evidence_presence
     normative: MUST
     severity: error
@@ -34,13 +34,15 @@ requirements:
       - playbook/process/phases/phase-7-product-acceptance.md
     description: >
       The compiled product scope must stay valid from user stories through
-      traceability, and the required visible PM workspace routes and Home CTA
-      targets must be present in the delivered frontend.
+      traceability. Current-release stories and independent-test obligations
+      are primary; visible routes/pages and CTA targets are the supporting
+      proof surfaces that must remain aligned with that story scope.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_frontend_route_coverage.py
     evidence:
       required_files:
+        - runs/current/artifacts/product/story-quality-checklist.md
         - runs/current/evidence/quality/coverage-report.md
     exceptions:
       allowed: false

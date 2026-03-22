@@ -155,16 +155,16 @@ validators:
     callable: collect_issues
     path_field: path
     message_field: reason
-    summary_pass: frontend route coverage passed
-    summary_fail_template: "{count} frontend coverage issue(s)"
+    summary_pass: product story scope coverage passed
+    summary_fail_template: "{count} product story-scope issue(s)"
   tools/validators/coverage/validate_preview_coverage.py:
     adapter: issue_list
     module: validators.coverage.validate_preview_coverage
     callable: collect_issues
     path_field: path
     message_field: reason
-    summary_pass: preview coverage passed
-    summary_fail_template: "{count} preview coverage issue(s)"
+    summary_pass: preview story-surface coverage passed
+    summary_fail_template: "{count} preview story-surface issue(s)"
   tools/validators/coverage/validate_integration_review_coverage.py:
     adapter: issue_list
     module: validators.coverage.validate_integration_review_coverage
@@ -187,8 +187,8 @@ validators:
     callable: collect_issues
     path_field: path
     message_field: reason
-    summary_pass: QA review coverage passed
-    summary_fail_template: "{count} QA review coverage issue(s)"
+    summary_pass: QA story coverage passed
+    summary_fail_template: "{count} QA story coverage issue(s)"
   tools/validators/policy/validate_delivery_approval.py:
     adapter: issue_list
     module: validators.policy.validate_delivery_approval

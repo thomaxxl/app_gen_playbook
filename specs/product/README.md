@@ -26,11 +26,15 @@ Rules:
 - `story-quality-checklist.md` is the Product-owned readability/quality pass
   over the story catalog. It is not a replacement for the story compiler, but
   it records whether current-release stories are concrete, testable, and free
-  of hidden implementation leakage.
+  of hidden implementation leakage, and it is a required pre-handoff Phase 1
+  artifact.
+- `spec-kit-crosswalk.md` documents how the playbook's split product artifacts
+  map onto the future spec-kit shape so later interop work does not become
+  guesswork.
 - routing-first agents SHOULD start from the Product Manager summary and task
   bundle before loading individual template files
 
-Template files:
+Template and reference files:
 
 - `input-interpretation.md`
 - `research-notes.md`
@@ -44,6 +48,7 @@ Template files:
 - `custom-pages.md`
 - `traceability-matrix.md`
 - `story-quality-checklist.md`
+- `spec-kit-crosswalk.md`
 - `acceptance-criteria.md`
 - `sample-data.md`
 - `assumptions-and-open-questions.md`

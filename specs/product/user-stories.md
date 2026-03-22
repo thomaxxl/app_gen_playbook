@@ -42,13 +42,13 @@ Canonical story priority is:
 - `P2` = current-release non-core or next-in-line story
 - `P3` = later-release or stretch story
 
-If the run still needs commitment language, add:
+If the run needs commitment language, add:
 
 - `Delivery Class`: `must`, `should`, or `could`
 
-For transition compatibility, the compiler still accepts legacy
-`must`/`should`/`could` values in the `Priority` column, but new artifacts
-SHOULD use `P1`/`P2`/`P3` and keep commitment language in `Delivery Class`.
+New artifacts MUST use `P1`/`P2`/`P3` in the `Priority` column and keep
+commitment language in `Delivery Class`. Do not put `must`/`should`/`could`
+directly in the `Priority` column for new story catalogs.
 
 ## Story type taxonomy
 
@@ -80,9 +80,9 @@ Matrix` heading. Use `yes` or `no` values and list the covering story IDs in
 
 ## Capability Coverage
 
-The real artifact SHOULD include this normalized table under the
-`## Capability Coverage` heading and treat it as the machine-validated source
-for actor/capability breadth coverage.
+The real artifact MUST include this normalized table under the
+`## Capability Coverage` heading. This is the canonical machine-validated
+source for actor/capability breadth coverage.
 
 | Actor | Capability Band | Covered by Story IDs |
 | --- | --- | --- |
@@ -91,9 +91,9 @@ for actor/capability breadth coverage.
 | Approver | Workflow/Approval | US-010 |
 | Approver | Exception/Recovery | US-011 |
 
-If the normalized table is temporarily missing, the compiler will derive a
-fallback from the coarse coverage matrix during the transition window. New
-artifacts SHOULD include both tables.
+The coarse `Coverage Matrix` and the normalized `Capability Coverage` table
+must agree. The normalized table is authoritative when the compiler audits
+breadth coverage.
 
 ## Story Index
 
@@ -115,11 +115,10 @@ Rules:
 ## User Scenarios & Testing
 
 The real artifact MUST include a `### <Story ID> - <short title>` subsection
-for every current-release `P1` story and every current-release workflow-heavy
-`P2` story. Each required story block MUST be a spec-kit-compatible superset
-of the playbook depth fields.
+for every current-release story. Every current-release story block MUST be a
+spec-kit-compatible core record of the user journey and independent test.
 
-Every required story block MUST include:
+Every current-release story block MUST include:
 
 - `**Actor**:`
 - `**Story Type**:`
@@ -128,6 +127,17 @@ Every required story block MUST include:
 - `**Independent Test**:`
 - `**Acceptance Scenarios**:`
 - `**Edge Cases**:`
+
+Each `Acceptance Scenarios` section MUST include at least one concrete
+`Given / When / Then` scenario.
+
+Higher-depth story blocks are required for:
+
+- every current-release `P1` story
+- every current-release workflow-heavy `P2` story
+
+Higher-depth story blocks MUST also include:
+
 - `Context / trigger:`
 - `Preconditions:`
 - `Happy path:`
@@ -138,9 +148,6 @@ Every required story block MUST include:
 - `Audit / notification expectation:`
 - `Non-goals:`
 - `Required evidence:`
-
-Each `Acceptance Scenarios` section MUST include at least one concrete
-`Given / When / Then` scenario.
 
 Worked example:
 

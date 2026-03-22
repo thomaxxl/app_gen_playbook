@@ -16,6 +16,7 @@ required_artifacts:
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/product/custom-pages.md
+  - runs/current/artifacts/product/story-quality-checklist.md
   - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/architecture/capability-profile.md

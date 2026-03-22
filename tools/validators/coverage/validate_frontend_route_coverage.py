@@ -33,7 +33,7 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
             issues.append(
                 {
                     "path": "app/frontend/src/App.tsx",
-                    "reason": f"missing required visible route {route['route_id']} at {route['path']}",
+                    "reason": f"missing required story-supporting route {route['route_id']} at {route['path']}",
                 }
             )
 

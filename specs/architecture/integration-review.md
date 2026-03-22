@@ -24,6 +24,8 @@ The real artifact MUST record:
 - `## Scenario Depth Coverage`
 - `## Page Coverage`
 - `## Route Coverage`
-- citation of the reviewed `must` stories by story ID
+- citation of the reviewed current-release stories by story ID
+- explicit note that routes/pages are supporting proof surfaces for those
+  story obligations, not the primary scope unit
 - explicit comment on negative/validation, empty-state, and permission
   behavior for the reviewed required stories
