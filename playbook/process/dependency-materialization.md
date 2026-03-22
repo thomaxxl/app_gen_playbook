@@ -16,7 +16,7 @@ Generated app files under `app/` MUST NOT keep those unresolved tokens.
 Before any frontend install step begins, the run MUST:
 
 1. read `runs/current/artifacts/architecture/runtime-bom.md`
-2. resolve the concrete `safrs-jsonapi-client` repo URL and ref
+2. resolve the concrete `safrs-jsonapi-client` repo URL and checkout policy
 3. materialize that source into `app/tmp/safrs-jsonapi-client`
 4. keep `app/frontend/package.json` pointed at `file:../tmp/safrs-jsonapi-client`
 
@@ -25,7 +25,7 @@ The unresolved template token MUST remain in the template lane only.
 The current maintained default for that source is:
 
 - repo: `https://github.com/thomaxxl/safrs-jsonapi-client`
-- ref: `0.0.1`
+- checkout policy: latest upstream default-branch checkout
 - local materialization path: `app/tmp/safrs-jsonapi-client`
 
 unless the run-owned `runtime-bom.md` explicitly records and approves a
@@ -39,7 +39,7 @@ It MUST NOT survive into:
 
 The generated app MUST NOT expect npm to fetch `safrs-jsonapi-client`
 directly from GitHub during normal clean install. The supported flow is to
-clone the approved repo/ref locally first, then install from that local file
+clone or refresh the approved local checkout first, then install from that local file
 dependency.
 
 ## Verification rule

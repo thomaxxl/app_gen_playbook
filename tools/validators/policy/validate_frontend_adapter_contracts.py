@@ -94,7 +94,7 @@ def collect_install_source_issues(repo_root: Path) -> list[dict[str, str]]:
             repo_root / "specs" / "contracts" / "frontend" / "dependencies.md": [
                 "file:../tmp/safrs-jsonapi-client",
                 "approved local clone path",
-                "repo/ref",
+                "latest upstream",
             ],
             repo_root / "templates" / "app" / "frontend" / "package.json.md": [
                 "file:../tmp/safrs-jsonapi-client",

@@ -240,7 +240,8 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
             self.assertEqual(result.status, "blocked")
             self.assertIn("missing local safrs-jsonapi-client checkout", result.detail)
-            self.assertIn("git clone --depth 1 --branch 0.0.1", result.detail)
+            self.assertIn("git clone --depth 1", result.detail)
+            self.assertNotIn("--branch 0.0.1", result.detail)
 
     def test_check_node_modules_requires_safrs_jsonapi_client(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

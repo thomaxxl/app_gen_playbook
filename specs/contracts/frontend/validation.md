@@ -14,8 +14,8 @@ of approved rules whose `Frontend Mirror` field is not `none` in:
 ## Build validation
 
 - `npm install` succeeds
-- `runtime-bom.md` records the approved `safrs-jsonapi-client` repo, ref, and
-  local `tmp/` materialization path
+- `runtime-bom.md` records the approved `safrs-jsonapi-client` repo source
+  policy and local `tmp/` materialization path
 - `package.json` consumes `safrs-jsonapi-client` from the approved local
   `file:../tmp/safrs-jsonapi-client` source
 - `npm install` does not immediately force a baseline-maintenance step such as

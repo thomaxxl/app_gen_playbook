@@ -16,7 +16,7 @@ RUN apt-get update \
 WORKDIR /frontend
 COPY frontend/package.json /frontend/package.json
 RUN mkdir -p /tmp \
-    && git clone --depth 1 --branch 0.0.1 https://github.com/thomaxxl/safrs-jsonapi-client /tmp/safrs-jsonapi-client
+    && git clone --depth 1 https://github.com/thomaxxl/safrs-jsonapi-client /tmp/safrs-jsonapi-client
 RUN npm install
 COPY frontend /frontend
 RUN npm run build

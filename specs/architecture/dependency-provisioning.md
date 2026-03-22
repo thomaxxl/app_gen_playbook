@@ -58,7 +58,7 @@ In this mode, the run MAY allow:
 
 - creating `backend/.venv`
 - creating `frontend/node_modules`
-- creating `app/tmp/safrs-jsonapi-client` and cloning the approved repo/ref
+- creating `app/tmp/safrs-jsonapi-client` and cloning the approved latest upstream checkout
   into it before frontend install
 - running `pip install`, `npm install`, and Playwright preparation commands
 

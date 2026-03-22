@@ -3,7 +3,7 @@
 Use this checklist in frontend validation and Architect review.
 
 ## Package source
-- [ ] `runtime-bom.md` records the approved `safrs-jsonapi-client` repo, ref, and local materialization path
+- [ ] `runtime-bom.md` records the approved `safrs-jsonapi-client` repo, checkout policy, and local materialization path
 - [ ] generated `package.json` uses the approved local `file:../tmp/safrs-jsonapi-client` source
 - [ ] install source comes from the approved local checkout, not a floating git dependency or raw source archive
 

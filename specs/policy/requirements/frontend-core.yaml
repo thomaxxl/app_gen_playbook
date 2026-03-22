@@ -109,7 +109,7 @@ requirements:
       - playbook/process/runtime-baseline.md
     description: >
       The generated frontend must use the approved local tmp checkout of
-      safrs-jsonapi-client backed by the repo/ref in runtime-bom.md.
+      safrs-jsonapi-client backed by the runtime-bom source policy.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_install_source_issues

@@ -21,7 +21,6 @@ PORT_BIND_RETRY_ATTEMPTS = 20
 PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
-SAFRS_JSONAPI_CLIENT_REPO_REF = "0.0.1"
 MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
 BACKEND_IMPORT_PROBE = (
     "import fastapi, httpx, jsonapischema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
@@ -307,12 +306,9 @@ def check_node_modules(repo_root: Path) -> CheckResult:
     if not safrs_client_source_package.exists():
         detail_lines = [
             f"missing local safrs-jsonapi-client checkout: {safrs_client_source_package}",
-            "create the local tmp checkout before or during frontend install, for example:",
+            "create the local tmp checkout before or during frontend install using the latest upstream git checkout, for example:",
             f"    mkdir -p {safrs_client_source.parent}",
-            (
-                "    git clone --depth 1 --branch "
-                f"{SAFRS_JSONAPI_CLIENT_REPO_REF} {SAFRS_JSONAPI_CLIENT_REPO_URL} {safrs_client_source}"
-            ),
+            f"    git clone --depth 1 {SAFRS_JSONAPI_CLIENT_REPO_URL} {safrs_client_source}",
         ]
         if shutil.which("git") is None:
             detail_lines.append("git executable not found in PATH; install git before cloning the local dependency source")

@@ -54,7 +54,7 @@ The real artifact MUST define at least:
 | Node version | `24.x` or approved deviation | runtime-baseline | Replace this row |
 | Package manager | `npm` | runtime-baseline | Replace this row |
 | Vite version | `6.2.2` or approved deviation | runtime-baseline | Replace this row |
-| `safrs-jsonapi-client` source | validated repo URL + ref materialized into local `tmp/safrs-jsonapi-client` | runtime-baseline or override | Replace this row |
+| `safrs-jsonapi-client` source | validated repo URL + latest-checkout policy materialized into local `tmp/safrs-jsonapi-client` | runtime-baseline or override | Replace this row |
 
 ## Freeze rules
 
@@ -62,7 +62,7 @@ The real artifact MUST explicitly state:
 
 - whether the run uses the house frontend baseline unchanged or with approved
   deviations
-- the exact `safrs-jsonapi-client` repo URL, ref, and local materialization
+- the exact `safrs-jsonapi-client` repo URL, checkout policy, and local materialization
   path chosen for the generated app
 - whether any compatibility deviation was approved and why
 

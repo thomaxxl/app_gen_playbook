@@ -163,8 +163,8 @@ implementation.
 If the approved frontend install path cannot resolve `safrs-jsonapi-client`
 from existing local dependencies, the generated app MUST first materialize the
 approved local source checkout in `app/tmp/safrs-jsonapi-client`, then install
-from that local path. The maintained default is cloning
-`https://github.com/thomaxxl/safrs-jsonapi-client` at ref `0.0.1`.
+from that local path. The maintained default is the latest upstream checkout of
+`https://github.com/thomaxxl/safrs-jsonapi-client`.
 
 The Frontend agent MUST treat that package as the canonical provider and
 normalizer base. Local shared-runtime code should be thin extension glue for:

@@ -147,7 +147,7 @@ actually uses in the run-owned `runtime-bom.md`.
   not from a floating git dependency or raw `codeload` source archive
 - the preferred source is a local checkout cloned from
   `https://github.com/thomaxxl/safrs-jsonapi-client`
-- the current approved default ref is `0.0.1`
+- the current approved default is the latest upstream default-branch checkout
 - the generated app SHOULD clone that repo into local
   `tmp/safrs-jsonapi-client` before the first frontend `npm install`
 - the generated frontend package source SHOULD then be

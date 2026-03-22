@@ -95,9 +95,14 @@ Runtime:
 
 ```bash
 mkdir -p ../tmp
-git clone --depth 1 --branch 0.0.1 \
-  https://github.com/thomaxxl/safrs-jsonapi-client \
-  ../tmp/safrs-jsonapi-client
+if [[ -d ../tmp/safrs-jsonapi-client/.git ]]; then
+  git -C ../tmp/safrs-jsonapi-client pull --ff-only
+else
+  rm -rf ../tmp/safrs-jsonapi-client
+  git clone --depth 1 \
+    https://github.com/thomaxxl/safrs-jsonapi-client \
+    ../tmp/safrs-jsonapi-client
+fi
 
 npm install \
   react@19.1.0 \
@@ -115,9 +120,9 @@ npm install \
 
 The frontend still owns the SAFRS-specific adapter wiring under
 `src/shared-runtime/admin/`, but the maintained baseline now expects the
-generated app to clone `safrs-jsonapi-client` into local `tmp/` and install it
-from that file dependency unless the run-owned `runtime-bom.md` records a
-different approved source.
+generated app to clone or refresh the latest upstream `safrs-jsonapi-client`
+checkout into local `tmp/` and install it from that file dependency unless the
+run-owned `runtime-bom.md` records a different approved source.
 
 That package is the canonical frontend adapter, not an optional add-on. Local
 runtime code may wrap it, but the generated app MUST keep package-backed
@@ -197,11 +202,11 @@ npm install -D \
   local `tmp/safrs-jsonapi-client` checkout. The generated frontend still owns
   only the thin run-specific extension glue under `src/shared-runtime/admin/`.
 - `safrs-jsonapi-client` MUST come from the approved local clone path backed by
-  the repo/ref recorded in `runtime-bom.md`. Do not switch to a floating git
+  the repo source policy recorded in `runtime-bom.md`. Do not switch to a floating git
   dependency or raw source archive.
-- The repo/ref recorded in `runtime-bom.md`, the local checkout path, and the
+- The runtime-bom source policy, the local checkout path, and the
   package source in `package.json` MUST stay aligned. The playbook MUST NOT
-  preserve contradictory tag/file/version wording after the local materialized
+  preserve contradictory branch/file/version wording after the local materialized
   checkout model is selected.
 - A generated app MUST NOT require an immediate `npm audit fix --force` after
   the initial install just to reach the expected starter baseline. If an audit

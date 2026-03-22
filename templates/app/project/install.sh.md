@@ -49,7 +49,6 @@ DEPENDENCY_PROVISIONING_MODE="${DEPENDENCY_PROVISIONING_MODE:-clean-install}"
 BACKEND_VENV="${BACKEND_VENV:-}"
 FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR:-}"
 SAFRS_JSONAPI_CLIENT_REPO_URL="${SAFRS_JSONAPI_CLIENT_REPO_URL:-https://github.com/thomaxxl/safrs-jsonapi-client}"
-SAFRS_JSONAPI_CLIENT_REPO_REF="${SAFRS_JSONAPI_CLIENT_REPO_REF:-0.0.1}"
 SAFRS_JSONAPI_CLIENT_LOCAL_REPO="$PROJECT_DIR/tmp/safrs-jsonapi-client"
 BACKEND_VENV_DIR=""
 
@@ -82,6 +81,19 @@ import sys
 path = pathlib.Path(sys.argv[1])
 print(hashlib.sha256(path.read_bytes()).hexdigest())
 PY
+}
+
+safrs_jsonapi_client_source_version() {
+  if [[ -d "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/.git" ]] && command -v git >/dev/null 2>&1; then
+    git -C "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO" rev-parse HEAD 2>/dev/null && return 0
+  fi
+
+  if [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]]; then
+    file_sha256 "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json"
+    return 0
+  fi
+
+  printf 'missing\n'
 }
 
 ensure_frontend_node_modules_path() {
@@ -146,10 +158,6 @@ frontend_dependencies_ready() {
 }
 
 ensure_safrs_jsonapi_client_repo() {
-  if [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]]; then
-    return 0
-  fi
-
   if ! command -v git >/dev/null 2>&1; then
     echo "git is required to clone safrs-jsonapi-client into $SAFRS_JSONAPI_CLIENT_LOCAL_REPO." >&2
     exit 1
@@ -157,14 +165,26 @@ ensure_safrs_jsonapi_client_repo() {
 
   mkdir -p "$PROJECT_DIR/tmp"
 
+  if [[ -d "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/.git" ]]; then
+    echo "Refreshing local safrs-jsonapi-client checkout at $SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
+    git -C "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO" pull --ff-only
+    [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]] && return 0
+    echo "Existing safrs-jsonapi-client checkout is incomplete after refresh: $SAFRS_JSONAPI_CLIENT_LOCAL_REPO" >&2
+    exit 1
+  fi
+
+  if [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]]; then
+    return 0
+  fi
+
   if [[ -e "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO" ]]; then
     echo "Existing safrs-jsonapi-client checkout is incomplete: $SAFRS_JSONAPI_CLIENT_LOCAL_REPO" >&2
     echo "Remove it or restore package.json before rerunning ./install.sh." >&2
     exit 1
   fi
 
-  echo "Cloning safrs-jsonapi-client $SAFRS_JSONAPI_CLIENT_REPO_REF into $SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
-  git clone --depth 1 --branch "$SAFRS_JSONAPI_CLIENT_REPO_REF" "$SAFRS_JSONAPI_CLIENT_REPO_URL" "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
+  echo "Cloning the latest safrs-jsonapi-client checkout into $SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
+  git clone --depth 1 "$SAFRS_JSONAPI_CLIENT_REPO_URL" "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
 }
 
 ensure_safrs_jsonapi_client_installed() {
@@ -238,9 +258,11 @@ echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
   fi
   ensure_frontend_node_modules_path
   lock_hash="$(file_sha256 "$lock_source")"
+  safrs_source_version="$(safrs_jsonapi_client_source_version)"
   lock_stamp="node_modules/.install-lock.sha256"
+  install_fingerprint="${lock_hash}|${safrs_source_version}"
 
-  if [[ -d node_modules ]] && [[ -d node_modules/vite ]] && [[ -f "$lock_stamp" ]] && [[ "$(cat "$lock_stamp")" == "$lock_hash" ]]; then
+  if [[ -d node_modules ]] && [[ -d node_modules/vite ]] && [[ -f "$lock_stamp" ]] && [[ "$(cat "$lock_stamp")" == "$install_fingerprint" ]]; then
     echo "Frontend dependencies already match $lock_source. Skipping npm install."
   else
     echo "Installing frontend dependencies in $FRONTEND_DIR"
@@ -251,8 +273,10 @@ echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
       lock_source="package.json"
     fi
     lock_hash="$(file_sha256 "$lock_source")"
+    safrs_source_version="$(safrs_jsonapi_client_source_version)"
+    install_fingerprint="${lock_hash}|${safrs_source_version}"
     mkdir -p node_modules
-    printf '%s\n' "$lock_hash" > "$lock_stamp"
+    printf '%s\n' "$install_fingerprint" > "$lock_stamp"
   fi
 
   ensure_safrs_jsonapi_client_installed
@@ -261,8 +285,10 @@ echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
     lock_source="package.json"
   fi
   lock_hash="$(file_sha256 "$lock_source")"
+  safrs_source_version="$(safrs_jsonapi_client_source_version)"
+  install_fingerprint="${lock_hash}|${safrs_source_version}"
   mkdir -p node_modules
-  printf '%s\n' "$lock_hash" > "$lock_stamp"
+  printf '%s\n' "$install_fingerprint" > "$lock_stamp"
 
   if ! npx --no-install playwright --version >/dev/null 2>&1; then
     echo "Playwright CLI not found after npm install. Installing @playwright/test."
@@ -290,9 +316,9 @@ Notes:
   reinstalling packages on every run.
 - In `clean-install` mode, missing `node_modules` MUST still trigger a full
   frontend install automatically.
-- In `clean-install` mode, if `safrs-jsonapi-client` is still absent after the
-  baseline `npm install`, `install.sh` MUST install it from the approved local
-  `tmp/safrs-jsonapi-client` checkout.
+- In `clean-install` mode, `install.sh` SHOULD refresh an existing
+  `tmp/safrs-jsonapi-client` git checkout to the latest upstream state before
+  deciding whether frontend dependencies are already current.
 - If repeated local runs should reuse a dependency tree stored outside the app
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to

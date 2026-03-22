@@ -123,7 +123,7 @@ glue following the source model recorded in
 
 Do not replace that dependency with a floating git dependency, raw source
 archive, or a different package source unless a later runtime BOM explicitly
-approves the new source and records the exact repo/ref or replacement pin.
+approves the new source and records the exact source policy or replacement pin.
 
 If the first `npm install` on a newly generated app still requires an
 immediate `npm audit fix --force`, treat that as a stale playbook baseline and

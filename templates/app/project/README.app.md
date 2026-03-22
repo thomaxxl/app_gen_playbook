@@ -46,8 +46,8 @@ It is intended to read current-run status from the mirrored
 - In that install path, the canonical Python runtime is the backend virtualenv
   at `backend/.venv` or the declared `BACKEND_VENV`; the playbook should use
   that same venv for Python tooling.
-- In that install path, `install.sh` first clones
-  `https://github.com/thomaxxl/safrs-jsonapi-client` at ref `0.0.1` into
+- In that install path, `install.sh` first clones or refreshes the latest
+  upstream `https://github.com/thomaxxl/safrs-jsonapi-client` checkout into
   `tmp/safrs-jsonapi-client`, then installs the frontend with that local
   checkout as the `safrs-jsonapi-client` source.
 - In `preprovisioned-reuse-only` mode, it validates the prepared dependency
@@ -195,7 +195,7 @@ Notes:
   route and make clear that those URLs are logical app routes, not raw storage
   paths.
 - If the frontend depends on `safrs-jsonapi-client`, keep it pinned through the
-  approved local `tmp/safrs-jsonapi-client` checkout backed by the repo/ref in
+  approved local `tmp/safrs-jsonapi-client` checkout backed by the source policy in
   `runtime-bom.md`. Do not document a floating git dependency as the default
   generated-app path.
 - Document the root container files unconditionally because every generated app

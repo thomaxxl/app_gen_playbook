@@ -10,7 +10,7 @@ This skill exists to stop the frontend from inventing a parallel JSON:API client
 
 For SAFRS / ApiLogicServer frontends, the canonical data-provider lane is:
 
-1. materialize `safrs-jsonapi-client` from the approved repo/ref recorded in `runtime-bom.md`, normally into local `app/tmp/safrs-jsonapi-client`
+1. materialize `safrs-jsonapi-client` from the approved latest-upstream checkout policy recorded in `runtime-bom.md`, normally into local `app/tmp/safrs-jsonapi-client`
 2. use the package's `createDataProvider(...)` / `createDataProviderSync(...)`
 3. use the package's `normalizeAdminYaml(...)` schema model as the canonical normalized schema shape
 4. keep React-admin components behind the approved `dataProvider`
@@ -73,13 +73,13 @@ Frontend components must not call backend APIs directly for delivered app behavi
 ### 8. Install from the approved local materialization source
 The generated app MUST install `safrs-jsonapi-client` from the approved local
 checkout path recorded in `runtime-bom.md`, normally `file:../tmp/safrs-jsonapi-client`,
-after the playbook materializes the pinned repo/ref into `app/tmp/`.
+after the playbook materializes the approved latest-upstream checkout into `app/tmp/`.
 
 Do not use:
 - floating git dependencies
 - raw source archives
 - `codeload` snapshots
-- a different local checkout than the approved repo/ref
+- a different local checkout than the approved repo source policy
 
 ## Required outputs and evidence
 

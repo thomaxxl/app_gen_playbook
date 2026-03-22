@@ -61,7 +61,7 @@ Add one line requiring the frontend adapter skill when approving exceptions in f
 
 ### `specs/contracts/frontend/dependencies.md`
 Keep the approved local-materialization rule, but add:
-- package source must match the intended repo/ref convention
+- package source must match the intended latest-checkout convention
 - `runtime-bom.md`, `package.json`, and the local `tmp/` path must stay aligned
 - the package is the canonical frontend adapter, not an optional add-on
 
@@ -100,7 +100,7 @@ Add required checks for:
 
 ### `templates/app/frontend/package.json.md`
 Keep the approved local `tmp/safrs-jsonapi-client` install model.
-Also align the repo/ref, local path, and documented version wording so the dependency line is not confusing.
+Also align the source-policy, local path, and documented version wording so the dependency line is not confusing.
 
 ### `templates/app/frontend/shared-runtime/admin/adminSchema.ts.md`
 This is the most important fix.
