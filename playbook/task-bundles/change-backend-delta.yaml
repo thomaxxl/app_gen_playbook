@@ -10,6 +10,7 @@ required_phase:
   - playbook/process/phases/phase-I4-design-delta.md
   - playbook/process/phases/phase-I5-implementation-delta.md
 required_artifacts:
+  - runs/current/artifacts/product/conceptual-domain-model.md
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/architecture/resource-naming.md
 writable_targets:

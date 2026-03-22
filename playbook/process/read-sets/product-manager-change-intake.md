@@ -25,5 +25,10 @@ current implementation still matches the accepted baseline, because the review
 is questioning whether that baseline remains acceptable.
 
 If the change affects business concepts, lifecycle/state models, or business
-events, `conceptual-domain-model.md` MUST stay in scope for the change packet
-instead of inferring the delta only from resources or routes.
+events, the Product Manager MUST keep these in scope together for the change
+packet instead of inferring the delta only from resources or routes:
+
+- `conceptual-domain-model.md`
+- `user-stories.md`
+- `workflows.md`
+- `traceability-matrix.md`

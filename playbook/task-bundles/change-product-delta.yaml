@@ -10,6 +10,9 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/conceptual-domain-model.md
+  - runs/current/artifacts/product/user-stories.md
+  - runs/current/artifacts/product/workflows.md
+  - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/custom-pages.md

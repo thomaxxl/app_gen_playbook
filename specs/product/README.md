@@ -25,8 +25,10 @@ Rules:
   capability-coverage table, and use the exact story index schema the coverage
   compiler validates. It is a required Phase 1 authoring input, not reference-only prose.
 - `traceability-matrix.md` is the authoritative bridge from story scope to
-  workflows, rules, pages, routes, permissions, sample data, and acceptance
-  evidence. It is a required Phase 1 authoring input, not reference-only prose.
+  concepts, business events, workflows, rules, resources, pages, routes,
+  permissions, sample data, and acceptance evidence. Its exact schema now
+  includes `Concept IDs` and `Business Event IDs`, and it is a required Phase 1
+  authoring input, not reference-only prose.
 - `story-quality-checklist.md` is the Product-owned readability/quality pass
   over the story catalog. It is not a replacement for the story compiler, but
   it records whether current-release stories are concrete, testable, and free

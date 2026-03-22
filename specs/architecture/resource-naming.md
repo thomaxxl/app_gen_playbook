@@ -3,6 +3,7 @@ phase: phase-2-architecture-contract
 status: stub
 depends_on:
   - ../product/domain-glossary.md
+  - ../product/conceptual-domain-model.md
 unresolved:
   - replace with run-specific resource naming table
 last_updated_by: playbook
@@ -19,9 +20,9 @@ validated later at runtime.
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource | Model class | SQL table | admin.yaml key | Intended relationship names | Provisional endpoint | Discovered endpoint | Discovered wire type | Validation status |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ExampleResource | ExampleResource | example_resources | ExampleResource | ExampleList | /api/ExampleResource | pending runtime validation | pending runtime validation | pending runtime validation |
+| Resource | Concept IDs represented | Model class | SQL table | admin.yaml key | Intended relationship names | Provisional endpoint | Discovered endpoint | Discovered wire type | Validation status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ExampleResource | C-001 | ExampleResource | example_resources | ExampleResource | ExampleList | /api/ExampleResource | pending runtime validation | pending runtime validation | pending runtime validation |
 
 At Phase 2, `Discovered endpoint`, `Discovered wire type`, and `Validation status`
 MAY remain `pending runtime validation`.
@@ -33,6 +34,16 @@ The real artifact MUST explain any:
 - non-obvious relationship names
 - multiple references to the same target resource
 - names that differ from naive pluralization expectations
+
+## Business-language alignment
+
+The real artifact MUST record:
+
+- which conceptual concept IDs each resource name represents
+- any intentional name divergence between business concept and resource name
+- why that divergence exists
+- confirmation that storage-led names were rejected where business language is
+  available
 
 ## Runtime validation notes
 

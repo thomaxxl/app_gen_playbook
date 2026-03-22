@@ -14,6 +14,7 @@ Required startup reads:
 - `../../../playbook/summaries/contracts/frontend.summary.md`
 - `../../../playbook/summaries/contracts/backend.summary.md`
 - `../../../playbook/summaries/contracts/rules.summary.md`
+- `../../../specs/product/conceptual-domain-model.md`
 - `../../../specs/architecture/README.md`
 - `../../../specs/architecture/data-sourcing-contract.md`
 - `../../../skills/safrs-api-design/SKILL.md`

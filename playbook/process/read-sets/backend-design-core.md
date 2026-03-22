@@ -9,6 +9,7 @@ Required startup reads:
 - `../capability-loading.md`
 - `../phases/phase-4-backend-design-and-rules-mapping.md`
 - `../../roles/shared-responsibilities.md`
+- `../../../specs/product/conceptual-domain-model.md`
 - `../../../specs/contracts/backend/README.md`
 - `../../../specs/contracts/backend/data-sourcing.md`
 - `../../../skills/safrs-api-design/SKILL.md`

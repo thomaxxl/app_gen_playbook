@@ -8,6 +8,10 @@ It also contains a preserved filled architecture example package under:
 
 - `artifacts/architecture/`
 
+It also contains a preserved conceptual-model example under:
+
+- `artifacts/product/conceptual-domain-model.md`
+
 ## Scope
 
 - `.gitignore`: standalone-repo ignore policy for the generated app
@@ -24,6 +28,8 @@ It also contains a preserved filled architecture example package under:
 - `entrypoint.sh` and `nginx.conf`: packaged same-origin runtime files
 - `artifacts/architecture/`: preserved filled architecture artifacts for this
   example domain
+- `artifacts/product/conceptual-domain-model.md`: preserved worked example of
+  the business-facing conceptual layer for this domain
 
 ## Domain Model
 

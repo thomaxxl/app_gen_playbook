@@ -81,6 +81,25 @@ OLDER_LEGACY_STORY_INDEX_COLUMNS = (
 )
 TRACEABILITY_COLUMNS = (
     "Story ID",
+    "Concept IDs",
+    "Workflow IDs",
+    "Business Event IDs",
+    "Rule IDs",
+    "Resource IDs",
+    "Primary Evidence Mode",
+    "Page IDs",
+    "Route IDs",
+    "State/Mode Coverage",
+    "Permission Context",
+    "Sample Data IDs",
+    "Acceptance IDs",
+    "Generated resource allowed as satisfier?",
+    "Required preview evidence",
+    "Required live QA evidence",
+    "Acceptance owner",
+)
+TRANSITIONAL_TRACEABILITY_COLUMNS = (
+    "Story ID",
     "Workflow IDs",
     "Rule IDs",
     "Resource IDs",
@@ -456,7 +475,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             traceability,
             traceability_path.relative_to(repo_root).as_posix(),
             TRACEABILITY_COLUMNS,
-            legacy_columns=LEGACY_TRACEABILITY_COLUMNS,
+            legacy_columns=(TRANSITIONAL_TRACEABILITY_COLUMNS, LEGACY_TRACEABILITY_COLUMNS),
         )
     )
     issues.extend(_header_issues(custom_pages, custom_pages_path.relative_to(repo_root).as_posix(), CUSTOM_PAGE_COLUMNS))
@@ -490,7 +509,9 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             continue
         trace_row = {
             "story_id": story_id,
+            "concept_ids": _parse_optional_surface_ids(row.get("Concept IDs", "")),
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
+            "business_event_ids": _parse_optional_surface_ids(row.get("Business Event IDs", "")),
             "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
             "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
             "page_ids": _parse_optional_surface_ids(row.get("Page IDs", "")),
@@ -704,11 +725,13 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         current_release_story_rows.append(
             {
                 "story_id": story_id,
+                "concept_ids": trace_row["concept_ids"],
                 "priority": story["priority"],
                 "delivery_class": story["delivery_class"],
                 "release": story["release"],
                 "page_ids": trace_row["page_ids"],
                 "route_ids": trace_row["route_ids"],
+                "business_event_ids": trace_row["business_event_ids"],
                 "workflow_ids": trace_row["workflow_ids"],
                 "primary_evidence_mode": trace_row["primary_evidence_mode"],
             }
@@ -716,6 +739,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         primary_evidence_mode = trace_row["primary_evidence_mode"]
         ui_evidence_required = primary_evidence_mode in UI_EVIDENCE_MODES
 
+        if not trace_row["concept_ids"]:
+            issues.append(f"{story_id}: current-release story is missing concept mapping in traceability matrix")
         if not trace_row["workflow_ids"]:
             issues.append(f"{story_id}: no workflow mapping in traceability matrix")
         if not trace_row["rule_ids"]:
@@ -764,6 +789,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "story_statement": story["story_statement"],
                 "why_priority": story["why_priority"],
                 "independent_test": story["independent_test"],
+                "concept_ids": trace_row["concept_ids"],
+                "business_event_ids": trace_row["business_event_ids"],
                 "workflow_ids": trace_row["workflow_ids"],
                 "rule_ids": trace_row["rule_ids"],
                 "resource_ids": trace_row["resource_ids"],

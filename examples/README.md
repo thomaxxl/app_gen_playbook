@@ -11,7 +11,8 @@ Current examples in this workspace:
 
 - `cmdb/`
   Full generated CMDB operations console example, including preserved
-  architecture artifacts under `cmdb/artifacts/architecture/`.
+  architecture artifacts under `cmdb/artifacts/architecture/` and a preserved
+  conceptual-model example under `cmdb/artifacts/product/`.
 - `northwind_safrs_pa/`
   Minimal runnable Northwind deployment example that serves a built SPA at
   `/app/`.

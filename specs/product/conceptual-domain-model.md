@@ -32,6 +32,10 @@ It MUST NOT include:
 - endpoint names
 - SAFRS exposure choices
 - implementation-only derived fields
+- provisional resource names
+- pluralization guesses
+- route guesses
+- ORM/model-class guesses
 
 ## Required top-level sections
 
@@ -114,9 +118,9 @@ triggers.
 
 The real artifact MUST include a table with at least these columns:
 
-| Concept ID | Likely application shape | Candidate resource name(s) | Notes |
-| --- | --- | --- | --- |
-| `C-001` | first-class resource | Request | Replace this row |
+| Concept ID | Likely application shape | Notes |
+| --- | --- | --- |
+| `C-001` | first-class resource | Replace this row |
 
 Allowed `Likely application shape` examples:
 

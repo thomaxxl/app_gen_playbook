@@ -127,10 +127,10 @@ def seed_scope(repo_root: Path) -> None:
         repo_root / "runs/current/artifacts/product/traceability-matrix.md",
         "\n".join(
             [
-                "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
-                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                "| US-001 | WF-001 | BR-001 | Run | ui | PAGE-001 | N001 | active, empty | requester can inspect assigned work | SD-001 | AC-001 | no | yes | yes | product_manager |",
-                "| US-004 | WF-003 | BR-004 | Approval | ui | PAGE-006 | N007 | pending, approved, rejected | approver can review assigned approvals | SD-004 | AC-004 | no | yes | yes | product_manager |",
+                "| Story ID | Concept IDs | Workflow IDs | Business Event IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| US-001 | C-001 | WF-001 | none | BR-001 | Run | ui | PAGE-001 | N001 | active, empty | requester can inspect assigned work | SD-001 | AC-001 | no | yes | yes | product_manager |",
+                "| US-004 | C-004 | WF-003 | EV-004 | BR-004 | Approval | ui | PAGE-006 | N007 | pending, approved, rejected | approver can review assigned approvals | SD-004 | AC-004 | no | yes | yes | product_manager |",
             ]
         )
         + "\n",
@@ -179,6 +179,45 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertEqual(len(payload["current_release_stories"]), 2)
             self.assertEqual(payload["required_actor_coverage"], ["Approver", "Requester"])
             self.assertIn("approval", payload["story_type_catalog"])
+
+    def test_compile_product_scope_requires_concept_mapping_for_current_release_stories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            trace_text = (repo_root / "runs/current/artifacts/product/traceability-matrix.md").read_text(encoding="utf-8")
+            write(
+                repo_root / "runs/current/artifacts/product/traceability-matrix.md",
+                trace_text.replace("| US-001 | C-001 |", "| US-001 | none |"),
+            )
+
+            _, issues = compile_product_scope_payload(repo_root)
+            self.assertTrue(any("US-001: current-release story is missing concept mapping" in issue for issue in issues))
+
+    def test_compile_product_scope_accepts_transitional_traceability_header_for_non_current_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
+            story_text = story_text.replace("| US-001 | Requester overview | Requester | P1 | must | R1 |", "| US-001 | Requester overview | Requester | P1 | must | R2 |")
+            story_text = story_text.replace("| US-004 | Approver reviews pending request | Approver | P1 | must | R1 |", "| US-004 | Approver reviews pending request | Approver | P1 | must | R2 |")
+            write(repo_root / "runs/current/artifacts/product/user-stories.md", story_text)
+
+            write(
+                repo_root / "runs/current/artifacts/product/traceability-matrix.md",
+                "\n".join(
+                    [
+                        "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | WF-001 | BR-001 | Run | ui | PAGE-001 | N001 | active, empty | requester can inspect assigned work | SD-001 | AC-001 | no | yes | yes | product_manager |",
+                        "| US-004 | WF-003 | BR-004 | Approval | ui | PAGE-006 | N007 | pending, approved, rejected | approver can review assigned approvals | SD-004 | AC-004 | no | yes | yes | product_manager |",
+                    ]
+                )
+                + "\n",
+            )
+
+            payload, issues = compile_product_scope_payload(repo_root)
+            self.assertFalse(any("must use exact columns" in issue for issue in issues))
+            self.assertEqual(payload["current_release_stories"], [])
 
     def test_compile_product_scope_fails_when_current_release_story_lacks_required_detail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -286,7 +325,7 @@ class CoverageValidatorTests(unittest.TestCase):
             write(repo_root / "runs/current/artifacts/product/user-stories.md", story_text)
 
             trace_text = (repo_root / "runs/current/artifacts/product/traceability-matrix.md").read_text(encoding="utf-8")
-            trace_text += "| US-050 | WF-050 | BR-050 | AuditEvent | background | none | none | emitted, duplicated-blocked | approver action emits audit record | SD-050 | AC-050 | no | no | no | product_manager |\n"
+            trace_text += "| US-050 | C-050 | WF-050 | none | BR-050 | AuditEvent | background | none | none | emitted, duplicated-blocked | approver action emits audit record | SD-050 | AC-050 | no | no | no | product_manager |\n"
             write(repo_root / "runs/current/artifacts/product/traceability-matrix.md", trace_text)
 
             payload, issues = compile_product_scope_payload(repo_root)
@@ -544,10 +583,10 @@ class CoverageValidatorTests(unittest.TestCase):
                 repo_root / "runs/current/changes/CR-TEST-001/candidate/artifacts/product/traceability-matrix.md",
                 "\n".join(
                     [
-                        "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
-                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                        "| US-201 | WF-201 | none | Run | ui | PAGE-CR-001 | N201 | active, complete | operator can inspect current run state | SD-201 | AC-201 | no | yes | yes | product_manager |",
-                        "| US-202 | WF-202 | none | HandoffMessage | ui | PAGE-CR-004 | N202 | queued, empty | operator can inspect handoffs | SD-202 | AC-202 | no | yes | yes | product_manager |",
+                        "| Story ID | Concept IDs | Workflow IDs | Business Event IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| US-201 | C-201 | WF-201 | none | none | Run | ui | PAGE-CR-001 | N201 | active, complete | operator can inspect current run state | SD-201 | AC-201 | no | yes | yes | product_manager |",
+                        "| US-202 | C-202 | WF-202 | EV-202 | none | HandoffMessage | ui | PAGE-CR-004 | N202 | queued, empty | operator can inspect handoffs | SD-202 | AC-202 | no | yes | yes | product_manager |",
                     ]
                 )
                 + "\n",

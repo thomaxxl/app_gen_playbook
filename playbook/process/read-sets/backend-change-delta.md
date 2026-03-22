@@ -30,5 +30,9 @@ artifacts explicitly affected by the change, and the `app/backend/` or
 implementation trees broadly.
 
 If the change redefines business concepts, lifecycle/state meaning, or business
-events, keep `product/conceptual-domain-model.md` in scope instead of inferring
-the design delta only from resource or ORM artifacts.
+events, keep the baseline `product/conceptual-domain-model.md` in scope
+instead of inferring the design delta only from resource or ORM artifacts.
+
+When the change workspace already contains a candidate conceptual-model delta,
+keep that candidate file in scope too so backend design can reconcile the
+current baseline and proposed business-language shift together.

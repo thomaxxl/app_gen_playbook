@@ -10,6 +10,9 @@ Rules:
   `../../runs/current/artifacts/architecture/`.
 - The architecture layer interprets Product-owned conceptual and scope
   artifacts into cross-layer contracts.
+- The architecture layer MUST reconcile resource naming and classification
+  back to Product-owned conceptual concepts instead of inventing storage-led
+  naming independently.
 - `../../examples/` MAY be consulted as a runnable reference-example library,
   but it MUST NOT be treated as the architecture source of truth.
 
