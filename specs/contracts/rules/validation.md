@@ -37,6 +37,11 @@ Where relevant, the tests MUST also distinguish:
 If the author has not clearly asked for live propagation, the tested default
 SHOULD be snapshot semantics via `Rule.copy`.
 
+If rule implementation or validation exposes a likely upstream LogicBank bug or
+an inconsistent SAFRS-family runtime interaction, the run MUST record it in
+`../../../BUGS.md` and MUST NOT treat endpoint/service/event workarounds as
+successful rule validation.
+
 ## API-path validation
 
 At least one invalid mutation MUST be tested through the API surface, not only

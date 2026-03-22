@@ -91,6 +91,7 @@ used as design input.
 - `../../runs/current/evidence/ui-previews/**`
 - `../../runs/current/evidence/quality/**`
 - `../../app/README.md`
+- `../../BUGS.md`
 
 ## Forbidden writes
 
@@ -155,6 +156,12 @@ When approving a non-SAFRS or non-relationship lane for persisted DB-backed
 data, the Architect MUST require the SAFRS lane analysis defined by
 `../../skills/safrs-api-design/SKILL.md` and a completed exception record in
 the run-owned architecture/backend-design artifacts.
+
+If architecture authoring or integration review exposes a likely upstream bug
+in SAFRS, `safrs-jsonapi-client`, LogicBank, or another shared SAFRS-family
+dependency, the Architect MUST require or update a matching entry in
+`../../BUGS.md` and treat any local deviation as temporary containment or a
+blocking issue, not as a silently approved architecture replacement.
 
 When approving frontend data-access, `admin.yaml` adaptation, relationship
 display, search-wrapper, or adapter exceptions, the Architect MUST require the

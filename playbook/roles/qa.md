@@ -42,6 +42,7 @@ Runtime state lives in:
 - `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/role-state/qa/**`
+- `../../BUGS.md`
 
 ## Forbidden writes
 
@@ -84,6 +85,9 @@ The QA agent MUST:
   obvious request loops, or showing runtime error surfaces
 - fail the review if the backend logs or live behavior show unhandled runtime
   errors during the tested flows
+- if QA uncovers a likely upstream SAFRS-family bug rather than an app-only
+  implementation defect, record or update it in `../../BUGS.md` and cite it in
+  `qa-delivery-review.md`
 - fail the review if user-facing pages still expose metadata, route inventory,
   contract recovery copy, provisional warnings, or other internal/debug
   language
@@ -122,6 +126,9 @@ The QA agent MUST:
   - `metadata_leakage: pass-on-tested-surfaces`
 - create downstream inbox notes for the owning roles when QA fails
 - approve delivery only when the app behaves as a usable product surface
+- treat a discovered SAFRS, `safrs-jsonapi-client`, or LogicBank bug as a
+  blocker or explicit containment item, not as a normal QA pass with a local
+  workaround
 
 The QA agent MUST NOT:
 

@@ -3,6 +3,12 @@
 `app_gen_playbook` is a repository for generating SAFRS-based admin
 applications through a structured multi-role workflow.
 
+It also serves as a SAFRS-family integration testbed. If a run exposes a bug
+in `safrs`, `safrs-jsonapi-client`, `logicbank`, or another shared upstream
+dependency, do not normalize a local workaround as the accepted fix. Record it
+in [BUGS.md](BUGS.md) and treat the issue as a blocker or explicit temporary
+containment item.
+
 It is primarily intended for:
 
 - maintainers of the playbook

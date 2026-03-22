@@ -84,6 +84,7 @@ Use the small stable startup manifest:
 - `../../app/entrypoint.sh`
 - `../../app/install.sh`
 - `../../app/run.sh`
+- `../../BUGS.md`
 
 ## Forbidden writes
 
@@ -173,6 +174,18 @@ In that mode:
 When the backend venv is available, DevOps SHOULD ensure the playbook's Python
 tooling uses that same interpreter instead of drifting onto a separate system
 Python.
+
+If dependency materialization, runtime normalization, or packaging exposes a
+likely upstream bug in SAFRS, `safrs-jsonapi-client`, LogicBank, or another
+shared SAFRS-family dependency, DevOps MUST:
+
+- record or update the defect in `../../BUGS.md`
+- cite it in the relevant packaging or verification evidence
+- avoid normalizing a packaging-only workaround as if the underlying framework
+  or package behavior were healthy
+
+Temporary containment may help confirm the defect, but it does not clear the
+gate and does not replace the bug report.
 
 ## Escalation targets
 

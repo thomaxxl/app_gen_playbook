@@ -111,6 +111,7 @@ This applies in particular to:
 - `../../runs/current/changes/*/verification/**`
 - `../../runs/current/role-state/frontend/**`
 - `../../app/frontend/**`
+- `../../BUGS.md`
 
 ## Forbidden writes
 
@@ -175,6 +176,19 @@ normalizer base. Local shared-runtime code should be thin extension glue for:
 - app-local auth or header glue
 
 It MUST NOT become a second long-lived adapter stack.
+
+If frontend implementation or validation exposes a likely upstream bug in
+`safrs-jsonapi-client`, SAFRS metadata or relationship behavior, or another
+shared SAFRS-family dependency, the Frontend agent MUST:
+
+- record or update the defect in `../../BUGS.md`
+- cite it in the relevant run evidence or remarks
+- reopen or block the run instead of normalizing a local adapter, provider, or
+  relationship workaround as the accepted frontend baseline
+
+Temporary local containment may help confirm the bug, but it MUST NOT be
+presented as the clean delivery lane or as proof that the upstream behavior is
+healthy.
 
 The Frontend agent MUST treat relationship tabs and related-record popups as
 baseline generated-UI behavior. Silence, omission, or a thinner CRUD shell is

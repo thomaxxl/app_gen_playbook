@@ -63,6 +63,10 @@ This file defines the minimum backend validation checklist.
 - when such a custom DB-backed endpoint exists, the evidence pack MUST point
   to the run-owned SAFRS lane audit or explicit exception record that was
   produced after applying `../../../skills/safrs-api-design/SKILL.md`
+- if backend implementation or validation exposes a likely upstream SAFRS or
+  LogicBank bug, the run MUST record it in `../../../BUGS.md` and MUST NOT
+  treat a custom endpoint, raw-SQL bypass, service-layer patch, or rule
+  workaround as successful contract validation
 - raw SQL or hand-built row adapters MAY supplement aggregate/read-model
   endpoints, but MUST NOT replace the normal ORM lane for appropriate
   DB-backed resources
@@ -140,3 +144,7 @@ and record the fallback path and justification in the relevant handoff or
 The fallback harness is not optional documentation only: the starter template
 set MUST include an executable fallback file so verification can still
 proceed in constrained environments.
+
+If the fallback path reveals an upstream SAFRS-family bug rather than a normal
+environment constraint, that defect MUST be recorded in `../../../BUGS.md` and
+must not be normalized as a clean backend pass.

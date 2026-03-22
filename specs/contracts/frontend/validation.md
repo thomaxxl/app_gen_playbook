@@ -59,6 +59,11 @@ frontend package template before treating the playbook baseline as current.
   `safrs-jsonapi-client`, not from a parallel local JSON:API client
 - the `admin.yaml` adaptation layer stays thin and preserves `endpoint`,
   `user_key`, search metadata, and `tab_groups`
+- if frontend implementation or validation exposes a likely upstream bug in
+  `safrs-jsonapi-client`, SAFRS metadata/relationship behavior, or another
+  shared SAFRS-family dependency, the run MUST record it in
+  `../../../BUGS.md` and MUST NOT treat a parallel provider, adapter patch, or
+  relationship workaround as successful validation
 - API-backed frontend surfaces use the React-admin dataProvider path rather
   than direct component-level `fetch(...)` calls
 - `runs/current/artifacts/ux/landing-strategy.md` exists and is not left as
@@ -202,6 +207,10 @@ screenshots. If preview capture would normally be appropriate but is skipped
 because the environment cannot provide browser execution, record that reason in
 `runs/current/remarks.md`, `runs/current/evidence/frontend-usability.md`, and
 `runs/current/evidence/ui-previews/manifest.md`.
+
+If browser validation or preview review reveals a SAFRS-family client or
+metadata bug rather than an app-only issue, record it in `../../../BUGS.md`
+and treat any local containment as diagnostic only.
 
 ## Usability guardrail script
 

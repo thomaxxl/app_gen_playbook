@@ -17,6 +17,12 @@ the sidecar policy registry under `specs/policy/`, especially:
 - `specs/policy/profiles/gate-quality.yaml`
 - `specs/policy/profiles/gate-acceptance.yaml`
 
+The playbook is also a SAFRS-family integration testbed. If a run discovers an
+upstream framework or client bug in `safrs`, `safrs-jsonapi-client`,
+`logicbank`, or a closely related shared dependency, the issue MUST be logged
+in `../../BUGS.md`. Temporary containment may help confirm the defect, but it
+does not count as a clean fix or clear the gate.
+
 ## Hard blockers
 
 SAFRS-first API rule:
@@ -59,6 +65,10 @@ The run is blocked if any of these are true:
   `jsonapi_rpc` was insufficient
 - a custom DB-backed endpoint exists without quality evidence pointing to the
   run-owned SAFRS lane audit or explicit exception record
+- a SAFRS-family framework/client/rules bug was discovered during the run but
+  hidden behind a local workaround, silent template patch, or acceptance
+  exception without an explicit entry in `../../BUGS.md` and a matching
+  blocker or containment note in run evidence
 - `/jsonapi.json` exists only as renamed FastAPI OpenAPI while required
   SAFRS-backed resources are missing from real model exposure
 - DB-backed tables or relationships that should be ordinary ORM-backed domain

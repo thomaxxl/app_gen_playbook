@@ -61,6 +61,7 @@ undecided feature packs MUST NOT be loaded, summarized, or copied.
 - `../../app/backend/**`
 - `../../app/rules/**`
 - `../../app/reference/admin.yaml`
+- `../../BUGS.md`
 
 ## Forbidden writes
 
@@ -197,6 +198,19 @@ If a relationship is intentionally not public, that MUST be a documented SAFRS
 decision using normal SAFRS controls such as hidden relationships or
 relationship item-mode choices. It MUST NOT be an implicit omission followed by
 custom substitute endpoints.
+
+If backend design, implementation, or validation exposes a likely upstream bug
+in SAFRS, LogicBank, or a shared SAFRS-family dependency, the Backend agent
+MUST:
+
+- record or update the defect in `../../BUGS.md`
+- cite the bug in the relevant run notes, remarks, or backend evidence
+- reopen or block the run instead of treating a custom endpoint, raw-SQL
+  bypass, service-layer patch, or rule workaround as the accepted fix
+
+Temporary local instrumentation or containment is allowed only to confirm the
+bug. It MUST NOT be presented as the clean delivery lane or as proof that the
+underlying framework behavior is acceptable.
 
 Use the template sources above when producing the run-owned artifacts under
 `../../runs/current/artifacts/backend-design/`.
