@@ -63,6 +63,7 @@ Design the user journey and page behavior before implementation diverges.
 - screen and custom-view specs explicitly identify which user-visible data must
   come from the API
 - `review-plan.json` covers every required visible route from the Product + UX
-  scope contract
+  scope contract and carries the story-depth obligations later reviewers must
+  cite
 - the `runs/current/artifacts/ux/` package is marked `ready-for-handoff` or
   `approved`

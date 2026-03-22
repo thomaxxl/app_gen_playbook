@@ -9,6 +9,8 @@ Convert product requirements into a stable cross-layer contract.
 ## Activities
 
 - verify the product package is complete enough for architecture decisions
+- use `user-stories.md` and `traceability-matrix.md` as first-class inputs,
+  not only workflow or page summaries
 - classify the run as starter, rename-only, or non-starter
 - classify each resource and record singleton-versus-first-class decisions
 - define canonical resource names
@@ -51,6 +53,8 @@ If the run differs from the starter trio, the Architect MUST read
 
 - no contradictory contracts remain
 - each later role can work without guessing
+- user-story scope, workflow depth, permission context, and review obligations
+  are explicit enough that architecture does not need to infer them indirectly
 - runtime dependencies are explicit
 - runtime-bom is authored and freezes frontend/backend package sources before
   implementation

@@ -19,5 +19,11 @@ The real artifact MUST record:
 - verification references
 - unresolved issues
 - `## Story Coverage`
+- `## Actor Coverage`
+- `## Story Type Coverage`
+- `## Scenario Depth Coverage`
 - `## Page Coverage`
 - `## Route Coverage`
+- citation of the reviewed `must` stories by story ID
+- explicit comment on negative/validation, empty-state, and permission
+  behavior for the reviewed required stories

@@ -19,6 +19,9 @@ The real artifact MUST record:
 - evidence references
 - deferred items, if any
 - `## Story Coverage`
+- `## Actor Coverage`
+- `## Story Type Coverage`
+- `## Scenario Depth Coverage`
 - `## Page Coverage`
 - `## Route Coverage`
 - explicit review of the entry page, required custom pages, and at least one
@@ -27,3 +30,6 @@ The real artifact MUST record:
   `custom-view-specs.md` when applicable
 - whether any internal implementation/debug/recovery copy leaked into
   user-visible UI
+- citation of the reviewed `must` stories by story ID
+- explicit comment on negative/validation, empty-state, and permission
+  behavior for the reviewed required stories

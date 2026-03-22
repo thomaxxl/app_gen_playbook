@@ -22,6 +22,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 - sparse-input interpretation
 - resource inventory and CRUD expectations
 - user stories and workflows
+- actor coverage, story taxonomy, and scenario depth
 - human-readable business-rule intent
 - custom-page purpose
 - acceptance criteria
@@ -177,6 +178,21 @@ plainly is not. If the input leaves gaps around expected workflows, standard
 domain behavior, common operating constraints, or baseline usability
 expectations, those gaps MUST be closed through explicit research and
 documented product decisions before handoff.
+
+`../../runs/current/artifacts/product/user-stories.md` is the authoritative
+scope catalog for the run. The Product Manager MUST not leave it as loose prose
+or a flat CRUD list. It MUST include:
+
+- an actor-by-capability coverage matrix
+- the exact story index schema defined by `specs/product/user-stories.md`
+- the mandatory story-type taxonomy
+- detailed scenario sections for every `must` story and every workflow-heavy
+  `should` story
+
+The Product Manager MUST treat `traceability-matrix.md` as the bridge from
+story scope into workflows, rules, pages, routes, permissions, sample data,
+and acceptance IDs. Those fields are required because downstream roles are not
+allowed to infer workflow depth by guesswork.
 
 Use the generic product templates under
 [../../specs/product/README.md](../../specs/product/README.md) when producing

@@ -10,9 +10,11 @@ required_phase:
   - playbook/process/phases/phase-4-backend-design-and-rules-mapping.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/resource-inventory.md
   - runs/current/artifacts/product/resource-behavior-matrix.md
   - runs/current/artifacts/product/business-rules.md
+  - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/architecture/integration-boundary.md
   - runs/current/artifacts/architecture/resource-naming.md
   - runs/current/artifacts/architecture/resource-classification.md

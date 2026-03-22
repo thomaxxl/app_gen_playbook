@@ -21,6 +21,11 @@ def generate_review_plan_payload(repo_root: Path) -> tuple[dict[str, Any], list[
     scope, issues = compile_product_scope_payload(repo_root)
     surfaces = []
     for route in scope["required_visible_routes"]:
+        mapped_story_reviews = [
+            story
+            for story in scope.get("required_story_reviews", [])
+            if route["route_id"] in story.get("route_ids", [])
+        ]
         surfaces.append(
             {
                 "surface_id": route["route_id"],
@@ -32,9 +37,21 @@ def generate_review_plan_payload(repo_root: Path) -> tuple[dict[str, Any], list[
                 "product_review_required": True,
                 "qa_live_test_required": True,
                 "sample_depth": "visible-route",
+                "story_ids": [story["story_id"] for story in mapped_story_reviews],
+                "story_types": sorted({story["story_type"] for story in mapped_story_reviews if story.get("story_type")}),
+                "required_checks": sorted(
+                    {check for story in mapped_story_reviews for check in story.get("required_checks", [])}
+                ),
             }
         )
-    payload = {"surfaces": surfaces, "source_paths": scope["source_paths"]}
+    payload = {
+        "surfaces": surfaces,
+        "story_reviews": scope.get("required_story_reviews", []),
+        "actor_coverage": scope.get("coverage_matrix", []),
+        "story_type_catalog": scope.get("story_type_catalog", []),
+        "required_scenario_checks": scope.get("required_scenario_checks", []),
+        "source_paths": scope["source_paths"],
+    }
     return payload, issues
 
 

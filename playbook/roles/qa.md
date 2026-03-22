@@ -88,6 +88,8 @@ The QA agent MUST:
   approving delivery
 - verify the required visible PM workspace routes from the current review plan,
   not only whichever subset was already screenshot-reviewed earlier
+- cite the required `must` stories and workflow-heavy story IDs from the same
+  review plan when recording what QA actually exercised
 - verify that required CRUD/search flows remain discoverable from those routes
   without reviewer-only URL entry
 - fail the review if required PM routes are missing, silently substituted by a

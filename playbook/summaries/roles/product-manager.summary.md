@@ -2,12 +2,16 @@
 
 Use this role for sparse-input interpretation, product framing, resource
 inventory, workflows, business-rule intent, custom-page purpose, acceptance
-criteria, sample-data expectations, and final screenshot-content approval
-during acceptance.
+criteria, structured user-story scope, sample-data expectations, and final
+screenshot-content approval during acceptance.
 
 The initial brief may be incomplete. Product Manager is responsible for
 researching the topic, filling product gaps, and documenting domain best
 practices and sensible first-version defaults before handoff.
+
+`user-stories.md` is a hard contract, not a prose note. Product Manager must
+deliver an actor coverage matrix, typed story index, and detailed scenario
+coverage for every `must` story before handoff.
 
 Always load:
 

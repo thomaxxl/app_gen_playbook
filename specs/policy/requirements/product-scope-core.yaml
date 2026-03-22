@@ -1,6 +1,6 @@
 id: product-scope-core
 title: Product scope coverage requirements
-description: Executable rules for story, page, and route completeness.
+description: Executable rules for story breadth, story depth, page, and route completeness.
 requirements:
   - id: PROD-SCOPE-001
     title: Frontend implements required visible routes and CTA targets

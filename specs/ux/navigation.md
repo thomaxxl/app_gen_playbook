@@ -17,11 +17,11 @@ version at `../../runs/current/artifacts/ux/navigation.md`.
 
 ## Required route table
 
-The real artifact MUST include a table with at least these columns:
+The real artifact MUST include this exact table schema:
 
-| Route ID | Path | Menu label | Menu visibility | Route owner | Entry role | Primary intent | Page header model | Entry conditions | Return path | Primary CTA | Back path or recovery path | Accessibility notes | Responsive notes | Resource or page source | Justification |
+| Route ID | Path | Label | Visibility | Implementation | Role | Purpose | Entry cue | Trigger | Back target | Primary action | Secondary action | Accessibility | Responsive | Delivery mode | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | visible or hidden | generated/custom/singleton/hidden | primary-entry/support/detail/hidden | replace | starter/non-starter/custom | replace | replace | replace | replace | default/non-default | default/non-default | replace | replace |
+| N001 | `/app/#/Home` | Overview | visible | custom | primary-entry | orient the user and show next actions | hero CTA | sidebar or home CTA | none | open review queue | open activity | default | desktop-first | custom | primary landing route |
 
 ## Required sections
 

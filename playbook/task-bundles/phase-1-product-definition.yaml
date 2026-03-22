@@ -19,7 +19,9 @@ conditional_artifacts:
     - examples/README.md
 reference_only:
   - specs/product/README.md
+  - specs/product/user-stories.md
   - specs/product/sample-data.md
+  - specs/product/custom-pages.md
   - specs/product/traceability-matrix.md
 writable_targets:
   - runs/current/artifacts/product/**

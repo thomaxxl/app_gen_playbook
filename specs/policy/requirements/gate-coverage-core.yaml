@@ -21,8 +21,9 @@ requirements:
       - specs/architecture/integration-review.md
       - playbook/process/phases/phase-6-integration-review.md
     description: >
-      The integration review artifact must include structured story, page, and
-      route coverage sections.
+      The integration review artifact must include structured actor, story,
+      story-type, scenario-depth, page, and route coverage sections with
+      concrete cited content.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_integration_review_coverage.py
@@ -54,8 +55,9 @@ requirements:
       - specs/product/acceptance-review.md
       - playbook/process/phases/phase-7-product-acceptance.md
     description: >
-      The acceptance review artifact must include structured story, page, and
-      route coverage sections.
+      The acceptance review artifact must include structured actor, story,
+      story-type, scenario-depth, page, and route coverage sections with
+      concrete cited content.
     validator:
       kind: python_function
       entrypoint: tools/validators/coverage/validate_acceptance_review_coverage.py

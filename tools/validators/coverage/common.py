@@ -11,6 +11,7 @@ from orchestrator_common import resolve_repo_root
 TABLE_SEPARATOR_RE = re.compile(r"^\s*:?-{3,}:?\s*$")
 PRIMARY_CTA_TARGET_RE = re.compile(r"(?im)^-\s*Primary CTA route target:\s*(.+?)\s*$")
 BACKTICK_PATH_RE = re.compile(r"`(/app/#/[^`]+)`")
+SECTION_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 QUALITY_SUMMARY_BLOCKED_PATTERNS = (
     (
         re.compile(r"(?im)quality evidence pack is `blocked`"),
@@ -88,7 +89,11 @@ def collect_quality_gate_evidence_issues(repo_root: Path) -> list[dict[str, str]
 def parse_markdown_table(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
-    lines = path.read_text(encoding="utf-8").splitlines()
+    return parse_markdown_table_text(path.read_text(encoding="utf-8"))
+
+
+def parse_markdown_table_text(text: str) -> list[dict[str, str]]:
+    lines = text.splitlines()
     rows: list[dict[str, str]] = []
     header: list[str] | None = None
     for raw_line in lines:
@@ -107,6 +112,66 @@ def parse_markdown_table(path: Path) -> list[dict[str, str]]:
     return rows
 
 
+def extract_markdown_section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    capture = False
+    level = 0
+    buffer: list[str] = []
+    normalized_heading = heading.strip().lower()
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        match = SECTION_HEADING_RE.match(stripped)
+        if match:
+            current_level = len(match.group(1))
+            current_heading = match.group(2).strip().lower()
+            if capture and current_level <= level:
+                break
+            if not capture and current_heading == normalized_heading:
+                capture = True
+                level = current_level
+                continue
+        if capture:
+            buffer.append(raw_line)
+    return "\n".join(buffer).strip()
+
+
+def parse_markdown_table_from_section(text: str, heading: str) -> list[dict[str, str]]:
+    section_text = extract_markdown_section(text, heading)
+    if not section_text:
+        return []
+    return parse_markdown_table_text(section_text)
+
+
+def extract_child_sections(text: str, level: int) -> dict[str, str]:
+    lines = text.splitlines()
+    current_heading: str | None = None
+    current_buffer: list[str] = []
+    sections: dict[str, str] = {}
+    marker = "#" * level
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        match = SECTION_HEADING_RE.match(stripped)
+        if match:
+            current_level = len(match.group(1))
+            if current_heading is not None and current_level <= level:
+                sections[current_heading] = "\n".join(current_buffer).strip()
+                current_heading = None
+                current_buffer = []
+            if current_level == level and stripped.startswith(f"{marker} "):
+                current_heading = match.group(2).strip()
+                current_buffer = []
+                continue
+        if current_heading is not None:
+            current_buffer.append(raw_line)
+    if current_heading is not None:
+        sections[current_heading] = "\n".join(current_buffer).strip()
+    return sections
+
+
+def parse_csv_values(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 def parse_page_id(value: str) -> str:
     return value.strip().split()[0]
 
@@ -120,6 +185,10 @@ def parse_primary_cta_targets(text: str) -> list[str]:
     if match is None:
         return []
     return parse_backtick_paths(match.group(1))
+
+
+def normalized_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip().lower())
 
 
 def story_rows(repo_root: Path) -> list[dict[str, str]]:

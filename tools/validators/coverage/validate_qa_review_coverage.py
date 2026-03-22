@@ -65,6 +65,16 @@ def collect_issues(repo_root) -> list[dict[str, str]]:
                     "reason": f"QA screenshot manifest does not cover required route {surface['route_id']} at {surface['path']}",
                 }
             )
+    for story in plan.get("story_reviews", []):
+        if story.get("priority") == "must" or story.get("detail_required"):
+            story_id = str(story.get("story_id", "")).strip()
+            if story_id and story_id not in qa_text:
+                issues.append(
+                    {
+                        "path": qa_path.relative_to(repo_root).as_posix(),
+                        "reason": f"QA review does not mention required story {story_id}",
+                    }
+                )
     return issues
 
 

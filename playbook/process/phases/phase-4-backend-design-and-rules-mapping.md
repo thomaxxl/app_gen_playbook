@@ -10,7 +10,8 @@ and tests.
 ## Activities
 
 - start from the Product Manager resource inventory and resource behavior
-  matrix, not only the glossary and rule narrative
+  matrix, user stories, and traceability matrix, not only the glossary and
+  rule narrative
 - classify which product concepts become exposed SAFRS resources
 - treat persisted database-backed product or operator concepts as SAFRS
   resources by default unless an explicit documented exception applies
@@ -68,6 +69,9 @@ and tests.
 - every approved rule ID maps to backend implementation and backend tests
 - every approved rule ID records the chosen LogicBank lane or justified
   exception before coding starts
+- backend design decisions do not have to guess about workflow depth because
+  `user-stories.md` and `traceability-matrix.md` already record scenario,
+  permission, and acceptance context
 - every derived persisted field records any schema prerequisite, migration, or
   backfill plan before coding starts
 - every frontend-visible field maps to backend truth
