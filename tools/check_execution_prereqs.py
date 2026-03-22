@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import errno
+import hashlib
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -20,12 +22,41 @@ PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
 SAFRS_JSONAPI_CLIENT_REPO_REF = "0.0.1"
+MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
+BACKEND_IMPORT_PROBE = (
+    "import fastapi, httpx, jsonapischema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
+)
+
+
 @dataclass
 class CheckResult:
     name: str
     status: str
     detail: str
     optional: bool = False
+
+
+def load_runtime_env(repo_root: Path) -> dict[str, str]:
+    result: dict[str, str] = {}
+    runtime_env_path = repo_root / "app" / ".runtime.local.env"
+    if not runtime_env_path.exists():
+        return result
+
+    for raw_line in runtime_env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        result[key] = os.path.expandvars(value)
+    return result
 
 
 def resolve_app_relative_path(repo_root: Path, raw_path: str) -> Path:
@@ -35,19 +66,39 @@ def resolve_app_relative_path(repo_root: Path, raw_path: str) -> Path:
     return candidate.resolve()
 
 
-def backend_python_path(repo_root: Path) -> Path:
-    raw_candidate = os.environ.get("BACKEND_VENV", "").strip()
+def runtime_env_value(repo_root: Path, key: str) -> str:
+    env_value = os.environ.get(key, "").strip()
+    if env_value:
+        return env_value
+    return load_runtime_env(repo_root).get(key, "").strip()
+
+
+def dependency_provisioning_mode(repo_root: Path) -> str:
+    env_mode = runtime_env_value(repo_root, "DEPENDENCY_PROVISIONING_MODE")
+    if env_mode in {"clean-install", "preprovisioned-reuse-only"}:
+        return env_mode
+    artifact = repo_root / "runs" / "current" / "artifacts" / "architecture" / "dependency-provisioning.md"
+    if not artifact.exists():
+        return "clean-install"
+    match = MODE_PATTERN.search(artifact.read_text(encoding="utf-8"))
+    if not match:
+        return "clean-install"
+    return match.group(1)
+
+
+def backend_venv_dir(repo_root: Path) -> Path:
+    raw_candidate = runtime_env_value(repo_root, "BACKEND_VENV")
     if raw_candidate:
-        candidate = resolve_app_relative_path(repo_root, raw_candidate)
-    else:
-        candidate = repo_root / "app" / "backend" / ".venv"
-    if candidate.is_dir():
-        return candidate / "bin" / "python"
-    return candidate
+        return resolve_app_relative_path(repo_root, raw_candidate)
+    return repo_root / "app" / "backend" / ".venv"
+
+
+def backend_python_path(repo_root: Path) -> Path:
+    return backend_venv_dir(repo_root) / "bin" / "python"
 
 
 def frontend_node_modules_path(repo_root: Path) -> Path:
-    raw_candidate = os.environ.get("FRONTEND_NODE_MODULES_DIR", "").strip()
+    raw_candidate = runtime_env_value(repo_root, "FRONTEND_NODE_MODULES_DIR")
     if raw_candidate:
         return resolve_app_relative_path(repo_root, raw_candidate)
     return repo_root / "app" / "frontend" / "node_modules"
@@ -59,6 +110,103 @@ def frontend_tool_path(repo_root: Path, name: str) -> Path:
 
 def frontend_safrs_jsonapi_client_source_path(repo_root: Path) -> Path:
     return repo_root / "app" / "tmp" / "safrs-jsonapi-client"
+
+
+def backend_requirements_path(repo_root: Path) -> Path:
+    return repo_root / "app" / "backend" / "requirements.txt"
+
+
+def backend_prereq_stamp_path(repo_root: Path) -> Path:
+    return backend_venv_dir(repo_root) / ".playbook-backend-prereqs.sha256"
+
+
+def backend_dependency_fingerprint(repo_root: Path) -> str:
+    requirements_path = backend_requirements_path(repo_root)
+    payload = requirements_path.read_bytes() + b"\nlogicbank\n"
+    return hashlib.sha256(payload).hexdigest()
+
+
+def backend_dependency_stamp_matches(repo_root: Path) -> bool:
+    stamp_path = backend_prereq_stamp_path(repo_root)
+    if not stamp_path.exists():
+        return False
+    return stamp_path.read_text(encoding="utf-8").strip() == backend_dependency_fingerprint(repo_root)
+
+
+def run_backend_import_probe(python_path: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [str(python_path), "-c", BACKEND_IMPORT_PROBE],
+        capture_output=True,
+        text=True,
+    )
+
+
+def ensure_backend_venv_ready(repo_root: Path) -> tuple[bool, str]:
+    requirements_path = backend_requirements_path(repo_root)
+    venv_dir = backend_venv_dir(repo_root)
+    python_path = backend_python_path(repo_root)
+    mode = dependency_provisioning_mode(repo_root)
+    created = False
+    installed = False
+
+    if mode == "preprovisioned-reuse-only":
+        if not python_path.exists():
+            return False, f"missing backend python: {python_path}"
+        probe = run_backend_import_probe(python_path)
+        if probe.returncode == 0:
+            return True, f"verified imports via {python_path}"
+        return False, f"dependency imports failed via {python_path}: {(probe.stderr or probe.stdout).strip()}"
+
+    if not requirements_path.exists():
+        return False, f"missing backend requirements manifest: {requirements_path}"
+
+    if not python_path.exists():
+        venv_dir.parent.mkdir(parents=True, exist_ok=True)
+        proc = subprocess.run(
+            [sys.executable, "-m", "venv", str(venv_dir)],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            return False, f"backend venv creation failed at {venv_dir}: {(proc.stderr or proc.stdout).strip()}"
+        created = True
+
+    probe = run_backend_import_probe(python_path)
+    if probe.returncode != 0 or not backend_dependency_stamp_matches(repo_root):
+        pip_upgrade = subprocess.run(
+            [str(python_path), "-m", "pip", "install", "--upgrade", "pip"],
+            capture_output=True,
+            text=True,
+        )
+        if pip_upgrade.returncode != 0:
+            return False, f"backend dependency install failed via {python_path}: {(pip_upgrade.stderr or pip_upgrade.stdout).strip()}"
+        dependency_install = subprocess.run(
+            [
+                str(python_path),
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                "-r",
+                str(requirements_path),
+                "logicbank",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if dependency_install.returncode != 0:
+            return False, f"backend dependency install failed via {python_path}: {(dependency_install.stderr or dependency_install.stdout).strip()}"
+        backend_prereq_stamp_path(repo_root).write_text(backend_dependency_fingerprint(repo_root), encoding="utf-8")
+        installed = True
+
+    probe = run_backend_import_probe(python_path)
+    if probe.returncode != 0:
+        return False, f"dependency imports failed via {python_path}: {(probe.stderr or probe.stdout).strip()}"
+    if created and installed:
+        return True, f"created backend venv and installed dependencies via {python_path}"
+    if installed:
+        return True, f"repaired backend venv dependencies and verified imports via {python_path}"
+    return True, f"verified imports via {python_path}"
 
 
 def runtime_environment() -> str:
@@ -146,26 +294,10 @@ def check_local_socket_capability() -> CheckResult:
 
 
 def check_backend_venv(repo_root: Path) -> CheckResult:
-    python_path = backend_python_path(repo_root)
-    if not python_path.exists():
-        return CheckResult("python_venv", "blocked", f"missing backend python: {python_path}")
-
-    proc = subprocess.run(
-        [
-            str(python_path),
-            "-c",
-            "import fastapi, sqlalchemy, safrs, uvicorn",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if proc.returncode == 0:
-        return CheckResult("python_venv", "ok", f"verified imports via {python_path}")
-    return CheckResult(
-        "python_venv",
-        "blocked",
-        f"dependency imports failed via {python_path}: {(proc.stderr or proc.stdout).strip()}",
-    )
+    ready, detail = ensure_backend_venv_ready(repo_root)
+    if ready:
+        return CheckResult("python_venv", "ok", detail)
+    return CheckResult("python_venv", "blocked", detail)
 
 
 def check_node_modules(repo_root: Path) -> CheckResult:

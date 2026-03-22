@@ -55,7 +55,7 @@ BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
   BACKEND_VENV_DIR="$(normalize_path "$BACKEND_VENV")"
-elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
+else
   BACKEND_VENV_DIR="$BACKEND_DIR/.venv"
 fi
 
@@ -127,6 +127,7 @@ backend_dependencies_ready() {
   local backend_python="$1"
   "$backend_python" - <<'PY' >/dev/null 2>&1
 import fastapi
+import jsonapischema
 import logic_bank
 import safrs
 import uvicorn
@@ -193,7 +194,7 @@ if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
 
   if ! backend_dependencies_ready "$BACKEND_VENV_DIR/bin/python"; then
     echo "Backend dependencies are incomplete in $BACKEND_VENV_DIR." >&2
-    echo "Expected fastapi, logic_bank, safrs, and uvicorn to already be installed." >&2
+    echo "Expected fastapi, jsonapischema, logic_bank, safrs, and uvicorn to already be installed." >&2
     exit 1
   fi
 
@@ -208,26 +209,17 @@ if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
   exit 0
 fi
 
-if [[ -n "$BACKEND_VENV_DIR" ]]; then
-  if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
-    echo "Creating backend virtualenv at $BACKEND_VENV_DIR"
-    python3 -m venv "$BACKEND_VENV_DIR"
-  fi
-
-  echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
-  (
-    cd "$BACKEND_DIR"
-    "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade pip
-    "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade -r requirements.txt logicbank
-  )
-else
-  echo "Installing backend dependencies into $BACKEND_DIR/.deps"
-  (
-    cd "$BACKEND_DIR"
-    python3 -m pip install --upgrade --target .deps -r requirements.txt
-    python3 -m pip install --upgrade --target .deps logicbank
-  )
+if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
+  echo "Creating backend virtualenv at $BACKEND_VENV_DIR"
+  python3 -m venv "$BACKEND_VENV_DIR"
 fi
+
+echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
+(
+  cd "$BACKEND_DIR"
+  "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade pip
+  "$BACKEND_VENV_DIR/bin/python" -m pip install --upgrade -r requirements.txt logicbank
+)
 
 (
   cd "$FRONTEND_DIR"
@@ -288,8 +280,9 @@ Notes:
 
 - Keep this at the project root, next to `run.sh`.
 - `install.sh` MUST honor `DEPENDENCY_PROVISIONING_MODE`.
-- In `clean-install` mode, the backend may still use `backend/.deps` by
-  default or install into a declared `backend/.venv` or `BACKEND_VENV`.
+- In `clean-install` mode, the backend venv is the canonical Python runtime.
+  `install.sh` MUST create or repair `backend/.venv` or the declared
+  `BACKEND_VENV` before the playbook continues.
 - In `preprovisioned-reuse-only` mode, `install.sh` becomes a validator. It
   MUST NOT create a virtualenv, run pip, run npm, or install Playwright.
 - `install.sh` SHOULD be idempotent for the frontend. If `frontend/node_modules`
@@ -298,8 +291,8 @@ Notes:
 - In `clean-install` mode, missing `node_modules` MUST still trigger a full
   frontend install automatically.
 - In `clean-install` mode, if `safrs-jsonapi-client` is still absent after the
-  baseline `npm install`, `install.sh` MUST install it from the approved
-  release asset URL.
+  baseline `npm install`, `install.sh` MUST install it from the approved local
+  `tmp/safrs-jsonapi-client` checkout.
 - If repeated local runs should reuse a dependency tree stored outside the app
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to

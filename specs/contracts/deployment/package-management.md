@@ -34,6 +34,11 @@ Allowed modes:
 `clean-install` means the generated app may create or install local dependency
 roots when they are absent.
 
+For Python specifically, `clean-install` means the backend virtualenv is the
+first dependency root that must be materialized. The playbook's Python tooling
+should then use that same backend venv for subsequent checks and runtime
+automation.
+
 `preprovisioned-reuse-only` means dependencies are expected to exist before the
 playbook tries to use them. In that mode, roles may verify and normalize the
 approved roots, but MUST NOT create or install them.
@@ -102,6 +107,8 @@ Generated backends MUST:
 
 - declare the intended Python runtime where packaging depends on it
 - use `requirements.txt` as the primary runtime manifest by default
+- treat the backend virtualenv as the canonical Python runtime for both backend
+  execution and playbook-side Python tooling
 - keep the backend install path reproducible enough for local and container
   packaging
 

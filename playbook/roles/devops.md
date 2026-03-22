@@ -122,7 +122,7 @@ non-blocking unless the playbook policy changes in a future release.
 When reusable local dependency roots are needed for implementation or delivery,
 DevOps owns the normalization policy for:
 
-- optional local `app/backend/.venv`
+- canonical local `app/backend/.venv`
 - optional local `app/frontend/node_modules` symlink
 - optional local `app/.runtime.local.env`
 - `BACKEND_VENV`
@@ -137,7 +137,8 @@ runtime validation is blocked by the environment.
 
 That prerequisite check MUST cover:
 
-- a usable backend Python venv
+- a usable backend Python venv, including clean-install creation/repair when
+  allowed
 - local frontend `node_modules`
 - localhost port bind capability
 - Playwright screenshot capture capability
@@ -167,6 +168,10 @@ In that mode:
 - DevOps MUST NOT run package installation commands
 - DevOps MUST stop immediately with a clear block if the prepared dependency
   roots are missing or incomplete
+
+When the backend venv is available, DevOps SHOULD ensure the playbook's Python
+tooling uses that same interpreter instead of drifting onto a separate system
+Python.
 
 ## Escalation targets
 

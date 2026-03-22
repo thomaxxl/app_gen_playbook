@@ -29,7 +29,7 @@ The real artifact MUST include a machine-readable policy block like this:
 dependency_provisioning:
   mode: clean-install
   backend:
-    source: backend-dot-deps-default
+    source: backend-venv-default
     create_if_missing: true
     install_if_missing: true
   frontend:
@@ -56,7 +56,7 @@ local dependency roots.
 
 In this mode, the run MAY allow:
 
-- creating `backend/.venv` or installing into `backend/.deps`
+- creating `backend/.venv`
 - creating `frontend/node_modules`
 - creating `app/tmp/safrs-jsonapi-client` and cloning the approved repo/ref
   into it before frontend install

@@ -31,7 +31,7 @@ def load_runtime_env(path: Path) -> dict[str, str]:
         value = value.strip()
         if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
             value = value[1:-1]
-        result[key] = value
+        result[key] = os.path.expandvars(value)
     return result
 
 
@@ -77,7 +77,7 @@ def check_backend(python_path: Path, errors: list[str]) -> None:
     command = [
         str(python_path),
         "-c",
-        "import fastapi, logic_bank, safrs, uvicorn",
+        "import fastapi, jsonapischema, logic_bank, safrs, uvicorn",
     ]
     try:
         completed = subprocess.run(
@@ -92,7 +92,7 @@ def check_backend(python_path: Path, errors: list[str]) -> None:
     if completed.returncode != 0:
         errors.append(
             "backend dependencies are incomplete in "
-            f"{python_path.parent.parent} (expected fastapi, logic_bank, safrs, uvicorn)"
+            f"{python_path.parent.parent} (expected fastapi, jsonapischema, logic_bank, safrs, uvicorn)"
         )
 
 

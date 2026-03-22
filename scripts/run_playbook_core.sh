@@ -23,6 +23,20 @@ load_env_file() {
 
 load_env_file
 
+load_app_runtime_env_file() {
+  local env_path="$ROOT/app/.runtime.local.env"
+  if [[ ! -f "$env_path" ]]; then
+    return 0
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  . "$env_path"
+  set +a
+}
+
+load_app_runtime_env_file
+
 MODE="new"
 RESUME=0
 TARGET_ROLE=""
@@ -489,6 +503,39 @@ print(raw.resolve())
 PY
 }
 
+activate_playbook_backend_venv() {
+  local backend_venv_dir backend_venv_bin
+
+  if [[ -n "$BACKEND_VENV" ]]; then
+    backend_venv_dir="$(resolve_playbook_path "$BACKEND_VENV")"
+  else
+    backend_venv_dir="$ROOT/app/backend/.venv"
+  fi
+
+  if [[ -x "$backend_venv_dir/bin/python3" ]]; then
+    backend_venv_bin="$backend_venv_dir/bin"
+    PLAYBOOK_PYTHON="$backend_venv_dir/bin/python3"
+  elif [[ -x "$backend_venv_dir/bin/python" ]]; then
+    backend_venv_bin="$backend_venv_dir/bin"
+    PLAYBOOK_PYTHON="$backend_venv_dir/bin/python"
+  else
+    PLAYBOOK_PYTHON="python3"
+    return 1
+  fi
+
+  case ":$PATH:" in
+    *":$backend_venv_bin:"*) ;;
+    *) export PATH="$backend_venv_bin:$PATH" ;;
+  esac
+  hash -r
+  export VIRTUAL_ENV="$backend_venv_dir"
+  export PLAYBOOK_PYTHON
+  return 0
+}
+
+PLAYBOOK_PYTHON="python3"
+activate_playbook_backend_venv || true
+
 ensure_host_runtime_dependency_links() {
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
   [[ -d "$ROOT/app" ]] || return 1
@@ -706,6 +753,8 @@ PY
 
   if [[ -x "$backend_python" ]] && "$backend_python" - <<'PY' >/dev/null 2>&1
 import fastapi  # noqa: F401
+import jsonapischema  # noqa: F401
+import logic_bank  # noqa: F401
 import sqlalchemy  # noqa: F401
 import safrs  # noqa: F401
 import uvicorn  # noqa: F401
@@ -1871,7 +1920,7 @@ EOF
 
 dependency_failure_requires_operator_escalation() {
   local detail="$1"
-  grep -Eqi '(`python_venv`:\s*`blocked`|`node_packages`:\s*`blocked`|`repo_skills`:\s*`blocked`|missing backend python|dependency imports failed|missing node_modules|missing vite executable|missing playwright executable|missing repo-local skills|missing playwright-skill|missing openapi-to-admin-yaml)' <<<"$detail"
+  grep -Eqi '(`python_venv`:\s*`blocked`|`node_packages`:\s*`blocked`|`repo_skills`:\s*`blocked`|missing backend python|missing backend requirements manifest|dependency imports failed|backend venv creation failed|backend dependency install failed|missing node_modules|missing vite executable|missing playwright executable|missing repo-local skills|missing playwright-skill|missing openapi-to-admin-yaml)' <<<"$detail"
 }
 
 fatal_exit() {
@@ -3853,6 +3902,7 @@ seed_new_run() {
   reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
+  activate_playbook_backend_venv || true
 }
 
 seed_change_run() {
@@ -3898,6 +3948,7 @@ seed_change_run() {
   reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
+  activate_playbook_backend_venv || true
 }
 
 prepare_resume() {
@@ -3928,6 +3979,7 @@ PY
   reset_runner_runtime_surface_fingerprint
   perform_host_runtime_preflight
   enforce_startup_execution_prereqs
+  activate_playbook_backend_venv || true
   enforce_phase6_admin_yaml_nonempty
   clear_execution_prereqs_operator_action_required || true
   clear_superseded_operator_action_required || true

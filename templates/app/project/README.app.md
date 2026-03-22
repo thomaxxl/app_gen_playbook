@@ -43,6 +43,9 @@ It is intended to read current-run status from the mirrored
 
 - In `clean-install` mode, it installs backend and frontend dependencies
   locally and prepares the Playwright delivery gate.
+- In that install path, the canonical Python runtime is the backend virtualenv
+  at `backend/.venv` or the declared `BACKEND_VENV`; the playbook should use
+  that same venv for Python tooling.
 - In that install path, `install.sh` first clones
   `https://github.com/thomaxxl/safrs-jsonapi-client` at ref `0.0.1` into
   `tmp/safrs-jsonapi-client`, then installs the frontend with that local
@@ -77,7 +80,7 @@ EOF
 With that file in place:
 
 - `install.sh` validates `BACKEND_VENV` instead of creating a fallback
-  environment
+  backend venv
 - `install.sh` keeps `frontend/node_modules` as a managed symlink to
   `FRONTEND_NODE_MODULES_DIR` when the target already exists
 - `run.sh` uses those same local overrides automatically

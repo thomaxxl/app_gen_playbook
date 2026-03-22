@@ -29,15 +29,13 @@ Mounted or restricted filesystems MAY also block or degrade:
 - executable-bit preservation
 - symlink-heavy install layouts
 - `python -m venv` creation
-- `pip install --target ...` behavior compared with a normal local disk
 - frontend typecheck/build performance or completion on large dependency trees
 
 If the target path is a mounted or host-shared filesystem and the standard
 environment path is unstable, the operator MAY:
 
-- install backend dependencies into a local `.deps/` directory with
-  `pip install --target`
-- run backend commands with `PYTHONPATH` pointing at that directory
+- provide a prepared backend virtualenv on a stable local-disk path
+- point `BACKEND_VENV` at that prepared venv
 - verify frontend build or typecheck from a local-disk copy such as `/tmp`
   when the mounted path stalls or fails for environmental reasons
 
@@ -74,7 +72,8 @@ Preferred override keys:
 - `FRONTEND_NODE_MODULES_DIR=/absolute/or/project-relative/path/to/node_modules`
 
 Use `backend/.venv` or `BACKEND_VENV` for Python dependency reuse instead of
-symlinking whole backend directories.
+symlinking whole backend directories. The playbook's Python tooling SHOULD use
+that same backend venv once it is available.
 
 Use a local `frontend/node_modules` directory or symlink for frontend
 dependency reuse. If the operator prefers not to create that link manually, the
@@ -132,6 +131,8 @@ deviation and the chosen workaround before continuing.
 
 - SAFRS: install as a normal pip package
 - LogicBank: install as a normal pip package
+- `jsonapischema`: install into the same backend virtualenv as the rest of the
+  backend stack
 
 The playbook baseline does not recover a SAFRS pin from `examples/`. Each
 generated app must record the validated published `safrs==...` version it

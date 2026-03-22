@@ -12,12 +12,15 @@ python-multipart==0.0.20
 PyYAML==6.0.3
 pytest==9.0.2
 httpx==0.28.1
+jsonapischema
 safrs
 ```
 
 Notes:
 
 - SAFRS should be installed as a normal pip package, not from git.
+- `jsonapischema` is part of the baseline backend dependency set and MUST be
+  installable in the same backend virtualenv as the playbook runtime.
 - LogicBank should be installed as the normal published pip package.
 - If a project needs stricter reproducibility, pin SAFRS to a published PyPI
   version such as `safrs==<chosen-version>`.

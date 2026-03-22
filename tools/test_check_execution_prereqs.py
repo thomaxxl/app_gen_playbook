@@ -6,6 +6,7 @@ import unittest.mock
 import errno
 from pathlib import Path
 import sys
+import subprocess
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -139,6 +140,52 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
                 python_path = check_execution_prereqs.backend_python_path(repo_root)
             self.assertEqual(python_path, venv_dir / "bin" / "python")
 
+    def test_check_backend_venv_materializes_missing_backend_venv_in_clean_install_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            requirements_path = repo_root / "app" / "backend" / "requirements.txt"
+            requirements_path.parent.mkdir(parents=True, exist_ok=True)
+            requirements_path.write_text("fastapi\njsonapischema\nsafrs\n", encoding="utf-8")
+            python_path = repo_root / "app" / "backend" / ".venv" / "bin" / "python"
+            venv_dir = python_path.parent.parent
+
+            def fake_run(args, capture_output=False, text=False, **kwargs):
+                command = list(args)
+                if command[:3] == [sys.executable, "-m", "venv"]:
+                    python_path.parent.mkdir(parents=True, exist_ok=True)
+                    python_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+                    python_path.chmod(0o755)
+                    return subprocess.CompletedProcess(command, 0, "", "")
+                if command[:4] == [str(python_path), "-m", "pip", "install"]:
+                    return subprocess.CompletedProcess(command, 0, "", "")
+                if command[0] == str(python_path) and command[1] == "-c":
+                    self.assertIn("jsonapischema", command[2])
+                    return subprocess.CompletedProcess(command, 0, "", "")
+                raise AssertionError(f"unexpected command: {command}")
+
+            with unittest.mock.patch("check_execution_prereqs.subprocess.run", side_effect=fake_run):
+                result = check_execution_prereqs.check_backend_venv(repo_root)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("created backend venv", result.detail)
+            self.assertTrue(python_path.exists())
+            self.assertTrue((venv_dir / ".playbook-backend-prereqs.sha256").exists())
+
+    def test_check_backend_venv_does_not_install_in_preprovisioned_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            requirements_path = repo_root / "app" / "backend" / "requirements.txt"
+            requirements_path.parent.mkdir(parents=True, exist_ok=True)
+            requirements_path.write_text("fastapi\njsonapischema\nsafrs\n", encoding="utf-8")
+
+            with unittest.mock.patch.dict("os.environ", {"DEPENDENCY_PROVISIONING_MODE": "preprovisioned-reuse-only"}, clear=False):
+                with unittest.mock.patch("check_execution_prereqs.subprocess.run") as mock_run:
+                    result = check_execution_prereqs.check_backend_venv(repo_root)
+
+            self.assertEqual(result.status, "blocked")
+            self.assertIn("missing backend python", result.detail)
+            mock_run.assert_not_called()
+
     def test_frontend_node_modules_path_resolves_relative_override_from_app_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -147,6 +194,15 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             with unittest.mock.patch.dict("os.environ", {"FRONTEND_NODE_MODULES_DIR": "shared/node_modules"}, clear=False):
                 resolved_path = check_execution_prereqs.frontend_node_modules_path(repo_root)
             self.assertEqual(resolved_path, node_modules)
+
+    def test_backend_python_path_uses_runtime_local_env_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            runtime_env = repo_root / "app" / ".runtime.local.env"
+            runtime_env.parent.mkdir(parents=True, exist_ok=True)
+            runtime_env.write_text('BACKEND_VENV="shared/backend-venv"\n', encoding="utf-8")
+            python_path = check_execution_prereqs.backend_python_path(repo_root)
+            self.assertEqual(python_path, repo_root / "app" / "shared" / "backend-venv" / "bin" / "python")
 
     def test_check_node_modules_uses_configured_node_modules_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

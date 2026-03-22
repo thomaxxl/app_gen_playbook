@@ -81,7 +81,7 @@ BACKEND_VENV_DIR=""
 
 if [[ -n "$BACKEND_VENV" ]]; then
   BACKEND_VENV_DIR="$(normalize_path "$BACKEND_VENV")"
-elif [[ -x "$BACKEND_DIR/.venv/bin/python" ]]; then
+else
   BACKEND_VENV_DIR="$BACKEND_DIR/.venv"
 fi
 
@@ -145,14 +145,12 @@ backend_dependencies_ready() {
 
     "$BACKEND_PYTHON" - <<'PY' >/dev/null 2>&1
 import fastapi
+import jsonapischema
 import logic_bank
 import safrs
 import uvicorn
 PY
     return $?
-  fi
-
-  [[ -d "$BACKEND_DIR/.deps" ]] && [[ -d "$BACKEND_DIR/.deps/fastapi" ]] && [[ -d "$BACKEND_DIR/.deps/safrs" ]]
 }
 
 backend_source_ready() {
@@ -167,11 +165,7 @@ require_installed_dependencies() {
   fi
 
   if ! backend_dependencies_ready; then
-    if [[ -n "$BACKEND_VENV_DIR" ]]; then
-      missing+=("backend Python dependencies in ${BACKEND_VENV_DIR}")
-    else
-      missing+=("backend Python dependencies in backend/.deps")
-    fi
+    missing+=("backend Python dependencies in ${BACKEND_VENV_DIR}")
   fi
 
   if ! frontend_dependencies_ready; then

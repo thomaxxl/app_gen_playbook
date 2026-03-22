@@ -198,7 +198,8 @@ That prerequisite check SHOULD be produced by
 `tools/check_execution_prereqs.py` from inside the current execution context
 and SHOULD cover:
 
-- backend venv availability
+- backend venv availability, materialization in `clean-install` mode, and
+  required backend imports from that same venv
 - frontend `node_modules` availability
 - required repo-local skills are installed from
   `app_gen_playbook/skills/` into `app_gen_playbook/.codex/skills/`
@@ -231,6 +232,10 @@ prerequisite check and stop immediately with `operator-action-required.md` if
 any required check fails. Recording a blocked prerequisite artifact is not
 enough; the run MUST NOT proceed into role dispatch until the current
 execution context validates.
+
+When the backend venv is created or repaired during that prerequisite step, the
+orchestrator SHOULD switch subsequent Python tool execution onto that same
+backend venv instead of continuing on a divergent system interpreter.
 
 For `iterative-change-run` and `app-only-hotfix`, iteration startup MUST also:
 

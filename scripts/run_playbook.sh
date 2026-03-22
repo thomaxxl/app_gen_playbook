@@ -37,6 +37,20 @@ load_env_file() {
 
 load_env_file
 
+load_app_runtime_env_file() {
+  local env_path="$ROOT/app/.runtime.local.env"
+  if [[ ! -f "$env_path" ]]; then
+    return 0
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  . "$env_path"
+  set +a
+}
+
+load_app_runtime_env_file
+
 FAST_MODEL="${FAST_MODEL:-}"
 MAIN_MODEL="${MAIN_MODEL:-}"
 ARCHITECT_MODEL="${ARCHITECT_MODEL:-${MAIN_MODEL:-gpt-5.4}}"
@@ -87,6 +101,39 @@ if not raw.is_absolute():
 print(raw.resolve())
 PY
 }
+
+activate_playbook_backend_venv() {
+  local backend_venv_dir backend_venv_bin
+
+  if [[ -n "$BACKEND_VENV" ]]; then
+    backend_venv_dir="$(resolve_playbook_path "$BACKEND_VENV")"
+  else
+    backend_venv_dir="$ROOT/app/backend/.venv"
+  fi
+
+  if [[ -x "$backend_venv_dir/bin/python3" ]]; then
+    backend_venv_bin="$backend_venv_dir/bin"
+    PLAYBOOK_PYTHON="$backend_venv_dir/bin/python3"
+  elif [[ -x "$backend_venv_dir/bin/python" ]]; then
+    backend_venv_bin="$backend_venv_dir/bin"
+    PLAYBOOK_PYTHON="$backend_venv_dir/bin/python"
+  else
+    PLAYBOOK_PYTHON="python3"
+    return 1
+  fi
+
+  case ":$PATH:" in
+    *":$backend_venv_bin:"*) ;;
+    *) export PATH="$backend_venv_bin:$PATH" ;;
+  esac
+  hash -r
+  export VIRTUAL_ENV="$backend_venv_dir"
+  export PLAYBOOK_PYTHON
+  return 0
+}
+
+PLAYBOOK_PYTHON="python3"
+activate_playbook_backend_venv || true
 
 ensure_host_runtime_dependency_links() {
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
