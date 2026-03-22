@@ -47,10 +47,20 @@ STORY_INDEX_COLUMNS = (
     "Release",
     "Story Type",
     "Story Statement",
+)
+LEGACY_STORY_INDEX_COLUMNS = (
+    "Story ID",
+    "Title",
+    "Actor",
+    "Priority",
+    "Delivery Class",
+    "Release",
+    "Story Type",
+    "Story Statement",
     "Why this priority",
     "Independent Test",
 )
-LEGACY_STORY_INDEX_COLUMNS = (
+OLDER_LEGACY_STORY_INDEX_COLUMNS = (
     "Story ID",
     "Epic",
     "Actor",
@@ -74,6 +84,7 @@ TRACEABILITY_COLUMNS = (
     "Workflow IDs",
     "Rule IDs",
     "Resource IDs",
+    "Primary Evidence Mode",
     "Page IDs",
     "Route IDs",
     "State/Mode Coverage",
@@ -103,6 +114,17 @@ LEGACY_TRACEABILITY_COLUMNS = (
     "Acceptance owner",
 )
 COVERAGE_MATRIX_COLUMNS = (
+    "Actor",
+    "Discover/Search",
+    "Create/Intake",
+    "Inspect/Detail",
+    "Edit/Maintain",
+    "Workflow/Approval",
+    "Exception/Recovery",
+    "Reporting/Export",
+    "Admin/Setup",
+)
+LEGACY_COVERAGE_MATRIX_COLUMNS = (
     "Actor",
     "Discover/Search",
     "Create/Intake",
@@ -164,7 +186,9 @@ WORKFLOW_HEAVY_STORY_TYPES = {
     "integration-import-export",
     "notification-audit",
 }
-CAPABILITY_BANDS = COVERAGE_MATRIX_COLUMNS[1:-1]
+ALLOWED_PRIMARY_EVIDENCE_MODES = {"ui", "service", "background", "hybrid"}
+UI_EVIDENCE_MODES = {"ui", "hybrid"}
+CAPABILITY_BANDS = COVERAGE_MATRIX_COLUMNS[1:]
 REQUIRED_STORY_BLOCK_FIELDS = (
     "**Actor**:",
     "**Story Type**:",
@@ -248,15 +272,21 @@ def _header_issues(
     rows: list[dict[str, str]],
     label: str,
     expected_columns: tuple[str, ...],
-    legacy_columns: tuple[str, ...] | None = None,
+    legacy_columns: tuple[str, ...] | tuple[tuple[str, ...], ...] | None = None,
 ) -> list[str]:
     if not rows:
         return [f"{label} is missing or empty"]
     actual_columns = _table_columns(rows)
     if actual_columns == expected_columns:
         return []
-    if legacy_columns and actual_columns == legacy_columns:
-        return []
+    if legacy_columns:
+        allowed_legacy_columns = (
+            legacy_columns
+            if legacy_columns and isinstance(legacy_columns[0], tuple)
+            else (legacy_columns,)
+        )
+        if actual_columns in allowed_legacy_columns:
+            return []
     return [f"{label} must use exact columns {list(expected_columns)}; found {list(actual_columns)}"]
 
 
@@ -298,6 +328,22 @@ def _detail_required(priority: str, release: str, story_type: str) -> bool:
     if priority == "P2" and current_release and story_type in WORKFLOW_HEAVY_STORY_TYPES:
         return True
     return False
+
+
+def _normalize_primary_evidence_mode(value: str, page_ids: list[str], route_ids: list[str]) -> str:
+    normalized = value.strip().lower().replace("`", "")
+    if normalized in ALLOWED_PRIMARY_EVIDENCE_MODES:
+        return normalized
+    if page_ids or route_ids:
+        return "ui"
+    return ""
+
+
+def _parse_optional_surface_ids(value: str) -> list[str]:
+    values = parse_csv_values(value)
+    if len(values) == 1 and values[0].lower() == "none":
+        return []
+    return values
 
 
 def _parse_story_detail_section(
@@ -354,7 +400,14 @@ def _parse_user_story_catalog(
     detail_text = extract_markdown_section(text, "User Scenarios & Testing") or extract_markdown_section(text, "Detailed Stories")
     detail_sections = extract_child_sections(detail_text, 3) if detail_text else {}
 
-    issues.extend(_header_issues(coverage_matrix, f"{path.as_posix()} coverage matrix", COVERAGE_MATRIX_COLUMNS))
+    issues.extend(
+        _header_issues(
+            coverage_matrix,
+            f"{path.as_posix()} coverage matrix",
+            COVERAGE_MATRIX_COLUMNS,
+            legacy_columns=LEGACY_COVERAGE_MATRIX_COLUMNS,
+        )
+    )
     issues.extend(
         _header_issues(
             capability_coverage,
@@ -367,7 +420,7 @@ def _parse_user_story_catalog(
             story_index,
             f"{path.as_posix()} story index",
             STORY_INDEX_COLUMNS,
-            legacy_columns=LEGACY_STORY_INDEX_COLUMNS,
+            legacy_columns=(LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
         )
     )
     if not detail_text:
@@ -440,8 +493,13 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
             "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
             "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
-            "page_ids": parse_csv_values(row.get("Page IDs", "")),
-            "route_ids": parse_csv_values(row.get("Route IDs", "")),
+            "page_ids": _parse_optional_surface_ids(row.get("Page IDs", "")),
+            "route_ids": _parse_optional_surface_ids(row.get("Route IDs", "")),
+            "primary_evidence_mode": _normalize_primary_evidence_mode(
+                row.get("Primary Evidence Mode", ""),
+                _parse_optional_surface_ids(row.get("Page IDs", "")),
+                _parse_optional_surface_ids(row.get("Route IDs", "")),
+            ),
             "state_mode_coverage": parse_csv_values(row.get("State/Mode Coverage", "")),
             "permission_context": row.get("Permission Context", "").strip(),
             "sample_data_ids": parse_csv_values(row.get("Sample Data IDs", "")),
@@ -457,13 +515,12 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
     coverage_matrix_payload: list[dict[str, Any]] = []
     required_actors: set[str] = set()
     normalized_capability_coverage: list[dict[str, Any]] = []
-    capability_index: dict[tuple[str, str], list[str]] = {}
+    matrix_band_index: dict[tuple[str, str], str] = {}
     for row in coverage_matrix:
         actor = row.get("Actor", "").strip()
         if not actor:
             continue
         required_actors.add(actor)
-        covered_by = parse_csv_values(row.get("Covered by", ""))
         capability_bands = {
             column: _normalize_yes_no(row.get(column, ""))
             for column in CAPABILITY_BANDS
@@ -472,24 +529,13 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             {
                 "actor": actor,
                 "capability_bands": capability_bands,
-                "covered_by": covered_by,
             }
         )
-        relevant_bands = [band for band, flag in capability_bands.items() if flag == "yes"]
-        if relevant_bands and not covered_by:
-            issues.append(f"{actor}: coverage matrix row marks capability coverage but Covered by is empty")
-        for band in relevant_bands:
-            capability_index[(actor, band)] = list(covered_by)
-            normalized_capability_coverage.append(
-                {
-                    "actor": actor,
-                    "capability_band": band,
-                    "covered_by_story_ids": list(covered_by),
-                }
-            )
+        for band, flag in capability_bands.items():
+            matrix_band_index[(actor, band)] = flag
 
     normalized_capability_coverage = []
-    capability_index = {}
+    capability_index: dict[tuple[str, str], list[str]] = {}
     for row in capability_coverage_rows:
         actor = row.get("Actor", "").strip()
         capability_band = row.get("Capability Band", "").strip()
@@ -511,6 +557,11 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "covered_by_story_ids": list(story_ids),
             }
         )
+        matrix_flag = matrix_band_index.get((actor, capability_band))
+        if matrix_flag is None:
+            issues.append(f"{actor} / {capability_band}: capability coverage row has no matching Coverage Matrix actor/band")
+        elif matrix_flag != "yes":
+            issues.append(f"{actor} / {capability_band}: capability coverage row exists but Coverage Matrix does not mark that band `yes`")
     for row in coverage_matrix_payload:
         actor = row["actor"]
         for band, flag in row["capability_bands"].items():
@@ -524,7 +575,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
     required_story_reviews: list[dict[str, Any]] = []
 
     actual_story_columns = _table_columns(stories)
-    legacy_story_index = actual_story_columns == LEGACY_STORY_INDEX_COLUMNS
+    legacy_story_index = actual_story_columns in {LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS}
 
     for row in stories:
         story_id = row.get("Story ID", "").strip()
@@ -538,8 +589,6 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         release = row.get("Release", "").strip()
         story_type = row.get("Story Type", "").strip().lower()
         story_statement = row.get("Story Statement", "").strip()
-        why_priority = row.get("Why this priority", "").strip()
-        independent_test = row.get("Independent Test", "").strip()
         current_release = _is_current_release(release)
         story_block_required = _story_block_required(release)
         detail_required = _detail_required(priority, release, story_type)
@@ -547,8 +596,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
             "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
             "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
-            "page_ids": parse_csv_values(row.get("Page IDs", "")),
-            "route_ids": parse_csv_values(row.get("Route IDs", "")),
+            "page_ids": _parse_optional_surface_ids(row.get("Page IDs", "")),
+            "route_ids": _parse_optional_surface_ids(row.get("Route IDs", "")),
             "permission_context": row.get("Permission Context", "").strip(),
             "sample_data_ids": parse_csv_values(row.get("Sample Data IDs", "")),
             "acceptance_ids": parse_csv_values(row.get("Acceptance IDs", "")),
@@ -565,6 +614,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         )
         if story_block_required:
             issues.extend(detail_issues)
+        why_priority = (detail_metrics.get("why_priority") or row.get("Why this priority", "")).strip()
+        independent_test = (detail_metrics.get("independent_test") or row.get("Independent Test", "")).strip()
 
         story_payload = {
             "story_id": story_id,
@@ -601,16 +652,10 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             issues.append(f"{story_id}: unsupported story type {story_type or '<blank>'}")
         if not story_statement:
             issues.append(f"{story_id}: story statement is required")
-        if not why_priority:
-            issues.append(f"{story_id}: why this priority is required in story index")
-        if not independent_test:
-            issues.append(f"{story_id}: independent test is required in story index")
-
-        if story_block_required:
-            if detail_metrics.get("why_priority") and why_priority and detail_metrics["why_priority"] != why_priority:
-                issues.append(f"{story_id}: why this priority drift between story index and detailed story block")
-            if detail_metrics.get("independent_test") and independent_test and detail_metrics["independent_test"] != independent_test:
-                issues.append(f"{story_id}: independent test drift between story index and detailed story block")
+        if story_block_required and not why_priority:
+            issues.append(f"{story_id}: why this priority is required in the current-release story block")
+        if story_block_required and not independent_test:
+            issues.append(f"{story_id}: independent test is required in the current-release story block")
 
         for capability_entry in normalized_capability_coverage:
             if story_id in capability_entry["covered_by_story_ids"]:
@@ -665,8 +710,11 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "page_ids": trace_row["page_ids"],
                 "route_ids": trace_row["route_ids"],
                 "workflow_ids": trace_row["workflow_ids"],
+                "primary_evidence_mode": trace_row["primary_evidence_mode"],
             }
         )
+        primary_evidence_mode = trace_row["primary_evidence_mode"]
+        ui_evidence_required = primary_evidence_mode in UI_EVIDENCE_MODES
 
         if not trace_row["workflow_ids"]:
             issues.append(f"{story_id}: no workflow mapping in traceability matrix")
@@ -674,10 +722,12 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             issues.append(f"{story_id}: no rule mapping in traceability matrix")
         if not trace_row["resource_ids"]:
             issues.append(f"{story_id}: no resource mapping in traceability matrix")
-        if not trace_row["page_ids"]:
-            issues.append(f"{story_id}: no page mapping in traceability matrix")
-        if not trace_row["route_ids"]:
-            issues.append(f"{story_id}: no route mapping in traceability matrix")
+        if primary_evidence_mode not in ALLOWED_PRIMARY_EVIDENCE_MODES:
+            issues.append(f"{story_id}: primary evidence mode must be one of {sorted(ALLOWED_PRIMARY_EVIDENCE_MODES)}")
+        if ui_evidence_required and not trace_row["page_ids"]:
+            issues.append(f"{story_id}: no page mapping in traceability matrix for ui-backed story")
+        if ui_evidence_required and not trace_row["route_ids"]:
+            issues.append(f"{story_id}: no route mapping in traceability matrix for ui-backed story")
         if not trace_row["state_mode_coverage"]:
             issues.append(f"{story_id}: no state/mode coverage in traceability matrix")
         if not trace_row["permission_context"]:
@@ -688,6 +738,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             issues.append(f"{story_id}: no acceptance ID mapping in traceability matrix")
         if not trace_row["acceptance_owner"]:
             issues.append(f"{story_id}: no acceptance owner in traceability matrix")
+        if primary_evidence_mode in {"service", "background"} and trace_row["preview_required"]:
+            issues.append(f"{story_id}: non-UI story cannot require preview screenshot evidence")
 
         mapped_current_release_page_ids.update(trace_row["page_ids"])
         mapped_current_release_route_ids.update(trace_row["route_ids"])
@@ -715,8 +767,10 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "workflow_ids": trace_row["workflow_ids"],
                 "rule_ids": trace_row["rule_ids"],
                 "resource_ids": trace_row["resource_ids"],
+                "primary_evidence_mode": primary_evidence_mode,
                 "page_ids": trace_row["page_ids"],
                 "route_ids": trace_row["route_ids"],
+                "supporting_surface_ids": list(dict.fromkeys(trace_row["route_ids"] + trace_row["page_ids"])),
                 "permission_context": trace_row["permission_context"],
                 "sample_data_ids": trace_row["sample_data_ids"],
                 "acceptance_ids": trace_row["acceptance_ids"],
@@ -725,6 +779,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "acceptance_owner": trace_row["acceptance_owner"],
                 "story_block_required": story["story_block_required"],
                 "detail_required": story["detail_required"],
+                "ui_surface_required": ui_evidence_required,
                 "required_checks": list(SCENARIO_CHECKS) if story["detail_required"] else [],
                 "acceptance_scenario_count": story["acceptance_scenario_count"],
                 "edge_case_count": story["edge_case_count"],

@@ -26,8 +26,8 @@ Recommended checklist:
 
 - no story text leaks implementation details that belong in traceability or
   technical artifacts
-- every current-release story has `Why this priority`
-- every current-release story has `Independent Test`
+- every current-release story block has canonical `Why this priority`
+- every current-release story block has canonical `Independent Test`
 - every current-release story has at least one concrete `Given / When / Then`
   acceptance scenario
 - edge cases are recorded where relevant

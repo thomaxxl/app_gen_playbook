@@ -77,6 +77,9 @@ The QA agent MUST:
 - treat `runs/current/evidence/quality/review-plan.json` as a story-driven QA
   contract: current-release stories are primary, routes/pages are the visible
   proof surfaces attached to those stories
+- record `## Story Live Coverage` in
+  `../../runs/current/evidence/qa-delivery-review.md` as a structured
+  markdown table instead of prose-only mentions
 - fail the review if the frontend is blank, visibly crashed, flickering from
   obvious request loops, or showing runtime error surfaces
 - fail the review if the backend logs or live behavior show unhandled runtime
@@ -89,6 +92,9 @@ The QA agent MUST:
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the
   screenshot files under `../../runs/current/evidence/ui-previews/qa/` before
   approving delivery
+- record `## Story Screenshot Coverage` in
+  `../../runs/current/evidence/ui-previews/qa-manifest.md` as a structured
+  story-to-screenshot table
 - verify the review-plan story obligations first and then verify the
   supporting visible routes/pages from the same review plan, not only
   whichever subset was already screenshot-reviewed earlier

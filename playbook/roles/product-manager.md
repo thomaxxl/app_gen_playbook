@@ -188,7 +188,9 @@ or a flat CRUD list. It MUST include:
 - a normalized `Capability Coverage` table as the canonical breadth ledger
 - the exact story index schema defined by `specs/product/user-stories.md`
 - the mandatory story-type taxonomy
-- story-core fields such as priority, why this priority, and independent test
+- story-core fields such as priority in the story index and the canonical
+  `Why this priority` plus `Independent Test` fields in the current-release
+  story blocks
 - a spec-kit-core story block for every current-release story
 - extended scenario-depth fields for every current-release `P1` story and
   every current-release workflow-heavy `P2` story

@@ -164,6 +164,8 @@ content review rather than only file creation. At minimum it MUST state:
 - `frontend_validation: approved`
 - `architect_validation: approved`
 - `product_manager_validation: approved`
+- a `## Story Preview Coverage` table with:
+  `Story ID | Supporting Surface IDs | Screenshot Files | Coverage Status | Notes`
 - a non-placeholder `review_conclusion:` describing what the screenshots prove
 
 The screenshot files alone are not valid preview evidence. A blank page,
@@ -180,6 +182,8 @@ That final QA screenshot pass MUST produce:
 
 - `runs/current/evidence/ui-previews/qa-manifest.md`
 - screenshot files under `runs/current/evidence/ui-previews/qa/`
+- a `## Story Screenshot Coverage` table in the QA manifest with:
+  `Story ID | Supporting Surface IDs | Screenshot Files | Coverage Status | Notes`
 
 The QA review MUST cite that manifest and the screenshot set. QA screenshot
 existence does not replace live testing, but final QA approval is incomplete

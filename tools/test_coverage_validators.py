@@ -12,6 +12,7 @@ from validators.coverage.validate_acceptance_review_coverage import collect_issu
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
 from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
 from validators.coverage.validate_preview_coverage import collect_issues as collect_preview_coverage_issues
+from validators.coverage.validate_product_scope_contracts import collect_issues as collect_product_scope_contract_issues
 from validators.coverage.validate_qa_review_coverage import collect_issues as collect_qa_review_coverage_issues
 
 
@@ -29,10 +30,10 @@ def seed_scope(repo_root: Path) -> None:
                 "",
                 "## Coverage Matrix",
                 "",
-                "| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup | Covered by |",
-                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                "| Requester | yes | no | yes | no | no | no | no | no | US-001 |",
-                "| Approver | no | no | yes | no | yes | yes | no | no | US-004 |",
+                "| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| Requester | yes | no | yes | no | no | no | no | no |",
+                "| Approver | no | no | yes | no | yes | yes | no | no |",
                 "",
                 "## Capability Coverage",
                 "",
@@ -46,10 +47,10 @@ def seed_scope(repo_root: Path) -> None:
                 "",
                 "## Story Index",
                 "",
-                "| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement | Why this priority | Independent Test |",
-                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                "| US-001 | Requester overview | Requester | P1 | must | R1 | crud | As a requester, I inspect the current overview and continue my work. | The overview is the first stop for the current release. | Open the home overview as a requester and confirm the assigned work summary and primary next step render correctly. |",
-                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. | Pending approvals are the control point before work can continue. | Open one pending approval, approve or reject it, and confirm the queue and audit trail update correctly. |",
+                "| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| US-001 | Requester overview | Requester | P1 | must | R1 | crud | As a requester, I inspect the current overview and continue my work. |",
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |",
                 "",
                 "## User Scenarios & Testing",
                 "",
@@ -126,13 +127,29 @@ def seed_scope(repo_root: Path) -> None:
         repo_root / "runs/current/artifacts/product/traceability-matrix.md",
         "\n".join(
             [
-                "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
-                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                "| US-001 | WF-001 | BR-001 | Run | PAGE-001 | N001 | active, empty | requester can inspect assigned work | SD-001 | AC-001 | no | yes | yes | product_manager |",
-                "| US-004 | WF-003 | BR-004 | Approval | PAGE-006 | N007 | pending, approved, rejected | approver can review assigned approvals | SD-004 | AC-004 | no | yes | yes | product_manager |",
+                "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| US-001 | WF-001 | BR-001 | Run | ui | PAGE-001 | N001 | active, empty | requester can inspect assigned work | SD-001 | AC-001 | no | yes | yes | product_manager |",
+                "| US-004 | WF-003 | BR-004 | Approval | ui | PAGE-006 | N007 | pending, approved, rejected | approver can review assigned approvals | SD-004 | AC-004 | no | yes | yes | product_manager |",
             ]
         )
         + "\n",
+    )
+    write(
+        repo_root / "runs/current/artifacts/product/story-quality-checklist.md",
+        "\n".join(
+            [
+                "# Story Quality Checklist",
+                "",
+                "- status: reviewed",
+                "- current-release stories checked: US-001, US-004",
+                "- normalized capability coverage: aligned",
+                "- story-core completeness: pass",
+                "- critical issues: none",
+                "- review_summary: The story catalog is concrete, independently testable, and aligned with traceability.",
+                "",
+            ]
+        ),
     )
     write(
         repo_root / "runs/current/artifacts/ux/navigation.md",
@@ -204,8 +221,8 @@ class CoverageValidatorTests(unittest.TestCase):
             seed_scope(repo_root)
             story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
             story_text = story_text.replace(
-                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. | Pending approvals are the control point before work can continue. | Open one pending approval, approve or reject it, and confirm the queue and audit trail update correctly. |\n",
-                "| US-004 | Approver reviews pending request | Approver | P2 | should | R1 | reporting-search | As an approver, I review pending approvals and record a decision. | Pending approvals are the control point before work can continue. | Open one pending approval, approve or reject it, and confirm the queue and audit trail update correctly. |\n",
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |\n",
+                "| US-004 | Approver reviews pending request | Approver | P2 | should | R1 | reporting-search | As an approver, I review pending approvals and record a decision. |\n",
             )
             start = story_text.index("### US-004 - Approver reviews pending request (Priority: P1)")
             write(
@@ -215,6 +232,68 @@ class CoverageValidatorTests(unittest.TestCase):
 
             _, issues = compile_product_scope_payload(repo_root)
             self.assertTrue(any("US-004: missing required current-release story block" in issue for issue in issues))
+
+    def test_compile_product_scope_allows_non_ui_story_types_with_background_evidence_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
+            story_text = story_text.replace(
+                "| Approver | no | no | yes | no | yes | yes | no | no |\n",
+                "| Approver | no | no | yes | no | yes | yes | yes | no |\n",
+            )
+            story_text = story_text.replace(
+                "| Approver | Exception/Recovery | US-004 |\n",
+                "| Approver | Exception/Recovery | US-004 |\n| Approver | Reporting/Export | US-050 |\n",
+            )
+            story_text = story_text.replace(
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |\n",
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |\n"
+                "| US-050 | Approver receives audit notification | Approver | P2 | should | R1 | notification-audit | As an approver, I confirm the audit notification stream records approval outcomes. |\n",
+            )
+            story_text += "\n".join(
+                [
+                    "",
+                    "### US-050 - Approver receives audit notification (Priority: P2)",
+                    "**Actor**: Approver",
+                    "**Story Type**: notification-audit",
+                    "**Release**: R1",
+                    "",
+                    "As an approver, I confirm the audit notification stream records approval outcomes.",
+                    "",
+                    "**Why this priority**: Audit visibility is required in the first release but does not need a dedicated UI route.",
+                    "**Independent Test**: Complete an approval and confirm the audit notification record is emitted for downstream observers.",
+                    "",
+                    "**Acceptance Scenarios**:",
+                    "1. **Given** an approval is completed **When** the transaction commits **Then** the audit notification record exists for downstream review.",
+                    "",
+                    "**Edge Cases**:",
+                    "- duplicate notifications are not emitted for the same approval action",
+                    "",
+                    "Context / trigger: An approval decision is committed.",
+                    "Preconditions: An approval is ready to transition.",
+                    "Happy path: The approval completes and the audit record is emitted.",
+                    "Alternate paths: The approval is rejected and the rejection notification is emitted.",
+                    "Negative / validation paths: Invalid approval state blocks the audit emission.",
+                    "Empty-state expectation: No standalone UI surface is required for this story.",
+                    "Permission constraints: Only authorized approval actions can emit the audit record.",
+                    "Audit / notification expectation: The audit notification record is written exactly once.",
+                    "Non-goals: Building a dedicated audit dashboard is out of scope.",
+                    "Required evidence: Transaction proof plus downstream audit record validation.",
+                    "",
+                ]
+            )
+            write(repo_root / "runs/current/artifacts/product/user-stories.md", story_text)
+
+            trace_text = (repo_root / "runs/current/artifacts/product/traceability-matrix.md").read_text(encoding="utf-8")
+            trace_text += "| US-050 | WF-050 | BR-050 | AuditEvent | background | none | none | emitted, duplicated-blocked | approver action emits audit record | SD-050 | AC-050 | no | no | no | product_manager |\n"
+            write(repo_root / "runs/current/artifacts/product/traceability-matrix.md", trace_text)
+
+            payload, issues = compile_product_scope_payload(repo_root)
+            self.assertEqual(issues, [])
+            us_050 = next(story for story in payload["required_story_reviews"] if story["story_id"] == "US-050")
+            self.assertFalse(us_050["ui_surface_required"])
+            self.assertEqual(us_050["supporting_surface_ids"], [])
 
     def test_frontend_route_coverage_fails_on_missing_required_route_and_wrong_cta(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -235,16 +314,45 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertTrue(any("missing required story-supporting route N007" in reason for reason in reasons))
             self.assertTrue(any("Home primary CTA target drift" in reason for reason in reasons))
 
+    def test_product_scope_contracts_fail_when_story_quality_checklist_is_placeholder(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            write(
+                repo_root / "runs/current/artifacts/product/story-quality-checklist.md",
+                "# Story Quality Checklist\n\n- status: pending\n- review_summary: pending\n",
+            )
+            issues = collect_product_scope_contract_issues(repo_root)
+            self.assertTrue(any("story quality checklist" in issue["reason"] for issue in issues))
+
     def test_preview_coverage_fails_when_manifest_reviews_subset_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             seed_scope(repo_root)
             write(
                 repo_root / "runs/current/evidence/ui-previews/manifest.md",
-                "# UI Preview Manifest\n\ncapture_status: captured\n- covered stories: US-001\n- reviewed_surfaces:\n  - `Home desktop` at `/app/#/Home` -> `home.png`\n",
+                "\n".join(
+                    [
+                        "# UI Preview Manifest",
+                        "",
+                        "capture_status: captured",
+                        "content_validation_status: reviewed",
+                        "frontend_validation: approved",
+                        "architect_validation: approved",
+                        "product_manager_validation: approved",
+                        "review_conclusion: Reviewed the overview preview.",
+                        "",
+                        "## Story Preview Coverage",
+                        "",
+                        "| Story ID | Supporting Surface IDs | Screenshot Files | Coverage Status | Notes |",
+                        "| --- | --- | --- | --- | --- |",
+                        "| US-001 | N001, PAGE-001 | home.png | reviewed | Reviewed the overview proof surfaces. |",
+                        "",
+                    ]
+                ),
             )
             issues = collect_preview_coverage_issues(repo_root)
-            self.assertTrue(any("N007" in issue["reason"] for issue in issues))
+            self.assertTrue(any("US-004" in issue["reason"] for issue in issues))
 
     def test_qa_review_coverage_fails_when_qa_only_mentions_home(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -252,14 +360,38 @@ class CoverageValidatorTests(unittest.TestCase):
             seed_scope(repo_root)
             write(
                 repo_root / "runs/current/evidence/ui-previews/qa-manifest.md",
-                "# QA Screenshot Manifest\n\ncapture_status: captured\n- covered stories: US-001\n- reviewed_surfaces:\n  - `N001 Overview` at `/app/#/Home` -> `qa-n001-home.png`\n",
+                "\n".join(
+                    [
+                        "# QA Screenshot Manifest",
+                        "",
+                        "capture_status: captured",
+                        "",
+                        "## Story Screenshot Coverage",
+                        "",
+                        "| Story ID | Supporting Surface IDs | Screenshot Files | Coverage Status | Notes |",
+                        "| --- | --- | --- | --- | --- |",
+                        "| US-001 | N001, PAGE-001 | qa-n001-home.png | captured | Captured the home overview surface. |",
+                        "",
+                    ]
+                ),
             )
             write(
                 repo_root / "runs/current/evidence/qa-delivery-review.md",
-                "- source manifest: `runs/current/evidence/ui-previews/qa-manifest.md`\n- covered stories: US-001\n- `curl http://127.0.0.1:5180/app/#/Home` -> `200`\n",
+                "\n".join(
+                    [
+                        "source manifest: runs/current/evidence/ui-previews/qa-manifest.md",
+                        "",
+                        "## Story Live Coverage",
+                        "",
+                        "| Story ID | Live Status | Independent Test Result | Supporting Surface IDs | Screenshot Files | Notes |",
+                        "| --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | pass | Home overview rendered and CTA was usable. | N001, PAGE-001 | qa-n001-home.png | QA exercised the overview path. |",
+                        "",
+                    ]
+                ),
             )
             issues = collect_qa_review_coverage_issues(repo_root)
-            self.assertTrue(any("N007" in issue["reason"] for issue in issues))
+            self.assertTrue(any("US-004" in issue["reason"] for issue in issues))
 
     def test_qa_review_coverage_passes_when_review_and_manifest_cover_required_routes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -272,10 +404,13 @@ class CoverageValidatorTests(unittest.TestCase):
                         "# QA Screenshot Manifest",
                         "",
                         "capture_status: captured",
-                        "- covered stories: US-001, US-004",
-                        "- reviewed_surfaces:",
-                        "  - `N001 Overview` at `/app/#/Home` -> `qa-n001-home.png`",
-                        "  - `N007 Reviews & Approvals` at `/app/#/approvals` -> `qa-n007-approvals.png`",
+                        "",
+                        "## Story Screenshot Coverage",
+                        "",
+                        "| Story ID | Supporting Surface IDs | Screenshot Files | Coverage Status | Notes |",
+                        "| --- | --- | --- | --- | --- |",
+                        "| US-001 | N001, PAGE-001 | qa-n001-home.png | captured | Captured the overview surface. |",
+                        "| US-004 | N007, PAGE-006 | qa-n007-approvals.png | captured | Captured the approvals surface. |",
                         "",
                     ]
                 ),
@@ -284,10 +419,14 @@ class CoverageValidatorTests(unittest.TestCase):
                 repo_root / "runs/current/evidence/qa-delivery-review.md",
                 "\n".join(
                     [
-                        "- source manifest: `runs/current/evidence/ui-previews/qa-manifest.md`",
-                        "- covered stories: US-001 and US-004",
-                        "- verified `/app/#/Home` live and reviewed `qa-n001-home.png`",
-                        "- verified `/app/#/approvals` live and reviewed `qa-n007-approvals.png`",
+                        "source manifest: runs/current/evidence/ui-previews/qa-manifest.md",
+                        "",
+                        "## Story Live Coverage",
+                        "",
+                        "| Story ID | Live Status | Independent Test Result | Supporting Surface IDs | Screenshot Files | Notes |",
+                        "| --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | pass | Overview loaded and CTA was verified. | N001, PAGE-001 | qa-n001-home.png | Live-tested requester overview path. |",
+                        "| US-004 | pass | Approval queue and audit trail updated correctly. | N007, PAGE-006 | qa-n007-approvals.png | Live-tested approver path. |",
                         "",
                     ]
                 ),
@@ -323,9 +462,9 @@ class CoverageValidatorTests(unittest.TestCase):
                         "",
                         "## Coverage Matrix",
                         "",
-                        "| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup | Covered by |",
-                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                        "| Operator | yes | no | yes | no | no | yes | no | no | US-201, US-202 |",
+                        "| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| Operator | yes | no | yes | no | no | yes | no | no |",
                         "",
                         "## Capability Coverage",
                         "",
@@ -337,10 +476,10 @@ class CoverageValidatorTests(unittest.TestCase):
                         "",
                         "## Story Index",
                         "",
-                        "| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement | Why this priority | Independent Test |",
-                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                        "| US-201 | Operator reviews run overview | Operator | P1 | must | R1 | crud | As an operator, I inspect the current run overview. | The iteration must keep the run overview available. | Open the overview and confirm the current run summary loads. |",
-                        "| US-202 | Operator reviews handoffs | Operator | P1 | must | R1 | exception-recovery | As an operator, I inspect the handoff queue. | Handoffs are the primary follow-up path in this change scope. | Open the handoffs view and confirm pending handoffs can be inspected. |",
+                        "| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| US-201 | Operator reviews run overview | Operator | P1 | must | R1 | crud | As an operator, I inspect the current run overview. |",
+                        "| US-202 | Operator reviews handoffs | Operator | P1 | must | R1 | exception-recovery | As an operator, I inspect the handoff queue. |",
                         "",
                         "## User Scenarios & Testing",
                         "",
@@ -405,10 +544,10 @@ class CoverageValidatorTests(unittest.TestCase):
                 repo_root / "runs/current/changes/CR-TEST-001/candidate/artifacts/product/traceability-matrix.md",
                 "\n".join(
                     [
-                        "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
-                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-                        "| US-201 | WF-201 | none | Run | PAGE-CR-001 | N201 | active, complete | operator can inspect current run state | SD-201 | AC-201 | no | yes | yes | product_manager |",
-                        "| US-202 | WF-202 | none | HandoffMessage | PAGE-CR-004 | N202 | queued, empty | operator can inspect handoffs | SD-202 | AC-202 | no | yes | yes | product_manager |",
+                        "| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |",
+                        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                        "| US-201 | WF-201 | none | Run | ui | PAGE-CR-001 | N201 | active, complete | operator can inspect current run state | SD-201 | AC-201 | no | yes | yes | product_manager |",
+                        "| US-202 | WF-202 | none | HandoffMessage | ui | PAGE-CR-004 | N202 | queued, empty | operator can inspect handoffs | SD-202 | AC-202 | no | yes | yes | product_manager |",
                     ]
                 )
                 + "\n",
@@ -462,22 +601,43 @@ class CoverageValidatorTests(unittest.TestCase):
                 "\n".join(
                     [
                         "## Story Coverage",
-                        "- US-001 and US-004 were reviewed against the delivered UI.",
+                        "| Story ID | Decision | Independent Test Evidence | Supporting Surface IDs | Scenario Coverage | Notes |",
+                        "| --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | approved | Overview path rendered and CTA worked. | N001, PAGE-001 | happy-path, empty-state, permission-context | Reviewed requester overview flow. |",
+                        "| US-004 | approved | Approval flow updated the queue and audit trail. | N007, PAGE-006 | happy-path, alternate-path, negative-validation, empty-state, permission-context | Reviewed approver flow. |",
                         "",
                         "## Actor Coverage",
-                        "- Requester and Approver flows were both exercised.",
+                        "| Actor | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| Requester | US-001 | Reviewed requester overview flow. |",
+                        "| Approver | US-004 | Reviewed approver decision flow. |",
                         "",
                         "## Story Type Coverage",
-                        "- crud and approval stories were both reviewed.",
+                        "| Story Type | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| crud | US-001 | Reviewed overview story. |",
+                        "| approval | US-004 | Reviewed approval story. |",
                         "",
                         "## Scenario Depth Coverage",
-                        "- happy path, alternate path, negative validation, empty state, and permission context were checked.",
+                        "| Scenario Check | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| happy-path | US-001, US-004 | Happy paths were exercised. |",
+                        "| alternate-path | US-004 | Alternate approval path was reviewed. |",
+                        "| negative-validation | US-004 | Missing rejection reason was validated. |",
+                        "| empty-state | US-001, US-004 | Empty-state messaging was reviewed. |",
+                        "| permission-context | US-001, US-004 | Role-based access behavior was reviewed. |",
                         "",
                         "## Page Coverage",
-                        "- PAGE-001 and PAGE-006 were reviewed live.",
+                        "| Page ID | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| PAGE-001 | US-001 | Reviewed overview page. |",
+                        "| PAGE-006 | US-004 | Reviewed approvals page. |",
                         "",
                         "## Route Coverage",
-                        "- N001 `/app/#/Home` and N007 `/app/#/approvals` were reviewed.",
+                        "| Route ID | Path | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- | --- |",
+                        "| N001 | /app/#/Home | US-001 | Reviewed overview route. |",
+                        "| N007 | /app/#/approvals | US-004 | Reviewed approvals route. |",
                         "",
                     ]
                 ),
@@ -504,22 +664,43 @@ class CoverageValidatorTests(unittest.TestCase):
                 "\n".join(
                     [
                         "## Story Coverage",
-                        "- US-001 and US-004 are accepted against the delivered behavior.",
+                        "| Story ID | Decision | Independent Test Evidence | Supporting Surface IDs | Scenario Coverage | Notes |",
+                        "| --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | accepted | Overview path rendered and CTA worked. | N001, PAGE-001 | happy-path, empty-state, permission-context | Accepted requester overview flow. |",
+                        "| US-004 | accepted | Approval flow updated the queue and audit trail. | N007, PAGE-006 | happy-path, alternate-path, negative-validation, empty-state, permission-context | Accepted approver flow. |",
                         "",
                         "## Actor Coverage",
-                        "- Requester and Approver coverage is acceptable.",
+                        "| Actor | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| Requester | US-001 | Requester coverage accepted. |",
+                        "| Approver | US-004 | Approver coverage accepted. |",
                         "",
                         "## Story Type Coverage",
-                        "- crud and approval scope was reviewed.",
+                        "| Story Type | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| crud | US-001 | Crud coverage accepted. |",
+                        "| approval | US-004 | Approval coverage accepted. |",
                         "",
                         "## Scenario Depth Coverage",
-                        "- happy path, alternate path, negative validation, empty state, and permission context were checked.",
+                        "| Scenario Check | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| happy-path | US-001, US-004 | Happy paths were accepted. |",
+                        "| alternate-path | US-004 | Alternate approval path was accepted. |",
+                        "| negative-validation | US-004 | Negative validation behavior was accepted. |",
+                        "| empty-state | US-001, US-004 | Empty-state behavior was accepted. |",
+                        "| permission-context | US-001, US-004 | Permission behavior was accepted. |",
                         "",
                         "## Page Coverage",
-                        "- PAGE-001 and PAGE-006 are covered.",
+                        "| Page ID | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| PAGE-001 | US-001 | Overview page accepted. |",
+                        "| PAGE-006 | US-004 | Approvals page accepted. |",
                         "",
                         "## Route Coverage",
-                        "- N001 `/app/#/Home` and N007 `/app/#/approvals` are covered.",
+                        "| Route ID | Path | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- | --- |",
+                        "| N001 | /app/#/Home | US-001 | Overview route accepted. |",
+                        "| N007 | /app/#/approvals | US-004 | Approvals route accepted. |",
                         "",
                     ]
                 ),
@@ -547,29 +728,41 @@ class CoverageValidatorTests(unittest.TestCase):
                 "\n".join(
                     [
                         "## Story Coverage",
-                        "pending",
+                        "| Story ID | Decision | Independent Test Evidence | Supporting Surface IDs | Scenario Coverage | Notes |",
+                        "| --- | --- | --- | --- | --- | --- |",
+                        "| US-001 | pending | pending | pending | pending | pending |",
                         "",
                         "## Actor Coverage",
-                        "pending",
+                        "| Actor | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| Requester | pending | pending |",
                         "",
                         "## Story Type Coverage",
-                        "pending",
+                        "| Story Type | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| crud | pending | pending |",
                         "",
                         "## Scenario Depth Coverage",
-                        "pending",
+                        "| Scenario Check | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| happy-path | pending | pending |",
                         "",
                         "## Page Coverage",
-                        "pending",
+                        "| Page ID | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- |",
+                        "| PAGE-001 | pending | pending |",
                         "",
                         "## Route Coverage",
-                        "pending",
+                        "| Route ID | Path | Covered Story IDs | Evidence Summary |",
+                        "| --- | --- | --- | --- |",
+                        "| N001 | /app/#/Home | pending | pending |",
                         "",
                     ]
                 ),
             )
             issues = collect_acceptance_review_coverage_issues(repo_root)
             reasons = [issue["reason"] for issue in issues]
-            self.assertTrue(any("empty or hand-wavy" in reason for reason in reasons))
+            self.assertTrue(any("placeholder" in reason for reason in reasons))
 
 
 if __name__ == "__main__":

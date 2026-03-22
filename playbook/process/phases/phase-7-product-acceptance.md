@@ -25,6 +25,9 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories define what must be accepted, and routes/pages are
   the visible proof surfaces attached to those stories
+- record structured tables in `acceptance-review.md` for Story, Actor, Story
+  Type, Scenario Depth, Page, and Route coverage instead of prose-only
+  mentions
 - verify the cited independent test for each current-release story the
   acceptance artifact claims is satisfied, using routes/pages as supporting
   evidence rather than as the primary unit of scope
@@ -86,7 +89,7 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - the acceptance record cites the actual reviewed user-facing pages and the
   evidence used to judge them
 - the acceptance artifact includes explicit Story/Page/Route coverage sections
-  plus Actor/Story Type/Scenario Depth coverage sections instead of only prose
+  plus Actor/Story Type/Scenario Depth coverage tables instead of only prose
   narrative
 - accepted delivery is handed to QA for an independent final validation pass
   before CEO approval
@@ -124,4 +127,4 @@ Acceptance fails when:
   route is accepted
   without explicit cited evidence
 - the acceptance review leaves Story, Actor, Story Type, or Scenario Depth
-  coverage sections empty, generic, or hand-wavy
+  coverage tables missing, generic, or placeholder

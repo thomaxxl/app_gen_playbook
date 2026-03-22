@@ -36,6 +36,9 @@ readiness note in:
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories are the primary review obligations, while routes and
   pages are the proof surfaces attached to those stories
+- record structured tables in `integration-review.md` for Story, Actor, Story
+  Type, Scenario Depth, Page, and Route coverage instead of prose-only
+  mentions
 - verify at least one independent-test path for every current-release story
   cited as reviewed in the integration artifact, with routes/pages used only
   as the visible proof surfaces for those story obligations
@@ -221,7 +224,7 @@ Integration review fails when:
 - the backend replaced required ORM-backed resource implementation with
   raw-SQL-only or row-mapper handlers without an approved exception
 - the integration review leaves Story, Actor, Story Type, or Scenario Depth
-  coverage sections empty, generic, or hand-wavy
+  coverage tables missing, generic, or placeholder
 - the integration review covers routes or pages without citing the
   current-release story obligations they are supposed to satisfy
 - a required visible route, custom page, or Home CTA target from the UX scope

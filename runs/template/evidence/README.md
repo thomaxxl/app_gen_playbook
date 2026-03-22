@@ -15,6 +15,8 @@ Expected run-owned evidence includes, when applicable:
   captured, not required, or blocked by environment constraints; when
   captured, it must also record content review and Frontend, Architect, plus
   Product Manager signoff
+- `ui-previews/qa-manifest.md` mapping required story IDs to QA screenshot
+  evidence for the final live review
 - `quality/` containing:
   - `crud-matrix.md`
   - `data-sourcing-audit.md`

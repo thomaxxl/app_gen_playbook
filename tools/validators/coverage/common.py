@@ -12,6 +12,7 @@ TABLE_SEPARATOR_RE = re.compile(r"^\s*:?-{3,}:?\s*$")
 PRIMARY_CTA_TARGET_RE = re.compile(r"(?im)^-\s*Primary CTA route target:\s*(.+?)\s*$")
 BACKTICK_PATH_RE = re.compile(r"`(/app/#/[^`]+)`")
 SECTION_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+KEY_VALUE_RE = re.compile(r"(?im)^\s*(?:-\s*)?([A-Za-z0-9_ /-]+):\s*(.+?)\s*$")
 QUALITY_SUMMARY_BLOCKED_PATTERNS = (
     (
         re.compile(r"(?im)quality evidence pack is `blocked`"),
@@ -170,6 +171,14 @@ def extract_child_sections(text: str, level: int) -> dict[str, str]:
 
 def parse_csv_values(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def parse_key_value_fields(text: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for match in KEY_VALUE_RE.finditer(text):
+        key = match.group(1).strip().lower()
+        fields[key] = match.group(2).strip()
+    return fields
 
 
 def parse_page_id(value: str) -> str:

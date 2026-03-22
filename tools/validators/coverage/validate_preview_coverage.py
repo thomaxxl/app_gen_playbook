@@ -3,19 +3,52 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
+from pathlib import Path
 
 if __package__ in {None, ""}:
     import sys
-    from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from coverage.common import load_compiled_fact, normalized_repo_root, read_text  # type: ignore[import-not-found]
+    from coverage.common import (  # type: ignore[import-not-found]
+        load_compiled_fact,
+        normalized_repo_root,
+        normalized_text,
+        parse_csv_values,
+        parse_key_value_fields,
+        parse_markdown_table_from_section,
+        read_text,
+    )
 else:
-    from .common import load_compiled_fact, normalized_repo_root, read_text
+    from .common import (
+        load_compiled_fact,
+        normalized_repo_root,
+        normalized_text,
+        parse_csv_values,
+        parse_key_value_fields,
+        parse_markdown_table_from_section,
+        read_text,
+    )
 
 
-REVIEWED_SURFACE_RE = re.compile(r"(?m)^\s*-\s*`[^`]+`\s+at\s+`(/app/#/[^`]+)`")
+STORY_PREVIEW_COLUMNS = (
+    "Story ID",
+    "Supporting Surface IDs",
+    "Screenshot Files",
+    "Coverage Status",
+    "Notes",
+)
+PLACEHOLDER_VALUES = {"", "pending", "todo", "tbd", "n/a"}
+APPROVED_PREVIEW_STATUSES = {"captured", "reviewed", "approved"}
+
+
+def _is_placeholder(value: str) -> bool:
+    return normalized_text(value) in PLACEHOLDER_VALUES
+
+
+def _table_columns(rows: list[dict[str, str]]) -> tuple[str, ...]:
+    if not rows:
+        return ()
+    return tuple(rows[0].keys())
 
 
 def collect_issues(repo_root) -> list[dict[str, str]]:
@@ -28,25 +61,95 @@ def collect_issues(repo_root) -> list[dict[str, str]]:
     if not manifest_path.exists():
         issues.append({"path": manifest_path.relative_to(repo_root).as_posix(), "reason": "missing ui preview manifest"})
         return issues
-    reviewed_paths = set(REVIEWED_SURFACE_RE.findall(read_text(manifest_path)))
+
     manifest_text = read_text(manifest_path)
-    for surface in plan["surfaces"]:
-        if surface["preview_required"] and surface["path"] not in reviewed_paths:
+    manifest_fields = parse_key_value_fields(manifest_text)
+    review_rows = parse_markdown_table_from_section(manifest_text, "Story Preview Coverage")
+    manifest_relpath = manifest_path.relative_to(repo_root).as_posix()
+
+    preview_required_stories = [
+        story for story in plan.get("story_reviews", plan.get("stories", [])) if story.get("preview_surface_required")
+    ]
+    if preview_required_stories:
+        if normalized_text(manifest_fields.get("capture_status", "")) != "captured":
             issues.append(
                 {
-                    "path": manifest_path.relative_to(repo_root).as_posix(),
-                    "reason": f"preview manifest is missing required reviewed story surface {surface['route_id']} at {surface['path']}",
+                    "path": manifest_relpath,
+                    "reason": "preview manifest must record capture_status: captured when preview-required stories exist",
                 }
             )
-    for story in plan.get("stories", plan.get("story_reviews", [])):
-        if not story.get("preview_required"):
-            continue
-        story_id = str(story.get("story_id", "")).strip()
-        if story_id and story_id not in manifest_text:
+        if normalized_text(manifest_fields.get("content_validation_status", "")) != "reviewed":
             issues.append(
                 {
-                    "path": manifest_path.relative_to(repo_root).as_posix(),
-                    "reason": f"preview manifest does not cite required story {story_id}",
+                    "path": manifest_relpath,
+                    "reason": "preview manifest must record content_validation_status: reviewed for captured previews",
+                }
+            )
+        for field_name in ("frontend_validation", "architect_validation", "product_manager_validation"):
+            if normalized_text(manifest_fields.get(field_name, "")) != "approved":
+                issues.append(
+                    {
+                        "path": manifest_relpath,
+                        "reason": f"preview manifest must record {field_name}: approved",
+                    }
+                )
+        if _is_placeholder(manifest_fields.get("review_conclusion", "")):
+            issues.append({"path": manifest_relpath, "reason": "preview manifest review_conclusion is missing or placeholder"})
+
+    if preview_required_stories and _table_columns(review_rows) != STORY_PREVIEW_COLUMNS:
+        issues.append(
+            {
+                "path": manifest_relpath,
+                "reason": f"preview manifest Story Preview Coverage must use exact columns {list(STORY_PREVIEW_COLUMNS)}",
+            }
+        )
+        return issues
+
+    review_by_story = {row.get("Story ID", "").strip(): row for row in review_rows if row.get("Story ID", "").strip()}
+    for story in preview_required_stories:
+        story_id = str(story.get("story_id", "")).strip()
+        if not story_id:
+            continue
+        row = review_by_story.get(story_id)
+        if row is None:
+            issues.append(
+                {
+                    "path": manifest_relpath,
+                    "reason": f"preview manifest is missing structured preview coverage for required story {story_id}",
+                }
+            )
+            continue
+        supporting_surface_ids = set(parse_csv_values(row.get("Supporting Surface IDs", "")))
+        required_surface_ids = set(story.get("supporting_surface_ids", []))
+        missing_surface_ids = sorted(required_surface_ids - supporting_surface_ids)
+        if missing_surface_ids:
+            issues.append(
+                {
+                    "path": manifest_relpath,
+                    "reason": f"preview manifest story {story_id} is missing supporting surface IDs {missing_surface_ids}",
+                }
+            )
+        screenshot_files = parse_csv_values(row.get("Screenshot Files", ""))
+        if not screenshot_files:
+            issues.append(
+                {
+                    "path": manifest_relpath,
+                    "reason": f"preview manifest story {story_id} does not list screenshot files",
+                }
+            )
+        coverage_status = normalized_text(row.get("Coverage Status", ""))
+        if coverage_status not in APPROVED_PREVIEW_STATUSES:
+            issues.append(
+                {
+                    "path": manifest_relpath,
+                    "reason": f"preview manifest story {story_id} must use Coverage Status captured/reviewed/approved",
+                }
+            )
+        if _is_placeholder(row.get("Notes", "")):
+            issues.append(
+                {
+                    "path": manifest_relpath,
+                    "reason": f"preview manifest story {story_id} notes are missing or placeholder",
                 }
             )
     return issues

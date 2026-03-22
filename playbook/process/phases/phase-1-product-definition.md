@@ -15,6 +15,9 @@ Turn business intent into an implementable product definition.
 - distinguish business concepts from application resources, admin screens, and
   backend persistence structures
 - write user stories or scenarios
+- author `user-stories.md`, `traceability-matrix.md`, and
+  `story-quality-checklist.md` from their exact template contracts rather than
+  treating them as optional reference prose
 - build an actor-by-capability coverage matrix instead of a flat story list
 - normalize that breadth into a `Capability Coverage` table keyed by actor and
   capability band and treat that normalized table as the canonical breadth

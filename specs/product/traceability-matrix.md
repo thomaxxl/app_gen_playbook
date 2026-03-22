@@ -26,9 +26,9 @@ omitted until promoted into the current delivery scope.
 
 The real artifact MUST use this exact table schema:
 
-| Story ID | Workflow IDs | Rule IDs | Resource IDs | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| US-001 | WF-001 | BR-001 | Request | PAGE-001 | N001 | draft, submitted, blocked | operator with submit permission | SD-001 | AC-001 | no | yes | yes | product_manager |
+| Story ID | Workflow IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| US-001 | WF-001 | BR-001 | Request | ui | PAGE-001 | N001 | draft, submitted, blocked | operator with submit permission | SD-001 | AC-001 | no | yes | yes | product_manager |
 
 Rules:
 
@@ -36,10 +36,19 @@ Rules:
 - `Workflow IDs`, `Rule IDs`, `Resource IDs`, `Sample Data IDs`, and
   `Acceptance IDs` MUST point to real product artifacts or explicitly record
   `none`
+- `Primary Evidence Mode` MUST be one of:
+  - `ui`
+  - `service`
+  - `background`
+  - `hybrid`
 - `State/Mode Coverage` MUST name the important states, modes, or lifecycle
   branches the story depends on
 - `Permission Context` MUST describe the acting role or access boundary, not
   just repeat the actor name
+- `Page IDs` and `Route IDs` are required when `Primary Evidence Mode` is
+  `ui` or `hybrid`
+- `Page IDs` and `Route IDs` MAY be `none` when `Primary Evidence Mode` is
+  `service` or `background`
 - if a current-release story has no business-rule linkage, record
   `Rule IDs: none` with the reason in the Product-owned commentary rather than
   leaving the field blank

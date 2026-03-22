@@ -6,6 +6,8 @@ always_load:
   - playbook/summaries/roles/product-manager.summary.md
   - playbook/process/read-sets/product-manager-core.md
   - specs/product/story-quality-checklist.md
+  - specs/product/user-stories.md
+  - specs/product/traceability-matrix.md
 required_phase:
   - playbook/process/phases/phase-1-product-definition.md
 required_artifacts:
@@ -21,10 +23,8 @@ conditional_artifacts:
 reference_only:
   - specs/product/README.md
   - specs/product/conceptual-domain-model.md
-  - specs/product/user-stories.md
   - specs/product/sample-data.md
   - specs/product/custom-pages.md
-  - specs/product/traceability-matrix.md
 writable_targets:
   - runs/current/artifacts/product/**
   - runs/current/role-state/product_manager/**

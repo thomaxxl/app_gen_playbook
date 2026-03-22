@@ -69,14 +69,14 @@ above instead of inventing a new label.
 ## Coverage Matrix
 
 The real artifact MUST include this exact table first under the `## Coverage
-Matrix` heading. Use `yes` or `no` values and list the covering story IDs in
-`Covered by`.
+Matrix` heading. Use `yes` or `no` values only. This matrix is the coarse
+human-readable breadth view; it is not the canonical story ledger.
 
-| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup | Covered by |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Requester | yes | yes | yes | yes | no | yes | no | no | US-001, US-002, US-005 |
-| Approver | yes | no | yes | no | yes | yes | yes | no | US-010, US-011 |
-| Operator | yes | yes | yes | yes | yes | yes | yes | yes | US-020, US-021 |
+| Actor | Discover/Search | Create/Intake | Inspect/Detail | Edit/Maintain | Workflow/Approval | Exception/Recovery | Reporting/Export | Admin/Setup |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Requester | yes | yes | yes | yes | no | yes | no | no |
+| Approver | yes | no | yes | no | yes | yes | yes | no |
+| Operator | yes | yes | yes | yes | yes | yes | yes | yes |
 
 ## Capability Coverage
 
@@ -91,24 +91,27 @@ source for actor/capability breadth coverage.
 | Approver | Workflow/Approval | US-010 |
 | Approver | Exception/Recovery | US-011 |
 
-The coarse `Coverage Matrix` and the normalized `Capability Coverage` table
-must agree. The normalized table is authoritative when the compiler audits
-breadth coverage.
+The normalized `Capability Coverage` table is authoritative when the compiler
+audits breadth coverage. The coarse `Coverage Matrix` is a summary view and
+MUST stay aligned with that normalized ledger.
 
 ## Story Index
 
 The real artifact MUST include this exact table under the `## Story Index`
 heading.
 
-| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement | Why this priority | Independent Test |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| US-010 | Approver reviews pending requests | Approver | P1 | must | R1 | approval | As an Approver, I review pending requests and either approve or reject them with an audit note. | Pending approvals are the critical control point before work can continue. | Create or locate a pending request assigned to the approver, open it, record an approval or rejection, and confirm the queue and audit note update without relying on another story. |
+| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| US-010 | Approver reviews pending requests | Approver | P1 | must | R1 | approval | As an Approver, I review pending requests and either approve or reject them with an audit note. |
 
 Rules:
 
 - keep the story core user-facing and testable
 - do not put workflow IDs, rule IDs, page IDs, route IDs, permission mapping,
   or sample-data mapping in the story index
+- do not duplicate `Why this priority` or `Independent Test` in the story
+  index; the canonical source for those fields is the current-release story
+  block under `## User Scenarios & Testing`
 - if a current-release story needs implementation linkage, record it in
   `traceability-matrix.md`
 
@@ -130,6 +133,10 @@ Every current-release story block MUST include:
 
 Each `Acceptance Scenarios` section MUST include at least one concrete
 `Given / When / Then` scenario.
+
+For current-release stories, `Why this priority` and `Independent Test` in
+this block are the canonical story-core record. Do not duplicate or maintain a
+second canonical copy of those fields elsewhere.
 
 Higher-depth story blocks are required for:
 

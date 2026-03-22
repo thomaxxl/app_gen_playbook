@@ -18,12 +18,18 @@ The real artifact MUST record:
 - criteria check
 - evidence references
 - deferred items, if any
-- `## Story Coverage`
-- `## Actor Coverage`
-- `## Story Type Coverage`
-- `## Scenario Depth Coverage`
-- `## Page Coverage`
-- `## Route Coverage`
+- `## Story Coverage` as a markdown table with columns:
+  `Story ID | Decision | Independent Test Evidence | Supporting Surface IDs | Scenario Coverage | Notes`
+- `## Actor Coverage` as a markdown table with columns:
+  `Actor | Covered Story IDs | Evidence Summary`
+- `## Story Type Coverage` as a markdown table with columns:
+  `Story Type | Covered Story IDs | Evidence Summary`
+- `## Scenario Depth Coverage` as a markdown table with columns:
+  `Scenario Check | Covered Story IDs | Evidence Summary`
+- `## Page Coverage` as a markdown table with columns:
+  `Page ID | Covered Story IDs | Evidence Summary`
+- `## Route Coverage` as a markdown table with columns:
+  `Route ID | Path | Covered Story IDs | Evidence Summary`
 - explicit note that routes/pages are supporting proof surfaces for accepted
   current-release stories, not the primary scope unit
 - explicit review of the entry page, required custom pages, and at least one

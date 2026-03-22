@@ -157,6 +157,14 @@ validators:
     message_field: reason
     summary_pass: product story scope coverage passed
     summary_fail_template: "{count} product story-scope issue(s)"
+  tools/validators/coverage/validate_product_scope_contracts.py:
+    adapter: issue_list
+    module: validators.coverage.validate_product_scope_contracts
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: product story scope coverage passed
+    summary_fail_template: "{count} product story-scope issue(s)"
   tools/validators/coverage/validate_preview_coverage.py:
     adapter: issue_list
     module: validators.coverage.validate_preview_coverage

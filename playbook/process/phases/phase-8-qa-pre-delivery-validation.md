@@ -38,8 +38,9 @@ This phase begins only after:
   coverage used to prove each live-tested current-release story
 - cite the required current-release story IDs from the review plan when
   recording what QA actually exercised
-- make sure the QA manifest records both the reviewed routes and the story IDs
-  those screenshots support
+- make sure the QA manifest records structured story-to-screenshot coverage
+  rows, including the supporting surface IDs and screenshot files for each
+  required story
 - verify that supported CRUD and search flows are reachable through normal UI
   navigation and actions, not only through manually typed deep links
 - treat missing required routes, CTA drift, or generic substitution of required

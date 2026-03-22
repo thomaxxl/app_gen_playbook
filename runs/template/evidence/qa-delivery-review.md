@@ -19,13 +19,11 @@ starter_status: pending-review-evidence
 
 Required live coverage content for a pass review:
 
-- cite `runs/current/evidence/ui-previews/qa-manifest.md`
+- `source manifest: runs/current/evidence/ui-previews/qa-manifest.md`
+- a `## Story Live Coverage` markdown table with columns:
+  `Story ID | Live Status | Independent Test Result | Supporting Surface IDs | Screenshot Files | Notes`
 - cite the saved screenshot files under `runs/current/evidence/ui-previews/qa/`
-- cite the story-required visible routes/pages from
-  `runs/current/evidence/quality/review-plan.json`
-- cite the required current-release story IDs from that same review plan
-- mention which reviewed screenshots support those story IDs
-- document the live route/page coverage used to prove those required stories
+- document the live route/page coverage used to prove the required stories
 - record whether any story-required route/page was missing, generically
   substituted, or blocked by CTA drift
 

@@ -39,7 +39,7 @@ requirements:
       proof surfaces that must remain aligned with that story scope.
     validator:
       kind: python_function
-      entrypoint: tools/validators/coverage/validate_frontend_route_coverage.py
+      entrypoint: tools/validators/coverage/validate_product_scope_contracts.py
     evidence:
       required_files:
         - runs/current/artifacts/product/story-quality-checklist.md
