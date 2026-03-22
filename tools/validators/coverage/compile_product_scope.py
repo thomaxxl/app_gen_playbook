@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,11 +14,11 @@ if __package__ in {None, ""}:
     from coverage.common import (  # type: ignore[import-not-found]
         extract_child_sections,
         extract_markdown_section,
-        parse_csv_values,
         normalized_repo_root,
-        parse_page_id,
+        parse_csv_values,
         parse_markdown_table,
         parse_markdown_table_from_section,
+        parse_page_id,
         parse_primary_cta_targets,
         read_text,
         write_json,
@@ -26,11 +27,11 @@ else:
     from .common import (
         extract_child_sections,
         extract_markdown_section,
-        parse_csv_values,
         normalized_repo_root,
-        parse_page_id,
+        parse_csv_values,
         parse_markdown_table,
         parse_markdown_table_from_section,
+        parse_page_id,
         parse_primary_cta_targets,
         read_text,
         write_json,
@@ -38,6 +39,18 @@ else:
 
 
 STORY_INDEX_COLUMNS = (
+    "Story ID",
+    "Title",
+    "Actor",
+    "Priority",
+    "Delivery Class",
+    "Release",
+    "Story Type",
+    "Story Statement",
+    "Why this priority",
+    "Independent Test",
+)
+LEGACY_STORY_INDEX_COLUMNS = (
     "Story ID",
     "Epic",
     "Actor",
@@ -57,6 +70,22 @@ STORY_INDEX_COLUMNS = (
     "Acceptance IDs",
 )
 TRACEABILITY_COLUMNS = (
+    "Story ID",
+    "Workflow IDs",
+    "Rule IDs",
+    "Resource IDs",
+    "Page IDs",
+    "Route IDs",
+    "State/Mode Coverage",
+    "Permission Context",
+    "Sample Data IDs",
+    "Acceptance IDs",
+    "Generated resource allowed as satisfier?",
+    "Required preview evidence",
+    "Required live QA evidence",
+    "Acceptance owner",
+)
+LEGACY_TRACEABILITY_COLUMNS = (
     "Story ID",
     "Priority",
     "Story Type",
@@ -84,6 +113,11 @@ COVERAGE_MATRIX_COLUMNS = (
     "Reporting/Export",
     "Admin/Setup",
     "Covered by",
+)
+CAPABILITY_COVERAGE_COLUMNS = (
+    "Actor",
+    "Capability Band",
+    "Covered by Story IDs",
 )
 CUSTOM_PAGE_COLUMNS = (
     "Page ID",
@@ -130,7 +164,15 @@ WORKFLOW_HEAVY_STORY_TYPES = {
     "integration-import-export",
     "notification-audit",
 }
-REQUIRED_SCENARIO_FIELDS = (
+CAPABILITY_BANDS = COVERAGE_MATRIX_COLUMNS[1:-1]
+REQUIRED_STORY_BLOCK_FIELDS = (
+    "**Actor**:",
+    "**Story Type**:",
+    "**Release**:",
+    "**Why this priority**:",
+    "**Independent Test**:",
+    "**Acceptance Scenarios**:",
+    "**Edge Cases**:",
     "Context / trigger:",
     "Preconditions:",
     "Happy path:",
@@ -138,6 +180,9 @@ REQUIRED_SCENARIO_FIELDS = (
     "Negative / validation paths:",
     "Empty-state expectation:",
     "Permission constraints:",
+    "Audit / notification expectation:",
+    "Non-goals:",
+    "Required evidence:",
 )
 SCENARIO_CHECKS = (
     "happy-path",
@@ -191,40 +236,131 @@ def _normalize_route_path(path: str) -> str:
     return value
 
 
-def _header_issues(rows: list[dict[str, str]], expected_columns: tuple[str, ...], label: str) -> list[str]:
+def _table_columns(rows: list[dict[str, str]]) -> tuple[str, ...]:
+    if not rows:
+        return ()
+    return tuple(rows[0].keys())
+
+
+def _header_issues(
+    rows: list[dict[str, str]],
+    label: str,
+    expected_columns: tuple[str, ...],
+    legacy_columns: tuple[str, ...] | None = None,
+) -> list[str]:
     if not rows:
         return [f"{label} is missing or empty"]
-    actual_columns = tuple(rows[0].keys())
-    if actual_columns != expected_columns:
-        return [
-            f"{label} must use exact columns {list(expected_columns)}; found {list(actual_columns)}"
-        ]
-    return []
+    actual_columns = _table_columns(rows)
+    if actual_columns == expected_columns:
+        return []
+    if legacy_columns and actual_columns == legacy_columns:
+        return []
+    return [f"{label} must use exact columns {list(expected_columns)}; found {list(actual_columns)}"]
 
 
 def _normalize_yes_no(value: str) -> str:
     return value.strip().lower().replace("`", "")
 
 
-def _story_detail_required(priority: str, story_type: str) -> bool:
-    return priority == "must" or (priority == "should" and story_type in WORKFLOW_HEAVY_STORY_TYPES)
+def _normalize_priority(value: str) -> str:
+    normalized = value.strip().upper().replace("`", "")
+    if normalized in {"P1", "P2", "P3"}:
+        return normalized
+    legacy = value.strip().lower().replace("`", "")
+    return {"must": "P1", "should": "P2", "could": "P3"}.get(legacy, "")
 
 
-def _parse_user_story_catalog(path: Path) -> tuple[list[dict[str, str]], list[dict[str, str]], dict[str, str], list[str]]:
+def _normalize_delivery_class(value: str, priority_value: str) -> str:
+    normalized = value.strip().lower().replace("`", "")
+    if normalized in {"must", "should", "could"}:
+        return normalized
+    priority = _normalize_priority(priority_value)
+    return {"P1": "must", "P2": "should", "P3": "could"}.get(priority, "")
+
+
+def _is_current_release(value: str) -> bool:
+    normalized = value.strip().upper().replace("`", "")
+    if not normalized:
+        return False
+    return normalized in {"R1", "CURRENT", "NOW", "MVP"} or normalized.startswith("R1")
+
+
+def _detail_required(priority: str, delivery_class: str, release: str, story_type: str) -> bool:
+    current_release = _is_current_release(release)
+    if priority == "P1":
+        return True
+    if priority == "P2":
+        return current_release or story_type in WORKFLOW_HEAVY_STORY_TYPES
+    if delivery_class == "must" and current_release:
+        return True
+    return False
+
+
+def _parse_story_detail_section(detail_text: str, story_id: str) -> tuple[dict[str, Any], list[str]]:
+    issues: list[str] = []
+    parsed: dict[str, Any] = {
+        "acceptance_scenario_count": 0,
+        "edge_case_count": 0,
+    }
+    if not detail_text:
+        return parsed, [f"{story_id}: missing required detailed story section"]
+    for marker in REQUIRED_STORY_BLOCK_FIELDS:
+        if marker not in detail_text:
+            issues.append(f"{story_id}: detailed story section is missing '{marker}'")
+
+    given_count = detail_text.count("**Given**")
+    when_count = detail_text.count("**When**")
+    then_count = detail_text.count("**Then**")
+    parsed["acceptance_scenario_count"] = min(given_count, when_count, then_count)
+    if parsed["acceptance_scenario_count"] <= 0:
+        issues.append(f"{story_id}: detailed story section is missing a concrete Given / When / Then acceptance scenario")
+
+    edge_cases_section = detail_text.split("**Edge Cases**:", 1)
+    if len(edge_cases_section) == 2:
+        parsed["edge_case_count"] = len(re.findall(r"(?m)^\s*-\s+\S", edge_cases_section[1]))
+    if parsed["edge_case_count"] <= 0:
+        issues.append(f"{story_id}: detailed story section does not list any edge cases")
+
+    why_priority_match = re.search(r"\*\*Why this priority\*\*:\s*(.+)", detail_text)
+    parsed["why_priority"] = why_priority_match.group(1).strip() if why_priority_match else ""
+    independent_test_match = re.search(r"\*\*Independent Test\*\*:\s*(.+)", detail_text)
+    parsed["independent_test"] = independent_test_match.group(1).strip() if independent_test_match else ""
+    return parsed, issues
+
+
+def _parse_user_story_catalog(
+    path: Path,
+) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]], dict[str, str], list[str]]:
     issues: list[str] = []
     if not path.exists():
-        return [], [], {}, [f"missing or empty {path.as_posix()}"]
+        return [], [], [], {}, [f"missing or empty {path.as_posix()}"]
     text = path.read_text(encoding="utf-8")
     coverage_matrix = parse_markdown_table_from_section(text, "Coverage Matrix")
+    capability_coverage = parse_markdown_table_from_section(text, "Capability Coverage")
     story_index = parse_markdown_table_from_section(text, "Story Index")
-    details_text = extract_markdown_section(text, "Detailed Stories")
-    detail_sections = extract_child_sections(details_text, 3) if details_text else {}
+    detail_text = extract_markdown_section(text, "User Scenarios & Testing") or extract_markdown_section(text, "Detailed Stories")
+    detail_sections = extract_child_sections(detail_text, 3) if detail_text else {}
 
-    issues.extend(_header_issues(coverage_matrix, COVERAGE_MATRIX_COLUMNS, f"{path.as_posix()} coverage matrix"))
-    issues.extend(_header_issues(story_index, STORY_INDEX_COLUMNS, f"{path.as_posix()} story index"))
-    if not details_text:
-        issues.append(f"{path.as_posix()} is missing required section ## Detailed Stories")
-    return coverage_matrix, story_index, detail_sections, issues
+    issues.extend(_header_issues(coverage_matrix, f"{path.as_posix()} coverage matrix", COVERAGE_MATRIX_COLUMNS))
+    if capability_coverage:
+        issues.extend(
+            _header_issues(
+                capability_coverage,
+                f"{path.as_posix()} capability coverage",
+                CAPABILITY_COVERAGE_COLUMNS,
+            )
+        )
+    issues.extend(
+        _header_issues(
+            story_index,
+            f"{path.as_posix()} story index",
+            STORY_INDEX_COLUMNS,
+            legacy_columns=LEGACY_STORY_INDEX_COLUMNS,
+        )
+    )
+    if not detail_text:
+        issues.append(f"{path.as_posix()} is missing required section ## User Scenarios & Testing")
+    return coverage_matrix, capability_coverage, story_index, detail_sections, issues
 
 
 def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list[str]]:
@@ -238,7 +374,10 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         "/runs/current/changes/" in path.as_posix()
         for path in (user_stories_path, traceability_path, custom_pages_path, navigation_path, landing_strategy_path)
     )
-    coverage_matrix, stories, detail_sections, story_catalog_issues = _parse_user_story_catalog(user_stories_path)
+
+    coverage_matrix, capability_coverage_rows, stories, detail_sections, story_catalog_issues = _parse_user_story_catalog(
+        user_stories_path
+    )
     issues.extend(
         message.replace(user_stories_path.as_posix(), user_stories_path.relative_to(repo_root).as_posix())
         for message in story_catalog_issues
@@ -247,9 +386,16 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
     custom_pages = parse_markdown_table(custom_pages_path)
     navigation = parse_markdown_table(navigation_path)
 
-    issues.extend(_header_issues(traceability, TRACEABILITY_COLUMNS, traceability_path.relative_to(repo_root).as_posix()))
-    issues.extend(_header_issues(custom_pages, CUSTOM_PAGE_COLUMNS, custom_pages_path.relative_to(repo_root).as_posix()))
-    issues.extend(_header_issues(navigation, NAVIGATION_COLUMNS, navigation_path.relative_to(repo_root).as_posix()))
+    issues.extend(
+        _header_issues(
+            traceability,
+            traceability_path.relative_to(repo_root).as_posix(),
+            TRACEABILITY_COLUMNS,
+            legacy_columns=LEGACY_TRACEABILITY_COLUMNS,
+        )
+    )
+    issues.extend(_header_issues(custom_pages, custom_pages_path.relative_to(repo_root).as_posix(), CUSTOM_PAGE_COLUMNS))
+    issues.extend(_header_issues(navigation, navigation_path.relative_to(repo_root).as_posix(), NAVIGATION_COLUMNS))
 
     page_ids = {parse_page_id(row.get("Page ID", "")) for row in custom_pages if row.get("Page ID")}
     visible_routes: list[dict[str, str]] = []
@@ -277,145 +423,240 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         story_id = row.get("Story ID", "").strip()
         if not story_id:
             continue
-        page_values = parse_csv_values(row.get("Page IDs", ""))
-        route_values = parse_csv_values(row.get("Route IDs", ""))
-        story_type = row.get("Story Type", "").strip().lower()
         trace_row = {
             "story_id": story_id,
-            "priority": row.get("Priority", "").strip().lower(),
-            "story_type": story_type,
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
             "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
-            "page_ids": page_values,
-            "route_ids": route_values,
+            "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
+            "page_ids": parse_csv_values(row.get("Page IDs", "")),
+            "route_ids": parse_csv_values(row.get("Route IDs", "")),
             "state_mode_coverage": parse_csv_values(row.get("State/Mode Coverage", "")),
             "permission_context": row.get("Permission Context", "").strip(),
             "sample_data_ids": parse_csv_values(row.get("Sample Data IDs", "")),
             "acceptance_ids": parse_csv_values(row.get("Acceptance IDs", "")),
             "preview_required": row.get("Required preview evidence", "").strip().lower() == "yes",
             "qa_live_required": row.get("Required live QA evidence", "").strip().lower() == "yes",
+            "acceptance_owner": row.get("Acceptance owner", "").strip(),
+            "generated_resource_allowed": row.get("Generated resource allowed as satisfier?", "").strip().lower(),
         }
         trace_rows.append(trace_row)
         trace_by_story[story_id] = trace_row
 
+    coverage_matrix_payload: list[dict[str, Any]] = []
+    required_actors: set[str] = set()
+    normalized_capability_coverage: list[dict[str, Any]] = []
+    capability_index: dict[tuple[str, str], list[str]] = {}
+    for row in coverage_matrix:
+        actor = row.get("Actor", "").strip()
+        if not actor:
+            continue
+        required_actors.add(actor)
+        covered_by = parse_csv_values(row.get("Covered by", ""))
+        capability_bands = {
+            column: _normalize_yes_no(row.get(column, ""))
+            for column in CAPABILITY_BANDS
+        }
+        coverage_matrix_payload.append(
+            {
+                "actor": actor,
+                "capability_bands": capability_bands,
+                "covered_by": covered_by,
+            }
+        )
+        relevant_bands = [band for band, flag in capability_bands.items() if flag == "yes"]
+        if relevant_bands and not covered_by:
+            issues.append(f"{actor}: coverage matrix row marks capability coverage but Covered by is empty")
+        for band in relevant_bands:
+            capability_index[(actor, band)] = list(covered_by)
+            normalized_capability_coverage.append(
+                {
+                    "actor": actor,
+                    "capability_band": band,
+                    "covered_by_story_ids": list(covered_by),
+                }
+            )
+
+    if capability_coverage_rows:
+        normalized_capability_coverage = []
+        capability_index = {}
+        for row in capability_coverage_rows:
+            actor = row.get("Actor", "").strip()
+            capability_band = row.get("Capability Band", "").strip()
+            story_ids = parse_csv_values(row.get("Covered by Story IDs", ""))
+            if actor:
+                required_actors.add(actor)
+            if not actor or not capability_band:
+                issues.append("Capability Coverage rows require Actor and Capability Band")
+                continue
+            if capability_band not in CAPABILITY_BANDS:
+                issues.append(f"{actor}: unsupported capability band {capability_band}")
+            if not story_ids:
+                issues.append(f"{actor} / {capability_band}: capability coverage row is missing Story IDs")
+            capability_index[(actor, capability_band)] = list(story_ids)
+            normalized_capability_coverage.append(
+                {
+                    "actor": actor,
+                    "capability_band": capability_band,
+                    "covered_by_story_ids": list(story_ids),
+                }
+            )
+        for row in coverage_matrix_payload:
+            actor = row["actor"]
+            for band, flag in row["capability_bands"].items():
+                if flag == "yes" and (actor, band) not in capability_index:
+                    issues.append(f"{actor}: capability coverage is missing normalized row for {band}")
+
     story_rows: list[dict[str, Any]] = []
     story_index_by_id: dict[str, dict[str, Any]] = {}
     story_type_catalog: set[str] = set()
+    current_release_story_ids: list[str] = []
     required_story_reviews: list[dict[str, Any]] = []
-    required_actors: set[str] = set()
-    story_detail_requirements: dict[str, list[str]] = {}
-    if stories:
-        if not coverage_matrix:
-            issues.append(
-                f"{user_stories_path.relative_to(repo_root).as_posix()} is missing or empty ## Coverage Matrix table"
-            )
-        actor_to_story_refs: dict[str, list[str]] = {}
-        for row in coverage_matrix:
-            actor = row.get("Actor", "").strip()
-            if not actor:
-                continue
-            covered_by = parse_csv_values(row.get("Covered by", ""))
-            actor_to_story_refs[actor] = covered_by
-            relevant_bands = [
-                column
-                for column in COVERAGE_MATRIX_COLUMNS[1:-1]
-                if _normalize_yes_no(row.get(column, "")) == "yes"
-            ]
-            if not relevant_bands:
-                issues.append(f"{actor}: coverage matrix row has no capability bands marked yes")
-            if relevant_bands and not covered_by:
-                issues.append(f"{actor}: coverage matrix row marks capability coverage but Covered by is empty")
-            required_actors.add(actor)
 
-        for row in stories:
-            story_id = row.get("Story ID", "").strip()
-            if not story_id:
-                continue
-            priority = row.get("Priority", "").strip().lower()
-            actor = row.get("Actor", "").strip()
-            story_type = row.get("Story Type", "").strip().lower()
-            story_payload = {
-                "story_id": story_id,
-                "epic": row.get("Epic", "").strip(),
-                "actor": actor,
-                "story_type": story_type,
-                "priority": priority,
-                "release": row.get("Release", "").strip(),
-                "frequency": row.get("Frequency", "").strip(),
-                "criticality": row.get("Criticality", "").strip(),
-                "story_statement": row.get("Story Statement", "").strip(),
-                "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
-                "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
-                "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
-                "page_ids": parse_csv_values(row.get("Page IDs", "")),
-                "route_ids": parse_csv_values(row.get("Route IDs", "")),
-                "permission_context": row.get("Permission Context", "").strip(),
-                "sample_data_ids": parse_csv_values(row.get("Sample Data IDs", "")),
-                "acceptance_ids": parse_csv_values(row.get("Acceptance IDs", "")),
-            }
-            story_rows.append(story_payload)
-            story_index_by_id[story_id] = story_payload
-            if story_type:
-                story_type_catalog.add(story_type)
-            if actor:
-                required_actors.add(actor)
-            if story_type not in ALLOWED_STORY_TYPES:
-                issues.append(f"{story_id}: unsupported story type {story_type or '<blank>'}")
-            if not actor:
-                issues.append(f"{story_id}: actor is required in story index")
-            if not story_payload["story_statement"]:
-                issues.append(f"{story_id}: story statement is required")
-            if not story_payload["workflow_ids"]:
-                issues.append(f"{story_id}: workflow IDs are required in story index")
-            if not story_payload["page_ids"]:
-                issues.append(f"{story_id}: page IDs are required in story index")
-            if not story_payload["route_ids"]:
-                issues.append(f"{story_id}: route IDs are required in story index")
-            if not story_payload["permission_context"]:
-                issues.append(f"{story_id}: permission context is required in story index")
-            if not story_payload["sample_data_ids"]:
-                issues.append(f"{story_id}: sample data IDs are required in story index")
-            if not story_payload["acceptance_ids"]:
-                issues.append(f"{story_id}: acceptance IDs are required in story index")
+    actual_story_columns = _table_columns(stories)
+    legacy_story_index = actual_story_columns == LEGACY_STORY_INDEX_COLUMNS
 
-            detail_required = _story_detail_required(priority, story_type)
-            story_detail_requirements[story_id] = list(SCENARIO_CHECKS) if detail_required else []
-            if detail_required:
-                detail_key = next((key for key in detail_sections if key.startswith(story_id)), "")
-                detail_text = detail_sections.get(detail_key, "")
-                if not detail_text:
-                    issues.append(
-                        f"{story_id}: missing detailed story section under {user_stories_path.relative_to(repo_root).as_posix()}"
-                    )
-                else:
-                    for marker in REQUIRED_SCENARIO_FIELDS:
-                        if marker not in detail_text:
-                            issues.append(f"{story_id}: detailed story section is missing '{marker}'")
-
-        for actor, story_refs in actor_to_story_refs.items():
-            for story_id in story_refs:
-                if story_id not in story_index_by_id:
-                    issues.append(f"{actor}: coverage matrix references unknown story {story_id}")
-
-    must_story_rows: list[dict[str, str]] = []
     for row in stories:
         story_id = row.get("Story ID", "").strip()
-        priority = row.get("Priority", "").strip().lower()
+        if not story_id:
+            continue
+        title = row.get("Title", "").strip() or row.get("Epic", "").strip() or story_id
+        actor = row.get("Actor", "").strip()
+        raw_priority = row.get("Priority", "").strip()
+        priority = _normalize_priority(raw_priority)
+        delivery_class = _normalize_delivery_class(row.get("Delivery Class", ""), raw_priority)
+        release = row.get("Release", "").strip()
         story_type = row.get("Story Type", "").strip().lower()
-        if not story_id or priority != "must":
+        story_statement = row.get("Story Statement", "").strip()
+        why_priority = row.get("Why this priority", "").strip()
+        independent_test = row.get("Independent Test", "").strip()
+        current_release = _is_current_release(release)
+        detail_required = _detail_required(priority, delivery_class, release, story_type)
+        inline_traceability = {
+            "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
+            "rule_ids": parse_csv_values(row.get("Rule IDs", "")),
+            "resource_ids": parse_csv_values(row.get("Resource IDs", "")),
+            "page_ids": parse_csv_values(row.get("Page IDs", "")),
+            "route_ids": parse_csv_values(row.get("Route IDs", "")),
+            "permission_context": row.get("Permission Context", "").strip(),
+            "sample_data_ids": parse_csv_values(row.get("Sample Data IDs", "")),
+            "acceptance_ids": parse_csv_values(row.get("Acceptance IDs", "")),
+        }
+        detail_key = next((key for key in detail_sections if key.startswith(story_id)), "")
+        detail_text = detail_sections.get(detail_key, "")
+        detail_metrics, detail_issues = _parse_story_detail_section(detail_text, story_id) if detail_required else (
+            {"acceptance_scenario_count": 0, "edge_case_count": 0, "why_priority": "", "independent_test": ""},
+            [],
+        )
+        if detail_required:
+            issues.extend(detail_issues)
+
+        story_payload = {
+            "story_id": story_id,
+            "title": title,
+            "actor": actor,
+            "priority": priority,
+            "delivery_class": delivery_class,
+            "release": release,
+            "story_type": story_type,
+            "story_statement": story_statement,
+            "why_priority": why_priority,
+            "independent_test": independent_test,
+            "current_release": current_release,
+            "detail_required": detail_required,
+            "acceptance_scenario_count": detail_metrics.get("acceptance_scenario_count", 0),
+            "edge_case_count": detail_metrics.get("edge_case_count", 0),
+        }
+        story_rows.append(story_payload)
+        story_index_by_id[story_id] = story_payload
+
+        if actor:
+            required_actors.add(actor)
+        if story_type:
+            story_type_catalog.add(story_type)
+        if current_release:
+            current_release_story_ids.append(story_id)
+
+        if not actor:
+            issues.append(f"{story_id}: actor is required in story index")
+        if priority not in {"P1", "P2", "P3"}:
+            issues.append(f"{story_id}: priority must be P1, P2, or P3 (legacy must/should/could still accepted during transition)")
+        if story_type not in ALLOWED_STORY_TYPES:
+            issues.append(f"{story_id}: unsupported story type {story_type or '<blank>'}")
+        if not story_statement:
+            issues.append(f"{story_id}: story statement is required")
+        if not why_priority:
+            issues.append(f"{story_id}: why this priority is required in story index")
+        if not independent_test:
+            issues.append(f"{story_id}: independent test is required in story index")
+
+        if detail_required:
+            if detail_metrics.get("why_priority") and why_priority and detail_metrics["why_priority"] != why_priority:
+                issues.append(f"{story_id}: why this priority drift between story index and detailed story block")
+            if detail_metrics.get("independent_test") and independent_test and detail_metrics["independent_test"] != independent_test:
+                issues.append(f"{story_id}: independent test drift between story index and detailed story block")
+
+        for capability_entry in normalized_capability_coverage:
+            if story_id in capability_entry["covered_by_story_ids"]:
+                break
+        else:
+            if current_release:
+                issues.append(f"{story_id}: current-release story is not referenced from capability coverage")
+
+        if legacy_story_index and current_release:
+            trace_row = trace_by_story.get(story_id)
+            if not trace_row:
+                issues.append(f"{story_id}: missing traceability row")
+            else:
+                for field in (
+                    "workflow_ids",
+                    "rule_ids",
+                    "resource_ids",
+                    "page_ids",
+                    "route_ids",
+                    "sample_data_ids",
+                    "acceptance_ids",
+                ):
+                    inline_values = inline_traceability[field]
+                    trace_values = trace_row.get(field, [])
+                    if inline_values and trace_values and inline_values != trace_values:
+                        issues.append(f"{story_id}: {field.replace('_', ' ')} drift between story index and traceability matrix")
+                if inline_traceability["permission_context"] and inline_traceability["permission_context"] != trace_row.get("permission_context", ""):
+                    issues.append(f"{story_id}: permission context drift between story index and traceability matrix")
+
+    for capability_entry in normalized_capability_coverage:
+        for story_id in capability_entry["covered_by_story_ids"]:
+            if story_id not in story_index_by_id:
+                issues.append(
+                    f"{capability_entry['actor']} / {capability_entry['capability_band']}: capability coverage references unknown story {story_id}"
+                )
+
+    current_release_story_rows: list[dict[str, Any]] = []
+    mapped_current_release_page_ids: set[str] = set()
+    mapped_current_release_route_ids: set[str] = set()
+    for story_id in current_release_story_ids:
+        story = story_index_by_id[story_id]
+        trace_row = trace_by_story.get(story_id)
+        if not trace_row:
+            issues.append(f"{story_id}: current-release story is missing a traceability row")
             continue
-        must_story_rows.append(row)
-        if story_id not in trace_by_story:
-            issues.append(f"{story_id}: missing traceability row")
-            continue
-        trace_row = trace_by_story[story_id]
-        story_row = story_index_by_id.get(story_id, {})
-        if trace_row["story_type"] and story_type and trace_row["story_type"] != story_type:
-            issues.append(f"{story_id}: story type drift between story index and traceability matrix")
+        current_release_story_rows.append(
+            {
+                "story_id": story_id,
+                "priority": story["priority"],
+                "delivery_class": story["delivery_class"],
+                "release": story["release"],
+                "page_ids": trace_row["page_ids"],
+                "route_ids": trace_row["route_ids"],
+                "workflow_ids": trace_row["workflow_ids"],
+            }
+        )
+
         if not trace_row["workflow_ids"]:
             issues.append(f"{story_id}: no workflow mapping in traceability matrix")
         if not trace_row["rule_ids"]:
             issues.append(f"{story_id}: no rule mapping in traceability matrix")
+        if not trace_row["resource_ids"]:
+            issues.append(f"{story_id}: no resource mapping in traceability matrix")
         if not trace_row["page_ids"]:
             issues.append(f"{story_id}: no page mapping in traceability matrix")
         if not trace_row["route_ids"]:
@@ -428,41 +669,60 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             issues.append(f"{story_id}: no sample data mapping in traceability matrix")
         if not trace_row["acceptance_ids"]:
             issues.append(f"{story_id}: no acceptance ID mapping in traceability matrix")
-        if story_row.get("permission_context") and trace_row["permission_context"] != story_row["permission_context"]:
-            issues.append(f"{story_id}: permission context drift between story index and traceability matrix")
-        if change_scope_active:
-            continue
-        for page_id in trace_row["page_ids"]:
-            if page_id not in page_ids:
-                issues.append(f"{story_id}: unknown page id {page_id} in traceability matrix")
-        for route_id in trace_row["route_ids"]:
-            if route_id not in route_ids:
-                issues.append(f"{story_id}: unknown route id {route_id} in traceability matrix")
+        if not trace_row["acceptance_owner"]:
+            issues.append(f"{story_id}: no acceptance owner in traceability matrix")
 
-    for story_id, story_row in story_index_by_id.items():
-        priority = str(story_row.get("priority", ""))
-        story_type = str(story_row.get("story_type", ""))
-        detail_required = _story_detail_required(priority, story_type)
-        if not detail_required and story_id not in trace_by_story:
-            continue
-        trace_row = trace_by_story.get(story_id)
+        mapped_current_release_page_ids.update(trace_row["page_ids"])
+        mapped_current_release_route_ids.update(trace_row["route_ids"])
+
+        if not change_scope_active:
+            for page_id in trace_row["page_ids"]:
+                if page_id not in page_ids:
+                    issues.append(f"{story_id}: unknown page id {page_id} in traceability matrix")
+            for route_id in trace_row["route_ids"]:
+                if route_id not in route_ids:
+                    issues.append(f"{story_id}: unknown route id {route_id} in traceability matrix")
+
         required_story_reviews.append(
             {
                 "story_id": story_id,
-                "actor": story_row.get("actor", ""),
-                "story_type": story_type,
-                "priority": priority,
-                "workflow_ids": list((trace_row or story_row).get("workflow_ids", [])),
-                "rule_ids": list((trace_row or story_row).get("rule_ids", [])),
-                "page_ids": list((trace_row or story_row).get("page_ids", [])),
-                "route_ids": list((trace_row or story_row).get("route_ids", [])),
-                "permission_context": (trace_row or story_row).get("permission_context", ""),
-                "sample_data_ids": list((trace_row or story_row).get("sample_data_ids", [])),
-                "acceptance_ids": list((trace_row or story_row).get("acceptance_ids", [])),
-                "required_checks": list(story_detail_requirements.get(story_id, [])),
-                "detail_required": detail_required,
+                "title": story["title"],
+                "actor": story["actor"],
+                "priority": story["priority"],
+                "delivery_class": story["delivery_class"],
+                "release": story["release"],
+                "story_type": story["story_type"],
+                "story_statement": story["story_statement"],
+                "why_priority": story["why_priority"],
+                "independent_test": story["independent_test"],
+                "workflow_ids": trace_row["workflow_ids"],
+                "rule_ids": trace_row["rule_ids"],
+                "resource_ids": trace_row["resource_ids"],
+                "page_ids": trace_row["page_ids"],
+                "route_ids": trace_row["route_ids"],
+                "permission_context": trace_row["permission_context"],
+                "sample_data_ids": trace_row["sample_data_ids"],
+                "acceptance_ids": trace_row["acceptance_ids"],
+                "preview_required": trace_row["preview_required"],
+                "qa_live_required": trace_row["qa_live_required"],
+                "acceptance_owner": trace_row["acceptance_owner"],
+                "detail_required": story["detail_required"],
+                "required_checks": list(SCENARIO_CHECKS) if story["detail_required"] else [],
+                "acceptance_scenario_count": story["acceptance_scenario_count"],
+                "edge_case_count": story["edge_case_count"],
+                "current_release": True,
             }
         )
+
+    for page_id in sorted(page_ids):
+        if page_id not in mapped_current_release_page_ids:
+            issues.append(f"{page_id}: custom page is not mapped from any current-release story in traceability matrix")
+
+    for route in visible_routes:
+        if route["route_id"] not in mapped_current_release_route_ids:
+            issues.append(
+                f"{route['route_id']}: visible route at {route['path']} is not mapped from any current-release story in traceability matrix"
+            )
 
     primary_targets = parse_primary_cta_targets(read_text(landing_strategy_path))
     requires_static_home_cta = any(route["path"] == "/app/#/Home" for route in visible_routes)
@@ -472,26 +732,10 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         )
 
     payload = {
-        "must_stories": [
-            {
-                "story_id": row.get("Story ID", "").strip(),
-                "workflow_ids": trace_by_story.get(row.get("Story ID", "").strip(), {}).get("workflow_ids", []),
-                "page_ids": trace_by_story.get(row.get("Story ID", "").strip(), {}).get("page_ids", []),
-                "route_ids": trace_by_story.get(row.get("Story ID", "").strip(), {}).get("route_ids", []),
-            }
-            for row in must_story_rows
-        ],
-        "coverage_matrix": [
-            {
-                "actor": row.get("Actor", "").strip(),
-                "capability_bands": {
-                    column: _normalize_yes_no(row.get(column, ""))
-                    for column in COVERAGE_MATRIX_COLUMNS[1:-1]
-                },
-                "covered_by": parse_csv_values(row.get("Covered by", "")),
-            }
-            for row in coverage_matrix
-        ],
+        "current_release_stories": current_release_story_rows,
+        "must_stories": current_release_story_rows,
+        "coverage_matrix": coverage_matrix_payload,
+        "capability_coverage": normalized_capability_coverage,
         "story_index": story_rows,
         "required_story_reviews": required_story_reviews,
         "required_actor_coverage": sorted(required_actors),

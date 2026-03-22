@@ -184,15 +184,27 @@ scope catalog for the run. The Product Manager MUST not leave it as loose prose
 or a flat CRUD list. It MUST include:
 
 - an actor-by-capability coverage matrix
+- a normalized `Capability Coverage` table
 - the exact story index schema defined by `specs/product/user-stories.md`
 - the mandatory story-type taxonomy
-- detailed scenario sections for every `must` story and every workflow-heavy
-  `should` story
+- story-core fields such as priority, why this priority, and independent test
+- detailed scenario sections for every current-release `P1` story and every
+  current-release workflow-heavy `P2` story
+
+The Product Manager MUST keep implementation linkage out of the story core.
+Workflow IDs, rule IDs, resource IDs, page IDs, route IDs, permissions,
+sample-data IDs, and acceptance IDs belong in
+`traceability-matrix.md`, which is the canonical mapping layer.
 
 The Product Manager MUST treat `traceability-matrix.md` as the bridge from
 story scope into workflows, rules, pages, routes, permissions, sample data,
 and acceptance IDs. Those fields are required because downstream roles are not
 allowed to infer workflow depth by guesswork.
+
+The Product Manager SHOULD also complete
+`story-quality-checklist.md` as the readability and story-quality pass before
+handoff so later reviewers can tell whether current-release stories are
+concrete, independently testable, and free of hidden implementation leakage.
 
 Use the generic product templates under
 [../../specs/product/README.md](../../specs/product/README.md) when producing

@@ -42,6 +42,7 @@ conditional_artifacts:
     - runs/current/artifacts/ux/custom-view-specs.md
 reference_only:
   - runs/current/artifacts/backend-design/test-plan.md
+  - runs/current/artifacts/product/story-quality-checklist.md
 writable_targets:
   - runs/current/artifacts/product/**
   - runs/current/evidence/ui-previews/manifest.md

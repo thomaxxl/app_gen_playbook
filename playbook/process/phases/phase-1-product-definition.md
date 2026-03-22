@@ -10,6 +10,8 @@ Turn business intent into an implementable product definition.
 
 - write user stories or scenarios
 - build an actor-by-capability coverage matrix instead of a flat story list
+- normalize that breadth into a `Capability Coverage` table keyed by actor and
+  capability band
 - classify every story with the required story-type taxonomy
 - research domain best practices and standard workflow expectations when the
   brief is incomplete or silent
@@ -19,10 +21,13 @@ Turn business intent into an implementable product definition.
 - define business rules in controlled natural language
 - define sample data expectations
 - define required custom pages
-- map every required story to workflows, rules, pages, routes, permissions,
-  sample data, and acceptance IDs
-- record detailed scenario coverage for every `must` story and every
-  workflow-heavy `should` story
+- keep the story core focused on user need, priority, why this priority, and
+  independent test instead of mixing it with implementation mapping
+- map every required current-release story to workflows, rules, resources,
+  pages, routes, permissions, sample data, and acceptance IDs in
+  `traceability-matrix.md`
+- record detailed scenario coverage for every current-release `P1` story and
+  every current-release workflow-heavy `P2` story
 - record assumptions and unresolved questions explicitly
 - replace brief-level gaps with researched product decisions, explicit
   conventions, or clearly documented assumptions before handoff
@@ -41,6 +46,7 @@ Turn business intent into an implementable product definition.
 - `runs/current/artifacts/product/business-rules.md`
 - `runs/current/artifacts/product/custom-pages.md`
 - `runs/current/artifacts/product/traceability-matrix.md`
+- `runs/current/artifacts/product/story-quality-checklist.md`
 - `runs/current/artifacts/product/acceptance-criteria.md`
 - `runs/current/artifacts/product/sample-data.md`
 - `runs/current/artifacts/product/assumptions-and-open-questions.md`
@@ -62,12 +68,17 @@ Turn business intent into an implementable product definition.
 - missing brief detail has been resolved into researched conventions,
   documented best-practice defaults, or explicit assumptions that downstream
   roles can follow without guessing
-- every `must` story is mapped in `traceability-matrix.md` to workflow IDs,
-  rule IDs, page IDs, route IDs, permission context, sample-data references,
-  acceptance IDs, and required review obligations
+- every current-release story is mapped in `traceability-matrix.md` to
+  workflow IDs, rule IDs, resource IDs, page IDs, route IDs, permission
+  context, sample-data references, acceptance IDs, and required review
+  obligations
 - `user-stories.md` includes a real coverage matrix instead of a prose-only
   story list
 - every primary actor has explicit capability coverage in `user-stories.md`
-- every `must` story includes happy path, alternate path, negative or
-  validation path, empty-state expectation, and permission context
+- every current-release story has explicit priority, why this priority, and an
+  independent test
+- every required detailed story includes happy path, alternate path, negative
+  or validation path, empty-state expectation, and permission context
+- `story-quality-checklist.md` records whether the current-release story set is
+  concrete, testable, and free of hidden implementation leakage
 - the product package is marked `ready-for-handoff` or `approved`

@@ -29,12 +29,24 @@ def collect_issues(repo_root) -> list[dict[str, str]]:
         issues.append({"path": manifest_path.relative_to(repo_root).as_posix(), "reason": "missing ui preview manifest"})
         return issues
     reviewed_paths = set(REVIEWED_SURFACE_RE.findall(read_text(manifest_path)))
+    manifest_text = read_text(manifest_path)
     for surface in plan["surfaces"]:
         if surface["preview_required"] and surface["path"] not in reviewed_paths:
             issues.append(
                 {
                     "path": manifest_path.relative_to(repo_root).as_posix(),
                     "reason": f"preview manifest is missing required reviewed route {surface['route_id']} at {surface['path']}",
+                }
+            )
+    for story in plan.get("stories", plan.get("story_reviews", [])):
+        if not story.get("preview_required"):
+            continue
+        story_id = str(story.get("story_id", "")).strip()
+        if story_id and story_id not in manifest_text:
+            issues.append(
+                {
+                    "path": manifest_path.relative_to(repo_root).as_posix(),
+                    "reason": f"preview manifest does not cite required story {story_id}",
                 }
             )
     return issues

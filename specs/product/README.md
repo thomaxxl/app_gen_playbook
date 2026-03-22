@@ -16,12 +16,17 @@ Rules:
 - `business-rules.md` is the single authoritative human-readable business-rule
   catalog for the run. Product templates MUST NOT create a second competing
   rule-intent file.
-- `user-stories.md` is the authoritative scope catalog. It MUST carry both an
-  actor-by-capability coverage matrix and the exact story index schema the
-  coverage compiler validates.
+- `user-stories.md` is the authoritative scope catalog. It MUST keep the story
+  core user-facing and testable, carry both the breadth matrix and normalized
+  capability-coverage table, and use the exact story index schema the coverage
+  compiler validates.
 - `traceability-matrix.md` is the authoritative bridge from story scope to
   workflows, rules, pages, routes, permissions, sample data, and acceptance
   evidence.
+- `story-quality-checklist.md` is the Product-owned readability/quality pass
+  over the story catalog. It is not a replacement for the story compiler, but
+  it records whether current-release stories are concrete, testable, and free
+  of hidden implementation leakage.
 - routing-first agents SHOULD start from the Product Manager summary and task
   bundle before loading individual template files
 
@@ -37,6 +42,8 @@ Template files:
 - `domain-glossary.md`
 - `business-rules.md`
 - `custom-pages.md`
+- `traceability-matrix.md`
+- `story-quality-checklist.md`
 - `acceptance-criteria.md`
 - `sample-data.md`
 - `assumptions-and-open-questions.md`

@@ -20,7 +20,8 @@ This phase begins only after:
 - run `app/run.sh` and confirm the app boots successfully
 - perform basic user testing against the live app
 - compile or read the current scope facts and review plan before testing
-- treat the review plan as a capability checklist, not just a route list
+- treat the review plan as a story-first capability checklist, not just a
+  route list
 - capture reviewable QA screenshots for every review-plan surface required for
   live QA or preview evidence
 - verify the frontend is not blank, crashed, or stuck in obvious request loops
@@ -32,8 +33,10 @@ This phase begins only after:
   substitute for live testing
 - execute the required route review plan and document live coverage for each
   required visible PM workspace route
-- cite the required `must` stories and workflow-heavy story IDs from the
-  review plan when recording what QA actually exercised
+- cite the required current-release story IDs from the review plan when
+  recording what QA actually exercised
+- make sure the QA manifest records both the reviewed routes and the story IDs
+  those screenshots support
 - verify that supported CRUD and search flows are reachable through normal UI
   navigation and actions, not only through manually typed deep links
 - treat missing required routes, CTA drift, or generic substitution of required

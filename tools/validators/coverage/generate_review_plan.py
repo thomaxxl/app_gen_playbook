@@ -32,24 +32,34 @@ def generate_review_plan_payload(repo_root: Path) -> tuple[dict[str, Any], list[
                 "route_id": route["route_id"],
                 "path": route["path"],
                 "page_label": route["page_label"],
-                "preview_required": True,
+                "preview_required": any(story.get("preview_required") for story in mapped_story_reviews),
                 "architect_review_required": True,
                 "product_review_required": True,
-                "qa_live_test_required": True,
+                "qa_live_test_required": any(story.get("qa_live_required") for story in mapped_story_reviews),
                 "sample_depth": "visible-route",
                 "story_ids": [story["story_id"] for story in mapped_story_reviews],
                 "story_types": sorted({story["story_type"] for story in mapped_story_reviews if story.get("story_type")}),
                 "required_checks": sorted(
                     {check for story in mapped_story_reviews for check in story.get("required_checks", [])}
                 ),
+                "independent_tests": [
+                    story["independent_test"]
+                    for story in mapped_story_reviews
+                    if story.get("independent_test")
+                ],
             }
         )
+    stories = scope.get("required_story_reviews", [])
     payload = {
+        "stories": stories,
         "surfaces": surfaces,
-        "story_reviews": scope.get("required_story_reviews", []),
-        "actor_coverage": scope.get("coverage_matrix", []),
+        "story_reviews": stories,
+        "actor_coverage": scope.get("capability_coverage", []),
+        "capability_coverage": scope.get("capability_coverage", []),
+        "coverage_matrix": scope.get("coverage_matrix", []),
         "story_type_catalog": scope.get("story_type_catalog", []),
         "required_scenario_checks": scope.get("required_scenario_checks", []),
+        "required_story_ids": [story["story_id"] for story in stories],
         "source_paths": scope["source_paths"],
     }
     return payload, issues

@@ -33,6 +33,9 @@ readiness note in:
 - verify frontend behavior against real backend data
 - verify required CRUD and search behavior from normal in-app navigation, not
   only by typing direct deep links to list/show/form routes
+- treat `runs/current/evidence/quality/review-plan.json` as story-first:
+  current-release stories are the primary review obligations, while routes and
+  pages are the proof surfaces attached to those stories
 - verify the entry page, required custom pages, and at least one generated
   CRUD flow against `runs/current/artifacts/ux/landing-strategy.md`,
   `screen-inventory.md`, and `custom-view-specs.md` when custom pages exist
@@ -145,8 +148,8 @@ readiness note in:
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
 - `runs/current/evidence/quality/coverage-report.md` proves required actor,
-  story, scenario-depth, page, and route coverage rather than only reviewed
-  subset quality
+  current-release story, scenario-depth, page, and route coverage rather than
+  only reviewed subset quality
 - `app/reference/admin.yaml` is present and non-empty; an empty file at Phase 6
   is an operator-escalation fatal because integration review cannot validate a
   missing frontend contract surface
@@ -216,6 +219,8 @@ Integration review fails when:
   raw-SQL-only or row-mapper handlers without an approved exception
 - the integration review leaves Story, Actor, Story Type, or Scenario Depth
   coverage sections empty, generic, or hand-wavy
+- the integration review covers routes or pages without citing the
+  current-release story obligations they are supposed to satisfy
 - a required visible route, custom page, or Home CTA target from the UX scope
   contract is missing or drifted
 - the approved preview manifest omits required PM workspace routes

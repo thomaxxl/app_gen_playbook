@@ -23,6 +23,7 @@ reference_only:
   - specs/product/sample-data.md
   - specs/product/custom-pages.md
   - specs/product/traceability-matrix.md
+  - specs/product/story-quality-checklist.md
 writable_targets:
   - runs/current/artifacts/product/**
   - runs/current/role-state/product_manager/**

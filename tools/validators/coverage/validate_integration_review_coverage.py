@@ -83,11 +83,7 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
     page_section = normalized_text(section_map.get("## Page Coverage", ""))
     route_section = normalized_text(section_map.get("## Route Coverage", ""))
 
-    required_story_reviews = [
-        story
-        for story in scope.get("required_story_reviews", [])
-        if story.get("priority") == "must" or story.get("detail_required")
-    ]
+    required_story_reviews = plan.get("stories", scope.get("required_story_reviews", []))
     for story in required_story_reviews:
         story_id = story.get("story_id", "")
         if story_id and story_id.lower() not in story_section:

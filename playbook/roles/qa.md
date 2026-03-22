@@ -74,6 +74,9 @@ The QA agent MUST:
 - run the final QA screenshot pass with
   `cd ../../app/frontend && npm run capture:qa-screenshots` or an equivalent
   wrapper such as `../../scripts/run_qa_review.sh`
+- treat `runs/current/evidence/quality/review-plan.json` as a story-driven QA
+  contract: current-release stories are primary, routes/pages are the visible
+  proof surfaces attached to those stories
 - fail the review if the frontend is blank, visibly crashed, flickering from
   obvious request loops, or showing runtime error surfaces
 - fail the review if the backend logs or live behavior show unhandled runtime
@@ -88,8 +91,10 @@ The QA agent MUST:
   approving delivery
 - verify the required visible PM workspace routes from the current review plan,
   not only whichever subset was already screenshot-reviewed earlier
-- cite the required `must` stories and workflow-heavy story IDs from the same
-  review plan when recording what QA actually exercised
+- cite the required current-release story IDs from the same review plan when
+  recording what QA actually exercised
+- make sure the QA screenshot manifest and QA review both name the tested story
+  IDs, not only the route paths
 - verify that required CRUD/search flows remain discoverable from those routes
   without reviewer-only URL entry
 - fail the review if required PM routes are missing, silently substituted by a

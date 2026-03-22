@@ -15,6 +15,7 @@ Required fields:
 When `capture_status: captured`, list:
 
 - the command used, typically `npm run capture:ui-previews`
+- the story IDs the screenshots are intended to support
 - the reviewed routes or surfaces
 - the generated screenshot files that Product can review
 - `content_validation_status: reviewed`
