@@ -27,10 +27,14 @@ Use this as the neutral starter for the run-owned capability profile.
 | d3-custom-views | disabled | replace | architect, frontend |
 | reporting | disabled | replace | architect, backend, frontend, devops |
 | background-jobs | disabled | replace | architect, backend, devops |
+| logicbank-request-pattern | disabled | replace | architect, backend |
+| logicbank-allocation | disabled | replace | architect, backend |
 
 ## Rules
 
 - Only `enabled` features MAY be loaded, copied, or implemented.
 - `disabled` and `undecided` features MUST remain out of scope.
+- `logicbank-request-pattern` and `logicbank-allocation` stay out of the
+  default backend read path until the Architect explicitly enables them.
 - The Architect MUST replace this starter content before implementation
   handoff.

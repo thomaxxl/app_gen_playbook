@@ -64,9 +64,25 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
             "skills/logicbank-rules-design/SKILL.md",
             "skills/logicbank-request-pattern/SKILL.md",
             "skills/logicbank-allocation/SKILL.md",
+            "logicbank-request-pattern",
+            "logicbank-allocation",
             "rule-mapping.md",
             "app/rules/**",
             "custom Python rule behavior",
+        ],
+        repo_root / "playbook" / "process" / "capability-loading.md": [
+            "logicbank-request-pattern",
+            "logicbank-allocation",
+            "capability profile",
+            "load plan",
+        ],
+        repo_root / "runs" / "template" / "artifacts" / "architecture" / "capability-profile.md": [
+            "logicbank-request-pattern",
+            "logicbank-allocation",
+        ],
+        repo_root / "runs" / "template" / "artifacts" / "architecture" / "load-plan.md": [
+            "logicbank-request-pattern",
+            "logicbank-allocation",
         ],
         repo_root / "specs" / "contracts" / "rules" / "patterns.md": [
             "schema constraint",
@@ -103,6 +119,20 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in tokens:
             if _normalized(token) not in normalized:
                 issues.append(_issue(repo_root, path, f"missing LogicBank contract token: {token}"))
+
+    optional_skill_paths = (
+        repo_root / "skills" / "logicbank-request-pattern" / "SKILL.md",
+        repo_root / "skills" / "logicbank-allocation" / "SKILL.md",
+    )
+    for path in optional_skill_paths:
+        if not path.exists():
+            issues.append(
+                _issue(
+                    repo_root,
+                    path,
+                    "referenced optional LogicBank skill path does not exist",
+                )
+            )
     return issues
 
 
@@ -166,11 +196,23 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "LogicBank trace",
         ],
         repo_root / "specs" / "contracts" / "rules" / "logicbank-reference.md": [
+            "verify_logicbank_runtime_contract.py",
+            "verified-runtime-notes.md",
             "calling(row=..., old_row=..., logic_row=...)",
             "logic_row.log",
             "logic_row.new_logic_row(ModelClass)",
             "early_row_event",
             "after_flush_row_event",
+        ],
+        repo_root / "specs" / "references" / "logicbank" / "README.md": [
+            "verified-runtime-notes.md",
+            "verify_logicbank_runtime_contract.py",
+        ],
+        repo_root / "specs" / "references" / "logicbank" / "verified-runtime-notes.md": [
+            "verify_logicbank_runtime_contract.py",
+            "LogicBank.activate",
+            "LogicRow.log",
+            "LogicRow.new_logic_row",
         ],
     }
     for path, tokens in required_tokens.items():
@@ -195,6 +237,16 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
                         f"live rules implementation is missing LogicBank runtime token: {token}",
                     )
                 )
+
+    verification_script = repo_root / "tools" / "verify_logicbank_runtime_contract.py"
+    if not verification_script.exists():
+        issues.append(
+            _issue(
+                repo_root,
+                verification_script,
+                "LogicBank compatibility contract claims verified runtime behavior without a verification script",
+            )
+        )
     return issues
 
 

@@ -62,6 +62,16 @@ Optional advanced skills are loaded only when the run explicitly needs them:
 
 Those skills are not part of the default backend read path.
 
+When those advanced skills are needed, the run MUST make that decision
+explicit in:
+
+- `../../../runs/current/artifacts/architecture/capability-profile.md`
+  using the capability keys `logicbank-request-pattern` and/or
+  `logicbank-allocation`
+- `../../../runs/current/artifacts/architecture/load-plan.md`
+  by assigning the enabled skill to Backend and/or Architect for the current
+  task
+
 The skill above is the default day-to-day rule-selection guide. This contract
 directory and the advanced LogicBank reference still own normative
 enforcement, lifecycle, and verification expectations.

@@ -25,6 +25,10 @@ Use this as the neutral starter for the run-owned role load plan.
 - `specs/contracts/backend/`
 - `specs/contracts/rules/`
 - enabled feature packs assigned to Architect
+- `skills/logicbank-request-pattern/SKILL.md` only when
+  `capability-profile.logicbank-request-pattern == enabled`
+- `skills/logicbank-allocation/SKILL.md` only when
+  `capability-profile.logicbank-allocation == enabled`
 
 ### frontend
 
@@ -49,6 +53,10 @@ Typical examples:
 - `specs/contracts/rules/`
 - `specs/backend-design/`
 - enabled backend feature packs only
+- `skills/logicbank-request-pattern/SKILL.md` only when
+  `capability-profile.logicbank-request-pattern == enabled`
+- `skills/logicbank-allocation/SKILL.md` only when
+  `capability-profile.logicbank-allocation == enabled`
 
 ### devops
 
@@ -61,3 +69,6 @@ Typical examples:
 - Expand from task bundles first.
 - Load only the minimum required artifacts for the current task.
 - Reference-only artifacts MUST NOT become default preload.
+- Advanced LogicBank packs are optional. They MUST be both enabled in the
+  capability profile and explicitly assigned in this load plan before
+  backend/architect work loads them.

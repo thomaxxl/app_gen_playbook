@@ -73,6 +73,14 @@ validators:
     message_field: reason
     summary_pass: frontend direct-fetch boundary passed
     summary_fail_template: "{count} frontend direct-fetch issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_frontend_runtime_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_frontend_runtime_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend runtime and evidence contract passed
+    summary_fail_template: "{count} frontend runtime/evidence issue(s)"
   tools/check_backend_orm_safrs.py:
     adapter: string_list
     module: check_backend_orm_safrs

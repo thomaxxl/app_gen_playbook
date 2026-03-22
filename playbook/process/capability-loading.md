@@ -76,7 +76,24 @@ This negative rule applies equally to UX/UI-oriented packs such as:
 - d3-custom-views
 - reporting
 - background-jobs
+- logicbank-request-pattern
+- logicbank-allocation
 - any future advanced accessibility or analytics packs
+
+The same rule applies to optional advanced backend/rules packs under
+`../../skills/` when the run treats them as gated capability modules rather
+than default core guidance.
+
+For the current rules lane, these capability keys are reserved:
+
+- `logicbank-request-pattern`
+- `logicbank-allocation`
+
+Those advanced LogicBank packs MUST remain out of scope until:
+
+- the capability profile marks the key `enabled`, and
+- the load plan assigns the pack to Architect and/or Backend for the relevant
+  task
 
 ## Supporting-contract rule
 

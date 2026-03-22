@@ -76,3 +76,9 @@ role SHOULD load the optional repo-local skills:
 
 - `../../../skills/logicbank-request-pattern/SKILL.md`
 - `../../../skills/logicbank-allocation/SKILL.md`
+
+Those advanced skills are not part of the default backend read path. The run
+SHOULD enable the matching capability key in
+`../../runs/current/artifacts/architecture/capability-profile.md` and assign
+the skill in `../../runs/current/artifacts/architecture/load-plan.md` before
+treating it as active design input.

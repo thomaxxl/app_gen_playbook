@@ -31,6 +31,16 @@ def _first_code_fence(text: str) -> str:
     return match.group(1) if match else text
 
 
+def _combined_text(root: Path, pattern: str) -> tuple[str, list[Path]]:
+    files = sorted(path for path in root.rglob(pattern) if "__pycache__" not in path.parts)
+    return "\n".join(_read(path) for path in files), files
+
+
+def _is_non_stub(path: Path) -> bool:
+    text = _read(path)
+    return bool(text) and "status: stub" not in text
+
+
 def _check_required_tokens(
     repo_root: Path,
     required_tokens: dict[Path, list[str]],
@@ -322,3 +332,178 @@ def collect_no_direct_fetch_issues(repo_root: Path) -> list[dict[str, str]]:
         },
         "missing frontend direct-fetch guard input",
     )
+
+
+def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+
+    relationship_runtime = repo_root / "app" / "frontend" / "src" / "shared-runtime" / "relationshipUi.tsx"
+    relationship_text = _read(relationship_runtime)
+    if relationship_text:
+        runtime_tokens = (
+            "getRecordRelationValue(",
+            "RelatedRecordSummary(",
+            "SingleRelationshipTab(",
+            "__included",
+            "dataProvider.getOne(",
+        )
+        for token in runtime_tokens:
+            if token not in relationship_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        relationship_runtime,
+                        f"generated relationship runtime is missing required token: {token}",
+                    )
+                )
+        if "dataProvider.execute(" not in relationship_text and "dataProvider.execute<" not in relationship_text:
+            issues.append(
+                _issue(
+                    repo_root,
+                    relationship_runtime,
+                    "generated relationship runtime does not call dataProvider.execute(resource, params)",
+                )
+            )
+        for banned in (
+            "return <div>{resource}</div>;",
+            "return <div>{relationship.label}</div>;",
+            "intentionally reduced",
+        ):
+            if banned in relationship_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        relationship_runtime,
+                        f"generated relationship runtime still contains placeholder text: {banned}",
+                    )
+                )
+
+    resource_registry = repo_root / "app" / "frontend" / "src" / "shared-runtime" / "resourceRegistry.tsx"
+    registry_text = _read(resource_registry)
+    if registry_text:
+        for token in (
+            "ShowContent(",
+            "ManyRelationshipTab(",
+            "SingleRelationshipTab",
+            "RelatedRecordDialogLink",
+            "<Tabs",
+            "ReferenceManyField",
+        ):
+            if token not in registry_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        resource_registry,
+                        f"generated resource registry is missing relationship runtime token: {token}",
+                    )
+                )
+        if "SimpleShowLayout" in registry_text:
+            issues.append(
+                _issue(
+                    repo_root,
+                    resource_registry,
+                    "generated resource registry still renders show pages through SimpleShowLayout instead of relationship-tab content",
+                )
+            )
+
+    provider_runtime = repo_root / "app" / "frontend" / "src" / "shared-runtime" / "admin" / "createSafrsJsonApiDataProvider.js"
+    provider_text = _read(provider_runtime)
+    if provider_text:
+        for token in (
+            "async execute(resource, params",
+            "actionUrlFor(",
+            "normalizeJsonApiDocument(payload)",
+        ):
+            if token not in provider_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        provider_runtime,
+                        f"generated frontend provider is missing execute/runtime token: {token}",
+                    )
+                )
+
+    tests_root = repo_root / "app" / "frontend" / "tests"
+    tests_text, test_files = _combined_text(tests_root, "*.ts")
+    tsx_text, tsx_files = _combined_text(tests_root, "*.tsx")
+    combined_tests = "\n".join((tests_text, tsx_text))
+    all_test_files = test_files + tsx_files
+    if all_test_files:
+        if "execute(" not in combined_tests:
+            issues.append(
+                _issue(
+                    repo_root,
+                    tests_root,
+                    "generated frontend tests do not exercise dataProvider.execute(resource, params)",
+                )
+            )
+        if "relationship" not in combined_tests.lower():
+            issues.append(
+                _issue(
+                    repo_root,
+                    tests_root,
+                    "generated frontend tests do not mention relationship dialog/tab coverage",
+                )
+            )
+
+    usability = repo_root / "runs" / "current" / "evidence" / "frontend-usability.md"
+    if _is_non_stub(usability):
+        normalized = _normalized(_read(usability)).lower()
+        if "relationship" not in normalized and "related-record" not in normalized:
+            issues.append(
+                _issue(
+                    repo_root,
+                    usability,
+                    "frontend usability evidence does not mention reviewed relationship dialog/tab behavior",
+                )
+            )
+
+    preview_manifest = repo_root / "runs" / "current" / "evidence" / "ui-previews" / "manifest.md"
+    if _is_non_stub(preview_manifest):
+        normalized = _normalized(_read(preview_manifest))
+        for token in (
+            "capture_status: captured",
+            "content_validation_status: reviewed",
+            "frontend_validation: approved",
+            "architect_validation: approved",
+            "product_manager_validation: approved",
+            "review_conclusion:",
+        ):
+            if _normalized(token) not in normalized:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        preview_manifest,
+                        f"ui preview manifest is missing required review token: {token}",
+                    )
+                )
+
+    qa_manifest = repo_root / "runs" / "current" / "evidence" / "ui-previews" / "qa-manifest.md"
+    if qa_manifest.exists():
+        normalized = _normalized(_read(qa_manifest))
+        for token in (
+            "capture_status: captured",
+            "review_conclusion:",
+        ):
+            if _normalized(token) not in normalized:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        qa_manifest,
+                        f"qa screenshot manifest is missing required token: {token}",
+                    )
+                )
+
+    qa_review = repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md"
+    if _is_non_stub(qa_review):
+        normalized = _normalized(_read(qa_review)).lower()
+        if "relationship" not in normalized and "related-record" not in normalized:
+            issues.append(
+                _issue(
+                    repo_root,
+                    qa_review,
+                    "qa delivery review does not mention relationship dialog/tab validation",
+                )
+            )
+
+    return issues

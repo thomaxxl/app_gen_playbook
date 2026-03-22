@@ -7,6 +7,7 @@ from pathlib import Path
 from validators.policy.validate_frontend_adapter_contracts import (
     collect_adapter_lane_issues,
     collect_execute_usage_issues,
+    collect_frontend_runtime_issues,
     collect_install_source_issues,
     collect_no_direct_fetch_issues,
     collect_relationship_route_issues,
@@ -30,6 +31,7 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
         self.assertEqual(collect_relationship_route_issues(self.repo_root), [])
         self.assertEqual(collect_execute_usage_issues(self.repo_root), [])
         self.assertEqual(collect_no_direct_fetch_issues(self.repo_root), [])
+        self.assertEqual(collect_frontend_runtime_issues(self.repo_root), [])
 
     def test_adapter_lane_validator_detects_missing_skill_load(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -114,6 +116,50 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             self.assertTrue(any("placeholder implementation text" in issue["reason"] for issue in relationship_issues))
             self.assertTrue(any("SimpleShowLayout" in issue["reason"] for issue in relationship_issues))
             self.assertTrue(any("execute(resource, params)" in issue["reason"] for issue in execute_issues))
+
+    def test_runtime_validator_detects_missing_generated_runtime_and_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "app/frontend/src/shared-runtime/relationshipUi.tsx",
+                "export function RelatedRecordSummary() { return <div>{resource}</div>; }\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/shared-runtime/resourceRegistry.tsx",
+                "SimpleShowLayout\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/shared-runtime/admin/createSafrsJsonApiDataProvider.js",
+                "export function createSafrsJsonApiDataProvider() { return {}; }\n",
+            )
+            write_file(
+                repo_root / "app/frontend/tests/dataProvider.integration.test.ts",
+                "describe('provider', () => {})\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-usability.md",
+                "# Frontend Usability\n\nreview_status: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: captured\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/qa-manifest.md",
+                "# QA Screenshot Manifest\n\ncapture_status: captured\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/qa-delivery-review.md",
+                "# QA Delivery Review\n\nstatus: approved\n",
+            )
+
+            issues = collect_frontend_runtime_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("generated relationship runtime is missing required token", reasons)
+            self.assertIn("SimpleShowLayout", reasons)
+            self.assertIn("do not exercise dataProvider.execute", reasons)
+            self.assertIn("frontend usability evidence does not mention reviewed relationship", reasons)
 
 
 if __name__ == "__main__":

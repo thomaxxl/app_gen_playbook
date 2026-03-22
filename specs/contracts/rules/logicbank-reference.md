@@ -135,8 +135,11 @@ That means:
 
 ## Verified compatibility notes
 
-These patterns were verified against the installed `logicbank` package used by
-the backend runtime.
+These patterns are maintained against the installed `logicbank` package used by
+the backend runtime and are backed by:
+
+- `../../../tools/verify_logicbank_runtime_contract.py`
+- `../../references/logicbank/verified-runtime-notes.md`
 
 - event callbacks are called as `calling(row=..., old_row=..., logic_row=...)`
 - `logic_row.log("...")` is the preferred trace path for advanced rule/event

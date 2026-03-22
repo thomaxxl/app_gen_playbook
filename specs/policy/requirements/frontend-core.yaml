@@ -252,3 +252,43 @@ requirements:
     remediation: >
       Extend the adapter or reopen the contract gap instead of calling backend
       APIs directly from delivery components.
+
+  - id: FE-ADAPTER-007
+    title: Generated frontend runtime and run evidence prove the adapter contract
+    class: runtime_behavior
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+      - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - qa
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/frontend/validation.md
+      - playbook/process/quality-gates.md
+      - playbook/roles/qa.md
+    description: >
+      Runtime policy must inspect the generated frontend and run evidence, not
+      only playbook prose/templates, for relationship-tab behavior, execute
+      usage, and reviewed usability evidence.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_frontend_runtime_issues
+    evidence:
+      required_files:
+        - runs/current/evidence/frontend-usability.md
+        - runs/current/evidence/ui-previews/manifest.md
+    remediation: >
+      Fix the generated runtime and update reviewed frontend evidence so the
+      delivered app, tests, and proof files all match the adapter contract.
