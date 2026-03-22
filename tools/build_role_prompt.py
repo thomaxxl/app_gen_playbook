@@ -6,26 +6,15 @@ import re
 from pathlib import Path
 
 from orchestrator_common import (
-    DISPLAY_TO_ROLE_FILE,
     RUNTIME_TO_DISPLAY,
     canonical_artifacts_for_role_phases,
+    parse_message_headers,
     parse_message_sections,
-    parse_simple_yaml,
     phase_name_from_phase_doc,
     relpath,
     resolve_repo_root,
-    owned_prefixes,
 )
-
-
-CORE_READS = (
-    "playbook/summaries/global-core.md",
-    "playbook/roles/shared-responsibilities.md",
-    "playbook/process/inbox-protocol.md",
-    "playbook/process/capability-loading.md",
-    "playbook/process/ownership-and-edits.md",
-    "playbook/process/single-operator-mode.md",
-)
+from routing_resolver import resolve_read_packet, resolve_writable_paths
 
 
 def dedupe_paths(paths: list[str]) -> list[str]:
@@ -38,17 +27,6 @@ def dedupe_paths(paths: list[str]) -> list[str]:
         seen.add(normalized)
         ordered.append(normalized)
     return ordered
-
-
-def allowed_write_paths(runtime_role: str) -> list[str]:
-    writes = list(owned_prefixes(runtime_role))
-    writes.extend(
-        [
-            "runs/current/evidence/**",
-            "runs/current/role-state/*/inbox/*.md",
-        ]
-    )
-    return dedupe_paths(writes)
 
 
 def repo_relative_or_absolute(path: Path, repo_root: Path) -> str:
@@ -67,25 +45,20 @@ def absolutize(repo_root: Path, path_value: str) -> str:
 def build_read_paths(
     repo_root: Path,
     runtime_role: str,
-    role_file: Path,
     message_path: Path,
+    headers: dict[str, str],
     sections: dict[str, list[str] | str],
 ) -> list[str]:
-    read_paths = list(CORE_READS)
-    read_paths.append(role_file.as_posix())
-    read_paths.append("runs/current/artifacts/architecture/capability-profile.md")
-    read_paths.append("runs/current/artifacts/architecture/load-plan.md")
-
-    role_context = repo_root / "runs" / "current" / "role-state" / runtime_role / "context.md"
-    if role_context.exists():
-        read_paths.append(relpath(role_context, repo_root))
-
-    for item in sections.get("required reads", []):
-        if isinstance(item, str):
-            read_paths.append(item)
-
-    read_paths.append(repo_relative_or_absolute(message_path, repo_root))
-    return dedupe_paths(read_paths)
+    required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+    packet = resolve_read_packet(
+        repo_root,
+        runtime_role,
+        message_required_reads=required_reads,
+        explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+        explicit_phase=headers.get("phase"),
+        include_message_path=message_path,
+    )
+    return dedupe_paths(list(packet["read_paths"]))
 
 
 def build_canonical_outputs(
@@ -100,10 +73,10 @@ def build_canonical_outputs(
     for read_path in read_paths:
         if not read_path.startswith("playbook/task-bundles/") or not read_path.endswith(".yaml"):
             continue
-        bundle_path = repo_root / read_path
-        if not bundle_path.exists():
+        packet = resolve_read_packet(repo_root, runtime_role, explicit_task_bundle=read_path)
+        bundle = packet.get("task_bundle_payload", {})
+        if not isinstance(bundle, dict):
             continue
-        bundle = parse_simple_yaml(bundle_path)
         required_phase = bundle.get("required_phase", [])
         if isinstance(required_phase, str):
             required_phase = [required_phase]
@@ -136,6 +109,7 @@ def emit_full_prompt(
     message_path: Path,
     sections: dict[str, list[str] | str],
     read_paths: list[str],
+    write_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} agent for app_gen_playbook.\n")
@@ -146,7 +120,7 @@ def emit_full_prompt(
         print(f"- {path}")
 
     print("\nAllowed writes:\n")
-    for path in allowed_write_paths(runtime_role):
+    for path in write_paths:
         print(f"- {path}")
 
     if canonical_outputs:
@@ -197,6 +171,7 @@ def emit_short_prompt(
     message_path: Path,
     sections: dict[str, list[str] | str],
     read_paths: list[str],
+    write_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} runtime worker for app_gen_playbook.")
@@ -210,7 +185,7 @@ def emit_short_prompt(
         print(f"- {absolutize(repo_root, path)}")
     print("")
     print("Allowed writes:")
-    for path in allowed_write_paths(runtime_role):
+    for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
     if canonical_outputs:
@@ -253,11 +228,18 @@ def main() -> int:
     repo_root = resolve_repo_root(args.repo_root)
     message_path = Path(args.message).resolve()
     display_role = args.display_role or RUNTIME_TO_DISPLAY[args.runtime_role]
-    role_file = Path(args.role_file or DISPLAY_TO_ROLE_FILE[display_role])
     message_text = message_path.read_text(encoding="utf-8")
-    sections = parse_message_sections(message_text)
-    read_paths = build_read_paths(repo_root, args.runtime_role, role_file, message_path, sections)
+    headers = parse_message_headers(message_text)
+    sections = parse_message_sections(message_text, headers=headers)
+    read_paths = build_read_paths(repo_root, args.runtime_role, message_path, headers, sections)
     canonical_outputs = build_canonical_outputs(repo_root, args.runtime_role, read_paths, sections)
+    write_paths = resolve_writable_paths(
+        repo_root,
+        args.runtime_role,
+        explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+        explicit_phase=headers.get("phase"),
+        message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
+    )
 
     if args.mode == "short":
         emit_short_prompt(
@@ -267,6 +249,7 @@ def main() -> int:
             message_path,
             sections,
             read_paths,
+            write_paths,
             canonical_outputs,
         )
     else:
@@ -278,6 +261,7 @@ def main() -> int:
             message_path,
             sections,
             read_paths,
+            write_paths,
             canonical_outputs,
         )
 

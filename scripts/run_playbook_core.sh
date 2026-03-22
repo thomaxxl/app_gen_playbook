@@ -2996,7 +2996,8 @@ validate_role_turn() {
   local runtime_role="$1"
   local snapshot_file="$2"
   local validation_file="$3"
-  shift 3
+  local message_path="$4"
+  shift 4
 
   local cmd=(
     python3 "$ROOT/tools/validate_role_diff.py" validate
@@ -3004,6 +3005,7 @@ validate_role_turn() {
     --runtime-role "$runtime_role"
     --snapshot "$snapshot_file"
     --evidence-out "$validation_file"
+    --message "$message_path"
   )
 
   while [[ $# -gt 0 ]]; do
@@ -3775,7 +3777,7 @@ run_role_once() {
   fi
 
   session_record "$runtime_role" "$jsonl_file" "$role_dir" "$(display_model "$model")"
-  validate_role_turn "$runtime_role" "$snapshot_file" "$validation_file" "${ignore_roles[@]}"
+  validate_role_turn "$runtime_role" "$snapshot_file" "$validation_file" "$message_path" "${ignore_roles[@]}"
 
   if [[ -f "$message_path" ]]; then
     python3 "$ROOT/tools/checkpoint_run_state.py" finish-worker \
