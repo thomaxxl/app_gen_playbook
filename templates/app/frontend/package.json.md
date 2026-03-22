@@ -5,8 +5,8 @@ See also:
 - [../../../specs/contracts/frontend/dependencies.md](../../../specs/contracts/frontend/dependencies.md)
 
 Use a pinned dependency set. Do not rely on transitive dependencies for routing
-or YAML parsing, and keep the SAFRS JSON:API adapter in run-owned app code
-rather than an external package.
+or YAML parsing, and keep `safrs-jsonapi-client` as the canonical SAFRS
+JSON:API adapter instead of building a parallel local client.
 
 ```json
 {
@@ -115,9 +115,10 @@ link handling explicit and safe.
 
 The starter baseline now includes `safrs-jsonapi-client` from the approved
 local `tmp/safrs-jsonapi-client` checkout above. Keep the generated
-`app/frontend/package.json` on the baseline React-Admin stack and implement
-SAFRS JSON:API behavior as run-owned app code under `src/shared-runtime/admin/`,
-following the source model recorded in
+`app/frontend/package.json` on the baseline React-Admin stack and treat the
+package as the canonical provider plus normalized-schema base. Local
+`src/shared-runtime/admin/` code should be thin compatibility or extension
+glue following the source model recorded in
 `../../../runs/current/artifacts/architecture/runtime-bom.md`.
 
 Do not replace that dependency with a floating git dependency, raw source

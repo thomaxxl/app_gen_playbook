@@ -62,7 +62,8 @@ approved React-admin dataProvider layer for API-backed data retrieval.
 That means:
 
 - use `useDataProvider()` or an equivalent approved dataProvider consumer
-- use dataProvider methods for resource reads and approved custom methods for
+- use dataProvider methods for resource reads
+- use `dataProvider.execute(...)` for approved SAFRS custom methods or other
   non-CRUD read models
 - do not call `fetch(...)` directly from delivery page components for backend
   API reads

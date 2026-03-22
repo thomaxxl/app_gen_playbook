@@ -17,7 +17,7 @@ import type { ErrorInfo, ReactNode } from "react";
 import { Admin } from "react-admin";
 import type { DataProvider, LayoutProps } from "react-admin";
 import type { ComponentType } from "react";
-import type { Schema } from "./shared-runtime/admin/adminSchema";
+import type { Schema } from "safrs-jsonapi-client";
 
 import ErrorState from "./ErrorState";
 import type { RawAdminYaml } from "./shared-runtime/admin/resourceMetadata";

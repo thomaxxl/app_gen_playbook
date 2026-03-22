@@ -57,6 +57,14 @@ import {
   type ResourceRelationshipMeta,
 } from "./admin/resourceMetadata";
 
+type ExecuteCapableDataProvider = ReturnType<typeof useDataProvider> & {
+  execute?: (request: {
+    method?: string;
+    mode?: "raw" | "jsonapi";
+    path: string;
+  }) => Promise<unknown>;
+};
+
 export function getRecordRelationValue(
   record: Record<string, unknown>,
   relationshipName: string,
@@ -115,6 +123,34 @@ export function buildRelatedId(
     : values.join(relationship.compositeDelimiter ?? delimiter);
 }
 
+function buildRelationshipRoutePath(
+  relationship: ResourceRelationshipMeta,
+  parentRecord: Record<string, unknown>,
+): string | null {
+  const parentId = parentRecord.id;
+  if (parentId === undefined || parentId === null || parentId === "") {
+    return null;
+  }
+
+  return relationship.relationshipRouteTemplate.replace(
+    "{id}",
+    encodeURIComponent(String(parentId)),
+  );
+}
+
+function extractRelationshipRecord(payload: unknown): Record<string, unknown> | null {
+  const document = payload as {
+    data?: unknown;
+  } | null;
+
+  const related = document?.data;
+  if (related && typeof related === "object" && !Array.isArray(related)) {
+    return related as Record<string, unknown>;
+  }
+
+  return null;
+}
+
 export function RelatedRecordDialogLink({
   parentRecord,
   relationship,
@@ -124,7 +160,7 @@ export function RelatedRecordDialogLink({
 }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
-  const dataProvider = useDataProvider();
+  const dataProvider = useDataProvider() as ExecuteCapableDataProvider;
   const redirect = useRedirect();
   const targetMeta = useMemo(
     () => buildResourceMeta(schema, rawYaml, relationship.targetResource),
@@ -142,13 +178,17 @@ export function RelatedRecordDialogLink({
     () => buildRelatedId(parentRecord, relationship, schema.delimiter),
     [parentRecord, relationship, schema.delimiter],
   );
+  const relationshipRoutePath = useMemo(
+    () => buildRelationshipRoutePath(relationship, parentRecord),
+    [parentRecord, relationship],
+  );
   const label = useMemo(
     () => getRelatedRecordLabel(parentRecord, relationship, targetMeta),
     [parentRecord, relationship, targetMeta],
   );
 
   useEffect(() => {
-    if (!open || embeddedRelated || !relatedId) {
+    if (!open || embeddedRelated) {
       return;
     }
 
@@ -156,24 +196,54 @@ export function RelatedRecordDialogLink({
     setLoading(true);
     setError(null);
 
-    dataProvider.getOne(relationship.targetResource, { id: relatedId })
-      .then(({ data }) => {
+    const load = async () => {
+      try {
+        if (relationshipRoutePath && typeof dataProvider.execute === "function") {
+          const routePayload = await dataProvider.execute({
+            path: relationshipRoutePath,
+            method: "GET",
+            mode: "raw",
+          });
+          const routeRecord = extractRelationshipRecord(routePayload);
+          if (routeRecord) {
+            if (!cancelled) {
+              setRelated(routeRecord);
+              setLoading(false);
+            }
+            return;
+          }
+        }
+
+        if (!relatedId) {
+          throw new Error("Missing related id and no embedded or relationship-route payload was available.");
+        }
+
+        const result = await dataProvider.getOne(relationship.targetResource, { id: relatedId });
         if (!cancelled) {
-          setRelated(data as Record<string, unknown>);
+          setRelated(result.data as Record<string, unknown>);
           setLoading(false);
         }
-      })
-      .catch((nextError: unknown) => {
+      } catch (nextError: unknown) {
         if (!cancelled) {
           setError(nextError instanceof Error ? nextError.message : String(nextError));
           setLoading(false);
         }
-      });
+      }
+    };
+
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [dataProvider, embeddedRelated, open, relatedId, relationship.targetResource]);
+  }, [
+    dataProvider,
+    embeddedRelated,
+    open,
+    relatedId,
+    relationship.targetResource,
+    relationshipRoutePath,
+  ]);
 
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -260,7 +330,8 @@ Implementation notes:
 - the dialog opener MUST call both `preventDefault()` and `stopPropagation()`
   so it does not trigger datagrid row navigation
 - id-based `dataProvider.getOne(...)` fallback is acceptable only after the
-  runtime has tried embedded include data and canonical relationship metadata
+  runtime has tried embedded include data and the canonical parent
+  relationship route, typically through `dataProvider.execute(...)`
 - the list/show runtime MUST use this module instead of ad hoc per-page
   relationship rendering
 - the runtime SHOULD keep `getDefaultRelationshipTabIndex(...)` here so the

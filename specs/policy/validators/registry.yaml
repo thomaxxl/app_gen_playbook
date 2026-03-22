@@ -25,6 +25,54 @@ validators:
     default_path: app/frontend/src
     summary_pass: frontend usability guard passed
     summary_fail_template: "{count} frontend usability issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_adapter_lane_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_adapter_lane_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend adapter lane contract passed
+    summary_fail_template: "{count} frontend adapter lane issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_install_source_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_install_source_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend install-source contract passed
+    summary_fail_template: "{count} frontend install-source issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_search_wrapper_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_search_wrapper_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend search-wrapper contract passed
+    summary_fail_template: "{count} frontend search-wrapper issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_relationship_route_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_relationship_route_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend relationship-route contract passed
+    summary_fail_template: "{count} frontend relationship-route issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_execute_usage_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_execute_usage_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend execute-usage contract passed
+    summary_fail_template: "{count} frontend execute-usage issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_no_direct_fetch_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_no_direct_fetch_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend direct-fetch boundary passed
+    summary_fail_template: "{count} frontend direct-fetch issue(s)"
   tools/check_backend_orm_safrs.py:
     adapter: string_list
     module: check_backend_orm_safrs

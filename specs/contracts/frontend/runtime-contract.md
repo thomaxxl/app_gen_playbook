@@ -27,6 +27,7 @@ The starter archive MUST ship these runtime snippets:
 - `templates/app/frontend/SchemaDrivenAdminApp.tsx.md`
 - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
 - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`
+- `templates/app/frontend/shared-runtime/admin/adminSchema.ts.md`
 - `templates/app/frontend/shared-runtime/admin/schemaContext.tsx.md`
 - `templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md`
 - `templates/app/frontend/shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
@@ -54,9 +55,14 @@ The starter frontend scaffold MUST also ship:
   `safrs-jsonapi-client` normalizer shape
 - raw `admin.yaml` retention for local metadata lookups
 - schema context
-- data-provider creation
+- package-backed data-provider creation
 - explicit `Resource` registration
 - optional custom routes
+
+The package-backed `safrs-jsonapi-client` provider and normalized schema are
+the canonical frontend adapter lane. Local runtime code may add thin
+compatibility or extension glue, but it MUST NOT replace the package with a
+parallel client or weaker schema model.
 
 Required props:
 
@@ -89,7 +95,7 @@ type SchemaDrivenAdminAppProps = {
 2. keep the parsed raw YAML available to the local runtime
 3. adapt the raw YAML to the client normalizer input shape
 4. normalize the adapted document through `safrs-jsonapi-client`
-5. create the base data provider
+5. create the base data provider from `safrs-jsonapi-client`
 6. wrap it with the search-enabled provider
 7. make search requests use the explicit `admin.yaml endpoint` mapping
 8. honor runtime-consumed resource metadata for label, hidden, and menu order
@@ -114,6 +120,10 @@ The shared runtime is also the canonical API access boundary for the frontend.
 Delivery components MUST obtain backend/API data through the React-admin
 dataProvider exposed by this runtime, not through ad hoc direct fetch calls in
 page components.
+
+For SAFRS custom methods or non-resource JSON service calls, that same
+boundary MUST use `dataProvider.execute(...)` rather than component-level
+`fetch(...)`.
 
 The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
 layer and MUST remain functional when `schema.resources[...].relationships` is

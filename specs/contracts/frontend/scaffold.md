@@ -41,6 +41,7 @@ frontend/
       relationshipUi.tsx
       resourceRegistry.tsx
       admin/
+        adminSchema.ts
         schemaContext.tsx
         resourceMetadata.ts
         createSearchEnabledDataProvider.ts
@@ -92,6 +93,7 @@ These files are shipped under `templates/app/frontend/`:
 - `generated/resources/Status.tsx.md`
 - `resourcePages.ts.md`
 - `SchemaDrivenAdminApp.tsx.md`
+- `shared-runtime/admin/adminSchema.ts.md`
 - `shared-runtime/relationshipUi.tsx.md`
 - `shared-runtime/admin/schemaContext.tsx.md`
 - `shared-runtime/admin/resourceMetadata.ts.md`

@@ -119,6 +119,10 @@ generated app to clone `safrs-jsonapi-client` into local `tmp/` and install it
 from that file dependency unless the run-owned `runtime-bom.md` records a
 different approved source.
 
+That package is the canonical frontend adapter, not an optional add-on. Local
+runtime code may wrap it, but the generated app MUST keep package-backed
+provider creation and package-backed schema normalization as the base lane.
+
 Optional charts/graphs:
 
 ```bash
@@ -191,10 +195,14 @@ npm install -D \
   - `@playwright/test@1.58.2`
 - The starter baseline now includes `safrs-jsonapi-client` from the approved
   local `tmp/safrs-jsonapi-client` checkout. The generated frontend still owns
-  the run-specific SAFRS adapter wiring under `src/shared-runtime/admin/`.
+  only the thin run-specific extension glue under `src/shared-runtime/admin/`.
 - `safrs-jsonapi-client` MUST come from the approved local clone path backed by
   the repo/ref recorded in `runtime-bom.md`. Do not switch to a floating git
   dependency or raw source archive.
+- The repo/ref recorded in `runtime-bom.md`, the local checkout path, and the
+  package source in `package.json` MUST stay aligned. The playbook MUST NOT
+  preserve contradictory tag/file/version wording after the local materialized
+  checkout model is selected.
 - A generated app MUST NOT require an immediate `npm audit fix --force` after
   the initial install just to reach the expected starter baseline. If an audit
   fix changes direct dependency versions, the playbook dependency baseline MUST

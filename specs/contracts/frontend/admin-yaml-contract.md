@@ -31,6 +31,11 @@ frontend runtime MUST adapt this playbook contract before calling
 `normalizeAdminYaml(...)`. The playbook MUST NOT change this raw authoring
 format only to match a transient client-internal shape.
 
+That adaptation MUST remain a thin compatibility layer into the package's
+canonical schema model. The runtime MUST NOT answer this shape mismatch by
+maintaining a second long-lived local schema system with different
+relationship semantics.
+
 ## Top-level structure
 
 ```yaml
@@ -110,6 +115,8 @@ resources:
   metadata.
   The adapter/runtime MUST preserve this data and treat it as authoritative
   relationship ordering/input, not generator-only decoration.
+  `tab_groups` MUST survive the adaptation path into package-normalized
+  relationship metadata or an equivalent thin compatibility structure.
 
 ## Supported attribute keys
 
@@ -289,6 +296,10 @@ remain available to the runtime as an authoritative source for:
 - which relationships to render
 - the author-defined order
 - the author-visible relationship labels
+
+Unsupported raw keys such as ad hoc top-level or resource-level
+`relationships` metadata MUST NOT become a shadow executable contract unless
+this file is deliberately expanded to define them.
 
 ## Upload field rules
 

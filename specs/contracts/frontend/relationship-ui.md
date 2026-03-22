@@ -60,6 +60,10 @@ source of truth for relationships. Sparse apps often have incomplete
 normalized relationship metadata, so the runtime MUST combine all available
 sources and then render from the synthesized relationship model.
 
+The synthesized relationship model MUST be rich enough that the runtime can
+actually attempt canonical parent relationship routes, not merely describe
+that policy in prose.
+
 ## Metadata prerequisites
 
 The shared runtime MUST expose relationship metadata in `ResourceMeta`.
@@ -77,6 +81,8 @@ At minimum, `ResourceRelationshipMeta` MUST include:
 - `hideList`
 - `hideShow`
 - `hideEdit`
+- enough endpoint/include metadata to derive the canonical parent
+  relationship route before id fallback
 
 The runtime MUST derive that metadata from:
 
@@ -102,6 +108,12 @@ and `ResourceAttributeMeta` SHOULD expose:
 - `relationship?: ResourceRelationshipMeta`
 
 for any scalar FK attribute that maps to a readable `toone` relationship.
+
+That metadata or its schema-derived equivalent MUST let the runtime determine:
+
+- the parent collection endpoint
+- the relationship name or canonical include path
+- how to build the parent relationship URL from the parent record id
 
 This is the required mechanism for collapsing raw FK columns such as
 `device_id` into one readable relationship display item in list/show views.

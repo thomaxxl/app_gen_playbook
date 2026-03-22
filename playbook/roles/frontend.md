@@ -77,6 +77,26 @@ view needs backend data, it MUST retrieve that data through the approved
 dataProvider contract rather than calling backend APIs directly from component
 code.
 
+Whenever the work touches:
+
+- React-admin dataProvider setup
+- `admin.yaml` normalization or adaptation
+- relationship tabs or dialogs
+- search wrappers
+- custom SAFRS method calls
+
+the Frontend agent MUST load and apply
+`../../skills/safrs-jsonapi-client-frontend/SKILL.md`.
+
+For SAFRS or ApiLogicServer frontends, `safrs-jsonapi-client` is the
+canonical adapter. Local shared-runtime code MAY wrap or extend it, but it
+MUST NOT replace it with a parallel JSON:API client, a parallel schema model,
+or a weaker record normalizer.
+
+For custom SAFRS methods, RPC-style calls, or raw JSON service calls outside
+ordinary CRUD, the default lane is `dataProvider.execute(...)`, not a
+component-level `fetch(...)`.
+
 This applies in particular to:
 
 - `font-awesome-icons`
@@ -145,6 +165,16 @@ from existing local dependencies, the generated app MUST first materialize the
 approved local source checkout in `app/tmp/safrs-jsonapi-client`, then install
 from that local path. The maintained default is cloning
 `https://github.com/thomaxxl/safrs-jsonapi-client` at ref `0.0.1`.
+
+The Frontend agent MUST treat that package as the canonical provider and
+normalizer base. Local shared-runtime code should be thin extension glue for:
+
+- playbook `admin.yaml` compatibility adaptation
+- search behavior not yet supported upstream
+- upload-aware wrapping
+- app-local auth or header glue
+
+It MUST NOT become a second long-lived adapter stack.
 
 The Frontend agent MUST treat relationship tabs and related-record popups as
 baseline generated-UI behavior. Silence, omission, or a thinner CRUD shell is

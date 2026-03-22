@@ -6,6 +6,9 @@ frontend.
 ## Stable rules
 
 - The primary key MUST be normalized to `id`
+- Package-compatible records MUST preserve `ja_type`
+- Package-compatible records MUST preserve `attributes`
+- Package-compatible records MUST preserve `relationships`
 - All other attribute keys MUST preserve the exact backend/admin.yaml field names
 - The runtime MUST NOT perform automatic case conversion
 - Reference fields MUST remain scalar ids in the normalized record as the
@@ -24,6 +27,24 @@ For an `Item` resource:
 ```json
 {
   "id": "42",
+  "ja_type": "Item",
+  "attributes": {
+    "title": "Board passengers",
+    "estimate_hours": 2.5,
+    "completed_at": null,
+    "status_code": "scheduled",
+    "is_completed": false,
+    "status_id": 2,
+    "collection_id": 1
+  },
+  "relationships": {
+    "status": {
+      "data": {
+        "type": "Status",
+        "id": "2"
+      }
+    }
+  },
   "title": "Board passengers",
   "estimate_hours": 2.5,
   "completed_at": null,
@@ -54,6 +75,9 @@ Related resources are still separate records for canonical fetch/write flows:
 - generated list/show/edit pages MAY read scalar fields directly
 - generated list/show pages MAY also use optional embedded related objects for
   display when available
+- wrappers and search adapters MUST preserve `ja_type`, `attributes`,
+  `relationships`, and included-data hydration rather than collapsing records
+  to only `{ id, ...attributes }`
 - generated relationship rendering MUST remain functional even when embedded
   related objects are absent and normalized relationship metadata is partial
 - custom pages MUST prefer embedded related objects from `include=...`, then

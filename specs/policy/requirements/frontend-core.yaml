@@ -1,6 +1,6 @@
 id: frontend-core
 title: Frontend core requirements
-description: Existing frontend-facing enforcement hooks registered as policy.
+description: Frontend adapter, relationship, and usability enforcement hooks.
 requirements:
   - id: FE-USABILITY-001
     title: Frontend must not ship visible debug-shell or recovery copy
@@ -47,3 +47,207 @@ requirements:
     remediation: >
       Replace debug-shell copy with real product copy and update the reviewed
       frontend usability evidence before handoff.
+
+  - id: FE-ADAPTER-001
+    title: Frontend uses the package-backed SAFRS adapter lane
+    class: artifact_shape
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+    applies_when:
+      roles:
+        - frontend
+        - architect
+      phases:
+        - phase-3-ux-and-interaction-design
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - playbook/roles/frontend.md
+      - playbook/roles/architect.md
+      - specs/contracts/frontend/runtime-contract.md
+      - specs/contracts/frontend/admin-yaml-contract.md
+    description: >
+      SAFRS / ApiLogicServer frontends must use the safrs-jsonapi-client
+      package as the canonical provider and normalized-schema base.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_adapter_lane_issues
+    remediation: >
+      Load the frontend adapter skill, keep safrs-jsonapi-client as the base
+      provider/normalizer, and reduce local runtime code to thin extension
+      glue.
+
+  - id: FE-ADAPTER-002
+    title: Frontend uses the approved safrs-jsonapi-client install source
+    class: load_policy
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+      - devops
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - devops
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/frontend/dependencies.md
+      - playbook/process/dependency-materialization.md
+      - playbook/process/runtime-baseline.md
+    description: >
+      The generated frontend must use the approved local tmp checkout of
+      safrs-jsonapi-client backed by the repo/ref in runtime-bom.md.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_install_source_issues
+    remediation: >
+      Keep runtime-bom, dependency guidance, and package.json aligned on the
+      approved local safrs-jsonapi-client checkout path.
+
+  - id: FE-ADAPTER-003
+    title: Search wrappers preserve package-compatible behavior
+    class: code_pattern
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+    applies_when:
+      roles:
+        - frontend
+        - architect
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/frontend/validation.md
+      - skills/safrs-jsonapi-client-frontend/SKILL.md
+    description: >
+      Any q-search wrapper must stay a thin package-backed extension and must
+      preserve package record shape, include hydration, and totals.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_search_wrapper_issues
+    remediation: >
+      Rewrite the search wrapper as a thin layer around the package provider
+      and preserve package normalization semantics.
+
+  - id: FE-ADAPTER-004
+    title: Relationship UI uses canonical relationship-route behavior
+    class: runtime_behavior
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+      - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - qa
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+    source_docs:
+      - specs/contracts/frontend/relationship-ui.md
+      - specs/contracts/frontend/validation.md
+    description: >
+      Related-record UI must prefer embedded include data, then canonical
+      parent relationship routes, then id-based fallback fetches.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_relationship_route_issues
+    remediation: >
+      Expose enough relationship metadata to build parent relationship routes
+      generically and implement that route before getOne fallback.
+
+  - id: FE-ADAPTER-005
+    title: Custom SAFRS methods use execute through the adapter boundary
+    class: runtime_behavior
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+      - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - qa
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+    source_docs:
+      - playbook/roles/frontend.md
+      - specs/contracts/frontend/custom-views.md
+      - specs/contracts/frontend/validation.md
+    description: >
+      SAFRS RPC-style methods and raw JSON service calls must use
+      dataProvider.execute(...) through the approved adapter boundary.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_execute_usage_issues
+    remediation: >
+      Route custom SAFRS methods through dataProvider.execute(...) and add the
+      required validation proof.
+
+  - id: FE-ADAPTER-006
+    title: Delivered frontend code does not bypass the adapter with direct fetches
+    class: code_pattern
+    normative: MUST_NOT
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+      - qa
+    applies_when:
+      roles:
+        - frontend
+        - architect
+        - qa
+      phases:
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-8-qa-pre-delivery-validation
+      gates:
+        - quality
+    source_docs:
+      - playbook/roles/frontend.md
+      - specs/contracts/frontend/custom-views.md
+      - specs/contracts/frontend/validation.md
+    description: >
+      Delivered frontend behavior must not bypass the approved dataProvider
+      boundary with direct component-level fetch calls.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_no_direct_fetch_issues
+    remediation: >
+      Extend the adapter or reopen the contract gap instead of calling backend
+      APIs directly from delivery components.

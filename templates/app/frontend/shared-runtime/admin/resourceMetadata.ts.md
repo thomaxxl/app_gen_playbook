@@ -9,13 +9,9 @@ See also:
 ```tsx
 import { useMemo } from "react";
 
-import type {
-  RawAdminYaml,
-  Schema,
-  SchemaAttribute,
-  SearchCol,
-} from "./adminSchema";
+import type { Schema, SchemaAttribute, SearchCol } from "safrs-jsonapi-client";
 
+import type { RawAdminYaml } from "./adminSchema";
 import { useAdminSchema, useRawAdminYaml } from "./schemaContext";
 
 type AttributeType = "boolean" | "date" | "file" | "image" | "number" | "reference" | "text";
@@ -104,6 +100,10 @@ export interface ResourceRelationshipMeta {
   label: string;
   direction: "toone" | "tomany";
   targetResource: string;
+  parentResource: string;
+  parentEndpoint: string;
+  includePath: string;
+  relationshipRouteTemplate: string;
   fks: string[];
   attributes: string[];
   compositeDelimiter?: string;
@@ -378,6 +378,7 @@ function buildRelationshipMeta(
 ): ResourceRelationshipMeta[] {
   const rawResource = getRawResource(rawYaml, resource);
   const rawAttributeMap = buildRawAttributeMap(rawResource);
+  const parentEndpoint = rawResource?.endpoint ?? "";
   const relationshipsByName = new Map<string, ResourceRelationshipMeta>();
 
   for (const input of getSchemaRelationshipInputs(schema, resource)) {
@@ -402,6 +403,10 @@ function buildRelationshipMeta(
       label: normalizeLabel(input.label, name),
       direction,
       targetResource,
+      parentResource: resource,
+      parentEndpoint,
+      includePath: name,
+      relationshipRouteTemplate: `${parentEndpoint}/{id}/${name}`,
       fks,
       attributes: input.attributes ?? [],
       compositeDelimiter: input.compositeDelimiter,
@@ -431,6 +436,10 @@ function buildRelationshipMeta(
       label: normalizeLabel(rawAttribute.label, relationshipName),
       direction: "toone",
       targetResource,
+      parentResource: resource,
+      parentEndpoint,
+      includePath: relationshipName,
+      relationshipRouteTemplate: `${parentEndpoint}/{id}/${relationshipName}`,
       fks: [attributeName],
       attributes: [attributeName],
     });
@@ -469,6 +478,10 @@ function buildRelationshipMeta(
       label: normalizeLabel(undefined, relationshipName),
       direction,
       targetResource,
+      parentResource: resource,
+      parentEndpoint,
+      includePath: relationshipName,
+      relationshipRouteTemplate: `${parentEndpoint}/{id}/${relationshipName}`,
       fks,
       attributes: [],
     });
@@ -606,6 +619,9 @@ Required relationship extension:
 - `buildResourceMeta(...)` SHOULD also expose `relationshipByName` so
   `resourceRegistry.tsx` and `relationshipUi.tsx` can resolve relationships
   without rebuilding lookup logic
+- relationship metadata MUST expose enough endpoint/include detail to let the
+  runtime attempt canonical parent relationship routes generically before id
+  fallback
 - `buildResourceMeta(...)` MUST carry runtime-consumed form layout metadata
   such as `widget`, `rows`, `formSpan`, and `fullWidth`
 - raw `tab_groups` MUST be consumed here so the runtime can preserve

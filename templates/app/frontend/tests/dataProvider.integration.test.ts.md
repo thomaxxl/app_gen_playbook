@@ -9,7 +9,7 @@ Use this test to keep the real bootstrap path executable:
 
 - load raw `admin.yaml`
 - normalize it through `adaptAdminYamlForClient(...)`
-- build the real data provider
+- build the real package-backed data provider
 - fetch one representative list payload
 - prove that representative scalar fields survive into row records
 
@@ -126,3 +126,6 @@ Notes:
 - This test is intentionally narrower than a browser smoke suite. Its purpose
   is to prove that the schema/data-provider path preserves row data before the
   UI layer renders it.
+- If the delivered app uses custom SAFRS methods or raw JSON service calls,
+  add a companion integration assertion proving those calls go through
+  `dataProvider.execute(...)`.

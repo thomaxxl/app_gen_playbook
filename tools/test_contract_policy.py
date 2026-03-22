@@ -28,10 +28,16 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("BE-RULES-LOGICBANK-001", registry.requirements)
         self.assertIn("BE-RULES-EVID-001", registry.requirements)
         self.assertIn("FE-SAFRS-REL-001", registry.requirements)
+        self.assertIn("FE-ADAPTER-001", registry.requirements)
+        self.assertIn("FE-ADAPTER-004", registry.requirements)
         self.assertIn("gate-quality", registry.profiles)
         self.assertIn("gate-delivery", registry.profiles)
         self.assertIn("tools/check_completion.py", registry.validators)
         self.assertIn("tools/validators/policy/validate_delivery_approval.py", registry.validators)
+        self.assertIn(
+            "tools/validators/policy/validate_frontend_adapter_contracts.py::collect_adapter_lane_issues",
+            registry.validators,
+        )
         self.assertIn(
             "tools/validators/policy/validate_safrs_policy_contracts.py::collect_relationship_exposure_issues",
             registry.validators,

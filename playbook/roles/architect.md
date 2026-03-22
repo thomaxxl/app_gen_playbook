@@ -150,6 +150,12 @@ data, the Architect MUST require the SAFRS lane analysis defined by
 `../../skills/safrs-api-design/SKILL.md` and a completed exception record in
 the run-owned architecture/backend-design artifacts.
 
+When approving frontend data-access, `admin.yaml` adaptation, relationship
+display, search-wrapper, or adapter exceptions, the Architect MUST require the
+frontend adapter analysis defined by
+`../../skills/safrs-jsonapi-client-frontend/SKILL.md` before approving a
+non-default lane.
+
 If a relationship is intentionally not public, that MUST be a documented SAFRS
 decision using ordinary SAFRS controls such as hidden relationships or
 relationship item-mode choices, not an implicit omission followed by a custom

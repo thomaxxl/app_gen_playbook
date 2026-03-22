@@ -40,42 +40,43 @@ Suggested copy order:
 17. `QuickActionCard.tsx.md`
 18. `SummaryCard.tsx.md`
 19. `SchemaDrivenAdminApp.tsx.md`
-20. `shared-runtime/admin/schemaContext.tsx.md`
-21. `shared-runtime/admin/resourceMetadata.ts.md`
-22. `shared-runtime/relationshipUi.tsx.md`
-23. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
-24. `shared-runtime/resourceRegistry.tsx.md`
-25. `observerRouteContracts.ts.md`
-26. `ObserverPages.tsx.md`
-27. `resourcePages.ts.md`
-28. `App.tsx.md`
-29. `Home.tsx.md`
-30. `generated/resources/Collection.tsx.md` only for starter-style resource wrappers
-31. `generated/resources/Item.tsx.md` only for starter-style resource wrappers
-32. `generated/resources/Status.tsx.md` only for starter-style resource wrappers
-33. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
-34. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
-35. `D3Visualization.tsx.md` if the app needs charts or figures
-36. `shared-runtime/files/README.md`
-37. `shared-runtime/files/uploadAwareDataProvider.ts.md`
-38. `shared-runtime/files/fileValueAdapters.ts.md`
-39. `shared-runtime/files/fileFieldHelpers.ts.md`
-40. `fs-promises.ts.md`
-41. `vite.config.ts.md`
-42. `vitest.config.ts.md`
-43. `playwright.config.ts.md`
-44. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
-45. `tests/schemaContext.test.ts.md`
-46. `tests/dataProvider.integration.test.ts.md`
-47. `tests/resourceMetadata.test.ts.md`
-48. `tests/createSearchEnabledDataProvider.test.ts.md`
-49. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
-50. `tests/vite.config.test.ts.md`
-51. `tests/smoke.e2e.spec.ts.md`
-52. `tests/ui-previews.e2e.spec.ts.md`
-53. `tests/qa-screenshots.e2e.spec.ts.md`
-54. `../project/run.sh.md`
-55. `../project/README.app.md`
+20. `shared-runtime/admin/adminSchema.ts.md`
+21. `shared-runtime/admin/schemaContext.tsx.md`
+22. `shared-runtime/admin/resourceMetadata.ts.md`
+23. `shared-runtime/relationshipUi.tsx.md`
+24. `shared-runtime/admin/createSearchEnabledDataProvider.ts.md`
+25. `shared-runtime/resourceRegistry.tsx.md`
+26. `observerRouteContracts.ts.md`
+27. `ObserverPages.tsx.md`
+28. `resourcePages.ts.md`
+29. `App.tsx.md`
+30. `Home.tsx.md`
+31. `generated/resources/Collection.tsx.md` only for starter-style resource wrappers
+32. `generated/resources/Item.tsx.md` only for starter-style resource wrappers
+33. `generated/resources/Status.tsx.md` only for starter-style resource wrappers
+34. `Landing.tsx.md` only when the run explicitly enables a starter no-layout page
+35. `CustomDashboard.tsx.md` when the app needs a non-starter custom page
+36. `D3Visualization.tsx.md` if the app needs charts or figures
+37. `shared-runtime/files/README.md`
+38. `shared-runtime/files/uploadAwareDataProvider.ts.md`
+39. `shared-runtime/files/fileValueAdapters.ts.md`
+40. `shared-runtime/files/fileFieldHelpers.ts.md`
+41. `fs-promises.ts.md`
+42. `vite.config.ts.md`
+43. `vitest.config.ts.md`
+44. `playwright.config.ts.md`
+45. `tests/SchemaDrivenAdminApp.smoke.test.tsx.md`
+46. `tests/schemaContext.test.ts.md`
+47. `tests/dataProvider.integration.test.ts.md`
+48. `tests/resourceMetadata.test.ts.md`
+49. `tests/createSearchEnabledDataProvider.test.ts.md`
+50. `tests/uploadAwareDataProvider.test.ts.md` if the app supports uploads
+51. `tests/vite.config.test.ts.md`
+52. `tests/smoke.e2e.spec.ts.md`
+53. `tests/ui-previews.e2e.spec.ts.md`
+54. `tests/qa-screenshots.e2e.spec.ts.md`
+55. `../project/run.sh.md`
+56. `../project/README.app.md`
 
 Implementation entrypoint reads:
 
@@ -117,11 +118,19 @@ Notes:
 - `shared-runtime/relationshipUi.tsx.md` is part of the baseline runtime. It
   defines the Northwind-style foreign-key display, relationship dialog, and
   show-tab behavior that generated pages MUST reuse.
+- `shared-runtime/admin/schemaContext.tsx.md` MUST build the base provider from
+  `safrs-jsonapi-client` and keep local runtime code limited to thin adapter
+  or extension glue.
+- `shared-runtime/admin/adminSchema.ts.md` owns the playbook authoring types,
+  not a second long-lived normalized schema model.
 - read-side relationship behavior is canonical-SAFRS-first:
   prefer embedded include data, then parent relationship routes, then id-based
   fallback fetches.
 - `shared-runtime/admin/resourceMetadata.ts.md` MUST synthesize usable
   relationship metadata even when the normalized schema is partial.
+- `shared-runtime/admin/createSearchEnabledDataProvider.ts.md` MUST remain a
+  thin wrapper around the package provider. It MUST preserve package record
+  shape and included-data hydration.
 - `shared-runtime/resourceRegistry.tsx.md` MUST also implement responsive form
   layout heuristics so generated create/edit pages do not default to one
   full-width input per row.

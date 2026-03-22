@@ -8,6 +8,7 @@ Copy them into:
 
 Required files:
 
+- `admin/adminSchema.ts.md`
 - `admin/schemaContext.tsx.md`
 - `admin/resourceMetadata.ts.md`
 - `admin/createSearchEnabledDataProvider.ts.md`
@@ -28,6 +29,10 @@ Optional upload-related files:
 These are part of the archive so the starter frontend does not depend on
 hidden repo-local code outside `app_gen_playbook/templates/`.
 
+The canonical normalized schema model and canonical base provider come from
+`safrs-jsonapi-client`. The local shared runtime in this directory is
+extension glue around that package, not a replacement client.
+
 `relationshipUi.tsx.md` is a required baseline helper because generated
 list/show pages MUST render foreign keys and related summaries the same way as
 the Northwind reference runtime.
@@ -44,6 +49,10 @@ Do not invent helper endpoints such as `/api/order_customer_summary` when
 `admin/resourceMetadata.ts.md` is equally critical: it MUST synthesize
 relationship metadata from normalized schema, `fkToRelationship`, and raw
 `admin.yaml` so sparse-schema apps do not collapse back to raw-id-only UI.
+
+`admin/createSearchEnabledDataProvider.ts.md` MUST remain a thin wrapper
+around the package provider. It MUST preserve package normalization, package
+record shape, included hydration, and `include=...` behavior.
 
 A generated app that omits `relationshipUi.tsx.md` or replaces the baseline
 relationship runtime with plain `ReferenceField`-only rendering is invalid.

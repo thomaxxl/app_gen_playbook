@@ -41,6 +41,9 @@ The run is blocked if any of these are true:
   the approved contract requires API-backed retrieval
 - delivered frontend pages bypass the approved React-admin dataProvider layer
   for API-backed retrieval
+- the generated frontend replaces `safrs-jsonapi-client` with a parallel local
+  JSON:API provider or schema system instead of using the package as the
+  canonical adapter base
 - DB-backed tables or relationships that should be ordinary SAFRS resources are
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception
