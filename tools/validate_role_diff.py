@@ -7,16 +7,41 @@ from pathlib import Path
 from orchestrator_common import (
     owned_prefixes,
     path_matches_rule,
+    parse_message_headers,
+    parse_message_sections,
     read_json,
-    relpath,
     resolve_repo_root,
     snapshot_repo_files,
     write_json,
 )
+from routing_resolver import resolve_writable_paths
 
 
-def allowed_prefixes(runtime_role: str) -> list[str]:
-    return ["runs/current/evidence/"] + list(owned_prefixes(runtime_role))
+def allowed_prefixes(
+    repo_root: Path,
+    runtime_role: str,
+    *,
+    message_path: Path | None = None,
+) -> list[str]:
+    required_reads: list[str] = []
+    explicit_task_bundle: str | None = None
+    explicit_phase: str | None = None
+
+    if message_path is not None and message_path.exists():
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+        explicit_task_bundle = headers.get("taskbundle") or headers.get("task_bundle")
+        explicit_phase = headers.get("phase")
+
+    return resolve_writable_paths(
+        repo_root,
+        runtime_role,
+        explicit_task_bundle=explicit_task_bundle,
+        explicit_phase=explicit_phase,
+        message_required_reads=required_reads,
+    )
 
 
 def ignored_prefixes(ignore_runtime_roles: list[str]) -> list[str]:
@@ -26,12 +51,19 @@ def ignored_prefixes(ignore_runtime_roles: list[str]) -> list[str]:
     return prefixes
 
 
-def is_allowed_change(runtime_role: str, relative_path: str, ignore_runtime_roles: list[str]) -> bool:
+def is_allowed_change(
+    repo_root: Path,
+    runtime_role: str,
+    relative_path: str,
+    ignore_runtime_roles: list[str],
+    *,
+    message_path: Path | None = None,
+) -> bool:
     if relative_path.startswith("runs/current/role-state/") and relative_path.endswith(".md"):
         if "/inbox/" in relative_path:
             return True
 
-    valid_prefixes = allowed_prefixes(runtime_role) + ignored_prefixes(ignore_runtime_roles)
+    valid_prefixes = allowed_prefixes(repo_root, runtime_role, message_path=message_path) + ignored_prefixes(ignore_runtime_roles)
     return any(path_matches_rule(relative_path, prefix) for prefix in valid_prefixes)
 
 
@@ -48,6 +80,7 @@ def validate_command(
     snapshot_path: Path,
     evidence_out: Path | None,
     ignore_runtime_roles: list[str],
+    message_path: Path | None,
 ) -> int:
     before = read_json(snapshot_path)
     if not isinstance(before, dict):
@@ -62,7 +95,17 @@ def validate_command(
         if before.get(path) != after.get(path):
             changed.append(path)
 
-    violations = [path for path in changed if not is_allowed_change(runtime_role, path, ignore_runtime_roles)]
+    violations = [
+        path
+        for path in changed
+        if not is_allowed_change(
+            repo_root,
+            runtime_role,
+            path,
+            ignore_runtime_roles,
+            message_path=message_path,
+        )
+    ]
     if evidence_out is not None:
         evidence_out.parent.mkdir(parents=True, exist_ok=True)
         evidence_lines = [
@@ -106,6 +149,7 @@ def main() -> int:
     validate_parser.add_argument("--snapshot", required=True)
     validate_parser.add_argument("--evidence-out")
     validate_parser.add_argument("--ignore-runtime-role", action="append", default=[])
+    validate_parser.add_argument("--message")
 
     args = parser.parse_args()
 
@@ -120,6 +164,7 @@ def main() -> int:
         Path(args.snapshot).resolve(),
         Path(args.evidence_out).resolve() if args.evidence_out else None,
         list(args.ignore_runtime_role),
+        Path(args.message).resolve() if args.message else None,
     )
 
 

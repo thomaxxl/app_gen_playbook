@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_role_prompt import build_canonical_outputs, parse_message_sections
+from build_role_prompt import build_canonical_outputs, build_read_paths, parse_message_headers, parse_message_sections
 
 
 class BuildRolePromptTests(unittest.TestCase):
@@ -86,6 +86,31 @@ class BuildRolePromptTests(unittest.TestCase):
             outputs = build_canonical_outputs(repo_root, "qa", read_paths, sections)
 
             self.assertIn("runs/current/evidence/qa-delivery-review.md", outputs)
+
+    def test_build_read_paths_prefers_manifest_bundle_resolution_over_full_role_file(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        message_text = "\n".join(
+            [
+                "from: orchestrator",
+                "to: frontend",
+                "",
+                "## Required Reads",
+                "- playbook/task-bundles/frontend-implementation.yaml",
+            ]
+        )
+        headers = parse_message_headers(message_text)
+        sections = parse_message_sections(message_text, headers=headers)
+        message_path = repo_root / "tools" / "testdata-build-role-prompt-message.md"
+        message_path.write_text(message_text, encoding="utf-8")
+        self.addCleanup(message_path.unlink)
+
+        read_paths = build_read_paths(repo_root, "frontend", message_path, headers, sections)
+
+        self.assertIn("playbook/index.md", read_paths)
+        self.assertIn("playbook/task-bundles/frontend-implementation.yaml", read_paths)
+        self.assertIn("playbook/process/read-sets/frontend-implementation-core.md", read_paths)
+        self.assertNotIn("playbook/roles/frontend.md", read_paths)
+        self.assertNotIn("runs/current/role-state/frontend/context.md", read_paths)
 
 
 if __name__ == "__main__":
