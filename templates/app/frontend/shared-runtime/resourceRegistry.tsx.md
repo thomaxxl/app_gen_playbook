@@ -8,9 +8,9 @@ See also:
 - [relationshipUi.tsx.md](relationshipUi.tsx.md)
 
 ```tsx
+import { useEffect, useMemo, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
-import type { Schema } from "safrs-jsonapi-client";
-import { Box } from "@mui/material";
+import { Box, Divider, Tab, Tabs, Typography } from "@mui/material";
 import {
   AutocompleteInput,
   BooleanField,
@@ -20,35 +20,46 @@ import {
   DateField,
   DateInput,
   Edit,
-  FileField,
-  FileInput,
-  ImageField,
-  ImageInput,
+  FunctionField,
   List,
+  Loading,
   NumberField,
   NumberInput,
   ReferenceInput,
+  ReferenceManyField,
   Resource,
   SearchInput,
   Show,
   SimpleForm,
-  SimpleShowLayout,
   TextField,
   TextInput,
+  useRecordContext,
 } from "react-admin";
+import type { Schema } from "safrs-jsonapi-client";
 
 import { useAdminSchema, useRawAdminYaml } from "./admin/schemaContext";
 import {
   buildResourceMeta,
   type RawAdminYaml,
   type ResourceAttributeMeta,
-  type ResourceRelationshipMeta,
   type ResourceMeta,
+  type ResourceRelationshipMeta,
   useResourceMeta,
 } from "./admin/resourceMetadata";
-import { RelatedRecordDialogLink } from "./relationshipUi";
+import {
+  getDefaultRelationshipTabIndex,
+  getRelatedRecordLabel,
+  RelatedRecordDialogLink,
+  SingleRelationshipTab,
+} from "./relationshipUi";
 
 const DEFAULT_PAGE_SIZE = 25;
+
+type DisplayMode = "create" | "edit" | "list" | "show";
+
+type DisplayItem =
+  | { kind: "attribute"; attribute: ResourceAttributeMeta; key: string; label: string }
+  | { kind: "relationship"; key: string; label: string; relationship: ResourceRelationshipMeta };
 
 export interface ResourcePages {
   name: string;
@@ -58,10 +69,6 @@ export interface ResourcePages {
   show: () => ReactElement;
   recordRepresentation?: string;
 }
-
-type DisplayItem =
-  | { kind: "attribute"; attribute: ResourceAttributeMeta }
-  | { kind: "relationship"; relationship: ResourceRelationshipMeta };
 
 export function makeSchemaDrivenPages(resourceName: string): ResourcePages {
   const ListPage = () => <SchemaDrivenList resource={resourceName} />;
@@ -83,7 +90,26 @@ export function makeSchemaDrivenPages(resourceName: string): ResourcePages {
   };
 }
 
-function isHidden(attribute: ResourceAttributeMeta, mode: "list" | "show" | "create" | "edit"): boolean {
+function isTruthyFlag(value: boolean | string | undefined): boolean {
+  return value === true || value === "true";
+}
+
+function isHiddenSetting(
+  hidden: boolean | string | undefined,
+  mode: DisplayMode,
+): boolean {
+  if (isTruthyFlag(hidden)) {
+    return true;
+  }
+
+  return typeof hidden === "string" && hidden.toLowerCase() === mode;
+}
+
+function isAttributeHidden(attribute: ResourceAttributeMeta, mode: DisplayMode): boolean {
+  if (isHiddenSetting(attribute.hidden, mode)) {
+    return true;
+  }
+
   const explicitVisibility = (
     mode === "list"
       ? attribute.list
@@ -94,24 +120,34 @@ function isHidden(attribute: ResourceAttributeMeta, mode: "list" | "show" | "cre
           : attribute.edit
   );
 
-  if (explicitVisibility === true) {
-    return false;
-  }
+  return explicitVisibility === false;
+}
 
-  if (explicitVisibility === false) {
+function isRelationshipHidden(
+  relationship: ResourceRelationshipMeta,
+  mode: "list" | "show",
+): boolean {
+  if (isHiddenSetting(relationship.hidden, mode)) {
     return true;
   }
 
-  if (attribute.hidden === true || attribute.hidden === "true") {
+  if (mode === "list" && relationship.hideList === true) {
+    return true;
+  }
+
+  if (mode === "show" && relationship.hideShow === true) {
     return true;
   }
 
   return false;
 }
 
-function visibleAttributes(resourceMeta: ResourceMeta, mode: "list" | "show" | "create" | "edit") {
+function visibleAttributes(
+  resourceMeta: ResourceMeta,
+  mode: DisplayMode,
+): ResourceAttributeMeta[] {
   return resourceMeta.attributes
-    .filter((attribute) => !isHidden(attribute, mode))
+    .filter((attribute) => !isAttributeHidden(attribute, mode))
     .map((attribute, index) => ({ attribute, index }))
     .sort((left, right) => {
       const leftOrder = left.attribute.order;
@@ -134,18 +170,39 @@ function visibleAttributes(resourceMeta: ResourceMeta, mode: "list" | "show" | "
     .map(({ attribute }) => attribute);
 }
 
-function visibleDisplayItems(resourceMeta: ResourceMeta, mode: "list" | "show"): DisplayItem[] {
+function visibleDisplayItems(
+  resourceMeta: ResourceMeta,
+  mode: "list" | "show",
+): DisplayItem[] {
   const items: DisplayItem[] = [];
   const emittedRelationships = new Set<string>();
 
   for (const attribute of visibleAttributes(resourceMeta, mode)) {
-    if (attribute.relationship && !emittedRelationships.has(attribute.relationship.name)) {
-      items.push({ kind: "relationship", relationship: attribute.relationship });
+    if (
+      attribute.relationship
+      && attribute.relationship.direction === "toone"
+      && !isRelationshipHidden(attribute.relationship, mode)
+    ) {
+      if (emittedRelationships.has(attribute.relationship.name)) {
+        continue;
+      }
+
       emittedRelationships.add(attribute.relationship.name);
+      items.push({
+        kind: "relationship",
+        key: `relationship:${attribute.relationship.name}`,
+        label: attribute.relationship.label,
+        relationship: attribute.relationship,
+      });
       continue;
     }
 
-    items.push({ kind: "attribute", attribute });
+    items.push({
+      kind: "attribute",
+      attribute,
+      key: `attribute:${attribute.name}`,
+      label: attribute.label,
+    });
   }
 
   return items;
@@ -176,10 +233,6 @@ function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
     return attribute.formSpan;
   }
 
-  if (attribute.kind === "file" || attribute.kind === "image") {
-    return 12;
-  }
-
   if (attribute.widget === "textarea") {
     return 12;
   }
@@ -194,9 +247,9 @@ function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
     || fieldName.endsWith("code")
     || fieldName.includes("count")
     || fieldName.includes("total")
-    || fieldName.includes("amount")
+    || fieldName.includes("score")
+    || fieldName.includes("value")
     || fieldName.includes("limit")
-    || fieldName.includes("balance")
   ) {
     return 3;
   }
@@ -208,79 +261,87 @@ function getTextareaRows(attribute: ResourceAttributeMeta): number {
   return attribute.rows ?? 4;
 }
 
-function renderField(
+function formatScalarValue(value: unknown, kind: ResourceAttributeMeta["kind"]): string {
+  if (value === undefined || value === null || value === "") {
+    return "-";
+  }
+
+  if (kind === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  return String(value);
+}
+
+function renderListField(
   item: DisplayItem,
-  schema: ReturnType<typeof useAdminSchema>,
-  rawYaml: RawAdminYaml,
+  schema: Schema,
 ) {
   if (item.kind === "relationship") {
     return (
-      <RelatedRecordDialogLink
-        key={`relationship:${item.relationship.name}`}
-        relationship={item.relationship}
+      <FunctionField
+        key={item.key}
+        label={item.label}
+        render={(record: Record<string, unknown>) => (
+          <RelatedRecordDialogLink
+            parentRecord={record}
+            relationship={item.relationship}
+          />
+        )}
       />
     );
   }
 
-  const { attribute } = item;
-
-  if (attribute.kind === "reference" && attribute.reference) {
-    return (
-      <TextField
-        key={attribute.name}
-        label={attribute.label}
-        source={attribute.name}
-      />
-    );
-  }
+  const attribute = item.attribute;
 
   if (attribute.kind === "number") {
-    return <NumberField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <NumberField key={item.key} label={item.label} source={attribute.name} />;
   }
 
   if (attribute.kind === "boolean") {
-    return <BooleanField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <BooleanField key={item.key} label={item.label} source={attribute.name} />;
   }
 
   if (attribute.kind === "date") {
-    return <DateField key={attribute.name} label={attribute.label} source={attribute.name} />;
+    return <DateField key={item.key} label={item.label} source={attribute.name} />;
   }
 
-  if (attribute.kind === "image") {
-    return (
-      <ImageField
-        key={attribute.name}
-        label={attribute.label}
-        source={`${attribute.name}.src`}
-        title={`${attribute.name}.title`}
-      />
-    );
-  }
-
-  if (attribute.kind === "file") {
-    return (
-      <FileField
-        key={attribute.name}
-        label={attribute.label}
-        source={`${attribute.name}.src`}
-        title={`${attribute.name}.title`}
-      />
-    );
-  }
-
-  return <TextField key={attribute.name} label={attribute.label} source={attribute.name} />;
+  return <TextField key={item.key} label={item.label} source={attribute.name} />;
 }
 
 function renderInput(
   attribute: ResourceAttributeMeta,
-  schema: ReturnType<typeof useAdminSchema>,
+  schema: Schema,
   rawYaml: RawAdminYaml,
 ) {
   if (attribute.readonly) {
     return null;
   }
 
-  if (attribute.kind === "reference" && attribute.reference) {
+  const relationship = attribute.relationship;
+  if (relationship && relationship.direction === "toone" && relationship.fks[0] === attribute.name) {
+    const targetMeta = buildResourceMeta(schema, rawYaml, relationship.targetResource);
+    return (
+      <ReferenceInput
+        key={attribute.name}
+        label={relationship.label}
+        reference={relationship.targetResource}
+        source={attribute.name}
+      >
+        <AutocompleteInput
+          fullWidth
+          label={relationship.label}
+          optionText={targetMeta.userKey ?? "id"}
+        />
+      </ReferenceInput>
+    );
+  }
+
+  if (attribute.reference) {
     const targetMeta = buildResourceMeta(schema, rawYaml, attribute.reference);
     return (
       <ReferenceInput
@@ -289,7 +350,11 @@ function renderInput(
         reference={attribute.reference}
         source={attribute.name}
       >
-        <AutocompleteInput optionText={targetMeta.userKey ?? "id"} />
+        <AutocompleteInput
+          fullWidth
+          label={attribute.label}
+          optionText={targetMeta.userKey ?? "id"}
+        />
       </ReferenceInput>
     );
   }
@@ -313,25 +378,6 @@ function renderInput(
     return <DateInput {...commonProps} />;
   }
 
-  if (attribute.kind === "image") {
-    return (
-      <ImageInput
-        {...commonProps}
-        accept={attribute.accept ?? "image/*"}
-      >
-        <ImageField source="src" title="title" />
-      </ImageInput>
-    );
-  }
-
-  if (attribute.kind === "file") {
-    return (
-      <FileInput {...commonProps} accept={attribute.accept}>
-        <FileField source="src" title="title" />
-      </FileInput>
-    );
-  }
-
   if (attribute.widget === "textarea") {
     return <TextInput {...commonProps} multiline minRows={getTextareaRows(attribute)} />;
   }
@@ -341,7 +387,7 @@ function renderInput(
 
 function renderFormItem(
   attribute: ResourceAttributeMeta,
-  schema: ReturnType<typeof useAdminSchema>,
+  schema: Schema,
   rawYaml: RawAdminYaml,
 ) {
   const input = renderInput(attribute, schema, rawYaml);
@@ -349,15 +395,13 @@ function renderFormItem(
     return null;
   }
 
-  const span = getFormColumnSpan(attribute);
-
   return (
     <Box
       key={`form:${attribute.name}`}
       sx={{
         gridColumn: {
           xs: "1 / -1",
-          md: `span ${span}`,
+          md: `span ${getFormColumnSpan(attribute)}`,
         },
       }}
     >
@@ -366,35 +410,238 @@ function renderFormItem(
   );
 }
 
-function SchemaDrivenList({ resource }: { resource: string }) {
+function OverviewGrid({
+  items,
+  resourceMeta,
+}: {
+  items: DisplayItem[];
+  resourceMeta: ResourceMeta;
+}) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
+  const record = useRecordContext<Record<string, unknown>>();
+
+  if (!record) {
+    return <Loading />;
+  }
+
+  return (
+    <Box>
+      <Typography sx={{ mb: 4 }} variant="h4">
+        {resourceMeta.label}{" "}
+        <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+          #{String(record.id ?? "")}
+        </Box>
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            md: "repeat(4, minmax(0, 1fr))",
+          },
+        }}
+      >
+        {items.map((item) => {
+          let value = "-";
+
+          if (item.kind === "relationship") {
+            const targetMeta = buildResourceMeta(
+              schema,
+              rawYaml,
+              item.relationship.targetResource,
+            );
+            value = getRelatedRecordLabel(record, item.relationship, targetMeta);
+          } else {
+            value = formatScalarValue(record[item.attribute.name], item.attribute.kind);
+          }
+
+          return (
+            <Box key={item.key}>
+              <Typography
+                color="text.secondary"
+                sx={{ fontWeight: 700, mb: 0.5 }}
+                variant="body2"
+              >
+                {item.label}
+              </Typography>
+              <Typography variant="body1">{value}</Typography>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
+function buildRelationshipTarget(
+  relationship: ResourceRelationshipMeta,
+  delimiter: string,
+): string {
+  return relationship.fks.length === 1
+    ? relationship.fks[0]
+    : relationship.fks.join(relationship.compositeDelimiter ?? delimiter);
+}
+
+function isBackReferenceItem(
+  item: DisplayItem,
+  relationship: ResourceRelationshipMeta,
+  parentResource: string,
+): boolean {
+  if (item.kind === "attribute") {
+    return relationship.fks.includes(item.attribute.name);
+  }
+
+  return (
+    item.relationship.targetResource === parentResource
+    && item.relationship.fks.some((fk) => relationship.fks.includes(fk))
+  );
+}
+
+function ManyRelationshipTab({
+  parentResource,
+  relationship,
+}: {
+  parentResource: string;
+  relationship: ResourceRelationshipMeta;
+}) {
+  const schema = useAdminSchema();
+  const rawYaml = useRawAdminYaml();
+  const targetMeta = useMemo(
+    () => buildResourceMeta(schema, rawYaml, relationship.targetResource),
+    [rawYaml, relationship.targetResource, schema],
+  );
+  const items = useMemo(
+    () =>
+      visibleDisplayItems(targetMeta, "list")
+        .filter((item) => !isBackReferenceItem(item, relationship, parentResource))
+        .slice(0, 8),
+    [parentResource, relationship, targetMeta],
+  );
+  const target = buildRelationshipTarget(relationship, schema.delimiter);
+  const sortField = targetMeta.userKey ?? targetMeta.attributes[0]?.name ?? "id";
+
+  return (
+    <ReferenceManyField
+      perPage={DEFAULT_PAGE_SIZE}
+      reference={relationship.targetResource}
+      sort={{ field: sortField, order: "ASC" }}
+      target={target}
+    >
+      <Datagrid bulkActionButtons={false} rowClick="show">
+        {items.map((item) => renderListField(item, schema))}
+      </Datagrid>
+    </ReferenceManyField>
+  );
+}
+
+function TabPanel({
+  children,
+  index,
+  value,
+}: {
+  children: ReactNode;
+  index: number;
+  value: number;
+}) {
+  return (
+    <Box hidden={value !== index} sx={{ pt: 3 }}>
+      {value === index ? children : null}
+    </Box>
+  );
+}
+
+function ShowContent({
+  resource,
+}: {
+  resource: string;
+}) {
+  const resourceMeta = useResourceMeta(resource);
+  const overviewItems = useMemo(
+    () => visibleDisplayItems(resourceMeta, "show"),
+    [resourceMeta],
+  );
+  const relationships = useMemo(
+    () =>
+      resourceMeta.relationships.filter(
+        (relationship) => !isRelationshipHidden(relationship, "show"),
+      ),
+    [resourceMeta.relationships],
+  );
+  const preferredTabIndex = useMemo(
+    () => getDefaultRelationshipTabIndex(relationships, resource),
+    [relationships, resource],
+  );
+  const [tabIndex, setTabIndex] = useState(preferredTabIndex);
+
+  useEffect(() => {
+    setTabIndex(preferredTabIndex);
+  }, [preferredTabIndex, resource]);
+
+  return (
+    <Box>
+      <OverviewGrid items={overviewItems} resourceMeta={resourceMeta} />
+      {relationships.length > 0 ? (
+        <>
+          <Divider sx={{ my: 4 }} />
+          <Tabs
+            allowScrollButtonsMobile
+            onChange={(_event, nextIndex) => setTabIndex(nextIndex)}
+            scrollButtons="auto"
+            value={tabIndex}
+            variant="scrollable"
+          >
+            {relationships.map((relationship) => (
+              <Tab key={relationship.name} label={relationship.label} />
+            ))}
+          </Tabs>
+          {relationships.map((relationship, index) => (
+            <TabPanel index={index} key={relationship.name} value={tabIndex}>
+              {relationship.direction === "tomany" ? (
+                <ManyRelationshipTab
+                  parentResource={resource}
+                  relationship={relationship}
+                />
+              ) : (
+                <SingleRelationshipTab relationship={relationship} />
+              )}
+            </TabPanel>
+          ))}
+        </>
+      ) : null}
+    </Box>
+  );
+}
+
+function SchemaDrivenList({ resource }: { resource: string }) {
+  const schema = useAdminSchema();
   const resourceMeta = useResourceMeta(resource);
   const displayItems = visibleDisplayItems(resourceMeta, "list");
   const filters = resourceMeta.searchColumns.length > 0
-    ? [<SearchInput alwaysOn key="q" placeholder={buildSearchPlaceholder(resourceMeta)} source="q" />]
+    ? [
+        <SearchInput
+          alwaysOn
+          key="q"
+          placeholder={buildSearchPlaceholder(resourceMeta)}
+          source="q"
+        />,
+      ]
     : undefined;
 
   return (
     <List filters={filters} perPage={DEFAULT_PAGE_SIZE}>
       <Datagrid rowClick="show">
-        {displayItems.map((item) => renderField(item, schema, rawYaml))}
+        {displayItems.map((item) => renderListField(item, schema))}
       </Datagrid>
     </List>
   );
 }
 
 function SchemaDrivenShow({ resource }: { resource: string }) {
-  const schema = useAdminSchema();
-  const rawYaml = useRawAdminYaml();
-  const resourceMeta = useResourceMeta(resource);
-  const displayItems = visibleDisplayItems(resourceMeta, "show");
-
   return (
     <Show>
-      <SimpleShowLayout>
-        {displayItems.map((item) => renderField(item, schema, rawYaml))}
-      </SimpleShowLayout>
+      <ShowContent resource={resource} />
     </Show>
   );
 }
@@ -504,12 +751,11 @@ export function buildResources(
 }
 ```
 
-Required relationship extension:
+Required relationship behavior:
 
 - this file MUST import and use the helpers from `relationshipUi.tsx`
-- this file SHOULD use an explicit display-item model such as:
-  - scalar attribute display items
-  - relationship display items
+- this file MUST render a metadata-driven relationship-tab show page, not a
+  plain single-layout show renderer with deferred follow-up notes
 - generated list pages MUST render `toone` foreign-key-backed columns through
   `RelatedRecordDialogLink`, not raw scalar ids
 - FK-backed scalar attributes that carry `attribute.relationship` metadata
@@ -518,21 +764,3 @@ Required relationship extension:
 - generated show pages MUST render:
   - `tomany` relationships as datagrid tabs
   - `toone` relationships as summary tabs
-- the relationship tab default MUST use the priority order defined in
-  `specs/contracts/frontend/relationship-ui.md`
-- relationship tab ordering SHOULD use:
-  - `tab_groups` order first
-  - schema-discovered extra relationships appended afterward
-- generated forms MUST keep scalar foreign-key inputs even though list/show
-  rendering uses relationship-aware helpers
-- generated list/show pages MUST prefer embedded include data and canonical
-  relationship routes over custom helper endpoints for related-record reads
-- generated create/edit forms MUST use responsive width heuristics instead of
-  rendering every field full-width by default
-- the baseline form-layout heuristics SHOULD be:
-  - desktop default `span 4` for standard fields
-  - desktop `span 3` for compact ids/codes/counts/small numeric fields
-  - desktop `span 12` for textarea/file/image fields
-  - mobile full-width for all fields
-- explicit metadata overrides such as `formSpan`, `fullWidth`, and `rows`
-  MUST be honored

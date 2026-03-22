@@ -80,7 +80,7 @@ frontend package template before treating the playbook baseline as current.
 - the frontend does not require a custom endpoint merely to show DB-backed
   related data that SAFRS already exposes under the parent resource
 - custom SAFRS methods or raw JSON service calls use
-  `dataProvider.execute(...)` rather than component-level `fetch(...)`
+  `dataProvider.execute(resource, params)` rather than component-level `fetch(...)`
 - absence of related-item tabs or related-record popups is a failure unless a
   run-owned UX artifact explicitly documents the exception
 - generated create/edit forms use responsive width heuristics instead of
@@ -222,7 +222,7 @@ The starter frontend MUST ship automated tests for:
   `ja_type`, `attributes`, `relationships`, and included related-record data
 - the real `admin.yaml -> loadAdminBootstrap -> dataProvider.getList(...)`
   path preserves at least one representative scalar field in returned records
-- at least one representative `dataProvider.execute(...)` proof for custom
+- at least one representative `dataProvider.execute(resource, params)` proof for custom
   SAFRS methods or raw JSON service calls when the delivered app uses them
 - Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`

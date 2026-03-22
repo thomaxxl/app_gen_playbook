@@ -22,7 +22,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 "| `Project` | yes |\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/db.py",
+                repo_root / "app/backend/src/sample_app/db.py",
                 "\n".join(
                     [
                         "from sqlalchemy.orm import declarative_base",
@@ -32,7 +32,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/models.py",
+                repo_root / "app/backend/src/sample_app/models.py",
                 "\n".join(
                     [
                         "from safrs import SAFRSBase",
@@ -46,7 +46,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                repo_root / "app/backend/src/sample_app/fastapi_app.py",
                 "\n".join(
                     [
                         "from fastapi import FastAPI",
@@ -74,7 +74,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 "| `Project` | yes |\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/database.py",
+                repo_root / "app/backend/src/cmdb_app/database.py",
                 "\n".join(
                     [
                         "import safrs",
@@ -84,7 +84,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/models.py",
+                repo_root / "app/backend/src/cmdb_app/models.py",
                 "\n".join(
                     [
                         "from safrs import SAFRSBase",
@@ -97,7 +97,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/__init__.py",
+                repo_root / "app/backend/src/cmdb_app/__init__.py",
                 "\n".join(
                     [
                         "from fastapi import FastAPI",
@@ -125,7 +125,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 "| `Project` | yes |\n| `Run` | yes |\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/db.py",
+                repo_root / "app/backend/src/runtime_app/db.py",
                 "\n".join(
                     [
                         "from sqlalchemy import create_engine, text",
@@ -136,7 +136,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/mirror_api.py",
+                repo_root / "app/backend/src/runtime_app/mirror_api.py",
                 "\n".join(
                     [
                         "RESOURCE_TABLES = {'Project': 'projects'}",
@@ -148,7 +148,7 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
                 + "\n",
             )
             write_file(
-                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                repo_root / "app/backend/src/runtime_app/fastapi_app.py",
                 "\n".join(
                     [
                         "from fastapi import FastAPI",

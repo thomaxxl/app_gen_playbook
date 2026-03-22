@@ -72,7 +72,7 @@ If a `q` search wrapper exists, it must prove:
 
 ## RPC / service-call compatibility
 
-Custom SAFRS methods and raw JSON service calls should ride on the package provider's `execute()` so they inherit:
+Custom SAFRS methods and raw JSON service calls should ride on the package provider's `execute(resource, params)` API so they inherit:
 - auth header hooks
 - abort handling
 - JSON:API error mapping

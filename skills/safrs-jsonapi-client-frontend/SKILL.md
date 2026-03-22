@@ -14,7 +14,7 @@ For SAFRS / ApiLogicServer frontends, the canonical data-provider lane is:
 2. use the package's `createDataProvider(...)` / `createDataProviderSync(...)`
 3. use the package's `normalizeAdminYaml(...)` schema model as the canonical normalized schema shape
 4. keep React-admin components behind the approved `dataProvider`
-5. use `execute()` for SAFRS RPC-style methods or raw JSON service calls
+5. use `execute(resource, params)` for SAFRS RPC-style methods or raw JSON service calls
 
 Do **not** hand-roll a separate JSON:API client unless the exception is documented.
 
@@ -64,8 +64,8 @@ For related-record display:
 
 The runtime must not invent side endpoints for ordinary DB-backed related data that SAFRS already exposes.
 
-### 6. Use `execute()` for custom methods
-For `@jsonapi_rpc`, SAFRS custom methods, or non-resource JSON service calls, use the adapter's `execute()` method instead of component-level `fetch(...)`.
+### 6. Use `execute(resource, params)` for custom methods
+For `@jsonapi_rpc`, SAFRS custom methods, or non-resource JSON service calls, use the adapter's `execute(resource, params)` method instead of component-level `fetch(...)`.
 
 ### 7. No component-level API bypass
 Frontend components must not call backend APIs directly for delivered app behavior. If the adapter shape is insufficient, extend the adapter or escalate the gap.
@@ -89,7 +89,7 @@ When this skill is used, the run should be able to point to:
 - proof that relationship tabs/dialogs use include / relationship-route / id-fallback order
 - proof that search wrappers preserve package record shape
 - proof that `tab_groups` remains authoritative for relationship UI
-- proof that custom SAFRS methods use `execute()` instead of component-level fetches
+- proof that custom SAFRS methods use `execute(resource, params)` instead of component-level fetches
 
 ## Anti-patterns
 

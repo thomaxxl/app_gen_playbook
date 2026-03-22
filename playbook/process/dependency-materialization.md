@@ -42,6 +42,11 @@ directly from GitHub during normal clean install. The supported flow is to
 clone or refresh the approved local checkout first, then install from that local file
 dependency.
 
+If upstream release tags, release assets, and `package.json` version text do
+not line up exactly, the playbook still follows the approved local git
+checkout recorded in `runtime-bom.md`. Release labels are advisory unless the
+run explicitly repins to one.
+
 ## Verification rule
 
 Before delivery:

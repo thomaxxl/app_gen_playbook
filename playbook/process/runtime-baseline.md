@@ -31,3 +31,8 @@ The maintained baseline MUST NOT be recovered from `examples/`.
   run-owned `runtime-bom.md` with a reason.
 - If maintainers repin the house baseline, they MUST update this file,
   dependent contracts, and the relevant templates together.
+- For `safrs-jsonapi-client`, the maintained baseline follows the latest
+  upstream git checkout, not the latest GitHub release tag. If upstream
+  release labels and `package.json` version text diverge, the playbook still
+  treats the checked-out git revision as the authoritative frontend adapter
+  baseline unless `runtime-bom.md` records a different approved pin.

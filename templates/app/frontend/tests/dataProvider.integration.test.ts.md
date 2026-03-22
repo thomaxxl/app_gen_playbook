@@ -128,4 +128,4 @@ Notes:
   UI layer renders it.
 - If the delivered app uses custom SAFRS methods or raw JSON service calls,
   add a companion integration assertion proving those calls go through
-  `dataProvider.execute(...)`.
+  `dataProvider.execute(resource, params)`.

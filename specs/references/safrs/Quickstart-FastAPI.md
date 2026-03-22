@@ -15,6 +15,7 @@ relationship.
 
 Local references:
 
+- `../../../skills/safrs-api-design/SKILL.md`
+- `../../../skills/safrs-api-design/reference/decision-tree.md`
 - `../../../templates/app/backend/fastapi_app.py.md`
 - `../../../examples/cmdb/backend/src/cmdb_app/fastapi_app.py`
-- `../../../../demo/vendor/safrs/README.md`

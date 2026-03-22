@@ -209,13 +209,14 @@ requirements:
       - specs/contracts/frontend/validation.md
     description: >
       SAFRS RPC-style methods and raw JSON service calls must use
-      dataProvider.execute(...) through the approved adapter boundary.
+      dataProvider.execute(resource, params) through the approved adapter
+      boundary.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_execute_usage_issues
     remediation: >
-      Route custom SAFRS methods through dataProvider.execute(...) and add the
-      required validation proof.
+      Route custom SAFRS methods through dataProvider.execute(resource, params)
+      and add the required validation proof.
 
   - id: FE-ADAPTER-006
     title: Delivered frontend code does not bypass the adapter with direct fetches

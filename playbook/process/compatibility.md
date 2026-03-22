@@ -152,6 +152,10 @@ actually uses in the run-owned `runtime-bom.md`.
   `tmp/safrs-jsonapi-client` before the first frontend `npm install`
 - the generated frontend package source SHOULD then be
   `file:../tmp/safrs-jsonapi-client`
+- GitHub release labels for `safrs-jsonapi-client` may lag the checked-out
+  source or use different version wording than `package.json`; the playbook
+  baseline follows the selected git checkout, not the latest release page,
+  unless the run-owned `runtime-bom.md` explicitly repins to a release asset
 - if the selected checkout is missing required built outputs such as `dist/`,
   the operator MUST replace it with a validated checkout or approved override
   before continuing

@@ -37,12 +37,16 @@ def python_sources(root: Path) -> list[Path]:
     return sorted(path for path in root.rglob("*.py") if path.is_file())
 
 
+def backend_source_root(repo_root: Path) -> Path:
+    return repo_root / "app" / "backend" / "src"
+
+
 def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
     resources = expected_safrs_resources(repo_root)
     if not resources:
         return []
 
-    backend_root = repo_root / "app" / "backend" / "src" / "my_app"
+    backend_root = backend_source_root(repo_root)
     if not backend_root.exists():
         return []
 
@@ -52,7 +56,11 @@ def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
 
     texts = {path: read_text(path) for path in files}
     combined = "\n".join(texts.values())
-    fastapi_text = read_text(backend_root / "fastapi_app.py")
+    fastapi_text = "\n".join(
+        texts[path]
+        for path in files
+        if path.name in {"fastapi_app.py", "__init__.py"}
+    )
 
     issues: list[str] = []
 

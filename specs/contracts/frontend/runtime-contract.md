@@ -122,8 +122,8 @@ dataProvider exposed by this runtime, not through ad hoc direct fetch calls in
 page components.
 
 For SAFRS custom methods or non-resource JSON service calls, that same
-boundary MUST use `dataProvider.execute(...)` rather than component-level
-`fetch(...)`.
+boundary MUST use `dataProvider.execute(resource, params)` rather than
+component-level `fetch(...)`.
 
 The runtime MUST preserve raw `admin.yaml tab_groups` through the adapter
 layer and MUST remain functional when `schema.resources[...].relationships` is

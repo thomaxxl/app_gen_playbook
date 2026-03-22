@@ -77,7 +77,7 @@ validators:
     adapter: string_list
     module: check_backend_orm_safrs
     callable: audit_backend_orm_safrs
-    default_path: app/backend/src/my_app
+    default_path: app/backend/src
     summary_pass: backend ORM/SAFRS audit passed
     summary_fail_template: "{count} backend ORM/SAFRS issue(s)"
   tools/validators/policy/validate_safrs_policy_contracts.py::collect_relationship_exposure_issues:

@@ -42,7 +42,7 @@ Do not skip step 2.
 
 ## 5. Does the UI need a SAFRS custom method or non-resource service call?
 
-Use `dataProvider.execute(...)`.
+Use `dataProvider.execute(resource, params)`.
 
 Do not do direct `fetch(...)` from the component tree.
 

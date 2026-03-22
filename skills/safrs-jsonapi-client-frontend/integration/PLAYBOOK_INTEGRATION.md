@@ -52,7 +52,7 @@ Also state clearly:
 - `safrs-jsonapi-client` is the canonical adapter
 - local shared-runtime code may wrap it but must not replace it
 - direct component-level `fetch(...)` is forbidden for delivered backend reads
-- `execute()` is the default lane for SAFRS RPC / service calls
+- `execute(resource, params)` is the default lane for SAFRS RPC / service calls
 
 ### `playbook/roles/architect.md`
 Add one line requiring the frontend adapter skill when approving exceptions in frontend data-access or relationship-display design.
@@ -93,7 +93,7 @@ Add required checks for:
 - package-backed provider creation
 - search-wrapper compatibility with package record shape
 - relationship-route proof
-- `execute()` proof for representative custom-method calls
+- `execute(resource, params)` proof for representative custom-method calls
 - no delivered direct-fetch bypasses
 
 ## 6. Update frontend templates
@@ -158,7 +158,7 @@ Extend `specs/policy/requirements/frontend-core.yaml` with requirements for:
 - search-wrapper compatibility
 - relationship-route consumption
 - no direct-fetch bypass
-- `execute()` usage for custom SAFRS methods
+- `execute(resource, params)` usage for custom SAFRS methods
 
 Add validators that inspect actual frontend templates and generated app runtime files, not just contract prose.
 
@@ -168,7 +168,7 @@ Require at least:
 - one include-hydration proof
 - one searched-list proof that still preserves related-record rendering
 - one relationship-dialog/tab proof using canonical relationship metadata
-- one representative `execute()` proof
+- one representative `execute(resource, params)` proof
 - one proof that the generated frontend did not add custom helper endpoints for ordinary SAFRS relationships
 
 ## 9. Preferred convergence direction

@@ -94,8 +94,8 @@ MUST NOT replace it with a parallel JSON:API client, a parallel schema model,
 or a weaker record normalizer.
 
 For custom SAFRS methods, RPC-style calls, or raw JSON service calls outside
-ordinary CRUD, the default lane is `dataProvider.execute(...)`, not a
-component-level `fetch(...)`.
+ordinary CRUD, the default lane is `dataProvider.execute(resource, params)`,
+not a component-level `fetch(...)`.
 
 This applies in particular to:
 

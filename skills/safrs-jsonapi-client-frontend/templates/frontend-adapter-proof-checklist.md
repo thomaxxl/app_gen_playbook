@@ -38,7 +38,7 @@ Use this checklist in frontend validation and Architect review.
 - [ ] no custom helper endpoints were introduced for ordinary DB-backed relationships
 
 ## RPC / services
-- [ ] SAFRS RPC-style methods use `execute()`
+- [ ] SAFRS RPC-style methods use `execute(resource, params)`
 - [ ] raw JSON service calls use `execute(..., { mode: "raw" })`
 - [ ] error handling remains consistent with the package provider
 
@@ -46,4 +46,4 @@ Use this checklist in frontend validation and Architect review.
 - [ ] unit or integration test proves search-wrapper compatibility
 - [ ] unit or integration test proves relationship tab/dialog behavior
 - [ ] unit or integration test proves included related data survives normalization
-- [ ] unit or integration test proves a representative `execute()` call
+- [ ] unit or integration test proves a representative `execute(resource, params)` call

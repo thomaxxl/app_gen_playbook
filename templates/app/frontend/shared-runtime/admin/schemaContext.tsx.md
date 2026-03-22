@@ -14,7 +14,7 @@ import {
   normalizeAdminYaml,
 } from "safrs-jsonapi-client";
 import type {
-  DataProvider as SafrsDataProvider,
+  SafrsDataProvider,
   Schema,
 } from "safrs-jsonapi-client";
 
@@ -186,5 +186,5 @@ Notes:
 - If the app supports upload-backed fields, wrap the package-backed provider
   after the search-enabled provider is created.
 - Custom SAFRS methods and raw JSON service calls should use
-  `dataProvider.execute(...)` through the returned provider boundary rather than
+  `dataProvider.execute(resource, params)` through the returned provider boundary rather than
   introducing component-level fetch paths.

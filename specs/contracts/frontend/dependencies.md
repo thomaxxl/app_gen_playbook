@@ -204,6 +204,10 @@ npm install -D \
 - `safrs-jsonapi-client` MUST come from the approved local clone path backed by
   the repo source policy recorded in `runtime-bom.md`. Do not switch to a floating git
   dependency or raw source archive.
+- If the package's GitHub release tags, release assets, and `package.json`
+  version text differ, the playbook baseline follows the approved local git
+  checkout recorded in `runtime-bom.md`, not whichever release label happens
+  to be newest.
 - The runtime-bom source policy, the local checkout path, and the
   package source in `package.json` MUST stay aligned. The playbook MUST NOT
   preserve contradictory branch/file/version wording after the local materialized

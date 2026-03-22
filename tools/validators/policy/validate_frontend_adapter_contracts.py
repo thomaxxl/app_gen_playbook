@@ -26,6 +26,11 @@ def _normalized(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
+def _first_code_fence(text: str) -> str:
+    match = re.search(r"```[a-zA-Z0-9]*\n(.*?)```", text, re.DOTALL)
+    return match.group(1) if match else text
+
+
 def _check_required_tokens(
     repo_root: Path,
     required_tokens: dict[Path, list[str]],
@@ -63,7 +68,7 @@ def collect_adapter_lane_issues(repo_root: Path) -> list[dict[str, str]]:
             repo_root / "playbook" / "roles" / "frontend.md": [
                 "skills/safrs-jsonapi-client-frontend/SKILL.md",
                 "canonical adapter",
-                "dataProvider.execute(...)",
+                "dataProvider.execute(resource, params)",
             ],
             repo_root / "playbook" / "roles" / "architect.md": [
                 "skills/safrs-jsonapi-client-frontend/SKILL.md",
@@ -141,7 +146,7 @@ def collect_search_wrapper_issues(repo_root: Path) -> list[dict[str, str]]:
 
 
 def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
-    return _check_required_tokens(
+    issues = _check_required_tokens(
         repo_root,
         {
             repo_root / "specs" / "contracts" / "frontend" / "relationship-ui.md": [
@@ -157,7 +162,7 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 "includePath",
             ],
             repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "relationshipUi.tsx.md": [
-                "relationshipRouteTemplate",
+                "resolveExecuteResource",
                 "dataProvider.execute",
                 "parent relationship route",
             ],
@@ -165,26 +170,140 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
         "missing frontend relationship-route contract input",
     )
 
+    relationship_runtime = repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "relationshipUi.tsx.md"
+    relationship_text = _read(relationship_runtime)
+    if relationship_text:
+        runtime_code = _first_code_fence(relationship_text)
+        if "dataProvider.execute({" in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    relationship_runtime,
+                    "relationship runtime still uses the legacy one-argument execute({...}) placeholder instead of execute(resource, params)",
+                )
+            )
+        for token in (
+            "resolveExecuteResource",
+            "action: relationship.name",
+            "dataProvider.execute<",
+            "RelatedRecordSummary",
+            "SingleRelationshipTab",
+        ):
+            if token not in runtime_code:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        relationship_runtime,
+                        f"relationship runtime is missing implementation token: {token}",
+                    )
+                )
+        for banned in (
+            "intentionally reduced",
+            "replace the placeholders with the actual",
+            "return <div>{resource}</div>;",
+            "return <div>{relationship.label}</div>;",
+        ):
+            if banned in runtime_code:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        relationship_runtime,
+                        f"relationship runtime still contains placeholder implementation text: {banned}",
+                    )
+                )
+
+    registry_runtime = repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "resourceRegistry.tsx.md"
+    registry_text = _read(registry_runtime)
+    if registry_text:
+        runtime_code = _first_code_fence(registry_text)
+        if "SimpleShowLayout" in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    registry_runtime,
+                    "resource registry still renders show pages through plain SimpleShowLayout instead of relationship-tab content",
+                )
+            )
+        for token in (
+            "ShowContent",
+            "<Tabs",
+            "ManyRelationshipTab",
+            "SingleRelationshipTab",
+            "RelatedRecordDialogLink",
+        ):
+            if token not in runtime_code:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        registry_runtime,
+                        f"resource registry is missing relationship-tab runtime token: {token}",
+                    )
+                )
+
+    return issues
+
 
 def collect_execute_usage_issues(repo_root: Path) -> list[dict[str, str]]:
-    return _check_required_tokens(
+    issues = _check_required_tokens(
         repo_root,
         {
             repo_root / "playbook" / "roles" / "frontend.md": [
-                "dataProvider.execute(...)",
+                "dataProvider.execute(resource, params)",
             ],
             repo_root / "specs" / "contracts" / "frontend" / "custom-views.md": [
-                "dataProvider.execute(...)",
+                "dataProvider.execute(resource, params)",
             ],
             repo_root / "specs" / "contracts" / "frontend" / "validation.md": [
-                "representative `dataProvider.execute(...)` proof",
+                "representative `dataProvider.execute(resource, params)` proof",
             ],
             repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "admin" / "schemaContext.tsx.md": [
-                "dataProvider.execute(...)",
+                "dataProvider.execute(resource, params)",
             ],
         },
         "missing frontend execute-usage contract input",
     )
+
+    schema_context = repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "admin" / "schemaContext.tsx.md"
+    schema_context_text = _read(schema_context)
+    if schema_context_text and "SafrsDataProvider" not in schema_context_text:
+        issues.append(
+            _issue(
+                repo_root,
+                schema_context,
+                "schema context does not type the package-backed provider as SafrsDataProvider",
+            )
+        )
+
+    relationship_runtime = repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "relationshipUi.tsx.md"
+    relationship_text = _read(relationship_runtime)
+    if relationship_text:
+        runtime_code = _first_code_fence(relationship_text)
+        if "execute(resource, params)" not in relationship_text:
+            issues.append(
+                _issue(
+                    repo_root,
+                    relationship_runtime,
+                    "relationship runtime notes do not document the execute(resource, params) contract",
+                )
+            )
+        if "dataProvider.execute({" in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    relationship_runtime,
+                    "relationship runtime still uses execute({...}) instead of execute(resource, params)",
+                )
+            )
+        if "dataProvider.execute<" not in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    relationship_runtime,
+                    "relationship runtime does not call the package execute(resource, params) API directly",
+                )
+            )
+
+    return issues
 
 
 def collect_no_direct_fetch_issues(repo_root: Path) -> list[dict[str, str]]:

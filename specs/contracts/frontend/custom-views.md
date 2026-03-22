@@ -63,7 +63,7 @@ That means:
 
 - use `useDataProvider()` or an equivalent approved dataProvider consumer
 - use dataProvider methods for resource reads
-- use `dataProvider.execute(...)` for approved SAFRS custom methods or other
+- use `dataProvider.execute(resource, params)` for approved SAFRS custom methods or other
   non-CRUD read models
 - do not call `fetch(...)` directly from delivery page components for backend
   API reads

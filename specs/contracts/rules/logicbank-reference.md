@@ -40,15 +40,16 @@ Use this precedence order when LogicBank docs disagree:
 
 1. the playbook's generated-app contract under this `rules/` directory
 2. the installed published `logicbank` package in the current backend runtime
-3. the ApiLogicServer training docs under `/home/t/lab/ApiLogicServer-src`
+3. the local LogicBank skill references under
+   `../../../skills/logicbank-rules-design/reference/`
 
 The playbook remains the normative generated-app contract.
 
 The installed published `logicbank` package is the truth for actual API
 signatures and engine behavior.
 
-The ApiLogicServer training material is a pattern library and warning source.
-It MUST NOT become a second source of business meaning or generated-app
+The local LogicBank skill references are a pattern library and warning source.
+They MUST NOT become a second source of business meaning or generated-app
 structure.
 
 ## Role boundary

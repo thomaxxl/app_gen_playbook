@@ -47,6 +47,23 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             issues = collect_logicbank_lane_issues(repo_root)
             self.assertTrue(any("skills/logicbank-rules-design/SKILL.md" in issue["reason"] for issue in issues))
 
+    def test_artifact_validator_detects_missing_live_logicbank_runtime_tokens(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            for rel, content in (
+                ("specs/backend-design/rule-mapping.md", "Starter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\n"),
+                ("specs/backend-design/model-design.md", "maintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
+                ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\n"),
+                ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\n"),
+                ("app/rules/rules.py", "from logic_bank.logic_bank import LogicBank\n\ndef declare_logic():\n    pass\n"),
+            ):
+                write_file(repo_root / rel, content)
+
+            issues = collect_logicbank_artifact_issues(repo_root)
+            self.assertTrue(any("live rules implementation is missing" in issue["reason"] for issue in issues))
+
 
 if __name__ == "__main__":
     unittest.main()

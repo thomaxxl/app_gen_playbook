@@ -71,6 +71,50 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             issues = collect_search_wrapper_issues(repo_root)
             self.assertTrue(any("still claims to avoid safrs-jsonapi-client" in issue["reason"] for issue in issues))
 
+    def test_relationship_validator_detects_placeholder_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/contracts/frontend/relationship-ui.md",
+                "canonical parent relationship routes how to build the parent relationship URL\n",
+            )
+            write_file(
+                repo_root / "specs/contracts/frontend/validation.md",
+                "relationship-route behavior is proven representative `dataProvider.execute(resource, params)` proof\n",
+            )
+            write_file(
+                repo_root / "templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md",
+                "relationshipRouteTemplate parentEndpoint includePath\n",
+            )
+            write_file(
+                repo_root / "templates/app/frontend/shared-runtime/admin/schemaContext.tsx.md",
+                'dataProvider.execute(resource, params) from "safrs-jsonapi-client"\n',
+            )
+            write_file(
+                repo_root / "playbook/roles/frontend.md",
+                "dataProvider.execute(resource, params)\ncomponent-level `fetch(...)`\n",
+            )
+            write_file(
+                repo_root / "specs/contracts/frontend/custom-views.md",
+                "dataProvider.execute(resource, params)\ndo not call `fetch(...)` directly\n",
+            )
+            write_file(
+                repo_root / "templates/app/frontend/shared-runtime/relationshipUi.tsx.md",
+                "dataProvider.execute({\nreturn <div>{resource}</div>;\nreturn <div>{relationship.label}</div>;\n",
+            )
+            write_file(
+                repo_root / "templates/app/frontend/shared-runtime/resourceRegistry.tsx.md",
+                "SimpleShowLayout\n",
+            )
+
+            relationship_issues = collect_relationship_route_issues(repo_root)
+            execute_issues = collect_execute_usage_issues(repo_root)
+            self.assertTrue(any("legacy one-argument execute" in issue["reason"] for issue in relationship_issues))
+            self.assertTrue(any("placeholder implementation text" in issue["reason"] for issue in relationship_issues))
+            self.assertTrue(any("SimpleShowLayout" in issue["reason"] for issue in relationship_issues))
+            self.assertTrue(any("execute(resource, params)" in issue["reason"] for issue in execute_issues))
+
 
 if __name__ == "__main__":
     unittest.main()

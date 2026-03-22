@@ -124,6 +124,14 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "LogicBank-lane",
             "endpoint/service/frontend enforcement",
         ],
+        repo_root / "templates" / "app" / "rules" / "rules.py.md": [
+            "LogicBank.activate",
+            "Rule.copy",
+            "Rule.formula",
+            "Rule.sum",
+            "Rule.count",
+            "Rule.constraint",
+        ],
     }
     for path, tokens in required_tokens.items():
         text = _read(path)
@@ -134,4 +142,17 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in tokens:
             if _normalized(token) not in normalized:
                 issues.append(_issue(repo_root, path, f"missing LogicBank artifact token: {token}"))
+
+    live_rules = repo_root / "app" / "rules" / "rules.py"
+    live_rules_text = _read(live_rules)
+    if live_rules_text and any(token in live_rules_text for token in ("LogicBank", "Rule.", "logic_bank")):
+        for token in ("LogicBank.activate", "Rule.", "activate_logic"):
+            if token not in live_rules_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        live_rules,
+                        f"live rules implementation is missing LogicBank runtime token: {token}",
+                    )
+                )
     return issues
