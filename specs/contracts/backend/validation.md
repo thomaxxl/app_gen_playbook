@@ -38,6 +38,9 @@ This file defines the minimum backend validation checklist.
   live resource payload and referenced in the backend test plan
 - every declared `jsonapi_rpc` used by the run-owned design is proven on the
   correct collection or instance lane and referenced in the backend test plan
+- every DB-backed summary/query surface that users need to list, filter, sort,
+  or drill into is either exposed as a read-only mapped SAFRS resource
+  (table/view/selectable) or covered by an explicit exception record
 - every ordinary persisted table-backed resource that the run-owned design
   treats as ORM-backed is implemented through mapped SQLAlchemy ORM classes and
   relationships rather than only raw-SQL or row-mapper handlers
@@ -59,7 +62,8 @@ This file defines the minimum backend validation checklist.
   tables or relationships
 - when a custom endpoint for DB-backed data exists, the run-owned design and
   evidence must record why the need was not satisfied by a normal SAFRS
-  resource, relationship URL, `include=...`, `jsonapi_attr`, or `jsonapi_rpc`
+  resource, a mapped read-only SAFRS view/selectable resource, relationship
+  URL, `include=...`, `jsonapi_attr`, or `jsonapi_rpc`
 - when such a custom DB-backed endpoint exists, the evidence pack MUST point
   to the run-owned SAFRS lane audit or explicit exception record that was
   produced after applying `../../../skills/safrs-api-design/SKILL.md`

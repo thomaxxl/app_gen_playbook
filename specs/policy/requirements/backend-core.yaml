@@ -123,9 +123,10 @@ requirements:
       - playbook/roles/backend.md
     description: >
       The playbook must force authors to evaluate SAFRS resource,
-      relationship, include, jsonapi_attr, and jsonapi_rpc lanes before
-      inventing custom DB-backed APIs, and it must load the SAFRS API design
-      skill through the normal backend and architect read paths.
+      view-backed resource, relationship, include, jsonapi_attr, and
+      jsonapi_rpc lanes before inventing custom DB-backed APIs, and it must
+      load the SAFRS API design skill through the normal backend and architect
+      read paths.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_mechanism_preference_issues
@@ -167,7 +168,8 @@ requirements:
       - specs/backend-design/relationship-map.md
     description: >
       Every non-default API lane for DB-backed data must name the rejected
-      SAFRS option and the replacement contract.
+      SAFRS option, including view-backed resource and jsonapi_rpc lanes, and
+      the replacement contract.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_safrs_policy_contracts.py::collect_exception_handling_issues

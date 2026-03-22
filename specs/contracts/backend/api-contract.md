@@ -15,6 +15,9 @@ The generated app relies on these SAFRS/backend behaviors staying stable:
 - canonical schema URL `/jsonapi.json`
 - ordinary persisted resource delivery coming from real ORM-backed SAFRS
   resources, not hand-built JSON stand-ins
+- DB-backed read-only summary/query rows that are still browseable or
+  filterable coming from mapped SAFRS resources over real tables, views, or
+  selectables when that lane fits
 - ordinary persisted relationship delivery coming from real ORM-backed SAFRS
   relationship URLs and include paths, not custom summary endpoints
 - `/jsonapi.json` representing real SAFRS-backed resource discovery, not only
@@ -45,6 +48,15 @@ That does not change the canonical read contract:
   surface
 - if a relationship is intentionally not public, the run-owned design must
   record that as an explicit SAFRS decision and replacement contract
+
+For DB-backed read-side query or summary data:
+
+- if the rows are still stable enough to list, show, filter, sort, or drill
+  into, the preferred contract is a read-only SAFRS resource backed by a
+  mapped table/view/selectable model
+- if the need is parameterized retrieval or operation-style querying, the
+  preferred contract is `jsonapi_rpc`
+- a hand-built custom endpoint is an exception lane, not the default
 
 ## Runtime discovery rule
 

@@ -27,6 +27,15 @@ Custom read-model, ops, summary, or service endpoints may supplement that surfac
 
 Do not invent sibling endpoints that re-expose related database data outside the owning resource when SAFRS already has a standard lane for that need.
 
+For DB-backed summary, dashboard, or join-heavy row data that users still need
+to list, inspect, filter, sort, or drill into, prefer a read-only SQLAlchemy
+model mapped to a table, view, or selectable and expose that through SAFRS
+instead of inventing a custom endpoint.
+
+For parameterized retrieval or operation-style needs that are not naturally a
+first-class resource, prefer `@jsonapi_rpc` before inventing a custom
+endpoint.
+
 Bad pattern:
 
 - `/api/orders/{id}/customer_summary`
@@ -57,7 +66,29 @@ If yes:
 - expose it through SAFRS
 - make it discoverable in live `/jsonapi.json`
 
-### 2. Real relationship
+### 2. Read-only mapped read model
+
+Question:
+
+- Is this DB-backed query, summary, join, or aggregate data still row-shaped
+  enough that users need to browse, filter, sort, or drill into it like a
+  resource?
+
+If yes:
+
+- prefer a read-only SQLAlchemy model mapped to a table, SQL view, or
+  selectable
+- expose that model through SAFRS as the canonical read-side contract
+- keep the route resource-shaped instead of inventing a hand-built endpoint
+
+Good fits:
+
+- denormalized dashboard rows with stable identifiers
+- join-heavy reporting rows that still behave like browseable records
+- read-only aggregate records that should still paginate, sort, or show item
+  detail
+
+### 3. Real relationship
 
 Question:
 
@@ -73,7 +104,7 @@ If yes:
 Do not treat a scalar foreign key as the main relationship API.
 A scalar foreign key may remain a write convenience, but ordinary relational reads should come from the actual SAFRS relationship surface.
 
-### 3. Include path
+### 4. Include path
 
 Question:
 
@@ -87,7 +118,7 @@ If yes:
 
 Do not create a custom endpoint just because the UI wants one screen with parent and related data together.
 
-### 4. Computed resource field
+### 5. Computed resource field
 
 Question:
 
@@ -106,11 +137,12 @@ Good fits:
 - masked or facade fields
 - human-readable summaries that belong with the resource
 
-### 5. Explicit action or operation
+### 6. Explicit action, operation, or parameterized query
 
 Question:
 
-- Is the API need an operation rather than a resource or relationship read?
+- Is the API need an operation, custom query, or parameterized retrieval
+  rather than a resource or relationship read?
 
 If yes:
 
@@ -124,12 +156,16 @@ Good fits:
 - send mail
 - bulk transition
 - re-run a workflow step
+- filtered or parameterized retrieval that is not stable enough to become a
+  first-class resource
+- query helpers that belong to one resource or collection contract
 
-### 6. Stateless or custom endpoint
+### 7. Stateless or custom endpoint
 
 Question:
 
-- Is the need truly not a resource, relationship, include, computed attribute, or RPC?
+- Is the need truly not a resource, read-only mapped read model, relationship,
+  include, computed attribute, or RPC?
 
 Only then consider:
 
@@ -219,6 +255,10 @@ Reject the design if any of these are true:
 - a DB relationship is represented only by a scalar FK and a side endpoint
 - related record tabs depend on a custom endpoint even though the relation exists in the domain
 - a summary endpoint exists only because the author skipped the ORM relationship
+- DB-backed summary/query rows are pushed into a custom endpoint even though a
+  read-only mapped SAFRS model would fit
+- parameterized DB-backed retrieval is pushed into a custom endpoint without
+  first rejecting `@jsonapi_rpc`
 - a fake `/jsonapi.json` exists without real SAFRS model exposure
 - a normal DB-backed entity is delivered through raw SQL + hand-built JSON without an approved exception
 - a hidden relationship is replaced with a custom endpoint rather than documented with SAFRS visibility controls

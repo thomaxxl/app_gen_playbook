@@ -81,6 +81,7 @@ def collect_mechanism_preference_issues(repo_root: Path) -> list[dict[str, str]]
         repo_root / "playbook" / "roles" / "backend.md": [
             "skills/safrs-api-design/SKILL.md",
             "the normal SAFRS resource endpoint",
+            "read-only mapped table/view/selectable",
             "the normal SAFRS relationship endpoint",
             "include=...",
             "jsonapi_attr",
@@ -90,6 +91,7 @@ def collect_mechanism_preference_issues(repo_root: Path) -> list[dict[str, str]]
         repo_root / "playbook" / "roles" / "architect.md": [
             "skills/safrs-api-design/SKILL.md",
             "the normal SAFRS resource endpoint",
+            "table, view, or selectable",
             "the normal SAFRS relationship endpoint",
             "include=...",
             "@jsonapi_attr",
@@ -97,21 +99,28 @@ def collect_mechanism_preference_issues(repo_root: Path) -> list[dict[str, str]]
         ],
         repo_root / "specs" / "contracts" / "backend" / "data-sourcing.md": [
             "skills/safrs-api-design/SKILL.md",
+            "read-only mapped SQLAlchemy model",
+            "table, view, or selectable",
             "jsonapi_attr",
             "jsonapi_rpc",
             "DB-backed relationship design",
         ],
         repo_root / "specs" / "contracts" / "backend" / "validation.md": [
+            "view/selectable",
             "jsonapi_attr",
             "jsonapi_rpc",
             "relationship URL proof",
             "exception record",
         ],
         repo_root / "specs" / "contracts" / "backend" / "api-contract.md": [
+            "read-only SAFRS resource",
+            "table/view/selectable",
             "relationship URLs",
             "include=...",
         ],
         repo_root / "specs" / "contracts" / "backend" / "query-contract.md": [
+            "read-only SAFRS resource",
+            "preferred lane is `jsonapi_rpc`",
             "include=...",
             "relationship URLs",
         ],
@@ -133,6 +142,7 @@ def collect_exception_handling_issues(repo_root: Path) -> list[dict[str, str]]:
     required_tokens = {
         repo_root / "specs" / "architecture" / "data-sourcing-contract.md": [
             "which canonical SAFRS lane was rejected",
+            "table, view, or selectable",
             "@jsonapi_attr",
             "@jsonapi_rpc",
         ],
@@ -142,18 +152,21 @@ def collect_exception_handling_issues(repo_root: Path) -> list[dict[str, str]]:
         ],
         repo_root / "specs" / "architecture" / "resource-classification.md": [
             "Canonical SAFRS lane",
+            "view-backed resource",
             "Exception required",
             "Replacement contract",
         ],
         repo_root / "specs" / "backend-design" / "model-design.md": [
             "SAFRS model?",
             "EXPOSED_MODELS entry",
+            "Backing source",
             "Uses jsonapi_attr?",
             "Uses jsonapi_rpc?",
             "Exception id",
         ],
         repo_root / "specs" / "backend-design" / "resource-exposure-policy.md": [
             "Canonical SAFRS resource path",
+            "SAFRS backing lane",
             "Custom endpoint supplements?",
             "Why ordinary SAFRS is insufficient",
         ],
@@ -180,6 +193,37 @@ def collect_exception_handling_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in tokens:
             if _normalized(token) not in normalized:
                 issues.append(_issue(repo_root, path, f"missing exception-handling token: {token}"))
+
+    run_artifact_paths = (
+        repo_root / "runs" / "current" / "artifacts" / "architecture" / "data-sourcing-contract.md",
+        repo_root / "runs" / "current" / "artifacts" / "backend-design" / "model-design.md",
+        repo_root / "runs" / "current" / "artifacts" / "backend-design" / "resource-exposure-policy.md",
+    )
+    custom_markers = (
+        "custom endpoint",
+        "/api/ops/",
+        "api-read-model",
+        "read-model endpoint",
+        "aggregate endpoint",
+    )
+    for path in run_artifact_paths:
+        text = _read(path)
+        if not text:
+            continue
+        normalized_lower = _normalized(text).lower()
+        if not any(marker in normalized_lower for marker in custom_markers):
+            continue
+        if "jsonapi_rpc" in normalized_lower:
+            continue
+        if "view" in normalized_lower or "selectable" in normalized_lower:
+            continue
+        issues.append(
+            _issue(
+                repo_root,
+                path,
+                "custom DB-backed endpoint/read-model record does not document why a view-backed SAFRS resource or jsonapi_rpc was rejected",
+            )
+        )
     return issues
 
 

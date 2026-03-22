@@ -140,6 +140,11 @@ MUST treat the canonical API surface as:
 - a mapped SQLAlchemy model or relationship
 - exposed through SAFRS resource and relationship URLs
 
+For DB-backed summary/query rows that are still browseable, filterable, or
+drillable like records, the Architect MUST also consider a read-only mapped
+table/view/selectable model exposed through SAFRS before approving a custom
+endpoint.
+
 Custom read-model, summary, dashboard, or `/api/ops/` endpoints MAY
 supplement that surface, but they MUST NOT replace it.
 
@@ -147,6 +152,7 @@ Before approving a custom endpoint or non-default API lane for DB-backed
 data, the Architect MUST record why the need is not satisfied by:
 
 - the normal SAFRS resource endpoint
+- a mapped read-only SAFRS resource over a table, view, or selectable
 - the normal SAFRS relationship endpoint
 - `include=...`
 - `@jsonapi_attr`

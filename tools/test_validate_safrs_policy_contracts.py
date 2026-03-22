@@ -55,6 +55,42 @@ class ValidateSafrsPolicyContractsTests(unittest.TestCase):
             self.assertTrue(any("include=" in issue["reason"] for issue in issues))
             self.assertTrue(any("relationship coverage" in issue["reason"] for issue in issues))
 
+    def test_exception_validator_flags_custom_db_endpoint_without_view_or_rpc_rejection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "# Resource Exposure Policy\n\ncustom endpoint supplements? yes\n/api/ops/orders/customer_summary\n",
+            )
+
+            issues = collect_exception_handling_issues(repo_root)
+            self.assertTrue(
+                any("view-backed SAFRS resource or jsonapi_rpc" in issue["reason"] for issue in issues)
+            )
+
+    def test_exception_validator_accepts_custom_db_endpoint_when_view_or_rpc_rejection_is_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "\n".join(
+                    [
+                        "# Resource Exposure Policy",
+                        "custom endpoint supplements? yes",
+                        "/api/ops/orders/customer_summary",
+                        "Why ordinary SAFRS is insufficient: jsonapi_rpc rejected for list/show/filter semantics; view-backed resource rejected because stable identifiers do not exist",
+                    ]
+                )
+                + "\n",
+            )
+
+            issues = collect_exception_handling_issues(repo_root)
+            self.assertFalse(
+                any("view-backed SAFRS resource or jsonapi_rpc" in issue["reason"] for issue in issues)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

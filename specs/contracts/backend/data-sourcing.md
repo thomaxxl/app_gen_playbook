@@ -15,16 +15,27 @@ because it is not a simple CRUD row.
 The backend MAY satisfy UI data needs through one of these approved lanes:
 
 - standard JSON:API resources
+- read-only SAFRS resources backed by mapped SQLAlchemy tables, views, or
+  selectables
 - backend-computed read-model endpoints
 - JSON:API top-level or resource-level `meta`
-- dedicated operational endpoints when the data is not a good fit for CRUD
-  resources
+- `jsonapi_rpc` for explicit parameterized queries or operations
+- dedicated operational endpoints only when the data is not a good fit for a
+  SAFRS resource, view-backed resource, `jsonapi_rpc`, or JSON:API metadata
 
 For persisted database-backed tables and relationships that are user-visible or
 operator-visible, the default approved lane is the standard JSON:API resource
 and relationship surface exposed through SAFRS. Read-model or operational
 endpoints supplement that lane when needed, but MUST NOT silently replace it
 without an explicit architecture exception.
+
+For DB-backed summary, reporting, or join-heavy row data that users still need
+to list, filter, sort, or drill into like records, the preferred secondary
+lane is a read-only mapped SQLAlchemy model over a table, view, or selectable
+exposed through SAFRS. A hand-built endpoint is not the default for that case.
+
+For parameterized retrieval or custom query behavior that does not justify a
+first-class resource, the preferred lane is `jsonapi_rpc`.
 
 The default implementation lane for those resources is also mapped SQLAlchemy
 ORM models and relationships. A custom read-model endpoint does not justify
@@ -58,6 +69,7 @@ For persisted DB-backed data, every approved custom endpoint exception MUST
 explain why the need is not satisfied by:
 
 - the ordinary SAFRS resource endpoint
+- a mapped read-only SAFRS resource over a table, view, or selectable
 - the ordinary SAFRS relationship endpoint
 - `include=...`
 - `jsonapi_attr`

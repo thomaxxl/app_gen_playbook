@@ -61,6 +61,13 @@ The frontend and backend MUST NOT assume a custom summary endpoint is the
 normal read contract for a DB relationship when the same relationship exists in
 SAFRS.
 
+For DB-backed query or reporting data that is still row-like and needs normal
+list/show/filter/sort behavior, the preferred lane is a read-only SAFRS
+resource backed by a mapped table/view/selectable model.
+
+For parameterized retrieval or query helpers that do not justify a first-class
+resource, the preferred lane is `jsonapi_rpc`.
+
 ## Filtering
 
 Supported SAFRS modes:

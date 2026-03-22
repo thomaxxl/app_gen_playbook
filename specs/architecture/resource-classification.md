@@ -21,7 +21,7 @@ The real artifact MUST include a table with at least these columns:
 
 | Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Canonical SAFRS lane | Relationship-native? | Exception required | Replacement contract | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | resource / relationship / include / jsonapi_attr / jsonapi_rpc | yes/no | yes/no | replace or none | Replace this row |
+| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | resource / view-backed resource / relationship / include / jsonapi_attr / jsonapi_rpc | yes/no | yes/no | replace or none | Replace this row |
 
 Allowed `Class` values SHOULD be selected from:
 
@@ -46,7 +46,9 @@ The real artifact MUST record any candidate resources that were explicitly
 deferred from the first version.
 
 For any DB-backed concept that does not use the ordinary SAFRS lane, the real
-artifact MUST also record which canonical SAFRS option was rejected and why.
+artifact MUST also record which canonical SAFRS option was rejected and why,
+including whether a view-backed resource or `jsonapi_rpc` was considered and
+rejected.
 
 ## Concept-to-resource mapping notes
 

@@ -30,7 +30,9 @@ pages, custom views, dashboards, generated CRUD summaries, and other
 non-trivial surfaces as exactly one of:
 
 - `api-resource`
-  standard resource data fetched through the normal API/resource lane
+  standard SAFRS resource data fetched through the normal API/resource lane,
+  including read-only view/selectable-backed SAFRS resources when the data is
+  still resource-shaped
 - `api-read-model`
   backend-computed or aggregated dynamic data exposed for UI consumption
 - `api-meta`
@@ -58,13 +60,15 @@ replacement contract.
 
 The Architect MAY classify such data as `api-read-model` or `api-meta` only
 when the run-owned artifacts record why ordinary SAFRS resource exposure is not
-the right primary contract for that surface.
+the right primary contract for that surface, and why a read-only view/
+selectable-backed SAFRS resource or `jsonapi_rpc` was not the better fit.
 
 For any persisted DB-backed entity or relationship that users or operators need
 to list, inspect, filter, sort, include, or drill into, the real artifact MUST
 also record why the need was not satisfied by:
 
 - the normal SAFRS resource endpoint
+- a mapped read-only SAFRS resource over a table, view, or selectable
 - the normal SAFRS relationship endpoint
 - `include=...`
 - `@jsonapi_attr`

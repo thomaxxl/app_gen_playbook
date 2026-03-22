@@ -61,8 +61,11 @@ The run is blocked if any of these are true:
   replaced by custom summary endpoints or hand-built JSON routes without an
   approved architecture exception
 - a custom endpoint for DB-backed relational data was approved without
-  documenting why resource, relationship, include, `jsonapi_attr`, or
-  `jsonapi_rpc` was insufficient
+  documenting why resource, read-only SAFRS view/selectable resource,
+  relationship, include, `jsonapi_attr`, or `jsonapi_rpc` was insufficient
+- DB-backed summary/query rows that should have been exposed as read-only
+  SAFRS view/selectable resources or `jsonapi_rpc` queries are instead
+  delivered through ad hoc custom endpoints without an approved exception
 - a custom DB-backed endpoint exists without quality evidence pointing to the
   run-owned SAFRS lane audit or explicit exception record
 - a SAFRS-family framework/client/rules bug was discovered during the run but

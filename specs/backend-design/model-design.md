@@ -33,9 +33,9 @@ each requirement as one of:
 
 The real artifact MUST include a table with this shape:
 
-| Resource | Exposed | SAFRS model? | EXPOSED_MODELS entry | Table | Core stored fields | Derived persisted fields | Schema prerequisite / migration / backfill | ORM relationship fields | Uses jsonapi_attr? | Uses jsonapi_rpc? | Read-only fields | Exception id | Notes |
+| Resource | Exposed | SAFRS model? | EXPOSED_MODELS entry | Backing source | Core stored fields | Derived persisted fields | Schema prerequisite / migration / backfill | ORM relationship fields | Uses jsonapi_attr? | Uses jsonapi_rpc? | Read-only fields | Exception id | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<resource>` | `yes/no/internal/singleton/deferred` | `yes/no` | `yes/no` | `<table_name>` | `<field list>` | `<field list or none>` | `<plan or none>` | `<relationship list>` | `yes/no with field list` | `yes/no with method list` | `<field list or none>` | `<exception id or none>` | `<notes>` |
+| `<resource>` | `yes/no/internal/singleton/deferred` | `yes/no` | `yes/no` | `<table/view/selectable/rpc-only/exception>` | `<field list>` | `<field list or none>` | `<plan or none>` | `<relationship list>` | `yes/no with field list` | `yes/no with method list` | `<field list or none>` | `<exception id or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row. It MUST NOT leave the table
 empty or implied.
@@ -59,6 +59,9 @@ The real artifact MUST also define:
 - for every resource, whether ordinary SAFRS resource, relationship,
   `jsonapi_attr`, or `jsonapi_rpc` satisfies the need before an exception is
   considered
+- for every DB-backed summary/query surface, whether it is implemented as a
+  read-only mapped model over a table/view/selectable, through `jsonapi_rpc`,
+  or by approved exception
 - for every persisted table-backed resource, whether it is implemented as a
   mapped SQLAlchemy ORM model or an approved exception, and why
 

@@ -170,25 +170,31 @@ before inventing a custom workaround.
 For DB-backed API-lane decisions in a SAFRS-based app, the Backend agent MUST
 load and apply `../../skills/safrs-api-design/SKILL.md` before approving any
 resource-versus-relationship-versus-include-versus-`jsonapi_attr`-versus-
-`jsonapi_rpc`-versus-exception decision.
+`jsonapi_rpc`-versus-view-model-versus-exception decision.
 
 Before approving a non-default API lane for DB-backed data, the Backend agent
 MUST answer this decision tree in order:
 
 1. Is this persisted DB row data? Use a real SAFRS resource.
-2. Is this a DB relationship between exposed resources? Use a real ORM
+2. Is this DB-backed summary/query row data that still needs list/show/filter/
+   sort/drill-down behavior? Use a read-only mapped table/view/selectable
+   model exposed through SAFRS.
+3. Is this a DB relationship between exposed resources? Use a real ORM
    relationship plus the generated SAFRS relationship URL, and declare the
    include path.
-3. Is this a derived field that belongs on the resource representation? Use
+4. Is this a derived field that belongs on the resource representation? Use
    `@jsonapi_attr`.
-4. Is this an explicit action or service-like operation? Use `@jsonapi_rpc`.
-5. Only if none of those fit should the design consider `JABase`, a read-model
+5. Is this an explicit action, parameterized retrieval, or service-like
+   query? Use `@jsonapi_rpc`.
+6. Only if none of those fit should the design consider `JABase`, a read-model
    endpoint, or another custom API surface, and that choice needs a documented
    exception.
 
 The required rejected-lane check is explicit:
 
 - could the need be satisfied by the normal SAFRS resource endpoint?
+- could the need be satisfied by a mapped read-only SAFRS resource over a
+  table, view, or selectable?
 - could the need be satisfied by the normal SAFRS relationship endpoint?
 - could the need be satisfied by `include=...`?
 - could the need be satisfied by `jsonapi_attr`?
