@@ -1896,6 +1896,8 @@ fatal_error_requires_operator_escalation() {
 write_operator_action_required_for_fatal_escalation() {
   local title="$1"
   local body="$2"
+  local rendered_body
+  printf -v rendered_body '%b' "$body"
   mkdir -p "$ORCH_ROOT"
   cat > "$OPERATOR_ACTION_REQUIRED_MD" <<EOF
 # Operator Action Required
@@ -1914,7 +1916,7 @@ Notes:
 - resolve the underlying operator-owned issue, then update or remove this file
   and resume the run if appropriate
 
-$body
+$rendered_body
 EOF
 }
 
@@ -2047,7 +2049,7 @@ clear_execution_prereqs_operator_action_required() {
   [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]] || return 1
   [[ -f "$RUN_ROOT/artifacts/devops/execution-prereqs.md" ]] || return 1
 
-  grep -q "Execution environment preflight failed before run startup." "$OPERATOR_ACTION_REQUIRED_MD" || return 1
+  grep -Eq '(^Execution environment preflight failed before run startup\.$|^- execution environment preflight failed before run startup$)' "$OPERATOR_ACTION_REQUIRED_MD" || return 1
   if ! grep -q '^status: ready-for-handoff' "$RUN_ROOT/artifacts/devops/execution-prereqs.md"; then
     return 1
   fi
