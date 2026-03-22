@@ -4,6 +4,7 @@ status: stub
 depends_on:
   - brief.md
   - workflows.md
+  - conceptual-domain-model.md
   - domain-glossary.md
 unresolved:
   - replace with run-specific business rules
@@ -100,6 +101,17 @@ Manager SHOULD keep it short, explicit, and glossary-aligned.
 
 When a rule has multiple conditions and outcomes, the Product Manager SHOULD
 use a markdown decision table instead of long prose.
+
+## Domain Vocabulary Used In Rules
+
+The run-owned file SHOULD align rule wording with:
+
+- `conceptual-domain-model.md` for concept names, lifecycle/state names, and
+  business events
+- `domain-glossary.md` for approved vocabulary and synonym control
+
+`Applies To` SHOULD use conceptual concept/state names where that is clearer
+than low-level field notation.
 
 ## Worked examples
 

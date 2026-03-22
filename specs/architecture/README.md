@@ -8,6 +8,8 @@ Rules:
 - These files are playbook source and MUST remain generic.
 - Architect run output MUST be written under
   `../../runs/current/artifacts/architecture/`.
+- The architecture layer interprets Product-owned conceptual and scope
+  artifacts into cross-layer contracts.
 - `../../examples/` MAY be consulted as a runnable reference-example library,
   but it MUST NOT be treated as the architecture source of truth.
 

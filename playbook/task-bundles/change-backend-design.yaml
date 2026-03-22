@@ -9,6 +9,7 @@ always_load:
 required_phase:
   - playbook/process/phases/phase-I4-design-delta.md
 required_artifacts:
+  - runs/current/artifacts/product/conceptual-domain-model.md
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/backend-design/resource-exposure-policy.md
   - runs/current/artifacts/backend-design/relationship-map.md

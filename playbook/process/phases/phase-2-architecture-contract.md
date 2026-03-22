@@ -9,6 +9,12 @@ Convert product requirements into a stable cross-layer contract.
 ## Activities
 
 - verify the product package is complete enough for architecture decisions
+- map conceptual business concepts to application resources explicitly instead
+  of inferring them from CRUD shape alone
+- record where one business concept maps to multiple resources or several
+  concepts collapse into one resource
+- record any domain-area or bounded-context notes that affect naming or
+  resource boundaries
 - use `user-stories.md` and `traceability-matrix.md` as first-class inputs,
   not only workflow or page summaries
 - classify the run as starter, rename-only, or non-starter
@@ -51,6 +57,7 @@ If the run differs from the starter trio, the Architect MUST read
 
 ## Exit criteria
 
+- concept-to-resource mapping is explicit wherever the mapping is not 1:1
 - no contradictory contracts remain
 - each later role can work without guessing
 - user-story scope, workflow depth, permission context, and review obligations

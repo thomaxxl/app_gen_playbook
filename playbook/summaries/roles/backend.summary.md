@@ -13,7 +13,9 @@ Always load:
   - `../../process/read-sets/backend-change-delta.md`
 
 This role controls backend-design artifacts and backend implementation. It
-does not invent product scope, UX behavior, or packaging decisions.
+maps the approved conceptual and architectural model into ORM models, SAFRS
+exposure, rule enforcement, and backend lifecycle behavior. It does not
+invent product scope, UX behavior, or packaging decisions.
 
 Load UX or optional feature-pack material only when the current task requires
 it and the load plan allows it.

@@ -3,6 +3,7 @@ phase: phase-1-product-definition
 status: stub
 depends_on:
   - brief.md
+  - conceptual-domain-model.md
 unresolved:
   - replace with run-specific workflows
 last_updated_by: playbook
@@ -20,6 +21,9 @@ Each workflow MUST include:
 - steps
 - success outcome
 - failure or validation outcome
+- touched concept IDs
+- business event IDs, when relevant
+- lifecycle/state transition notes, when relevant
 - touched resources
 - related user story IDs
 - explicit non-goals, if any

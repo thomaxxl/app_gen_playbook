@@ -10,6 +10,7 @@ required_phase:
   - playbook/process/phases/phase-I3-architecture-and-contract-delta.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/conceptual-domain-model.md
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/custom-pages.md
   - runs/current/artifacts/architecture/capability-profile.md

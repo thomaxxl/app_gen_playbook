@@ -20,6 +20,7 @@ conditional_artifacts:
     - examples/README.md
 reference_only:
   - specs/product/README.md
+  - specs/product/conceptual-domain-model.md
   - specs/product/user-stories.md
   - specs/product/sample-data.md
   - specs/product/custom-pages.md

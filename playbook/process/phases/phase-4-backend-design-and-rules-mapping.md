@@ -12,6 +12,12 @@ and tests.
 - start from the Product Manager resource inventory and resource behavior
   matrix, user stories, and traceability matrix, not only the glossary and
   rule narrative
+- map conceptual business concepts, relationships, lifecycle models, and
+  business events to backend structures explicitly
+- record every non-1:1 mapping between conceptual concepts and backend
+  models/resources
+- distinguish business events from implementation choices such as rule
+  triggers, audit rows, RPCs, or integration events
 - classify which product concepts become exposed SAFRS resources
 - treat persisted database-backed product or operator concepts as SAFRS
   resources by default unless an explicit documented exception applies
@@ -65,6 +71,7 @@ and tests.
 
 - every PM resource is classified as exposed, internal, singleton/settings,
   deferred, or omitted
+- concept-to-model mapping is explicit wherever the mapping is not 1:1
 - every exposed resource has an explicit mutability policy
 - every approved rule ID maps to backend implementation and backend tests
 - every approved rule ID records the chosen LogicBank lane or justified

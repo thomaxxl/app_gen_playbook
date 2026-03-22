@@ -2,11 +2,12 @@ id: phase-1-product-definition
 title: Phase 1 - Product definition
 owners:
   - product_manager
-purpose: Produce an implementable product contract with stories, resources, rules, and acceptance hooks.
+purpose: Produce an implementable product contract with conceptual model, stories, resources, rules, and acceptance hooks.
 entry_milestones:
   - M0-framing-ready
 exit_milestone: M1-product-package-ready
 required_outputs:
+  - runs/current/artifacts/product/conceptual-domain-model.md
   - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/resource-inventory.md
   - runs/current/artifacts/product/resource-behavior-matrix.md
@@ -23,6 +24,7 @@ steps:
     requiredness: required
     outputs:
       artifacts:
+        - runs/current/artifacts/product/conceptual-domain-model.md
         - runs/current/artifacts/product/user-stories.md
         - runs/current/artifacts/product/resource-inventory.md
         - runs/current/artifacts/product/resource-behavior-matrix.md

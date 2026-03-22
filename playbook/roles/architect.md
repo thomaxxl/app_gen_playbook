@@ -119,6 +119,12 @@ The Architect owns and MUST maintain:
 - `../../runs/current/artifacts/architecture/data-sourcing-contract.md`
 - role-scoped change manifests under `../../runs/current/changes/*/role-loads/`
 
+The Architect MUST treat
+`../../runs/current/artifacts/product/conceptual-domain-model.md` as the
+upstream business-facing layer and map it explicitly into application/resource
+boundaries whenever concepts, states, relationships, or business events do not
+collapse cleanly into a 1:1 resource model.
+
 For persisted database-backed tables and relationships that are visible to the
 product or operator UX, the Architect MUST default the integration boundary to
 SQLAlchemy ORM plus SAFRS JSON:API resource and relationship exposure. The

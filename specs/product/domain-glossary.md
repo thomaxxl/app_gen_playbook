@@ -3,6 +3,7 @@ phase: phase-1-product-definition
 status: stub
 depends_on:
   - research-notes.md
+  - conceptual-domain-model.md
 unresolved:
   - replace with run-specific glossary
 last_updated_by: playbook
@@ -14,6 +15,9 @@ version at `../../runs/current/artifacts/product/domain-glossary.md`.
 
 Fill in:
 
+- concept glossary
+- business-event glossary
+- lifecycle/state glossary
 - resource glossary
 - important field glossary
 - derived-field glossary

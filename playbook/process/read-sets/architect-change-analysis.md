@@ -22,3 +22,7 @@ When the change packet marks a review-driven delta or baseline challenge,
 baseline alignment MUST be treated as comparison input only. Do not collapse the
 packet to a no-op unless the current app and cited evidence explicitly resolve
 the review findings.
+
+If the change packet marks concept, state, relationship, or business-event
+drift, the Architect MUST keep `conceptual-domain-model.md` in scope and update
+the concept-to-resource interpretation explicitly.

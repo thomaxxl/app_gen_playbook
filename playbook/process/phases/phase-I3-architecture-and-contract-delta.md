@@ -7,6 +7,11 @@ Lead: Architect
 Determine which contracts, capability decisions, and implementation lanes are
 affected by the change.
 
+When the change redefines concepts, states, relationships, or business
+events, the architecture delta MUST update the concept-to-resource
+interpretation and preserve any reopened lanes needed to keep the contracts
+aligned.
+
 If Product Manager marked the request as a baseline challenge or review-driven
 delta, Architect MUST preserve the reopened lanes needed to resolve those
 findings unless exact current evidence proves the raised issues are already
@@ -16,6 +21,7 @@ resolved. Matching the accepted baseline alone is not sufficient proof.
 
 - impact analysis
 - contract delta
+- updated concept-to-resource mapping when the conceptual model changed
 - compatibility classification
 - migration decision
 - role-load manifests under `runs/current/changes/<change_id>/role-loads/`

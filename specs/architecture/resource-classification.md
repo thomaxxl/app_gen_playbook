@@ -3,6 +3,7 @@ phase: phase-2-architecture-contract
 status: stub
 depends_on:
   - overview.md
+  - ../product/conceptual-domain-model.md
   - ../product/resource-inventory.md
   - ../product/resource-behavior-matrix.md
 unresolved:
@@ -46,3 +47,12 @@ deferred from the first version.
 
 For any DB-backed concept that does not use the ordinary SAFRS lane, the real
 artifact MUST also record which canonical SAFRS option was rejected and why.
+
+## Concept-to-resource mapping notes
+
+The real artifact MUST explicitly record:
+
+- which conceptual concept or concepts each important resource represents
+- any concept that splits into multiple resources and why
+- any resource that merges multiple concepts and why
+- any concept that is intentionally not represented as a first-class resource

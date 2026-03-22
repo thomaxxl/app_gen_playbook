@@ -78,6 +78,7 @@ for the current task and permitted by the load plan.
 Typical task-driven reads:
 
 - product/backend semantics:
+  `product/conceptual-domain-model.md`,
   `product/resource-inventory.md`, `product/resource-behavior-matrix.md`,
   `product/workflows.md`, `product/business-rules.md`,
   `product/sample-data.md`, `product/domain-glossary.md`
@@ -103,10 +104,10 @@ MUST also read:
 
 - [../../runs/current/artifacts/architecture/domain-adaptation.md](../../runs/current/artifacts/architecture/domain-adaptation.md)
 
-Backend design MUST start from the Product Manager's resource inventory and
-resource behavior matrix, then reconcile those artifacts with the Architect's
-resource classification before choosing exposure shape, mutability, or query
-behavior for any resource.
+Backend design MUST start from the Product Manager's conceptual-domain-model,
+resource inventory, and resource behavior matrix, then reconcile those
+artifacts with the Architect's resource classification before choosing
+exposure shape, mutability, or query behavior for any resource.
 
 The Backend agent MUST also treat
 `../../runs/current/artifacts/architecture/data-sourcing-contract.md` as

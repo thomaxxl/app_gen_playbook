@@ -14,6 +14,8 @@ point, but it is no longer evidence that the request needs no change.
 
 ## Outputs
 
+- conceptual-domain-model delta when the change affects concepts, concept
+  relationships, lifecycle/state models, or business events
 - updated user-story delta
 - workflow delta
 - business-rules delta

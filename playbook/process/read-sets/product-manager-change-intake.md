@@ -23,3 +23,7 @@ For review-style change requests that challenge the current accepted app,
 `acceptance-criteria.md` and `custom-pages.md` SHOULD stay in scope even if the
 current implementation still matches the accepted baseline, because the review
 is questioning whether that baseline remains acceptable.
+
+If the change affects business concepts, lifecycle/state models, or business
+events, `conceptual-domain-model.md` MUST stay in scope for the change packet
+instead of inferring the delta only from resources or routes.

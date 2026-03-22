@@ -28,3 +28,7 @@ role-load manifest when it exists, the exact backend-design and architecture
 artifacts explicitly affected by the change, and the `app/backend/` or
 `app/rules/` paths named by the inbox item. Do not read artifact or
 implementation trees broadly.
+
+If the change redefines business concepts, lifecycle/state meaning, or business
+events, keep `product/conceptual-domain-model.md` in scope instead of inferring
+the design delta only from resource or ORM artifacts.

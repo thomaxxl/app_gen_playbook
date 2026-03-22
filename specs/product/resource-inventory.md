@@ -4,6 +4,7 @@ status: stub
 depends_on:
   - brief.md
   - input-interpretation.md
+  - conceptual-domain-model.md
 unresolved:
   - replace with run-specific resource inventory
 last_updated_by: playbook
@@ -15,6 +16,10 @@ version at `../../runs/current/artifacts/product/resource-inventory.md`.
 
 For each resource, define:
 
+- backing business concept ID or IDs
+- whether the resource is a direct concept representation, supporting
+  transaction/process artifact, reference/status resource, or
+  read-model/dashboard artifact
 - resource name
 - purpose
 - primary user or users
@@ -27,3 +32,4 @@ For each resource, define:
 - rule touchpoints
 - notes on whether generated pages are sufficient or custom-page context is
   likely required
+- notes on any non-1:1 mapping between concept and resource

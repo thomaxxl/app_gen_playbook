@@ -3,6 +3,7 @@ phase: phase-2-architecture-contract
 status: stub
 depends_on:
   - ../product/brief.md
+  - ../product/conceptual-domain-model.md
 unresolved:
   - replace with run-specific architecture overview
 last_updated_by: playbook
@@ -28,6 +29,25 @@ The real artifact MUST state:
 
 The real artifact MUST name the main business resources and the reason they
 exist.
+
+## Domain areas and concept interpretation
+
+The real artifact MUST define:
+
+- the main domain areas carried forward from `conceptual-domain-model.md`
+- any terminology split that affects architecture boundaries
+- any concept that maps non-trivially into the application resource model
+
+## Concept-to-resource mapping notes
+
+The real artifact MUST record:
+
+- concepts that become first-class resources
+- concepts that become singleton/settings handling
+- concepts that become supporting transaction records
+- concepts that remain read-model/dashboard only
+- any one-to-many or many-to-one mapping between conceptual concepts and app
+  resources
 
 ## House-style fit
 

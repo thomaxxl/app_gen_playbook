@@ -2,6 +2,7 @@ owner: backend
 phase: phase-4-backend-design-and-rules-mapping
 status: stub
 depends_on:
+  - ../product/conceptual-domain-model.md
   - ../product/domain-glossary.md
   - ../architecture/resource-naming.md
 unresolved:
@@ -60,6 +61,26 @@ The real artifact MUST also define:
   considered
 - for every persisted table-backed resource, whether it is implemented as a
   mapped SQLAlchemy ORM model or an approved exception, and why
+
+## Concept-to-model mapping
+
+The real artifact MUST include a section that maps conceptual business
+concepts into backend realization.
+
+The section MUST record:
+
+- concepts that map directly to one model/resource
+- concepts that split into multiple models/resources
+- models/resources that combine multiple concepts
+- conceptual relationships that become ORM relationships
+- business events that become state transitions, rule enforcement points,
+  audit records, RPCs, or other backend mechanisms
+
+Suggested table shape:
+
+| Concept or Event ID | Name | Backend realization | Model / Value Object / Read Model / Rule / RPC / Audit | Notes |
+| --- | --- | --- | --- | --- |
+| `C-001` | Request | direct model | `Request` model | Replace this row |
 
 Persisted database-backed tables that are product-facing or operator-facing
 default to `Exposed = yes`. Any `no`, `internal`, `singleton`, or `deferred`

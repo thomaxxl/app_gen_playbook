@@ -20,6 +20,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 
 - product framing
 - sparse-input interpretation
+- conceptual domain model
 - resource inventory and CRUD expectations
 - user stories and workflows
 - actor coverage, story taxonomy, and scenario depth
@@ -207,6 +208,12 @@ It is the required human-readable quality pass proving that current-release
 stories are concrete, independently testable, breadth-complete, and free of
 hidden implementation leakage before Architecture starts from the Product
 package.
+
+The Product Manager MUST also author
+`../../runs/current/artifacts/product/conceptual-domain-model.md` as the
+business-facing concept, lifecycle, relationship, and business-event layer.
+That artifact MUST stay separate from resource inventory, route naming, ORM
+design, SAFRS exposure, or other implementation-only structures.
 
 Use the generic product templates under
 [../../specs/product/README.md](../../specs/product/README.md) when producing

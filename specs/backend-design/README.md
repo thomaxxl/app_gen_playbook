@@ -10,6 +10,8 @@ Rules:
 - `../../examples/` MAY be consulted as a runnable reference-example library,
   but it MUST NOT replace run-owned backend-design artifacts or the maintained
   runtime baseline.
+- Backend-design artifacts turn the approved conceptual and architectural
+  model into model, relationship, rule, and exposure design.
 - routing-first agents SHOULD start from the Backend summary and the current
   backend task bundle before loading individual template files
 

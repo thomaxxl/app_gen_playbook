@@ -8,6 +8,12 @@ Turn business intent into an implementable product definition.
 
 ## Activities
 
+- define a business-facing conceptual domain model distinct from resources and
+  database structure
+- define the main business concepts, concept relationships, lifecycle/state
+  models, and business events
+- distinguish business concepts from application resources, admin screens, and
+  backend persistence structures
 - write user stories or scenarios
 - build an actor-by-capability coverage matrix instead of a flat story list
 - normalize that breadth into a `Capability Coverage` table keyed by actor and
@@ -41,6 +47,7 @@ Turn business intent into an implementable product definition.
 - completed `runs/current/artifacts/product/input-interpretation.md` when
   input was sparse or partial
 - completed `runs/current/artifacts/product/research-notes.md`
+- `runs/current/artifacts/product/conceptual-domain-model.md`
 - completed `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
@@ -58,6 +65,10 @@ Turn business intent into an implementable product definition.
 ## Exit criteria
 
 - desired user-facing behavior is explicit
+- the business-facing conceptual model is explicit enough that downstream
+  roles do not have to infer core concepts from CRUD resources alone
+- important concept relationships, lifecycle states, and business events are
+  explicit
 - business rules exist in human-readable controlled language
 - `runs/current/artifacts/product/business-rules.md` is no longer a stub
 - `runs/current/artifacts/product/business-rules.md` includes a rule index

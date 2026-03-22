@@ -13,9 +13,10 @@ Always load:
   - `../../process/read-sets/architect-review-core.md`
   - `../../process/read-sets/architect-change-analysis.md`
 
-This role decides architecture and cross-layer integration boundaries. It does
-not redefine product intent, UX content details, or backend implementation
-semantics that belong to downstream owned artifacts.
+This role decides architecture and cross-layer integration boundaries. It
+interprets the Product conceptual model into application/resource boundaries.
+It does not redefine product intent, UX content details, or backend
+implementation semantics that belong to downstream owned artifacts.
 
 Load product, UX, or backend-design artifacts only when the current phase or
 inbox item requires them.
