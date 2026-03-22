@@ -35,9 +35,13 @@ class CheckResult:
     optional: bool = False
 
 
+def app_workspace_path(repo_root: Path) -> Path:
+    return repo_root / "app"
+
+
 def load_runtime_env(repo_root: Path) -> dict[str, str]:
     result: dict[str, str] = {}
-    runtime_env_path = repo_root / "app" / ".runtime.local.env"
+    runtime_env_path = app_workspace_path(repo_root) / ".runtime.local.env"
     if not runtime_env_path.exists():
         return result
 
@@ -61,7 +65,7 @@ def load_runtime_env(repo_root: Path) -> dict[str, str]:
 def resolve_app_relative_path(repo_root: Path, raw_path: str) -> Path:
     candidate = Path(raw_path).expanduser()
     if not candidate.is_absolute():
-        candidate = repo_root / "app" / candidate
+        candidate = app_workspace_path(repo_root) / candidate
     return candidate.resolve()
 
 
@@ -89,7 +93,7 @@ def backend_venv_dir(repo_root: Path) -> Path:
     raw_candidate = runtime_env_value(repo_root, "BACKEND_VENV")
     if raw_candidate:
         return resolve_app_relative_path(repo_root, raw_candidate)
-    return repo_root / "app" / "backend" / ".venv"
+    return app_workspace_path(repo_root) / "backend" / ".venv"
 
 
 def backend_python_path(repo_root: Path) -> Path:
@@ -100,7 +104,7 @@ def frontend_node_modules_path(repo_root: Path) -> Path:
     raw_candidate = runtime_env_value(repo_root, "FRONTEND_NODE_MODULES_DIR")
     if raw_candidate:
         return resolve_app_relative_path(repo_root, raw_candidate)
-    return repo_root / "app" / "frontend" / "node_modules"
+    return app_workspace_path(repo_root) / "frontend" / "node_modules"
 
 
 def frontend_tool_path(repo_root: Path, name: str) -> Path:
@@ -108,11 +112,45 @@ def frontend_tool_path(repo_root: Path, name: str) -> Path:
 
 
 def frontend_safrs_jsonapi_client_source_path(repo_root: Path) -> Path:
-    return repo_root / "app" / "tmp" / "safrs-jsonapi-client"
+    return app_workspace_path(repo_root) / "tmp" / "safrs-jsonapi-client"
 
 
 def backend_requirements_path(repo_root: Path) -> Path:
-    return repo_root / "app" / "backend" / "requirements.txt"
+    return app_workspace_path(repo_root) / "backend" / "requirements.txt"
+
+
+def check_app_workspace(repo_root: Path) -> CheckResult:
+    app_path = app_workspace_path(repo_root)
+    if app_path.exists():
+        if app_path.is_symlink():
+            return CheckResult(
+                "app_workspace",
+                "ok",
+                f"app workspace linked at {app_path} -> {app_path.resolve()}",
+            )
+        return CheckResult("app_workspace", "ok", f"app workspace located at {app_path}")
+
+    detail_lines = []
+    if app_path.is_symlink():
+        detail_lines.extend(
+            [
+                f"app workspace symlink is broken: {app_path}",
+                "create the app workspace target and relink it before startup, for example:",
+                f"    rm -f {app_path}",
+                "    mkdir -p /absolute/path/to/generated-app",
+                f"    ln -s /absolute/path/to/generated-app {app_path}",
+            ]
+        )
+    else:
+        detail_lines.extend(
+            [
+                f"app workspace expected at {app_path}",
+                "create the app workspace and symlink it into the repo before startup, for example:",
+                "    mkdir -p /absolute/path/to/generated-app",
+                f"    ln -s /absolute/path/to/generated-app {app_path}",
+            ]
+        )
+    return CheckResult("app_workspace", "blocked", "\n".join(detail_lines))
 
 
 def backend_prereq_stamp_path(repo_root: Path) -> Path:
@@ -348,7 +386,7 @@ def check_node_modules(repo_root: Path) -> CheckResult:
 
 
 def check_frontend_preview(repo_root: Path) -> CheckResult:
-    package_json = repo_root / "app" / "frontend" / "package.json"
+    package_json = app_workspace_path(repo_root) / "frontend" / "package.json"
     if not package_json.exists():
         return CheckResult("frontend_preview", "blocked", f"missing frontend package.json: {package_json}")
 
@@ -541,6 +579,7 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     results = [
+        check_app_workspace(repo_root),
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),

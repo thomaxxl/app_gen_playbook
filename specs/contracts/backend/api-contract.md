@@ -70,6 +70,9 @@ Instead, the implementation MUST:
   treated as read-only by clients
 - starter error responses are only required to expose a readable top-level
   message such as `errors[].title` and `errors[].detail`
+- expected business-rule or validation failures MUST leave the backend as
+  JSON:API `4xx`, not `500`, and the canonical frontend-visible message is
+  `errors[0].detail`
 - field-pointer semantics are out of scope for the starter contract unless the
   project adds them explicitly
 

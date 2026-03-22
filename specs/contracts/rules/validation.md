@@ -51,6 +51,9 @@ Minimum expectation:
 
 - invalid item update returns HTTP `400`
 - the JSON:API `errors[0].detail` includes the constraint message
+- the generated test set also proves the shared expected-error normalization
+  seam converts representative LogicBank `ConstraintException` failures into
+  SAFRS `ValidationError`
 
 ## ORM-path validation
 

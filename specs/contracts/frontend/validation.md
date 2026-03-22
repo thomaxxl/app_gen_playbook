@@ -55,6 +55,9 @@ frontend package template before treating the playbook baseline as current.
   data-provider path, fetches one live or mocked collection payload through
   that provider, and proves a representative scalar field survives into row
   records
+- a direct frontend integration test also proves a rejected mutation with
+  JSON:API `errors[0].detail` surfaces that detail as the thrown provider
+  error message instead of collapsing to `Internal Server Error`
 - the real bootstrap path creates the base provider from
   `safrs-jsonapi-client`, not from a parallel local JSON:API client
 - the `admin.yaml` adaptation layer stays thin and preserves `endpoint`,

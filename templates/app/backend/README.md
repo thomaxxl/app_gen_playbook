@@ -21,22 +21,23 @@ Suggested copy order:
 
 1. `requirements.txt.md`
 2. `config.py.md`
-3. `db.py.md`
-4. `models.py.md`
-5. `../rules/rules.py.md`
-6. `bootstrap.py.md`
-7. `__init__.py.md`
-8. `app.py.md`
-9. `fastapi_app.py.md`
-10. `run.py.md`
-11. `conftest.py.md`
-12. `test_api_contract.py.md`
-13. `test_api_contract_fallback.py.md`
-14. `test_bootstrap.py.md`
-15. `../rules/test_rules.py.md`
-16. `../project/run.sh.md`
-17. `../project/README.app.md`
-18. `run_with_spa.py.md` if the app should serve a built SPA itself
-19. `files/README.md` plus the `files/` snippets if the app supports uploaded
+3. `errors.py.md`
+4. `db.py.md`
+5. `models.py.md`
+6. `../rules/rules.py.md`
+7. `bootstrap.py.md`
+8. `__init__.py.md`
+9. `app.py.md`
+10. `fastapi_app.py.md`
+11. `run.py.md`
+12. `conftest.py.md`
+13. `test_api_contract.py.md`
+14. `test_api_contract_fallback.py.md`
+15. `test_bootstrap.py.md`
+16. `../rules/test_rules.py.md`
+17. `../project/run.sh.md`
+18. `../project/README.app.md`
+19. `run_with_spa.py.md` if the app should serve a built SPA itself
+20. `files/README.md` plus the `files/` snippets if the app supports uploaded
     media
-20. `test_uploads.py.md` if the app supports uploaded media
+21. `test_uploads.py.md` if the app supports uploaded media

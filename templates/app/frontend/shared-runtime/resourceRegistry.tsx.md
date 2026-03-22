@@ -52,7 +52,6 @@ import {
   extractExecuteRecords,
   getRecordRelationValues,
   getDefaultRelationshipTabIndex,
-  getRelatedRecordLabel,
   RelatedRecordDialogLink,
   resolveRelationshipExecuteRequest,
   SingleRelationshipTab,
@@ -423,8 +422,6 @@ function OverviewGrid({
   items: DisplayItem[];
   resourceMeta: ResourceMeta;
 }) {
-  const schema = useAdminSchema();
-  const rawYaml = useRawAdminYaml();
   const record = useRecordContext<Record<string, unknown>>();
 
   if (!record) {
@@ -450,19 +447,6 @@ function OverviewGrid({
         }}
       >
         {items.map((item) => {
-          let value = "-";
-
-          if (item.kind === "relationship") {
-            const targetMeta = buildResourceMeta(
-              schema,
-              rawYaml,
-              item.relationship.targetResource,
-            );
-            value = getRelatedRecordLabel(record, item.relationship, targetMeta);
-          } else {
-            value = formatScalarValue(record[item.attribute.name], item.attribute.kind);
-          }
-
           return (
             <Box key={item.key}>
               <Typography
@@ -472,7 +456,16 @@ function OverviewGrid({
               >
                 {item.label}
               </Typography>
-              <Typography variant="body1">{value}</Typography>
+              {item.kind === "relationship" ? (
+                <RelatedRecordDialogLink
+                  parentRecord={record}
+                  relationship={item.relationship}
+                />
+              ) : (
+                <Typography variant="body1">
+                  {formatScalarValue(record[item.attribute.name], item.attribute.kind)}
+                </Typography>
+              )}
             </Box>
           );
         })}
@@ -843,6 +836,8 @@ Required relationship behavior:
   plain single-layout show renderer with deferred follow-up notes
 - generated list pages MUST render `toone` foreign-key-backed columns through
   `RelatedRecordDialogLink`, not raw scalar ids
+- generated show-page overview summaries MUST also render `toone`
+  relationship items through `RelatedRecordDialogLink`, not plain text labels
 - FK-backed scalar attributes that carry `attribute.relationship` metadata
   SHOULD be collapsed into one relationship display item so duplicate raw-FK
   columns are suppressed

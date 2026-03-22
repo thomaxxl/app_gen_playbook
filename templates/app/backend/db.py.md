@@ -12,12 +12,15 @@ starter backend.
 from __future__ import annotations
 
 from contextlib import contextmanager
+from pathlib import Path
 from types import SimpleNamespace
 
 import safrs
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
+
+from .errors import expected_validation_error_types, raise_expected_validation_error
 
 Base = declarative_base()
 
@@ -57,11 +60,17 @@ def bind_safrs_db(session_factory) -> None:
 
 
 @contextmanager
-def session_scope(session_factory):
+def session_scope(session_factory, *, expected_error_types=()):
     session = session_factory()
     try:
         yield session
         session.commit()
+    except expected_validation_error_types(expected_error_types) as exc:
+        session.rollback()
+        raise_expected_validation_error(
+            exc,
+            extra_expected_error_types=expected_error_types,
+        )
     except Exception:
         session.rollback()
         raise
@@ -75,5 +84,11 @@ Notes:
 - Enable SQLite foreign keys explicitly.
 - Remove the `scoped_session` in FastAPI request middleware.
 - Use `session_scope(...)` for bootstrap/seed and custom non-request code.
+- `session_scope(...)` is also the shared non-request seam for normalizing
+  narrow expected validation failures such as LogicBank
+  `ConstraintException`.
 - When using `scoped_session`, prefer `remove()` at scope exit so the current
   session is discarded from the registry instead of only being closed.
+- For custom endpoint/session code that introduces an app-local validation
+  class, pass it through `expected_error_types=(MyValidationError,)` instead
+  of creating a second error-mapping path.

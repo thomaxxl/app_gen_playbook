@@ -31,6 +31,8 @@ Bootstrap and other non-request code MUST use a managed helper like
 
 - commit on success
 - rollback on exception
+- normalize narrow expected validation failures such as LogicBank
+  `ConstraintException` into SAFRS `ValidationError`
 - close the session in all cases
 
 ## SAFRS request-time writes
@@ -58,6 +60,8 @@ If the app later adds custom non-SAFRS write endpoints:
 - use the same session factory
 - commit on success
 - rollback on failure
+- reuse the shared expected-error helper instead of inventing an ad hoc
+  JSON error payload
 - MUST NOT leave the session dirty after exceptions
 
 If the app adds custom file-upload endpoints:

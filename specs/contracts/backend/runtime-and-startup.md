@@ -21,6 +21,7 @@ spec.
 - `backend/src/my_app/app.py`
 - `backend/src/my_app/config.py`
 - `backend/src/my_app/db.py`
+- `backend/src/my_app/errors.py`
 - `backend/src/my_app/models.py`
 - `backend/src/my_app/rules.py`
 - `backend/src/my_app/bootstrap.py`
@@ -47,15 +48,16 @@ The backend MUST perform startup in this order:
 7. activate LogicBank with `activate_logic(session_factory)`
 8. run idempotent seed/bootstrap against the current DB
 9. create FastAPI app
-10. instantiate `SafrsFastAPI(app, prefix="/api")`
-11. expose models from `EXPOSED_MODELS`
-12. add request cleanup middleware that removes the scoped session
-13. expose `/docs`, `/jsonapi.json`, `/healthz`, and `/ui/admin/admin.yaml`
+10. install the narrow expected-validation handlers from `errors.py`
+11. instantiate `SafrsFastAPI(app, prefix="/api")`
+12. expose models from `EXPOSED_MODELS`
+13. add request cleanup middleware that removes the scoped session
+14. expose `/docs`, `/jsonapi.json`, `/healthz`, and `/ui/admin/admin.yaml`
 
 If the app includes uploaded files or media routes, it MUST also:
 
-14. include the custom file-upload and media router
-15. expose logical media routes under `/media/...` instead of raw storage paths
+15. include the custom file-upload and media router
+16. expose logical media routes under `/media/...` instead of raw storage paths
 
 If the app includes uploaded files, the backend source tree SHOULD also add:
 
@@ -103,6 +105,20 @@ That reconciliation MUST:
 
 The backend MUST NOT treat a provisional `admin.yaml endpoint` value as final
 merely because the app boots.
+
+## Expected validation failure boundary
+
+The generated backend MUST ship one shared expected-error normalization seam in
+`backend/src/my_app/errors.py`.
+
+That seam MUST:
+
+- normalize known expected business failures such as
+  `logic_bank.util.ConstraintException` into JSON:API `400`
+- preserve the human-readable message in `errors[0].detail`
+- stay narrow and explicit instead of catching broad `Exception`
+- be reused by custom FastAPI endpoints or `jsonapi_rpc` write paths when they
+  need the same expected-failure contract
 
 ## Canonical schema URL
 

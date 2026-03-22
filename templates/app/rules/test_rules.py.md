@@ -13,10 +13,13 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 import pytest
+from logic_bank.util import ConstraintException
+from safrs.errors import ValidationError
 import yaml
 
 from my_app import create_app
 from my_app.db import session_scope
+from my_app.errors import raise_expected_validation_error
 from my_app.models import Collection, Item, Status
 
 ENABLE_TESTCLIENT = os.getenv("MY_APP_ENABLE_TESTCLIENT") == "1"
@@ -58,6 +61,16 @@ def discovered_type_for_collection(client: TestClient, endpoint: str) -> str:
     resource_type = payload[0]["type"]
     assert isinstance(resource_type, str) and resource_type
     return resource_type
+
+
+def test_logicbank_constraint_exception_normalizes_to_validation_error():
+    with pytest.raises(ValidationError) as excinfo:
+        try:
+            raise ConstraintException("Customer credit limit cannot exceed 100000.00.")
+        except ConstraintException as error:
+            raise_expected_validation_error(error)
+
+    assert "Customer credit limit cannot exceed 100000.00." in str(excinfo.value)
 
 
 @TESTCLIENT_ONLY
@@ -209,6 +222,9 @@ Notes:
 
 - Keep this file aligned with the minimum matrix in `rules/validation.md`.
 - Cover at least one API-path failure and multiple ORM-path mutation stories.
+- Keep one non-HTTP regression proving the shared expected-error helper maps
+  representative LogicBank `ConstraintException` failures into SAFRS
+  `ValidationError`.
 - If the run uses `jsonapi_rpc`, a thin request wrapper, or another approved
   business entry path, add at least one test through that entry path in
   addition to the normal ORM/session proof.

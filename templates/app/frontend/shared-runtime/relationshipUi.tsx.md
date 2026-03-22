@@ -231,7 +231,9 @@ function normalizeEndpointToResource(
 
 export type RelationshipExecuteRequest = {
   action: string;
+  id: string | number;
   resource: string;
+  routePath: string;
   routeTemplate: string;
 };
 
@@ -248,35 +250,30 @@ function normalizeRelationshipRouteTemplate(
 export function resolveRelationshipExecuteRequest(
   schema: Schema,
   relationship: ResourceRelationshipMeta,
+  recordId: string | number | undefined,
 ): RelationshipExecuteRequest | null {
   const routeTemplate = normalizeRelationshipRouteTemplate(schema, relationship);
+  if (recordId === undefined || recordId === null || recordId === "") {
+    return null;
+  }
   const segments = routeTemplate.split("/").filter(Boolean);
   const placeholderIndex = segments.findIndex((segment) => segment === "{id}");
-  const fallbackResource = (
-    schema.resourceByType[relationship.parentResource]
-    || normalizeEndpointToResource(relationship.parentEndpoint, schema)
-  );
-
   if (placeholderIndex <= 0 || placeholderIndex >= segments.length - 1) {
-    if (!fallbackResource) {
-      return null;
-    }
-    return {
-      action: relationship.name,
-      resource: fallbackResource,
-      routeTemplate,
-    };
+    return null;
   }
 
-  const resource = segments.slice(0, placeholderIndex).join("/") || fallbackResource;
-  const action = segments.slice(placeholderIndex + 1).join("/") || relationship.name;
+  const resource = segments.slice(0, placeholderIndex).join("/");
+  const action = segments.slice(placeholderIndex + 1).join("/");
   if (!resource || !action) {
     return null;
   }
 
+  const id = recordId as string | number;
   return {
     action,
+    id,
     resource,
+    routePath: routeTemplate.replace("{id}", String(id)).replace(/^\/+/, ""),
     routeTemplate,
   };
 }
@@ -320,10 +317,10 @@ function compareValues(left: unknown, right: unknown): number {
   return String(left ?? "").localeCompare(String(right ?? ""), undefined, { sensitivity: "base" });
 }
 
-export function sortRelatedRecords(
-  records: Record<string, unknown>[],
+export function sortRelatedRecords<T extends Record<string, unknown>>(
+  records: T[],
   sortField: string,
-): Record<string, unknown>[] {
+): T[] {
   return [...records].sort((left, right) => {
     const byField = compareValues(left[sortField], right[sortField]);
     if (byField !== 0) {
@@ -462,8 +459,8 @@ export function RelatedRecordDialogLink({
   const [error, setError] = useState<string | null>(null);
   const parentId = parentRecord.id;
   const executeRequest = useMemo(
-    () => resolveRelationshipExecuteRequest(schema, relationship),
-    [relationship, schema],
+    () => resolveRelationshipExecuteRequest(schema, relationship, parentId as string | number | undefined),
+    [parentId, relationship, schema],
   );
   const relatedId = useMemo(
     () => buildRelatedId(parentRecord, relationship, schema.delimiter),
@@ -476,7 +473,7 @@ export function RelatedRecordDialogLink({
   const canOpen = Boolean(
     embeddedRelated
     || relatedId
-    || (parentId !== undefined && parentId !== null && parentId !== "" && executeRequest),
+    || executeRequest,
   );
 
   useEffect(() => {
@@ -496,12 +493,12 @@ export function RelatedRecordDialogLink({
 
     const load = async () => {
       try {
-        if (executeRequest && parentId !== undefined && parentId !== null && parentId !== "") {
+        if (executeRequest) {
           const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
             executeRequest.resource,
             {
               action: executeRequest.action,
-              id: parentId as string | number,
+              id: executeRequest.id,
               method: "GET",
             },
           );
@@ -542,7 +539,6 @@ export function RelatedRecordDialogLink({
     embeddedRelated,
     executeRequest,
     open,
-    parentId,
     relatedId,
     relationship.targetResource,
   ]);
@@ -637,8 +633,8 @@ export function SingleRelationshipTab({
   const schema = useAdminSchema();
   const parentId = record?.id;
   const executeRequest = useMemo(
-    () => resolveRelationshipExecuteRequest(schema, relationship),
-    [relationship, schema],
+    () => resolveRelationshipExecuteRequest(schema, relationship, parentId as string | number | undefined),
+    [parentId, relationship, schema],
   );
   const [related, setRelated] = useState<Record<string, unknown> | null>(() => {
     if (!record) {
@@ -678,12 +674,12 @@ export function SingleRelationshipTab({
 
     const load = async () => {
       try {
-        if (executeRequest && parentId !== undefined && parentId !== null && parentId !== "") {
+        if (executeRequest) {
           const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
             executeRequest.resource,
             {
               action: executeRequest.action,
-              id: parentId as string | number,
+              id: executeRequest.id,
               method: "GET",
             },
           );
@@ -727,7 +723,6 @@ export function SingleRelationshipTab({
   }, [
     dataProvider,
     executeRequest,
-    parentId,
     record,
     relatedId,
     relationship.targetResource,
@@ -804,7 +799,8 @@ Implementation notes:
   shape when calling canonical SAFRS relationship routes
 - `relationshipRouteTemplate` is the authoritative relationship-route input and
   the runtime MUST derive `execute(resource, params)` from it instead of
-  bypassing that metadata with ad hoc endpoint guesses
+  bypassing that metadata with ad hoc endpoint guesses or a fallback derived
+  only from `parentEndpoint`
 - the dialog opener MUST call both `preventDefault()` and `stopPropagation()`
   so it does not trigger datagrid row navigation
 - id-based `dataProvider.getOne(...)` fallback is acceptable only after the

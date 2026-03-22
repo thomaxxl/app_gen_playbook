@@ -51,7 +51,7 @@ function requestUrl(input: RequestInfo | URL): string {
 }
 
 describe("loadAdminBootstrap data-provider integration", () => {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = requestUrl(input);
 
     if (url === "/ui/admin/admin.yaml") {
@@ -61,6 +61,26 @@ describe("loadAdminBootstrap data-provider integration", () => {
           "Content-Type": "text/yaml",
         },
       });
+    }
+
+    if (url.includes("/api/collections") && init?.method === "PATCH") {
+      return new Response(
+        JSON.stringify({
+          errors: [
+            {
+              status: "400",
+              title: "ValidationError",
+              detail: "Customer credit limit cannot exceed 100000.00.",
+            },
+          ],
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/vnd.api+json",
+          },
+        },
+      );
     }
 
     if (url.includes("/api/collections")) {
@@ -114,6 +134,28 @@ describe("loadAdminBootstrap data-provider integration", () => {
       name: "Spring Planning",
     });
   });
+
+  it("surfaces JSON:API validation detail on rejected writes", async () => {
+    const { dataProvider } = await loadAdminBootstrap({
+      adminYamlUrl: "/ui/admin/admin.yaml",
+      apiRoot: "/api",
+      title: "Starter App",
+    });
+
+    await expect(
+      dataProvider.update("Collection", {
+        id: "1",
+        data: {
+          id: "1",
+          name: "Invalid Collection",
+        },
+        previousData: {
+          id: "1",
+          name: "Spring Planning",
+        },
+      }),
+    ).rejects.toThrow("Customer credit limit cannot exceed 100000.00.");
+  });
 });
 ```
 
@@ -126,6 +168,9 @@ Notes:
 - This test is intentionally narrower than a browser smoke suite. Its purpose
   is to prove that the schema/data-provider path preserves row data before the
   UI layer renders it.
+- Keep one rejected-write assertion here so the generated frontend proves
+  `errors[0].detail` survives the provider boundary instead of collapsing into
+  a generic server message.
 - If the delivered app uses custom SAFRS methods or raw JSON service calls,
   add a companion integration assertion proving those calls go through
   `dataProvider.execute(resource, params)`.

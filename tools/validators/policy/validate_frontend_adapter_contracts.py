@@ -203,6 +203,7 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in (
             "resolveRelationshipExecuteRequest",
             "relationshipRouteTemplate",
+            "routePath",
             "action: executeRequest.action",
             "dataProvider.execute<",
             "RelatedRecordSummary",
@@ -221,6 +222,8 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
             "replace the placeholders with the actual",
             "return <div>{resource}</div>;",
             "return <div>{relationship.label}</div>;",
+            "schema.resourceByType[relationship.parentResource]",
+            "normalizeEndpointToResource(relationship.parentEndpoint, schema)",
         ):
             if banned in runtime_code:
                 issues.append(
@@ -269,6 +272,14 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                     repo_root,
                     registry_runtime,
                     "resource registry still uses ReferenceManyField for tomany tabs instead of the canonical parent relationship route lane",
+                )
+            )
+        if "getRelatedRecordLabel(record, item.relationship" in runtime_code:
+            issues.append(
+                _issue(
+                    repo_root,
+                    registry_runtime,
+                    "resource registry still resolves show-page relationship summaries to plain text instead of RelatedRecordDialogLink",
                 )
             )
 
@@ -366,6 +377,7 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "getRecordRelationValue(",
             "getRecordRelationValues(",
             "resolveRelationshipExecuteRequest(",
+            "routePath",
             "RelatedRecordSummary(",
             "SingleRelationshipTab(",
             "__included",
@@ -392,6 +404,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "return <div>{resource}</div>;",
             "return <div>{relationship.label}</div>;",
             "intentionally reduced",
+            "schema.resourceByType[relationship.parentResource]",
+            "normalizeEndpointToResource(relationship.parentEndpoint, schema)",
         ):
             if banned in relationship_text:
                 issues.append(
@@ -439,6 +453,14 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
                     repo_root,
                     resource_registry,
                     "generated resource registry still uses ReferenceManyField for tomany tabs instead of the canonical parent relationship route lane",
+                )
+            )
+        if "getRelatedRecordLabel(record, item.relationship" in registry_text:
+            issues.append(
+                _issue(
+                    repo_root,
+                    resource_registry,
+                    "generated resource registry still resolves show-page relationship summaries to plain text instead of RelatedRecordDialogLink",
                 )
             )
 

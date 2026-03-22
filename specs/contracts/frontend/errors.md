@@ -22,6 +22,8 @@ Expected backend shape:
 Frontend behavior:
 
 - always show a visible form-level or toast error using the backend message
+- a backend validation response with `errors[0].detail` MUST NOT collapse into
+  a generic `Internal Server Error` message in the generated adapter/runtime
 - field-level mapping is optional and only in scope if the project explicitly
   defines a JSON:API pointer contract plus frontend adapter support
 - when practical, frontend validation and error-handling code SHOULD preserve

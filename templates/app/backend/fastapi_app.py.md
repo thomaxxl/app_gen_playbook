@@ -9,6 +9,7 @@ from safrs.fastapi.api import SafrsFastAPI
 from .bootstrap import validate_admin_schema, validate_observer_database
 from .config import get_settings
 from .db import bind_safrs_db, build_engine, build_session_factory
+from .errors import install_expected_validation_error_handlers
 from .models import EXPOSED_MODELS
 
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url="/jsonapi.json",
     )
+    install_expected_validation_error_handlers(app)
 
     @app.middleware("http")
     async def cleanup_session(request: Request, call_next):  # noqa: ARG001

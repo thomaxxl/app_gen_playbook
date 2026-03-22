@@ -210,6 +210,21 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "endpoint/service/frontend enforcement",
             "logic trace evidence",
         ],
+        repo_root / "templates" / "app" / "backend" / "errors.py.md": [
+            "ConstraintException",
+            "ValidationError",
+            "raise_expected_validation_error",
+            "install_expected_validation_error_handlers",
+            "jsonapi_error_response",
+        ],
+        repo_root / "templates" / "app" / "backend" / "db.py.md": [
+            "expected_validation_error_types",
+            "raise_expected_validation_error",
+            "session_scope(session_factory, *, expected_error_types=())",
+        ],
+        repo_root / "templates" / "app" / "backend" / "fastapi_app.py.md": [
+            "install_expected_validation_error_handlers(app)",
+        ],
         repo_root / "templates" / "app" / "rules" / "rules.py.md": [
             "LogicBank.activate",
             "Rule.copy",
@@ -224,6 +239,10 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
         repo_root / "templates" / "app" / "rules" / "test_rules.py.md": [
             "business entry path",
             "LogicBank trace",
+            "ConstraintException",
+            "ValidationError",
+            "raise_expected_validation_error",
+            "shared expected-error helper",
         ],
         repo_root / "specs" / "contracts" / "rules" / "logicbank-reference.md": [
             "verify_logicbank_runtime_contract.py",

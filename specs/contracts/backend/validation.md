@@ -103,6 +103,11 @@ If the app supports uploaded files:
 - derived collection metrics are populated
 - copied/formula item fields are populated
 - invalid completed-item updates are rejected
+- the shared expected-error seam translates representative LogicBank
+  `ConstraintException` failures into SAFRS `ValidationError` instead of
+  leaking `500`
+- at least one rejected rule-driven write proves HTTP `400` plus
+  `errors[0].detail` when the preferred HTTP path is available
 - create/update/delete/reparent/status-change rule stories are covered
 
 ## Delete/nullability validation

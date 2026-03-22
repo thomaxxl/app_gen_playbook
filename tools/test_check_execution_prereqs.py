@@ -19,6 +19,52 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         result = CheckResult("name", "ok", "detail")
         self.assertEqual(result.name, "name")
 
+    def test_check_app_workspace_reports_existing_directory_location(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "app").mkdir()
+
+            result = check_execution_prereqs.check_app_workspace(repo_root)
+
+        self.assertEqual(result.status, "ok")
+        self.assertIn("app workspace located at", result.detail)
+
+    def test_check_app_workspace_reports_existing_symlink_location(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            target_dir = repo_root / "generated-app"
+            target_dir.mkdir()
+            (repo_root / "app").symlink_to(target_dir, target_is_directory=True)
+
+            result = check_execution_prereqs.check_app_workspace(repo_root)
+
+        self.assertEqual(result.status, "ok")
+        self.assertIn("app workspace linked at", result.detail)
+        self.assertIn(str(target_dir.resolve()), result.detail)
+
+    def test_check_app_workspace_reports_missing_workspace_with_symlink_hint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+
+            result = check_execution_prereqs.check_app_workspace(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("app workspace expected at", result.detail)
+        self.assertIn("ln -s /absolute/path/to/generated-app", result.detail)
+
+    def test_check_app_workspace_reports_broken_symlink_with_relink_hint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            missing_target = repo_root / "missing-app-target"
+            (repo_root / "app").symlink_to(missing_target, target_is_directory=True)
+
+            result = check_execution_prereqs.check_app_workspace(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("app workspace symlink is broken", result.detail)
+        self.assertIn("rm -f", result.detail)
+        self.assertIn("ln -s /absolute/path/to/generated-app", result.detail)
+
     def test_check_port_bind_returns_ok_when_ports_are_free(self) -> None:
         fake_socket = unittest.mock.Mock()
         fake_socket.bind.return_value = None
@@ -125,10 +171,10 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertIn("playwright-skill", result.detail)
 
     def test_render_markdown_uses_checkbox_style(self) -> None:
-        result_ok = CheckResult("python_venv", "ok", "all good")
+        result_ok = CheckResult("app_workspace", "ok", "app workspace located at /tmp/app")
         result_blocked = CheckResult("node_packages", "blocked", "missing node_modules")
         output = check_execution_prereqs.render_markdown([result_ok, result_blocked])
-        self.assertIn("- [x] `python_venv`: `ok` (required)", output)
+        self.assertIn("- [x] `app_workspace`: `ok` (required)", output)
         self.assertIn("- [ ] `node_packages`: `blocked` (required)", output)
 
     def test_backend_python_path_resolves_relative_override_from_app_root(self) -> None:

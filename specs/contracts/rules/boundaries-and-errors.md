@@ -43,11 +43,21 @@ errors with:
 
 The exact title may be `ValidationError` under current SAFRS FastAPI handling.
 
+The generated backend MUST provide one shared expected-error normalization seam
+for this behavior.
+
+That seam MUST be the canonical place that:
+
+- translates `logic_bank.util.ConstraintException` into SAFRS
+  `ValidationError`
+- preserves the human-readable rule message
+- is reused by custom write paths that need the same transport contract
+
 ## Manual validation fallback
 
 If a custom endpoint must raise a validation error outside `Rule.constraint`,
-raise `safrs.errors.ValidationError` so the transport shape stays aligned with
-the SAFRS JSON:API error handlers.
+raise `safrs.errors.ValidationError` or use the generated shared helper so the
+transport shape stays aligned with the SAFRS JSON:API error handlers.
 
 ## Compatibility caveat
 

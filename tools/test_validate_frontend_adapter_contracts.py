@@ -103,11 +103,19 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             )
             write_file(
                 repo_root / "templates/app/frontend/shared-runtime/relationshipUi.tsx.md",
-                "dataProvider.execute({\nreturn <div>{resource}</div>;\nreturn <div>{relationship.label}</div>;\n",
+                "\n".join(
+                    (
+                        "dataProvider.execute({",
+                        "schema.resourceByType[relationship.parentResource]",
+                        "normalizeEndpointToResource(relationship.parentEndpoint, schema)",
+                        "return <div>{resource}</div>;",
+                        "return <div>{relationship.label}</div>;",
+                    )
+                ),
             )
             write_file(
                 repo_root / "templates/app/frontend/shared-runtime/resourceRegistry.tsx.md",
-                "SimpleShowLayout\n",
+                "SimpleShowLayout\ngetRelatedRecordLabel(record, item.relationship, targetMeta)\n",
             )
 
             relationship_issues = collect_relationship_route_issues(repo_root)
@@ -115,6 +123,8 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             self.assertTrue(any("legacy one-argument execute" in issue["reason"] for issue in relationship_issues))
             self.assertTrue(any("placeholder implementation text" in issue["reason"] for issue in relationship_issues))
             self.assertTrue(any("SimpleShowLayout" in issue["reason"] for issue in relationship_issues))
+            self.assertTrue(any("parentEndpoint" in issue["reason"] or "schema.resourceByType[relationship.parentResource]" in issue["reason"] for issue in relationship_issues))
+            self.assertTrue(any("plain text instead of RelatedRecordDialogLink" in issue["reason"] for issue in relationship_issues))
             self.assertTrue(any("execute(resource, params)" in issue["reason"] for issue in execute_issues))
 
     def test_runtime_validator_detects_missing_generated_runtime_and_evidence(self) -> None:
@@ -196,6 +206,33 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             issues = collect_frontend_runtime_issues(repo_root)
             reasons = "\n".join(issue["reason"] for issue in issues)
             self.assertIn("ReferenceManyField", reasons)
+
+    def test_runtime_validator_rejects_plain_text_show_relationship_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "app/frontend/src/shared-runtime/resourceRegistry.tsx",
+                "\n".join(
+                    (
+                        "ShowContent(",
+                        "ManyRelationshipTab(",
+                        "SingleRelationshipTab",
+                        "RelatedRecordDialogLink",
+                        "<Tabs",
+                        "useDataProvider(",
+                        "useList(",
+                        "<ListContextProvider",
+                        "resolveRelationshipExecuteRequest(",
+                        "extractExecuteRecords(",
+                        "getRelatedRecordLabel(record, item.relationship, targetMeta)",
+                    )
+                ),
+            )
+
+            issues = collect_frontend_runtime_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("plain text instead of RelatedRecordDialogLink", reasons)
 
 
 if __name__ == "__main__":
