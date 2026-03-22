@@ -19,21 +19,24 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         result = CheckResult("name", "ok", "detail")
         self.assertEqual(result.name, "name")
 
-    def test_check_app_workspace_reports_existing_directory_location(self) -> None:
+    def test_check_app_workspace_reports_existing_directory_location_when_configured_in_repo(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=app\n", encoding="utf-8")
             (repo_root / "app").mkdir()
 
             result = check_execution_prereqs.check_app_workspace(repo_root)
 
         self.assertEqual(result.status, "ok")
         self.assertIn("app workspace located at", result.detail)
+        self.assertIn("APP_WORKSPACE_DIR=app", result.detail)
 
     def test_check_app_workspace_reports_existing_symlink_location(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             target_dir = repo_root / "generated-app"
             target_dir.mkdir()
+            (repo_root / ".env").write_text(f"APP_WORKSPACE_DIR={target_dir}\n", encoding="utf-8")
             (repo_root / "app").symlink_to(target_dir, target_is_directory=True)
 
             result = check_execution_prereqs.check_app_workspace(repo_root)
@@ -42,7 +45,7 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertIn("app workspace linked at", result.detail)
         self.assertIn(str(target_dir.resolve()), result.detail)
 
-    def test_check_app_workspace_reports_missing_workspace_with_symlink_hint(self) -> None:
+    def test_check_app_workspace_reports_missing_workspace_with_default_sibling_hint(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
 
@@ -50,12 +53,15 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
         self.assertEqual(result.status, "blocked")
         self.assertIn("app workspace expected at", result.detail)
-        self.assertIn("ln -s /absolute/path/to/generated-app", result.detail)
+        self.assertIn("APP_WORKSPACE_DIR=../agp_workspace/app", result.detail)
+        self.assertIn(str((repo_root / "../agp_workspace/app").resolve()), result.detail)
+        self.assertIn("ln -s", result.detail)
 
     def test_check_app_workspace_reports_broken_symlink_with_relink_hint(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             missing_target = repo_root / "missing-app-target"
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=../configured/app\n", encoding="utf-8")
             (repo_root / "app").symlink_to(missing_target, target_is_directory=True)
 
             result = check_execution_prereqs.check_app_workspace(repo_root)
@@ -63,7 +69,39 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertEqual(result.status, "blocked")
         self.assertIn("app workspace symlink is broken", result.detail)
         self.assertIn("rm -f", result.detail)
-        self.assertIn("ln -s /absolute/path/to/generated-app", result.detail)
+        self.assertIn(str((repo_root / "../configured/app").resolve()), result.detail)
+        self.assertIn("ln -s", result.detail)
+
+    def test_check_app_workspace_rejects_symlink_target_that_does_not_match_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            configured_target = repo_root / "configured-app"
+            actual_target = repo_root / "other-app"
+            configured_target.mkdir()
+            actual_target.mkdir()
+            (repo_root / ".env").write_text(f"APP_WORKSPACE_DIR={configured_target}\n", encoding="utf-8")
+            (repo_root / "app").symlink_to(actual_target, target_is_directory=True)
+
+            result = check_execution_prereqs.check_app_workspace(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("symlink points to", result.detail)
+        self.assertIn(str(actual_target.resolve()), result.detail)
+        self.assertIn(str(configured_target.resolve()), result.detail)
+
+    def test_runtime_env_value_reads_repo_env_when_process_env_is_unset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=../custom-workspace/app\nFRONTEND_PORT=7777\n", encoding="utf-8")
+
+            self.assertEqual(
+                check_execution_prereqs.runtime_env_value(repo_root, "APP_WORKSPACE_DIR"),
+                "../custom-workspace/app",
+            )
+            self.assertEqual(
+                check_execution_prereqs.runtime_env_value(repo_root, "FRONTEND_PORT"),
+                "7777",
+            )
 
     def test_check_port_bind_returns_ok_when_ports_are_free(self) -> None:
         fake_socket = unittest.mock.Mock()

@@ -194,10 +194,23 @@ prerequisite artifact under:
 
 - `runs/current/artifacts/devops/execution-prereqs.md`
 
+The repo-local `app/` entry is the canonical in-repo path for generated-app
+files, but it SHOULD be a symlink to the configured external workspace target
+from `.env`:
+
+- `APP_WORKSPACE_DIR`
+
+If `APP_WORKSPACE_DIR` is not set, the default target is the sibling workspace:
+
+- `../agp_workspace/app`
+
 That prerequisite check SHOULD be produced by
 `tools/check_execution_prereqs.py` from inside the current execution context
 and SHOULD cover:
 
+- app workspace target resolution from `.env`, including the expected
+  repo-local `app/` symlink and concrete relink guidance when it is missing or
+  mispointed
 - backend venv availability, materialization in `clean-install` mode, and
   required backend imports from that same venv
   the prerequisite script SHOULD create or repair `app/backend/.venv` before

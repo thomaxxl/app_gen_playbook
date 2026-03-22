@@ -69,7 +69,9 @@ exception.
   this playbook. Use [examples/README.md](examples/README.md) as the stable
   entrypoint.
 - `app/`
-  The local ignored generated-app working tree for the active run.
+  The repo-local symlink entrypoint to the ignored generated-app working tree
+  for the active run. Its target is configured by `APP_WORKSPACE_DIR` in
+  `.env`, and defaults to the sibling workspace `../agp_workspace/app`.
 - `scripts/run_playbook.sh`
   The top-level orchestrator entrypoint for a new run.
 - `scripts/run_playbook_interactive.sh`
@@ -102,7 +104,8 @@ This repository is intentionally segmented:
 - optional capability packs live under `specs/features/`
 - literal implementation snippets live under `templates/`
 - mutable run state lives under `runs/current/`
-- generated application output lives under local `app/`
+- generated application output lives under the configured app workspace,
+  exposed in-repo through local `app/`
 
 That separation is part of the design. It keeps the playbook readable for
 humans and keeps agent context bounded during automated runs.
@@ -136,7 +139,9 @@ Or launch interactively:
    intervention, or if the remaining blocker needs external operator or
    environment intervention, the run stops non-zero and points at
    `runs/current/orchestrator/operator-action-required.md`.
-4. The generated app is built locally under `app/`.
+4. The generated app is built in the configured external workspace and exposed
+   through the local `app/` symlink. By default that target is
+   `../agp_workspace/app`.
 5. Preserved runnable references remain available under `examples/`.
 
 The orchestrator keeps per-role evidence under `runs/current/evidence/` and
@@ -289,7 +294,9 @@ For generated-app shape:
 
 ## Important Conventions
 
-- `app/` is local and gitignored. It is created when a run starts.
+- `app/` is local and gitignored. It SHOULD be a symlink to the configured
+  external app workspace from `.env`; the default target is
+  `../agp_workspace/app`.
 - `runs/current/` is local run state, not committed playbook source.
 - `run_dashboard/` is operator tooling. It may observe `runs/current/`, but it
   is not a normative contract or role-loading surface.

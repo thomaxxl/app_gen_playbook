@@ -22,6 +22,8 @@ PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
 MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
+APP_WORKSPACE_DIR_ENV = "APP_WORKSPACE_DIR"
+DEFAULT_APP_WORKSPACE_DIR = "../agp_workspace/app"
 BACKEND_IMPORT_PROBE = (
     "import fastapi, httpx, jsonschema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
 )
@@ -35,17 +37,12 @@ class CheckResult:
     optional: bool = False
 
 
-def app_workspace_path(repo_root: Path) -> Path:
-    return repo_root / "app"
-
-
-def load_runtime_env(repo_root: Path) -> dict[str, str]:
+def load_env_assignments(env_path: Path) -> dict[str, str]:
     result: dict[str, str] = {}
-    runtime_env_path = app_workspace_path(repo_root) / ".runtime.local.env"
-    if not runtime_env_path.exists():
+    if not env_path.exists():
         return result
 
-    for raw_line in runtime_env_path.read_text(encoding="utf-8").splitlines():
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue
@@ -62,6 +59,18 @@ def load_runtime_env(repo_root: Path) -> dict[str, str]:
     return result
 
 
+def app_workspace_path(repo_root: Path) -> Path:
+    return repo_root / "app"
+
+
+def load_repo_env(repo_root: Path) -> dict[str, str]:
+    return load_env_assignments(repo_root / ".env")
+
+
+def load_runtime_env(repo_root: Path) -> dict[str, str]:
+    return load_env_assignments(app_workspace_path(repo_root) / ".runtime.local.env")
+
+
 def resolve_app_relative_path(repo_root: Path, raw_path: str) -> Path:
     candidate = Path(raw_path).expanduser()
     if not candidate.is_absolute():
@@ -73,7 +82,28 @@ def runtime_env_value(repo_root: Path, key: str) -> str:
     env_value = os.environ.get(key, "").strip()
     if env_value:
         return env_value
+    repo_value = load_repo_env(repo_root).get(key, "").strip()
+    if repo_value:
+        return repo_value
     return load_runtime_env(repo_root).get(key, "").strip()
+
+
+def configured_app_workspace_dir_value(repo_root: Path) -> str:
+    env_value = os.environ.get(APP_WORKSPACE_DIR_ENV, "").strip()
+    if env_value:
+        return env_value
+    repo_value = load_repo_env(repo_root).get(APP_WORKSPACE_DIR_ENV, "").strip()
+    if repo_value:
+        return repo_value
+    return DEFAULT_APP_WORKSPACE_DIR
+
+
+def configured_app_workspace_target(repo_root: Path) -> Path:
+    raw_candidate = configured_app_workspace_dir_value(repo_root)
+    candidate = Path(raw_candidate).expanduser()
+    if not candidate.is_absolute():
+        candidate = repo_root / candidate
+    return candidate.resolve(strict=False)
 
 
 def dependency_provisioning_mode(repo_root: Path) -> str:
@@ -121,33 +151,73 @@ def backend_requirements_path(repo_root: Path) -> Path:
 
 def check_app_workspace(repo_root: Path) -> CheckResult:
     app_path = app_workspace_path(repo_root)
+    configured_target = configured_app_workspace_target(repo_root)
+    configured_value = configured_app_workspace_dir_value(repo_root)
+    config_hint = f"{APP_WORKSPACE_DIR_ENV}={configured_value}"
     if app_path.exists():
         if app_path.is_symlink():
+            actual_target = app_path.resolve(strict=False)
+            if actual_target != configured_target:
+                return CheckResult(
+                    "app_workspace",
+                    "blocked",
+                    "\n".join(
+                        [
+                            f"app workspace symlink points to {actual_target}",
+                            f"but {config_hint} expects {configured_target}",
+                            "relink the repo-local app entry before startup, for example:",
+                            f"    rm -f {app_path}",
+                            f"    mkdir -p {configured_target}",
+                            f"    ln -s {configured_target} {app_path}",
+                        ]
+                    ),
+                )
             return CheckResult(
                 "app_workspace",
                 "ok",
-                f"app workspace linked at {app_path} -> {app_path.resolve()}",
+                f"app workspace linked at {app_path} -> {actual_target} ({config_hint})",
             )
-        return CheckResult("app_workspace", "ok", f"app workspace located at {app_path}")
+        if app_path.resolve(strict=False) == configured_target:
+            return CheckResult(
+                "app_workspace",
+                "ok",
+                f"app workspace located at {app_path} ({config_hint})",
+            )
+        return CheckResult(
+            "app_workspace",
+            "blocked",
+            "\n".join(
+                [
+                    f"app workspace exists as a local directory at {app_path}",
+                    f"but {config_hint} expects {configured_target}",
+                    "move or recreate the workspace at the configured target, then symlink it into the repo, for example:",
+                    f"    mkdir -p {configured_target}",
+                    f"    rm -rf {app_path}",
+                    f"    ln -s {configured_target} {app_path}",
+                ]
+            ),
+        )
 
     detail_lines = []
     if app_path.is_symlink():
         detail_lines.extend(
             [
                 f"app workspace symlink is broken: {app_path}",
-                "create the app workspace target and relink it before startup, for example:",
+                f"configured target from {config_hint}: {configured_target}",
+                "create the configured app workspace target and relink it before startup, for example:",
                 f"    rm -f {app_path}",
-                "    mkdir -p /absolute/path/to/generated-app",
-                f"    ln -s /absolute/path/to/generated-app {app_path}",
+                f"    mkdir -p {configured_target}",
+                f"    ln -s {configured_target} {app_path}",
             ]
         )
     else:
         detail_lines.extend(
             [
                 f"app workspace expected at {app_path}",
-                "create the app workspace and symlink it into the repo before startup, for example:",
-                "    mkdir -p /absolute/path/to/generated-app",
-                f"    ln -s /absolute/path/to/generated-app {app_path}",
+                f"configured target from {config_hint}: {configured_target}",
+                "create the configured app workspace and symlink it into the repo before startup, for example:",
+                f"    mkdir -p {configured_target}",
+                f"    ln -s {configured_target} {app_path}",
             ]
         )
     return CheckResult("app_workspace", "blocked", "\n".join(detail_lines))
@@ -246,8 +316,8 @@ def ensure_backend_venv_ready(repo_root: Path) -> tuple[bool, str]:
     return True, f"verified imports via {python_path}"
 
 
-def runtime_environment() -> str:
-    return os.environ.get("PLAYBOOK_RUNTIME_ENV", "host").strip() or "host"
+def runtime_environment(repo_root: Path) -> str:
+    return runtime_env_value(repo_root, "PLAYBOOK_RUNTIME_ENV") or "host"
 
 
 def repo_declared_skill_names(repo_root: Path) -> list[str]:
@@ -430,15 +500,15 @@ def expected_runtime_listeners_ready(frontend_port: int, backend_port: int) -> b
 
 
 def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
-    if runtime_environment() == "sandbox":
+    if runtime_environment(repo_root) == "sandbox":
         return CheckResult(
             "port_bind",
             "ok",
             "sandbox runtime mode defers localhost bind validation to a host-side verification step",
         )
 
-    frontend_port = int(os.environ.get("FRONTEND_PORT", "5173"))
-    backend_port = int(os.environ.get("BACKEND_PORT", "5656"))
+    frontend_port = int(runtime_env_value(repo_root, "FRONTEND_PORT") or "5173")
+    backend_port = int(runtime_env_value(repo_root, "BACKEND_PORT") or "5656")
     last_error: Exception | None = None
 
     for attempt in range(PORT_BIND_RETRY_ATTEMPTS):
@@ -500,7 +570,7 @@ def check_port_bind(repo_root: Path) -> CheckResult:  # noqa: ARG001
 
 
 def check_playwright_screenshot(repo_root: Path) -> CheckResult:
-    if runtime_environment() == "sandbox":
+    if runtime_environment(repo_root) == "sandbox":
         return CheckResult(
             "playwright_screenshot",
             "ok",
