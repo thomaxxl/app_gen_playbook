@@ -52,6 +52,7 @@ import {
   extractExecuteRecords,
   getRecordRelationValues,
   getDefaultRelationshipTabIndex,
+  type RelationshipLoadSource,
   RelatedRecordDialogLink,
   resolveRelationshipExecuteRequest,
   SingleRelationshipTab,
@@ -295,6 +296,7 @@ function renderListField(
           <RelatedRecordDialogLink
             parentRecord={record}
             relationship={item.relationship}
+            surface="list"
           />
         )}
       />
@@ -460,6 +462,7 @@ function OverviewGrid({
                 <RelatedRecordDialogLink
                   parentRecord={record}
                   relationship={item.relationship}
+                  surface="summary"
                 />
               ) : (
                 <Typography variant="body1">
@@ -512,11 +515,11 @@ function ManyRelationshipTab({
     [parentResource, relationship, targetMeta],
   );
   const sortField = targetMeta.userKey ?? targetMeta.attributes[0]?.name ?? "id";
-  const executeRequest = useMemo(
-    () => resolveRelationshipExecuteRequest(schema, relationship),
-    [relationship, schema],
-  );
   const parentId = record?.id;
+  const executeRequest = useMemo(
+    () => resolveRelationshipExecuteRequest(schema, relationship, parentId as string | number | undefined),
+    [parentId, relationship, schema],
+  );
   const embeddedRows = useMemo(
     () => (record ? getRecordRelationValues(record, relationship.name) : []),
     [record, relationship.name],
@@ -526,12 +529,16 @@ function ManyRelationshipTab({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadSource, setLoadSource] = useState<RelationshipLoadSource>(
+    embeddedRows.length > 0 ? "embedded" : "unresolved",
+  );
 
   useEffect(() => {
     if (embeddedRows.length > 0) {
       setRows(sortRelatedRecords(embeddedRows, sortField));
       setLoading(false);
       setError(null);
+      setLoadSource("embedded");
       return;
     }
 
@@ -539,6 +546,7 @@ function ManyRelationshipTab({
       setRows([]);
       setLoading(false);
       setError(null);
+      setLoadSource("empty");
       return;
     }
 
@@ -552,19 +560,21 @@ function ManyRelationshipTab({
           executeRequest.resource,
           {
             action: executeRequest.action,
-            id: parentId as string | number,
+            id: executeRequest.id,
             method: "GET",
           },
         );
         if (!cancelled) {
           setRows(sortRelatedRecords(extractExecuteRecords(routeResult.data), sortField));
           setLoading(false);
+          setLoadSource("relationship-route");
         }
       } catch (nextError: unknown) {
         if (!cancelled) {
           setRows([]);
           setLoading(false);
           setError(nextError instanceof Error ? nextError.message : String(nextError));
+          setLoadSource("error");
         }
       }
     };
@@ -586,31 +596,61 @@ function ManyRelationshipTab({
   });
 
   if (loading) {
-    return <Loading />;
+    return (
+      <Box
+        data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
+        data-relationship-direction="tomany"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Loading />
+      </Box>
+    );
   }
 
   if (error) {
     return (
-      <Typography color="error" sx={{ pt: 2 }}>
-        {error}
-      </Typography>
+      <Box
+        data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
+        data-relationship-direction="tomany"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Typography color="error" sx={{ pt: 2 }}>
+          {error}
+        </Typography>
+      </Box>
     );
   }
 
   if (rows.length === 0) {
     return (
-      <Typography color="text.secondary" sx={{ pt: 2 }}>
-        No related records.
-      </Typography>
+      <Box
+        data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
+        data-relationship-direction="tomany"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Typography color="text.secondary" sx={{ pt: 2 }}>
+          No related records.
+        </Typography>
+      </Box>
     );
   }
 
   return (
-    <ListContextProvider value={listContext}>
-      <Datagrid bulkActionButtons={false} rowClick="show">
-        {items.map((item) => renderListField(item, schema))}
-      </Datagrid>
-    </ListContextProvider>
+    <Box
+      data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
+      data-relationship-direction="tomany"
+      data-relationship-fetch-source={loadSource}
+      data-relationship-route-path={executeRequest?.routePath ?? ""}
+    >
+      <ListContextProvider value={listContext}>
+        <Datagrid bulkActionButtons={false} rowClick="show">
+          {items.map((item) => renderListField(item, schema))}
+        </Datagrid>
+      </ListContextProvider>
+    </Box>
   );
 }
 
@@ -838,6 +878,9 @@ Required relationship behavior:
   `RelatedRecordDialogLink`, not raw scalar ids
 - generated show-page overview summaries MUST also render `toone`
   relationship items through `RelatedRecordDialogLink`, not plain text labels
+- generated relationship tabs SHOULD expose stable `data-testid` and
+  `data-relationship-fetch-source` markers so the generic Playwright smoke can
+  prove canonical relationship behavior without hardcoding one domain model
 - FK-backed scalar attributes that carry `attribute.relationship` metadata
   SHOULD be collapsed into one relationship display item so duplicate raw-FK
   columns are suppressed

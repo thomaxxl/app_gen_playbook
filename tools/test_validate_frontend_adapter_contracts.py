@@ -106,6 +106,8 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
                 "\n".join(
                     (
                         "dataProvider.execute({",
+                        "data-testid={`relationship-dialog-link:${surface}:",
+                        "data-relationship-fetch-source",
                         "schema.resourceByType[relationship.parentResource]",
                         "normalizeEndpointToResource(relationship.parentEndpoint, schema)",
                         "return <div>{resource}</div>;",
@@ -115,7 +117,7 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             )
             write_file(
                 repo_root / "templates/app/frontend/shared-runtime/resourceRegistry.tsx.md",
-                "SimpleShowLayout\ngetRelatedRecordLabel(record, item.relationship, targetMeta)\n",
+                'SimpleShowLayout\nsurface="list"\nsurface="summary"\nrelationship-tab-panel:tomany:\nrelationship-tab-panel:toone:\ndata-relationship-fetch-source\ngetRelatedRecordLabel(record, item.relationship, targetMeta)\n',
             )
 
             relationship_issues = collect_relationship_route_issues(repo_root)
@@ -133,7 +135,7 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             (repo_root / ".git").mkdir()
             write_file(
                 repo_root / "app/frontend/src/shared-runtime/relationshipUi.tsx",
-                "export function RelatedRecordSummary() { return <div>{resource}</div>; }\n",
+                "export function RelatedRecordSummary() { return <div>{resource}</div>; }\ndata-testid={`relationship-dialog-link:${surface}:}\ndata-relationship-fetch-source\n",
             )
             write_file(
                 repo_root / "app/frontend/src/shared-runtime/resourceRegistry.tsx",
@@ -219,6 +221,11 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
                         "ManyRelationshipTab(",
                         "SingleRelationshipTab",
                         "RelatedRecordDialogLink",
+                        'surface="list"',
+                        'surface="summary"',
+                        "relationship-tab-panel:tomany:",
+                        "relationship-tab-panel:toone:",
+                        "data-relationship-fetch-source",
                         "<Tabs",
                         "useDataProvider(",
                         "useList(",

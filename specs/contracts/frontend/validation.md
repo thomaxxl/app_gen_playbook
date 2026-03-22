@@ -291,16 +291,21 @@ The smoke run must cover at least this flow:
 12. prove generated React-Admin resources are registered as direct `Admin`
     children by verifying the resource route resolves to a list or show page
     rather than a catch-all error route
-13. discover at least one generated show route with a relationship tab and
-    verify the tab renders related content
-14. when the app relies on sparse relationship metadata, verify a `tomany`
-    relationship tab still loads rows through the canonical parent
-    relationship lane or its documented fallback inference
-15. retain trace, screenshot, and video on failure
-16. fail if the primary entry page or required custom pages read like
+13. discover one generated list-cell relationship label, click it, and prove
+    the related-record dialog opens without row navigation and shows `EDIT`
+    plus `VIEW`
+14. discover one generated summary/show relationship label, click it, and
+    prove the same dialog behavior on the show surface
+15. discover at least one generated `toone` summary tab and one generated
+    `tomany` tab with related content
+16. prove that at least one generated `tomany` tab loaded through the
+    canonical parent relationship lane by checking runtime fetch-lane evidence,
+    not only by seeing rendered rows
+17. retain trace, screenshot, and video on failure
+18. fail if the primary entry page or required custom pages read like
     developer-facing contract/recovery shells rather than the UX artifacts they
     were supposed to implement
-17. fail if delivery page code bypasses the approved React-admin dataProvider
+19. fail if delivery page code bypasses the approved React-admin dataProvider
     layer for API-backed data retrieval
 
 When the run includes materially changed UI and stable browser execution is
@@ -364,6 +369,8 @@ If the app supports uploaded files:
 - one generated list route shows a readable related label instead of a raw id
 - one generated related label opens a dialog without triggering row navigation
 - one related-record dialog loads a summary plus `EDIT` and `VIEW`
+- one generated show summary/overview relationship label also opens that
+  dialog instead of rendering as inert text
 - one generated show route renders a `tomany` relationship tab
 - one generated `tomany` relationship tab proves that rows came from the
   canonical parent relationship lane rather than a reverse-FK child query

@@ -237,6 +237,14 @@ export type RelationshipExecuteRequest = {
   routeTemplate: string;
 };
 
+export type RelationshipLoadSource =
+  | "embedded"
+  | "relationship-route"
+  | "id-fallback"
+  | "empty"
+  | "error"
+  | "unresolved";
+
 function normalizeRelationshipRouteTemplate(
   schema: Schema,
   relationship: ResourceRelationshipMeta,
@@ -412,21 +420,22 @@ export function RelatedRecordSummary({
   return (
     <SummaryGrid>
       {items.map((item) => {
-        let value = "-";
-
-        if (item.kind === "relationship") {
-          const targetMeta = buildResourceMeta(schema, rawYaml, item.relationship.targetResource);
-          value = getRelatedRecordLabel(data, item.relationship, targetMeta);
-        } else {
-          value = formatScalarValue(data[item.attribute.name], item.attribute.kind);
-        }
-
         return (
           <div key={item.key}>
             <Typography color="text.secondary" sx={{ fontWeight: 700, mb: 0.5 }} variant="body2">
               {item.label}
             </Typography>
-            <Typography variant="body1">{value}</Typography>
+            {item.kind === "relationship" ? (
+              <RelatedRecordDialogLink
+                parentRecord={data}
+                relationship={item.relationship}
+                surface="summary"
+              />
+            ) : (
+              <Typography variant="body1">
+                {formatScalarValue(data[item.attribute.name], item.attribute.kind)}
+              </Typography>
+            )}
           </div>
         );
       })}
@@ -437,9 +446,11 @@ export function RelatedRecordSummary({
 export function RelatedRecordDialogLink({
   parentRecord,
   relationship,
+  surface = "list",
 }: {
   parentRecord: Record<string, unknown>;
   relationship: ResourceRelationshipMeta;
+  surface?: "list" | "summary";
 }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
@@ -457,6 +468,9 @@ export function RelatedRecordDialogLink({
   const [related, setRelated] = useState<Record<string, unknown> | null>(embeddedRelated);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadSource, setLoadSource] = useState<RelationshipLoadSource>(
+    embeddedRelated ? "embedded" : "unresolved",
+  );
   const parentId = parentRecord.id;
   const executeRequest = useMemo(
     () => resolveRelationshipExecuteRequest(schema, relationship, parentId as string | number | undefined),
@@ -480,6 +494,7 @@ export function RelatedRecordDialogLink({
     setRelated(embeddedRelated);
     setLoading(false);
     setError(null);
+    setLoadSource(embeddedRelated ? "embedded" : "unresolved");
   }, [embeddedRelated, relatedId]);
 
   useEffect(() => {
@@ -507,12 +522,16 @@ export function RelatedRecordDialogLink({
             if (!cancelled) {
               setRelated(routeRecord);
               setLoading(false);
+              setLoadSource("relationship-route");
             }
             return;
           }
         }
 
         if (!relatedId) {
+          if (!cancelled) {
+            setLoadSource("empty");
+          }
           throw new Error("Missing related id and no relationship-route payload was available.");
         }
 
@@ -520,11 +539,13 @@ export function RelatedRecordDialogLink({
         if (!cancelled) {
           setRelated(result.data as Record<string, unknown>);
           setLoading(false);
+          setLoadSource("id-fallback");
         }
       } catch (nextError: unknown) {
         if (!cancelled) {
           setError(nextError instanceof Error ? nextError.message : String(nextError));
           setLoading(false);
+          setLoadSource("error");
         }
       }
     };
@@ -577,6 +598,9 @@ export function RelatedRecordDialogLink({
   return (
     <>
       <Button
+        data-testid={`relationship-dialog-link:${surface}:${relationship.name}`}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-target-resource={relationship.targetResource}
         onClick={handleOpen}
         size="small"
         sx={{
@@ -589,10 +613,19 @@ export function RelatedRecordDialogLink({
       >
         {label}
       </Button>
-      <Dialog fullWidth maxWidth="lg" onClose={handleClose} open={open}>
+      <Dialog
+        data-testid={`relationship-dialog:${surface}:${relationship.name}`}
+        fullWidth
+        maxWidth="lg"
+        onClose={handleClose}
+        open={open}
+      >
         <DialogTitle>{label}</DialogTitle>
         <DialogContent dividers>
           <div
+            data-testid={`relationship-dialog-state:${surface}:${relationship.name}`}
+            data-relationship-fetch-source={loadSource}
+            data-relationship-route-path={executeRequest?.routePath ?? ""}
             style={{
               display: "flex",
               gap: "8px",
@@ -645,6 +678,14 @@ export function SingleRelationshipTab({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadSource, setLoadSource] = useState<RelationshipLoadSource>(() => {
+    if (!record) {
+      return "unresolved";
+    }
+    return getRecordRelationValue(record as Record<string, unknown>, relationship.name)
+      ? "embedded"
+      : "unresolved";
+  });
   const relatedId = useMemo(
     () => record
       ? buildRelatedId(record as Record<string, unknown>, relationship, schema.delimiter)
@@ -665,6 +706,7 @@ export function SingleRelationshipTab({
       setRelated(embedded);
       setLoading(false);
       setError(null);
+      setLoadSource("embedded");
       return;
     }
 
@@ -688,6 +730,7 @@ export function SingleRelationshipTab({
             if (!cancelled) {
               setRelated(routeRecord);
               setLoading(false);
+              setLoadSource("relationship-route");
             }
             return;
           }
@@ -698,6 +741,7 @@ export function SingleRelationshipTab({
             setRelated(null);
             setLoading(false);
             setError(null);
+            setLoadSource("empty");
           }
           return;
         }
@@ -706,11 +750,13 @@ export function SingleRelationshipTab({
         if (!cancelled) {
           setRelated(result.data as Record<string, unknown>);
           setLoading(false);
+          setLoadSource("id-fallback");
         }
       } catch (nextError: unknown) {
         if (!cancelled) {
           setError(nextError instanceof Error ? nextError.message : String(nextError));
           setLoading(false);
+          setLoadSource("error");
         }
       }
     };
@@ -729,26 +775,58 @@ export function SingleRelationshipTab({
   ]);
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div
+        data-testid={`relationship-tab-panel:toone:${relationship.name}`}
+        data-relationship-direction="toone"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Loading />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <Typography color="error" sx={{ pt: 2 }}>
-        {error}
-      </Typography>
+      <div
+        data-testid={`relationship-tab-panel:toone:${relationship.name}`}
+        data-relationship-direction="toone"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Typography color="error" sx={{ pt: 2 }}>
+          {error}
+        </Typography>
+      </div>
     );
   }
 
   if (!related) {
     return (
-      <Typography color="text.secondary" sx={{ pt: 2 }}>
-        No related record.
-      </Typography>
+      <div
+        data-testid={`relationship-tab-panel:toone:${relationship.name}`}
+        data-relationship-direction="toone"
+        data-relationship-fetch-source={loadSource}
+        data-relationship-route-path={executeRequest?.routePath ?? ""}
+      >
+        <Typography color="text.secondary" sx={{ pt: 2 }}>
+          No related record.
+        </Typography>
+      </div>
     );
   }
 
-  return <RelatedRecordSummary data={related} resource={relationship.targetResource} />;
+  return (
+    <div
+      data-testid={`relationship-tab-panel:toone:${relationship.name}`}
+      data-relationship-direction="toone"
+      data-relationship-fetch-source={loadSource}
+      data-relationship-route-path={executeRequest?.routePath ?? ""}
+    >
+      <RelatedRecordSummary data={related} resource={relationship.targetResource} />
+    </div>
+  );
 }
 
 function getRelationshipPriority(
@@ -801,6 +879,10 @@ Implementation notes:
   the runtime MUST derive `execute(resource, params)` from it instead of
   bypassing that metadata with ad hoc endpoint guesses or a fallback derived
   only from `parentEndpoint`
+- the shared relationship runtime SHOULD expose stable `data-testid` and
+  `data-relationship-fetch-source` markers so Playwright can prove list-dialog,
+  summary-dialog, `toone` tab, and canonical-parent-route `tomany` behavior
+  without cargo-culting one app's DOM structure
 - the dialog opener MUST call both `preventDefault()` and `stopPropagation()`
   so it does not trigger datagrid row navigation
 - id-based `dataProvider.getOne(...)` fallback is acceptable only after the

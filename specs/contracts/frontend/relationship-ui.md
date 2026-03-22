@@ -37,6 +37,11 @@ The frontend implementation lane MUST treat this as a required baseline, not
 as optional polish. If generated list or show pages omit relationship views,
 the frontend is incomplete.
 
+The generated relationship runtime SHOULD also expose stable `data-testid` and
+`data-relationship-fetch-source` markers for list dialogs, summary dialogs,
+and relationship tabs so the generic Playwright smoke can prove these
+behaviors without hardcoding one app's domain model.
+
 The runtime MUST remain functional even when normalized relationship metadata
 is partial. It MUST combine:
 

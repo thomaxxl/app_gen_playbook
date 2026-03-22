@@ -53,6 +53,7 @@ test-results/
 skills/playwright-skill/.temp-execution-*.js
 
 # Generated app working tree
+/app
 /app/
 /app.cmdb/
 /runs/current/
