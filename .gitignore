@@ -16,6 +16,7 @@ htmlcov/
 .env
 .codex/
 tmp/
+tools/runs/
 
 # Local Python environments and install targets
 .venv
@@ -49,6 +50,7 @@ tools/validators/coverage/**/*.py[cod]
 playwright-report/
 test-results/
 *.tsbuildinfo
+skills/playwright-skill/.temp-execution-*.js
 
 # Generated app working tree
 /app/

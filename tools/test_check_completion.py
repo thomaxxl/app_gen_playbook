@@ -13,6 +13,47 @@ def write_file(path: Path, content: str) -> None:
 
 
 class CheckCompletionTests(unittest.TestCase):
+    def test_terminal_delivery_approval_short_circuits_stale_completion_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/integration-review.md",
+                "owner: architect\nphase: phase-6-integration-review\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/qa-delivery-review.md",
+                "\n".join(
+                    [
+                        "---",
+                        "status: approved",
+                        "---",
+                        "- qa_decision: pass",
+                        "- run_sh_validation: pass",
+                        "- basic_user_testing: pass",
+                        "- frontend_runtime_errors: pass",
+                        "- backend_runtime_errors: pass",
+                        "- metadata_leakage: pass-on-tested-surfaces",
+                        "- review_summary: final QA validation passed",
+                    ]
+                ),
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ceo-delivery-validation.md",
+                "owner: ceo\nphase: delivery-approval\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/delivery-approved.md",
+                "owner: ceo\nphase: delivery-approval\nstatus: approved\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            self.assertEqual(blockers, [])
+
     def test_missing_docker_outputs_are_non_blocking(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

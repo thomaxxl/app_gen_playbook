@@ -90,6 +90,64 @@ CONTRACT_SAMPLES_REQUIRED_PATTERNS = (
 )
 
 
+def metadata_status(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return str(parse_metadata_block(path).get("status", "")).strip().lower()
+
+
+def qa_delivery_review_terminal(repo_root: Path) -> bool:
+    path = repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md"
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    checks = (
+        re.search(r"(?im)^(?:-\s*)?qa_decision:\s*(approved|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?run_sh_validation:\s*(passed|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?basic_user_testing:\s*(passed|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?frontend_runtime_errors:\s*(none|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?backend_runtime_errors:\s*(none|pass)\s*$", text),
+        re.search(r"(?im)^(?:-\s*)?metadata_leakage:\s*(none|pass-on-tested-surfaces)\s*$", text),
+    )
+    return all(checks)
+
+
+def delivery_approval_terminal(repo_root: Path) -> bool:
+    approval_path = repo_root / "runs" / "current" / "orchestrator" / "delivery-approved.md"
+    validation_path = repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md"
+    acceptance_review = repo_root / "runs" / "current" / "artifacts" / "product" / "acceptance-review.md"
+    integration_review = repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md"
+    return (
+        metadata_status(approval_path) == "approved"
+        and metadata_status(validation_path) == "ready-for-handoff"
+        and metadata_status(acceptance_review) == "approved"
+        and metadata_status(integration_review) in READY_ARTIFACT_STATUSES
+        and qa_delivery_review_terminal(repo_root)
+    )
+
+
+def active_role_queues_present(repo_root: Path) -> bool:
+    for display_role in CORE_DISPLAY_ROLES:
+        runtime_role = DISPLAY_TO_RUNTIME[display_role]
+        role_root = repo_root / "runs" / "current" / "role-state" / runtime_role
+        for lane in ("inbox", "inflight"):
+            lane_root = role_root / lane
+            if lane_root.exists() and any(lane_root.glob("*.md")):
+                return True
+    ceo_root = repo_root / "runs" / "current" / "role-state" / "ceo"
+    for lane in ("inbox", "inflight"):
+        lane_root = ceo_root / lane
+        if lane_root.exists() and any(lane_root.glob("*.md")):
+            return True
+    if is_optional_devops_active(repo_root):
+        for deployment_root in all_role_state_dirs(repo_root, "deployment"):
+            for lane in ("inbox", "inflight"):
+                lane_root = deployment_root / lane
+                if lane_root.exists() and any(lane_root.glob("*.md")):
+                    return True
+    return False
+
+
 def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
     browser_proof = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
     if not browser_proof.exists():
@@ -220,6 +278,9 @@ def ui_preview_validation_value(text: str, role: str) -> str:
 
 
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
+    if delivery_approval_terminal(repo_root) and not active_role_queues_present(repo_root):
+        return []
+
     blockers: list[dict[str, str]] = []
 
     acceptance_review = (
