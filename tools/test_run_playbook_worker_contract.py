@@ -103,14 +103,14 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         self.assertIn('"$ROOT/scripts"', ceo_section)
         self.assertIn('"$ROOT/tools"', ceo_section)
 
-    def test_ceo_turn_must_update_remarks(self) -> None:
+    def test_ceo_turn_without_direct_remarks_write_is_synthesized(self) -> None:
         script = self.runner_core()
 
         self.assertIn('if [[ "$runtime_role" == "ceo" ]]; then', script)
         self.assertIn('remarks_before_fingerprint="$(file_fingerprint "$RUN_ROOT/remarks.md")"', script)
-        self.assertIn('fatal_exit \\', script)
-        self.assertIn('role $runtime_role did not update remarks.md', script)
-        self.assertIn('Expected the CEO intervention to append a diagnosis or unblock note to runs/current/remarks.md.', script)
+        self.assertIn('"CEO Turn Summary (Synthesized)"', script)
+        self.assertIn('ceo-remarks-synthesized message=${message_base}.md', script)
+        self.assertIn('The CEO turn completed and archived its claimed work, but did not append a remarks entry directly', script)
 
     def test_runner_supports_playbook_wide_yolo_flag(self) -> None:
         script = self.runner_core()

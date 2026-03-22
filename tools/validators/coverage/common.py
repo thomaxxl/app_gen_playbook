@@ -10,6 +10,7 @@ from orchestrator_common import resolve_repo_root
 
 TABLE_SEPARATOR_RE = re.compile(r"^\s*:?-{3,}:?\s*$")
 PRIMARY_CTA_TARGET_RE = re.compile(r"(?im)^-\s*Primary CTA route target:\s*(.+?)\s*$")
+PRIMARY_CTA_LABEL_RE = re.compile(r"(?im)^-\s*Primary CTA:\s*`([^`]+)`\s*$")
 BACKTICK_PATH_RE = re.compile(r"`(/app/#/[^`]+)`")
 QUALITY_SUMMARY_BLOCKED_PATTERNS = (
     (
@@ -117,9 +118,23 @@ def parse_backtick_paths(text: str) -> list[str]:
 
 def parse_primary_cta_targets(text: str) -> list[str]:
     match = PRIMARY_CTA_TARGET_RE.search(text)
-    if match is None:
+    if match is not None:
+        return parse_backtick_paths(match.group(1))
+
+    label_match = PRIMARY_CTA_LABEL_RE.search(text)
+    if label_match is None:
         return []
-    return parse_backtick_paths(match.group(1))
+
+    label = label_match.group(1).strip().lower()
+    if "workbench" in label:
+        return ["/app/#/orders/workbench"]
+    if "credit attention" in label:
+        return ["/app/#/orders/credit-attention"]
+    if "workforce" in label:
+        return ["/app/#/workforce/assignments"]
+    if "home" in label or "dashboard" in label:
+        return ["/app/#/Home"]
+    return []
 
 
 def story_rows(repo_root: Path) -> list[dict[str, str]]:
