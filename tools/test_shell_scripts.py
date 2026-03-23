@@ -204,6 +204,12 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             self.assertTrue(runtime_log.is_file())
             self.assertEqual(runtime_log.read_text(encoding="utf-8"), "")
 
+    def test_prereq_operator_action_note_escapes_skill_names_in_source(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+        script_text = (source_repo_root / "scripts" / "run_playbook_core.sh").read_text(encoding="utf-8")
+        self.assertIn(r"(\`playwright-skill\` and \`openapi-to-admin-yaml\`)", script_text)
+        self.assertNotIn("(`playwright-skill` and `openapi-to-admin-yaml`)", script_text)
+
     def test_ceo_delivery_validation_succeeds_when_run_script_emits_logs(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
 

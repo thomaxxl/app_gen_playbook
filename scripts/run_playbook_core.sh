@@ -863,10 +863,10 @@ maybe_auto_pivot_runtime_env_to_sandbox() {
   log "runtime-env-auto-pivot from=host to=sandbox"
   append_recovery_log \
     "Runtime Environment Auto-Pivoted To Sandbox" \
-    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
+    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to \`PLAYBOOK_RUNTIME_ENV=sandbox\` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
   append_run_remark \
     "Runtime Environment Auto-Pivoted To Sandbox" \
-    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
+    "The runner detected that host-mode localhost validation is blocked by the current execution environment.\n\nDecision:\n- switched the current run from implicit host mode to \`PLAYBOOK_RUNTIME_ENV=sandbox\` before dispatching more work\n\nReason:\n- host-only socket validation is not available here, so sandbox mode is the correct runtime lane for this environment"
   return 0
 }
 
@@ -923,7 +923,7 @@ Required checks:
 - frontend dependency availability
 - frontend preview entrypoint presence
 - required repo-local skills are installed from skills/ into .codex/skills/
-  (`playwright-skill` and `openapi-to-admin-yaml`)
+  (\`playwright-skill\` and \`openapi-to-admin-yaml\`)
 - local socket creation / loopback capability in the current execution context
 - localhost port binding in the current execution context
 - Playwright screenshot capability
@@ -1586,7 +1586,7 @@ change_id: ${ACTIVE_CHANGE_ID}
 - record the delivery review in runs/current/remarks.md
 - run scripts/run_playbook.sh --ceo-delivery-validate
 - review runs/current/evidence/ceo-delivery-validation.md
-- write runs/current/orchestrator/delivery-approved.md with an explicit metadata line `status: approved` when delivery is validated
+- write runs/current/orchestrator/delivery-approved.md with an explicit metadata line \`status: approved\` when delivery is validated
 - if delivery validation fails, repair the blocker directly or emit the handoff needed to continue
 
 ## Dependencies
