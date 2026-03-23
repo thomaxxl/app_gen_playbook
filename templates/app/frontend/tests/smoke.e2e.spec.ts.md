@@ -23,7 +23,9 @@ type RelationshipDialogCandidate = {
   label: string;
   linkTestId: string;
   path: string;
+  relationshipName: string;
   resourceName: string;
+  surface: "list" | "summary";
 };
 
 type RelationshipTabCandidate = {
@@ -149,7 +151,9 @@ async function findListRelationshipDialogCandidate(
       label,
       linkTestId,
       path: `/app/#/${resource.name}`,
+      relationshipName: linkTestId.split(":").slice(2).join(":"),
       resourceName: resource.name,
+      surface: "list",
     };
   }
 
@@ -184,7 +188,9 @@ async function findSummaryRelationshipDialogCandidate(
       label,
       linkTestId,
       path,
+      relationshipName: linkTestId.split(":").slice(2).join(":"),
       resourceName: resource.name,
+      surface: "summary",
     };
   }
 
@@ -285,6 +291,18 @@ async function assertRelationshipDialogFlow(
   await expect(dialog.getByRole("button", { name: "EDIT" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "VIEW" })).toBeVisible();
   await expect(dialog.getByText(candidate.label)).toBeVisible();
+
+  const dialogState = page.getByTestId(
+    `relationship-dialog-state:${candidate.surface}:${candidate.relationshipName}`,
+  );
+  await expect(dialogState).toBeVisible();
+
+  const fetchSource = await dialogState.getAttribute("data-relationship-fetch-source");
+  expect(["embedded", "relationship-route", "id-fallback"]).toContain(fetchSource);
+
+  if (fetchSource === "relationship-route") {
+    await expect(dialogState).toHaveAttribute("data-relationship-route-path", /.+/);
+  }
 }
 
 test("generated app loads without blank screens, loops, or crashes", async ({

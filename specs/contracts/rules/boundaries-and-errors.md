@@ -25,6 +25,9 @@ If the app adds custom Python write endpoints later, those endpoints MUST:
 - use the same session factory as SAFRS
 - commit through that session
 - MUST NOT bypass the mapped ORM model layer
+- MUST NOT become the primary owner of persisted DB-backed business logic
+  unless the run-owned rule mapping records a documented LogicBank exception
+  with a concrete reason
 
 ## Rollback behavior
 

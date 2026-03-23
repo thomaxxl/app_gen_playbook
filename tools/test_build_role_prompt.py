@@ -71,6 +71,7 @@ class BuildRolePromptTests(unittest.TestCase):
 
         self.assertIn("do not leave background servers, watchers, or helper processes running", source)
         self.assertIn("terminate any processes you started for this turn", source)
+        self.assertIn("keeps only durable context relevant to future turns or future runs", source)
 
     def test_canonical_outputs_extract_evidence_paths_from_requested_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

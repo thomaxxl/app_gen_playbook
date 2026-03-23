@@ -148,16 +148,33 @@ Allowed `status` values:
 
 ## Context discipline
 
-Each runtime-created `context.md` should include:
+Each runtime-created `context.md` MUST stay compact and durable.
 
-- last processed inbox items
-- files created or updated
-- decisions made
-- assumptions made
-- unresolved issues
-- handoffs emitted
-- verification path used
-- implementation evidence such as tested routes, commands, or generated files
+It SHOULD keep only context that still matters for future turns or future runs,
+for example:
+
+- stable decisions still in force
+- durable assumptions worth preserving
+- unresolved issues that remain open across handoffs or recovery
+- reusable pitfalls, upstream bugs, or gotchas that future runs should avoid
+- pointers to the canonical artifact or evidence file when that pointer is
+  still useful later
+
+It MUST NOT become an append-only execution log. Move transient detail into the
+real canonical surfaces instead, such as inbox history, processed handoffs,
+`runs/current/notes.md`, verification artifacts, or role-owned evidence files.
+
+Examples of material that SHOULD NOT remain in `context.md` once the turn is
+complete:
+
+- last processed inbox filenames
+- exhaustive file-change lists
+- shell command transcripts
+- one-off tested routes or ad hoc verification snippets
+- implementation evidence that already lives in a canonical artifact
+
+Roles SHOULD compact `context.md` regularly by rewriting it in place, removing
+resolved or stale detail instead of only appending new notes.
 
 When recording verification results in `context.md`, evidence artifacts, or
 `runs/current/remarks.md`, agents MUST state explicitly whether the check

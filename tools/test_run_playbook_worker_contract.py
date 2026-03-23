@@ -175,6 +175,18 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
             script.index('if [[ -f "$OPERATOR_ACTION_REQUIRED_MD" ]]; then', main_loop_index),
         )
 
+    def test_steering_requests_block_new_claims_immediately(self) -> None:
+        script = self.runner_core()
+
+        self.assertIn("steering_request_blocks_new_claims()", script)
+        self.assertIn('if steering_request_blocks_new_claims; then', script)
+        self.assertIn('if [[ -f "$KILL_REQUESTED_MD" ]]; then', script)
+        self.assertIn('if [[ -f "$PAUSE_REQUESTED_MD" ]]; then', script)
+        claim_index = script.index("claim_message() {")
+        new_claim_gate_index = script.index('if steering_request_blocks_new_claims; then', claim_index)
+        inbox_claim_index = script.index('oldest_operator_queue_file inbox', claim_index)
+        self.assertLess(new_claim_gate_index, inbox_claim_index)
+
     def test_runner_routes_runner_owned_termination_through_ceo_review(self) -> None:
         script = self.runner_core()
 

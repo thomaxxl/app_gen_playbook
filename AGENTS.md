@@ -14,7 +14,9 @@ These instructions apply to the `app_gen_playbook` repository.
 - Process exactly one inbox message per non-interactive role invocation.
 - Respect the ownership map and writable-boundary rules defined by the
   playbook.
-- Update the active role's `context.md` when work completes.
+- Update the active role's `context.md` when work completes, but keep it
+  compact and limited to durable context that still matters for future turns
+  or future runs.
 - Move processed inbox items into `processed/`; do not leave completed work in
   `inbox/`.
 - Do not silently edit another role's artifact area. Emit a handoff instead.

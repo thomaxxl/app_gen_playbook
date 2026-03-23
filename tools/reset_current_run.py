@@ -47,7 +47,7 @@ def role_agents_content(runtime_role: str) -> str:
         f"- You are the {display_role} runtime worker.\n"
         "- Process exactly one inbox message per noninteractive Codex run.\n"
         "- Claimed work is moved into `inflight/` before you start.\n"
-        "- Update `context.md` before finishing the inbox item.\n"
+        "- Rewrite `context.md` before finishing the inbox item, keeping only compact durable context relevant to future turns or future runs.\n"
         "- Move the completed inflight item into `processed/`.\n"
         "- Create downstream inbox files when handoff is required.\n"
         "- Do not silently edit another role's owned artifact area or app subtree.\n"

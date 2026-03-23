@@ -38,6 +38,11 @@ Before choosing a LogicBank lane, classify the requirement:
 `Rule.constraint` MUST NOT be the first answer for requirements that are
 really schema/nullability/uniqueness/FK design choices.
 
+If the logic is about persisted DB-backed business data, derived state,
+aggregate state, or rollback-worthy invariants, the default implementation
+lane is LogicBank. Endpoint/service/frontend code MAY supplement that lane,
+but it MUST NOT silently replace it without a documented exception.
+
 ## Starter declaration pattern
 
 The implementation MUST use this starter shape unless a documented deviation
@@ -135,6 +140,15 @@ For each approved business rule, the default selection order is:
 
 The implementation MUST NOT skip directly to endpoint/service/event/custom
 code without recording why the earlier declarative lanes were insufficient.
+
+If a non-LogicBank lane is approved, the rule record MUST document:
+
+- whether persisted DB-backed data is involved
+- which `Rule.*` or advanced LogicBank lanes were rejected and why
+- why the replacement lane is safer or more correct here
+
+Arguments such as "easier for the endpoint", "easier for the frontend", or
+"faster to ship" are not sufficient by themselves.
 
 ## Visibility rule
 

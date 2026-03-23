@@ -95,7 +95,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             self.assertFalse((repo_root / "runs" / "current").exists())
             self.assertTrue((repo_root / "app").is_dir())
 
-    def test_steer_script_writes_pause_note_to_ceo_inbox(self) -> None:
+    def test_steer_script_pause_writes_direct_orchestrator_request(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -107,7 +107,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             shutil.copy2(source_repo_root / "scripts" / "steer.sh", scripts_dir / "steer.sh")
             (scripts_dir / "steer.sh").chmod(0o755)
 
-            (repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
 
             result = subprocess.run(
                 ["bash", str(scripts_dir / "steer.sh"), "--pause", "Pause for operator review."],
@@ -122,13 +122,12 @@ class ShellScriptSyntaxTests(unittest.TestCase):
                 msg=f"steer.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
             )
 
-            note_path = Path(result.stdout.strip())
-            self.assertTrue(note_path.is_file())
-            note_text = note_path.read_text(encoding="utf-8")
-            self.assertIn("from: operator", note_text)
-            self.assertIn("to: ceo", note_text)
-            self.assertIn("steering_mode: pause-run", note_text)
-            self.assertIn("write runs/current/orchestrator/pause-requested.md", note_text)
+            pause_request = Path(result.stdout.strip())
+            self.assertTrue(pause_request.is_file())
+            pause_text = pause_request.read_text(encoding="utf-8")
+            self.assertIn("request_mode: drain-pause", pause_text)
+            self.assertIn("do not start new work", pause_text)
+            self.assertFalse((repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").exists())
 
     def test_steer_script_kill_writes_kill_request_and_signals_runner(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
@@ -142,7 +141,6 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             shutil.copy2(source_repo_root / "scripts" / "steer.sh", scripts_dir / "steer.sh")
             (scripts_dir / "steer.sh").chmod(0o755)
 
-            (repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
             (repo_root / "runs" / "current" / "orchestrator" / "runner.pid").write_text("999999\n", encoding="utf-8")
 
@@ -159,15 +157,10 @@ class ShellScriptSyntaxTests(unittest.TestCase):
                 msg=f"steer.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
             )
 
-            note_path = Path(result.stdout.strip())
-            self.assertTrue(note_path.is_file())
-            note_text = note_path.read_text(encoding="utf-8")
-            self.assertIn("steering_mode: kill-run", note_text)
-            self.assertIn("write runs/current/orchestrator/kill-requested.md", note_text)
-
-            kill_request = repo_root / "runs" / "current" / "orchestrator" / "kill-requested.md"
+            kill_request = Path(result.stdout.strip())
             self.assertTrue(kill_request.is_file())
             self.assertIn("request_mode: immediate-kill", kill_request.read_text(encoding="utf-8"))
+            self.assertFalse((repo_root / "runs" / "current" / "role-state" / "ceo" / "inbox").exists())
 
     def test_ceo_delivery_validation_fails_when_run_script_exits_without_logs(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]

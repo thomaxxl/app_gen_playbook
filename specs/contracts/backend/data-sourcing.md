@@ -75,6 +75,19 @@ explain why the need is not satisfied by:
 - `jsonapi_attr`
 - `jsonapi_rpc`
 
+For any approved custom non-SAFRS endpoint, the run-owned design MUST also
+record:
+
+- whether persisted DB-backed data is involved at all
+- if not, what the actual source of truth is
+- the exception category, such as external integration, runtime/process
+  control, binary transport, auth/session, or intentionally non-resource-
+  shaped service contract
+- the replacement contract and caller expectations
+
+Arguments such as "easier for the frontend", "quicker to ship", or "did not
+want to model it" are not sufficient justification.
+
 Local workspace references currently include:
 
 - `../../references/safrs/Quickstart-FastAPI.md`

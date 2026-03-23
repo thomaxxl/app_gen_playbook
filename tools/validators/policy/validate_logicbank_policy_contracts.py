@@ -73,6 +73,7 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
         ],
         repo_root / "playbook" / "roles" / "backend.md": [
             "skills/logicbank-rules-design/SKILL.md",
+            "default to the LogicBank lane",
             "schema constraint",
             "transactional rule",
             "transport concern",
@@ -82,9 +83,11 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
             "Rule.count",
             "Rule.constraint",
             "Rule.copy` and record that the field is a snapshot",
+            "replacement lane is safer or more correct than LogicBank here",
         ],
         repo_root / "playbook" / "roles" / "architect.md": [
             "skills/logicbank-rules-design/SKILL.md",
+            "default the implementation lane to LogicBank",
             "LogicBank declarative lane",
             "custom-Python alternatives",
             "schema constraint",
@@ -117,6 +120,7 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
         repo_root / "specs" / "contracts" / "rules" / "patterns.md": [
             "schema constraint",
             "transport concern",
+            "default implementation lane is LogicBank",
             "Rule.copy",
             "Rule.formula",
             "Rule.sum",
@@ -126,6 +130,7 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
             "endpoint handlers",
             "frontend-only validation",
             "safe default is `Rule.copy`",
+            "replacement lane is safer or more correct here",
         ],
         repo_root / "specs" / "contracts" / "rules" / "lifecycle.md": [
             "shared ORM session factory",
@@ -138,6 +143,7 @@ def collect_logicbank_lane_issues(repo_root: Path) -> list[dict[str, str]]:
             "direct ORM usage",
             "real app session factory",
             "business entry point",
+            "non-LogicBank",
         ],
     }
     for path, tokens in required_tokens.items():
@@ -171,12 +177,14 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
     required_tokens = {
         repo_root / "specs" / "backend-design" / "rule-mapping.md": [
             "Requirement class",
+            "Persisted DB-backed data involved?",
             "Schema prerequisite / migration / backfill plan",
             "Starter LogicBank patterns considered",
             "Chosen LogicBank pattern",
             "Snapshot vs live semantics",
             "Advanced/custom exception required?",
             "Why declarative rules were insufficient",
+            "Why the replacement lane is safer or more correct than LogicBank here",
             "ORM-path proof",
             "API-path proof",
             "Business entry-path proof",
@@ -209,6 +217,7 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
             "LogicBank-lane",
             "endpoint/service/frontend enforcement",
             "logic trace evidence",
+            "replacement lane is safer or more correct",
         ],
         repo_root / "templates" / "app" / "backend" / "errors.py.md": [
             "ConstraintException",
@@ -276,6 +285,43 @@ def collect_logicbank_artifact_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in tokens:
             if _normalized(token) not in normalized:
                 issues.append(_issue(repo_root, path, f"missing LogicBank artifact token: {token}"))
+
+    run_rule_mapping = repo_root / "runs" / "current" / "artifacts" / "backend-design" / "rule-mapping.md"
+    run_rule_mapping_text = _read(run_rule_mapping)
+    if _is_non_stub_run_artifact(run_rule_mapping):
+        normalized_rule_mapping = _normalized(run_rule_mapping_text).lower()
+        schema_ready = (
+            "persisted db-backed data involved" in normalized_rule_mapping
+            or "safer or more correct than logicbank" in normalized_rule_mapping
+        )
+        custom_markers = (
+            "custom python",
+            "endpoint",
+            "service",
+            "wrapper",
+            "manual logic",
+            "imperative",
+        )
+        if schema_ready and any(marker in normalized_rule_mapping for marker in custom_markers):
+            if "safer or more correct than logicbank" not in normalized_rule_mapping:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        run_rule_mapping,
+                        "run rule mapping records a non-LogicBank lane without explaining why the replacement lane is safer or more correct than LogicBank",
+                    )
+                )
+            if not re.search(
+                r"persisted db-backed data involved\??\s*(?:\||:)\s*(yes|no)\b",
+                normalized_rule_mapping,
+            ):
+                issues.append(
+                    _issue(
+                        repo_root,
+                        run_rule_mapping,
+                        "run rule mapping records a non-LogicBank lane without stating whether persisted DB-backed data is involved as an explicit yes/no decision",
+                    )
+                )
 
     live_rules = repo_root / "app" / "rules" / "rules.py"
     live_rules_text = _read(live_rules)

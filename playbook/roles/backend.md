@@ -172,6 +172,30 @@ load and apply `../../skills/safrs-api-design/SKILL.md` before approving any
 resource-versus-relationship-versus-include-versus-`jsonapi_attr`-versus-
 `jsonapi_rpc`-versus-view-model-versus-exception decision.
 
+For persisted DB-backed business logic, derivations, aggregates, lifecycle
+checks, and rollback-worthy invariants, the Backend agent MUST default to the
+LogicBank lane. Endpoint handlers, service helpers, bootstrap code, and
+frontend validation MAY supplement that lane, but they MUST NOT become the
+primary owner of DB-backed business logic without a documented LogicBank
+exception.
+
+When the task is choosing between `Rule.*`, advanced LogicBank patterns, thin
+wrappers, or custom Python for DB-backed business behavior, the Backend agent
+MUST load and apply `../../skills/logicbank-rules-design/SKILL.md` before
+approving any non-LogicBank lane.
+
+If a non-LogicBank lane is approved for persisted DB-backed business logic,
+the Backend agent MUST record:
+
+- whether persisted DB-backed data is involved
+- whether the need is really a schema constraint, transactional rule, or
+  transport concern
+- which declarative or advanced LogicBank lanes were rejected and why
+- why the replacement lane is safer or more correct than LogicBank here
+
+Arguments such as "easier for the endpoint", "easier for the frontend", or
+"faster to ship" are not sufficient by themselves.
+
 Before approving a non-default API lane for DB-backed data, the Backend agent
 MUST answer this decision tree in order:
 

@@ -286,7 +286,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -439,7 +439,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -528,6 +528,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
                     parser = argparse.ArgumentParser()
                     parser.add_argument("--repo-root", required=True)
                     parser.add_argument("--output", required=True)
+                    parser.add_argument("--run-mode")
                     args = parser.parse_args()
 
                     output_path = Path(args.output)
@@ -632,7 +633,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -870,6 +871,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
                     parser = argparse.ArgumentParser()
                     parser.add_argument("--repo-root", required=True)
                     parser.add_argument("--output")
+                    parser.add_argument("--run-mode")
                     args = parser.parse_args()
                     if args.output:
                         path = Path(args.output)
@@ -1020,6 +1022,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
                     parser = argparse.ArgumentParser()
                     parser.add_argument("--repo-root", required=True)
                     parser.add_argument("--output")
+                    parser.add_argument("--run-mode")
                     args = parser.parse_args()
                     if args.output:
                         path = Path(args.output)
@@ -1163,6 +1166,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
                     parser = argparse.ArgumentParser()
                     parser.add_argument("--repo-root", required=True)
                     parser.add_argument("--output")
+                    parser.add_argument("--run-mode")
                     args = parser.parse_args()
                     if args.output:
                         path = Path(args.output)
@@ -1250,7 +1254,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); args = parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); args = parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1327,7 +1331,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); args = parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); args = parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1404,7 +1408,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1477,7 +1481,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1630,7 +1634,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1772,7 +1776,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
 
             result = subprocess.run(
@@ -1926,7 +1930,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
             write_executable(
                 tools_dir / "check_dependency_provisioning.py",
@@ -2227,7 +2231,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             )
             write_executable(
                 tools_dir / "check_execution_prereqs.py",
-                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.parse_args(); raise SystemExit(0)\n",
+                "#!/usr/bin/env python3\nimport argparse\nparser = argparse.ArgumentParser(); parser.add_argument('--repo-root', required=True); parser.add_argument('--output'); parser.add_argument('--run-mode'); parser.parse_args(); raise SystemExit(0)\n",
             )
             write_executable(
                 tools_dir / "check_dependency_provisioning.py",

@@ -163,6 +163,17 @@ data, the Architect MUST require the SAFRS lane analysis defined by
 `../../skills/safrs-api-design/SKILL.md` and a completed exception record in
 the run-owned architecture/backend-design artifacts.
 
+For persisted DB-backed business logic, derivations, aggregates, lifecycle
+checks, and rollback-worthy invariants, the Architect MUST default the
+implementation lane to LogicBank. The Architect MAY approve endpoint/service/
+wrapper/custom-Python ownership only with a documented LogicBank exception
+record and a concrete reason.
+
+When approving a non-LogicBank lane for DB-backed business logic, the
+Architect MUST require the LogicBank lane analysis defined by
+`../../skills/logicbank-rules-design/SKILL.md` and a completed rule
+exception record in the run-owned backend-design artifacts.
+
 If architecture authoring or integration review exposes a likely upstream bug
 in SAFRS, `safrs-jsonapi-client`, LogicBank, or another shared SAFRS-family
 dependency, the Architect MUST require or update a matching entry in

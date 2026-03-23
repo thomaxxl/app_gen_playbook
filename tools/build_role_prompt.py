@@ -150,7 +150,7 @@ def emit_full_prompt(
     print(
         "\nWhen finished:\n"
         "1. update owned artifacts\n"
-        "2. update the role context.md\n"
+        "2. rewrite the role context.md so it stays compact and keeps only durable context relevant to future turns or future runs\n"
         "3. create any required downstream inbox files\n"
         "4. terminate any processes you started for this turn\n"
         "5. move the claimed inflight work item into processed/\n"
@@ -199,7 +199,7 @@ def emit_short_prompt(
     print("- Do not edit another role's artifact area or app subtree.")
     print("- If contract drift exists, write a handoff into the Architect inbox instead of silently patching around it.")
     print("- Do not leave background servers, watchers, or helper processes running after this turn.")
-    print("- Update your role context.md.")
+    print("- Rewrite your role context.md so it stays compact and keeps only durable context relevant to future turns or future runs.")
     print("- Terminate any processes you started for this turn.")
     print("- Move the claimed inflight work item into processed/.")
     print("- Start the final response with `Summary: ...` on a single line.")

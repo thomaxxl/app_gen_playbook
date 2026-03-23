@@ -8,12 +8,17 @@ Use this only when a DB-backed API need cannot stay inside the normal SAFRS lane
 - Consumer:
 - Requested behavior:
 - Persisted DB-backed data involved:
+- If no, source of truth when not DB-backed:
+- Exception category:
+  external integration / runtime-process control / binary transport / auth-session /
+  non-resource-shaped service contract / other:
 
 ## Proposed custom surface
 
 - Proposed endpoint or service surface:
 - Request/response summary:
 - Why it exists:
+- Why ordinary SAFRS is not the right primary contract:
 
 ## Rejected SAFRS lanes
 
@@ -40,6 +45,13 @@ Use this only when a DB-backed API need cannot stay inside the normal SAFRS lane
 ## Why this is a valid exception
 
 -
+
+Weak arguments that are not acceptable by themselves:
+
+- "simpler for the frontend"
+- "faster to ship"
+- "did not want to model it"
+- "easier than using SAFRS"
 
 ## Replacement contract
 

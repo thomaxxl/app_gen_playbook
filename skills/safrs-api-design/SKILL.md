@@ -336,6 +336,14 @@ A custom endpoint is acceptable only when all of these are true:
 - it is not satisfied by `include=...`
 - it is not a resource field that belongs in `@jsonapi_attr`
 - it is not an explicit action that belongs in `@jsonapi_rpc`
+- the exception record states whether any persisted DB-backed data is involved
+- if no persisted DB-backed data is involved, the exception record names the
+  actual source of truth and why SAFRS is not the relevant lane
+- the exception record names a concrete category such as external integration,
+  runtime/process control, binary transport, auth/session, or intentionally
+  non-resource-shaped service contract
+- the justification is concrete and reviewable, not just "faster", "simpler",
+  "frontend requested it", or "easier than modeling"
 - the architecture and backend-design artifacts record the exception and replacement contract
 - verification covers both the custom endpoint and the surrounding canonical SAFRS surface
 

@@ -200,6 +200,9 @@ For generated list and summary/show layouts:
 - the visible column label MUST come from the relationship label, not the raw
   foreign-key attribute name
 - the visible value MUST use the readable label resolution rules above
+- summary/show overview relationship items MUST use the same dialog-link lane
+  as list cells, not plain text labels that cannot open the related-record
+  dialog
 
 The runtime MUST NOT leave a raw scalar such as `customer_id` or `employee_id`
 visible in the default generated UI when the relationship metadata is

@@ -259,7 +259,8 @@ requirements:
       Business-rule design and review must load the LogicBank skill and force
       authors to evaluate the declarative Rule.copy/formula/sum/count/
       constraint lane before endpoint/service/event/custom-Python
-      alternatives.
+      alternatives. Persisted DB-backed business logic defaults to LogicBank
+      unless a documented exception gives a concrete, defensible reason not to.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_lane_issues
@@ -298,7 +299,10 @@ requirements:
     description: >
       The backend-design artifacts must record the chosen LogicBank lane,
       exception reason, and API/ORM proof expectations instead of leaving
-      business-rule implementation as generic prose.
+      business-rule implementation as generic prose. Any non-LogicBank lane
+      for persisted DB-backed business logic must state whether DB-backed data
+      is involved and why the replacement lane is safer or more correct than
+      LogicBank.
     validator:
       kind: python_function
       entrypoint: tools/validators/policy/validate_logicbank_policy_contracts.py::collect_logicbank_artifact_issues

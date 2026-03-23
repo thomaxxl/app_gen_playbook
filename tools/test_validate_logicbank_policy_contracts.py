@@ -61,12 +61,12 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
                 ("playbook/process/read-sets/backend-implementation-core.md", "skills/logicbank-rules-design/SKILL.md\n"),
                 ("playbook/process/read-sets/architect-authoring-core.md", "skills/logicbank-rules-design/SKILL.md\n"),
                 ("playbook/process/read-sets/architect-review-core.md", "skills/logicbank-rules-design/SKILL.md\n"),
-                ("playbook/roles/backend.md", "skills/logicbank-rules-design/SKILL.md schema constraint transactional rule transport concern Rule.copy Rule.formula Rule.sum Rule.count Rule.constraint Rule.copy` and record that the field is a snapshot\n"),
-                ("playbook/roles/architect.md", "skills/logicbank-rules-design/SKILL.md LogicBank declarative lane custom-Python alternatives schema constraint Rule.copy\n"),
+                ("playbook/roles/backend.md", "skills/logicbank-rules-design/SKILL.md default to the LogicBank lane schema constraint transactional rule transport concern Rule.copy Rule.formula Rule.sum Rule.count Rule.constraint Rule.copy` and record that the field is a snapshot replacement lane is safer or more correct than LogicBank here\n"),
+                ("playbook/roles/architect.md", "skills/logicbank-rules-design/SKILL.md default the implementation lane to LogicBank LogicBank declarative lane custom-Python alternatives schema constraint Rule.copy\n"),
                 ("specs/contracts/rules/README.md", "skills/logicbank-rules-design/SKILL.md skills/logicbank-request-pattern/SKILL.md skills/logicbank-allocation/SKILL.md logicbank-request-pattern logicbank-allocation rule-mapping.md app/rules/** custom Python rule behavior\n"),
-                ("specs/contracts/rules/patterns.md", "schema constraint transport concern Rule.copy Rule.formula Rule.sum Rule.count Rule.constraint custom Python as last resort endpoint handlers frontend-only validation safe default is `Rule.copy`\n"),
+                ("specs/contracts/rules/patterns.md", "schema constraint transport concern default implementation lane is LogicBank Rule.copy Rule.formula Rule.sum Rule.count Rule.constraint custom Python as last resort endpoint handlers frontend-only validation safe default is `Rule.copy` replacement lane is safer or more correct here\n"),
                 ("specs/contracts/rules/lifecycle.md", "shared ORM session factory normal flush/commit path\n"),
-                ("specs/contracts/rules/validation.md", "snapshot semantics live recompute semantics API surface direct ORM usage real app session factory business entry point\n"),
+                ("specs/contracts/rules/validation.md", "snapshot semantics live recompute semantics API surface direct ORM usage real app session factory business entry point non-LogicBank\n"),
                 ("playbook/process/capability-loading.md", "logicbank-request-pattern logicbank-allocation capability profile load plan\n"),
                 ("runs/template/artifacts/architecture/capability-profile.md", "logicbank-request-pattern logicbank-allocation\n"),
                 ("runs/template/artifacts/architecture/load-plan.md", "logicbank-request-pattern logicbank-allocation\n"),
@@ -82,11 +82,11 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             repo_root = Path(tmp_dir)
             (repo_root / ".git").mkdir()
             for rel, content in (
-                ("specs/backend-design/rule-mapping.md", "Requirement class\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nPersisted DB-backed data involved?\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nWhy the replacement lane is safer or more correct than LogicBank here\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
                 ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
                 ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
                 ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
-                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\nreplacement lane is safer or more correct\n"),
                 ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
                 ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
                 ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
@@ -105,11 +105,11 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             repo_root = Path(tmp_dir)
             (repo_root / ".git").mkdir()
             for rel, content in (
-                ("specs/backend-design/rule-mapping.md", "Requirement class\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nPersisted DB-backed data involved?\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nWhy the replacement lane is safer or more correct than LogicBank here\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
                 ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
                 ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
                 ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
-                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\nreplacement lane is safer or more correct\n"),
                 ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
                 ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
                 ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
@@ -147,11 +147,11 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             repo_root = Path(tmp_dir)
             (repo_root / ".git").mkdir()
             for rel, content in (
-                ("specs/backend-design/rule-mapping.md", "Requirement class\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nPersisted DB-backed data involved?\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nWhy the replacement lane is safer or more correct than LogicBank here\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
                 ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
                 ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
                 ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
-                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\nreplacement lane is safer or more correct\n"),
                 ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
                 ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
                 ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
@@ -178,6 +178,31 @@ class ValidateLogicbankPolicyContractsTests(unittest.TestCase):
             issues = collect_logicbank_artifact_issues(repo_root)
             reasons = "\n".join(issue["reason"] for issue in issues)
             self.assertIn("runtime verifier reported failures", reasons)
+
+    def test_artifact_validator_flags_run_rule_mapping_without_logicbank_exception_justification(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            for rel, content in (
+                ("specs/backend-design/rule-mapping.md", "Requirement class\nPersisted DB-backed data involved?\nSchema prerequisite / migration / backfill plan\nStarter LogicBank patterns considered\nChosen LogicBank pattern\nSnapshot vs live semantics\nAdvanced/custom exception required?\nWhy declarative rules were insufficient\nWhy the replacement lane is safer or more correct than LogicBank here\nORM-path proof\nAPI-path proof\nBusiness entry-path proof\nLogic trace evidence\n"),
+                ("specs/backend-design/model-design.md", "schema constraint\ntransactional rule\ntransport concern\nSchema prerequisite / migration / backfill\nmaintained by `copy`\n`formula`\n`sum`\n`count`\ncustom logic\n"),
+                ("specs/backend-design/test-plan.md", "create/update/delete/reparent\ninvalid mutation stories\nAPI-path proof\nORM-path proof\nactivation proof\nbusiness entry-path coverage\nlogic-trace evidence\n"),
+                ("specs/backend-design/bootstrap-strategy.md", "derived-column migration or backfill\n"),
+                ("playbook/process/quality-gates.md", "LogicBank-lane\nendpoint/service/frontend enforcement\nlogic trace evidence\nreplacement lane is safer or more correct\n"),
+                ("templates/app/rules/rules.py.md", "LogicBank.activate\nRule.copy\nRule.formula\nRule.sum\nRule.count\nRule.constraint\nlogic_discovery/**\nlogic_row.log(...)\nlogic_row.new_logic_row(ModelClass)\n"),
+                ("templates/app/rules/test_rules.py.md", "business entry path\nLogicBank trace\n"),
+                ("specs/contracts/rules/logicbank-reference.md", "verify_logicbank_runtime_contract.py\nverified-runtime-notes.md\ncalling(row=..., old_row=..., logic_row=...)\nlogic_row.log\nlogic_row.new_logic_row(ModelClass)\nearly_row_event\nafter_flush_row_event\nreal in-memory smoke transaction\n"),
+                ("specs/references/logicbank/README.md", "verified-runtime-notes.md\nverify_logicbank_runtime_contract.py\n"),
+                ("specs/references/logicbank/verified-runtime-notes.md", "verify_logicbank_runtime_contract.py\nLogicBank.activate\nLogicRow.log\nLogicRow.new_logic_row\nin-memory smoke transaction\nnested audit-row creation\n"),
+                ("tools/verify_logicbank_runtime_contract.py", "Rule.early_row_event\nlogic_row.new_logic_row\nlogic_row.log\n\"verified\"\n"),
+                ("runs/current/artifacts/backend-design/rule-mapping.md", "status: approved\nPersisted DB-backed data involved? | \nChosen LogicBank pattern | custom python service helper\nAdvanced/custom exception required? | yes\n"),
+            ):
+                write_file(repo_root / rel, content)
+
+            issues = collect_logicbank_artifact_issues(repo_root)
+            reasons = "\n".join(issue["reason"] for issue in issues)
+            self.assertIn("safer or more correct than LogicBank", reasons)
+            self.assertIn("persisted DB-backed data is involved as an explicit yes/no decision", reasons)
 
 
 if __name__ == "__main__":

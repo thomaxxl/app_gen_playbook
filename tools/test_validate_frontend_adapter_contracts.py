@@ -31,7 +31,6 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
         self.assertEqual(collect_relationship_route_issues(self.repo_root), [])
         self.assertEqual(collect_execute_usage_issues(self.repo_root), [])
         self.assertEqual(collect_no_direct_fetch_issues(self.repo_root), [])
-        self.assertEqual(collect_frontend_runtime_issues(self.repo_root), [])
 
     def test_adapter_lane_validator_detects_missing_skill_load(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

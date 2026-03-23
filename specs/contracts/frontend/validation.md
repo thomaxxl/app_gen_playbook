@@ -25,8 +25,12 @@ of approved rules whose `Frontend Mirror` field is not `none` in:
 - `npm run test:e2e` succeeds
 - `npm run build` succeeds
 - built app loads under `/app/`
-- the Playwright smoke suite includes one live relationship-surface proof
-  against a generated record from the running API
+- the Playwright smoke suite proves, against generated records from the
+  running API:
+  - one list-surface relationship dialog
+  - one summary/show-surface relationship dialog
+  - `EDIT` and `VIEW` inside that dialog
+  - one `tomany` tab loaded through the canonical parent relationship lane
 
 If dependency maintenance changes direct frontend versions during a run, the
 agent MUST sync those versions back into the playbook dependency contract and
@@ -89,6 +93,9 @@ frontend package template before treating the playbook baseline as current.
   related-record dialog or tab, not only described in prose
 - the relationship proof above runs in a browser against the generated app, not
   only through unit tests or static token checks
+- that browser proof records dialog-state fetch-source markers and proves the
+  generated relationship runtime resolved the dialog/tab through an allowed
+  lane rather than only rendering preloaded text
 - the frontend does not require a custom endpoint merely to show DB-backed
   related data that SAFRS already exposes under the parent resource
 - custom SAFRS methods or raw JSON service calls use

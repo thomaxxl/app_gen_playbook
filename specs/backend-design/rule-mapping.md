@@ -20,9 +20,9 @@ that already belongs in `../../runs/current/artifacts/product/business-rules.md`
 
 The real artifact MUST include a table with this shape:
 
-| Rule ID | Requirement class | Backend fields involved | Schema prerequisite / migration / backfill plan | Backend enforcement location | Starter LogicBank patterns considered | Chosen LogicBank pattern | Snapshot vs live semantics | Advanced/custom exception required? | Why declarative rules were insufficient | API behavior | ORM-path proof | API-path proof | Business entry-path proof | Logic trace evidence | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `BR-001` | `<schema / transactional / transport>` | `<fields>` | `<plan or none>` | `<file/function>` | `<copy/formula/sum/count/constraint chain>` | `<formula/sum/count/copy/constraint/custom>` | `<snapshot/live/none>` | `<yes/no>` | `<reason or none>` | `<save rejected / derived update / none>` | `<test or evidence path>` | `<test or evidence path>` | `<test/evidence path or none>` | `<trace path or none>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
+| Rule ID | Requirement class | Persisted DB-backed data involved? | Backend fields involved | Schema prerequisite / migration / backfill plan | Backend enforcement location | Starter LogicBank patterns considered | Chosen LogicBank pattern | Snapshot vs live semantics | Advanced/custom exception required? | Why declarative rules were insufficient | Why the replacement lane is safer or more correct than LogicBank here | API behavior | ORM-path proof | API-path proof | Business entry-path proof | Logic trace evidence | Backend tests | Frontend mirror mode | Frontend mirror location | Frontend tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `BR-001` | `<schema / transactional / transport>` | `<yes/no>` | `<fields>` | `<plan or none>` | `<file/function>` | `<copy/formula/sum/count/constraint chain>` | `<formula/sum/count/copy/constraint/custom>` | `<snapshot/live/none>` | `<yes/no>` | `<reason or none>` | `<reason or none>` | `<save rejected / derived update / none>` | `<test or evidence path>` | `<test or evidence path>` | `<test/evidence path or none>` | `<trace path or none>` | `<test files>` | `<none/input/form/schema/async>` | `<file/function or none>` | `<test files or none>` | `<notes>` |
 
 The Backend role MUST replace the placeholder row.
 
@@ -47,6 +47,10 @@ The real artifact MUST also define:
 - which advanced rule IDs include a captured logic trace snippet or equivalent
   rule-execution evidence
 - for every exception, why declarative LogicBank rules were insufficient
+- for every non-LogicBank exception on persisted DB-backed logic, why the
+  replacement lane is safer or more correct than LogicBank here
+- weak arguments such as "easier for the endpoint", "easier for the
+  frontend", or "faster to ship" are not sufficient by themselves
 
 If the run needs LogicBank event handlers or signature-level API verification,
 the Backend role MAY load

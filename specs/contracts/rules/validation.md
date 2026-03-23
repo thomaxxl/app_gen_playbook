@@ -42,6 +42,13 @@ an inconsistent SAFRS-family runtime interaction, the run MUST record it in
 `../../../BUGS.md` and MUST NOT treat endpoint/service/event workarounds as
 successful rule validation.
 
+If persisted DB-backed business logic is implemented outside LogicBank as a
+non-LogicBank lane,
+validation MUST point to the explicit exception record and prove why a
+`Rule.*` lane or approved advanced LogicBank pattern was not the right fit.
+Validation MUST NOT accept endpoint/service/frontend-first business logic on
+DB-backed data without that record.
+
 ## API-path validation
 
 At least one invalid mutation MUST be tested through the API surface, not only

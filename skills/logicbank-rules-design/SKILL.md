@@ -16,6 +16,11 @@ Use this skill when the task touches any of the following:
 
 For SQLAlchemy-backed write logic, start with LogicBank's declarative rule DSL.
 
+If business logic is about persisted database-backed data, state transitions,
+aggregates, derivations, or rollback-worthy invariants, the default
+implementation lane is LogicBank unless a documented exception proves
+otherwise.
+
 Before choosing a LogicBank lane, classify the requirement:
 
 - schema constraint:
@@ -140,6 +145,25 @@ Only use custom Python as the primary rule implementation when:
 - the requirement is not naturally expressible as documented LogicBank rules or approved advanced patterns, and
 - the transaction still runs through the mapped ORM session / commit path, and
 - the exception is documented with why LogicBank was insufficient.
+
+Weak arguments are not sufficient by themselves:
+
+- easier for the endpoint or frontend
+- faster to ship
+- easier than modeling the rule
+- already had a service helper
+- simpler to keep it in one route
+
+Every non-LogicBank exception record must state:
+
+- whether persisted DB-backed data is involved
+- whether the rule is really a schema constraint, transactional rule, or
+  transport concern
+- which `Rule.*` lanes were rejected and why
+- whether advanced LogicBank patterns were considered and why they were not a
+  fit
+- what the replacement implementation lane is
+- why the replacement lane is safer or more correct than LogicBank here
 
 ## Mandatory semantic distinctions
 

@@ -5,6 +5,8 @@ Use this file to preserve the retrieval-first design of the playbook.
 ## Editorial budgets
 
 - summary files SHOULD stay within roughly 200 to 500 words
+- role `context.md` files SHOULD usually stay within roughly 150 to 300 words
+  and be rewritten compactly rather than grown as append-only logs
 - role entrypoint files SHOULD stay under roughly 900 words when practical
 - task bundles SHOULD stay under roughly 150 lines
 - contract summary files SHOULD stay under roughly 500 words

@@ -204,6 +204,14 @@ If `APP_WORKSPACE_DIR` is not set, the default target is the sibling workspace:
 
 - `../agp_workspace/app`
 
+Exception for active change runs:
+
+- `iterative-change-run` and `app-only-hotfix` MAY continue using the current
+  repo-local `app/` directory when that is the existing live run workspace,
+  even if `APP_WORKSPACE_DIR` points elsewhere
+- the prereq check SHOULD accept that reuse path instead of forcing a relink
+  before iteration starts
+
 That prerequisite check SHOULD be produced by
 `tools/check_execution_prereqs.py` from inside the current execution context
 and SHOULD cover:
@@ -424,12 +432,17 @@ Those role-local instructions MUST remain small and stable. They MUST define:
 
 - role identity
 - one-inbox-item-per-run behavior
-- `context.md` update requirement
+- `context.md` update requirement, with a compact durable-memory rule rather
+  than append-only logging
 - processed-message archiving requirement
 - cross-role edit prohibition
 
 The role-local `AGENTS.md` is a stable persona layer. It MUST NOT replace the
 real run state stored in artifacts or `context.md`.
+
+Role `context.md` files are not execution transcripts. They MUST keep only
+compact carry-forward context that remains useful for future turns or future
+runs and SHOULD be rewritten in place to remove stale or resolved detail.
 
 ## Claimed work
 
@@ -602,12 +615,14 @@ audit state so the follow-up survives resume and self-reexec.
 That rule allows an operator to steer a live run by writing a normal inbox
 message directly into the CEO lane without modifying the runner process itself.
 
-If CEO writes `runs/current/orchestrator/pause-requested.md`, the orchestrator
-MUST treat it as a high-priority drain request:
+If the operator or CEO writes `runs/current/orchestrator/pause-requested.md`,
+the orchestrator MUST treat it as a high-priority drain request:
 
 - finish only the work that is already in `inflight`
 - stop claiming new inbox work
 - then exit cleanly
+- refuse new inbox claims immediately, even if the pause request arrives
+  mid-loop after the top-of-loop pause check already ran
 
 A later `scripts/run_playbook.sh` startup, including `--resume`, MUST archive
 that pause file before the runner enters the main control loop.
@@ -615,6 +630,10 @@ that pause file before the runner enters the main control loop.
 If the operator writes `runs/current/orchestrator/kill-requested.md`, the
 orchestrator MUST stop immediately, terminate playbook-managed processes, and
 exit without waiting for additional queue work or CEO approval.
+
+The operator-facing `scripts/steer.sh --pause` and `scripts/steer.sh --kill`
+switches MUST write those orchestrator request files directly. They MUST NOT
+wait on a CEO inbox turn before the runner begins honoring the stop request.
 
 The orchestrator MUST NOT start a long-lived background worker through command
 substitution or any other construct that runs the starter in a subshell and

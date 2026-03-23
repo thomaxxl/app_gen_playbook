@@ -23,3 +23,4 @@ Each local runtime directory MUST contain:
 - `processed/`
 
 `context.md` is created by the role agent on first execution.
+It is a compact durable-memory file, not an append-only activity log.

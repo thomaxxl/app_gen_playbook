@@ -108,9 +108,10 @@ The CEO role MUST:
   time" means up to 20 minutes of wall-clock CEO intervention on the active
   stall, after which an explicit exit path is preferred over indefinite
   requeue churn if forward progress still cannot be restored
-- write `runs/current/orchestrator/pause-requested.md` when the operator asked
-  to pause or cleanly stop the current run and continue later with
-  `scripts/run_playbook.sh --resume`
+- write `runs/current/orchestrator/pause-requested.md` when a CEO steering
+  decision during normal inbox work explicitly chooses a clean pause; note
+  that `scripts/steer.sh --pause` writes that file directly and does not wait
+  for a CEO inbox turn
 - write `runs/current/orchestrator/ceo-progress-followup-requested.md` when
   you had to intervene locally to unblock the run or when progress is still
   fragile enough that the orchestrator should force CEO follow-up reviews on
@@ -185,9 +186,13 @@ That message SHOULD use:
 The CEO MUST process that note before normal role dispatch on the next control
 cycle.
 
-If the steering request is "pause" or "stop for now", the CEO MUST:
+If the steering request is "pause" or "stop for now", the CEO MAY still
+record a pause decision explicitly, but the standard operator path is
+`scripts/steer.sh --pause`, which writes `runs/current/orchestrator/pause-requested.md`
+directly.
 
-- write `runs/current/orchestrator/pause-requested.md`
+- If CEO is the one making the pause decision, write
+  `runs/current/orchestrator/pause-requested.md`
 - treat it as a high-priority drain request
 - allow only already in-flight work to finish; do not start new inbox work
 - explain why the run was paused and what should happen next

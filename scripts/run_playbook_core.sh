@@ -814,7 +814,7 @@ write_execution_prereqs_for_env() {
   local output_path="$2"
   BACKEND_VENV="${BACKEND_VENV}" FRONTEND_NODE_MODULES_DIR="${FRONTEND_NODE_MODULES_DIR}" \
     PLAYBOOK_RUNTIME_ENV="$runtime_env" \
-    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --output "$output_path"
+    python3 "$ROOT/tools/check_execution_prereqs.py" --repo-root "$ROOT" --run-mode "$RUN_MODE_NAME" --output "$output_path"
 }
 
 record_execution_prereqs() {
@@ -3525,6 +3525,12 @@ pause_drain_in_progress() {
   return 1
 }
 
+steering_request_blocks_new_claims() {
+  [[ -f "$KILL_REQUESTED_MD" ]] && return 0
+  [[ -f "$PAUSE_REQUESTED_MD" ]] && return 0
+  return 1
+}
+
 newer_pending_operator_override_path() {
   local role_dir path newest=""
 
@@ -3596,6 +3602,10 @@ claim_message() {
 
   local existing oldest claimed basename source_role_dir operator_priority_line
   while true; do
+    if [[ -f "$KILL_REQUESTED_MD" ]]; then
+      return 1
+    fi
+
     archive_superseded_messages_for_dirs "$runtime_role" "${candidate_dirs[@]}" || true
 
     existing=""
@@ -3620,6 +3630,10 @@ claim_message() {
       fi
       printf '%s\n' "$existing"
       return 0
+    fi
+
+    if steering_request_blocks_new_claims; then
+      return 1
     fi
 
     oldest=""
@@ -4062,6 +4076,12 @@ main_loop() {
         LAST_STALL_SIGNATURE=""
         if [[ -f "$KILL_REQUESTED_MD" ]]; then
           kill_requested_exit
+        fi
+        if [[ -f "$PAUSE_REQUESTED_MD" ]]; then
+          if pause_drain_in_progress; then
+            continue
+          fi
+          pause_requested_exit
         fi
         continue
       fi

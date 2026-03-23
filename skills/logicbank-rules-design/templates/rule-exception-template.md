@@ -13,6 +13,8 @@ Use this template whenever the backend does **not** implement a rule primarily t
 
 - What the rule means in plain English:
 - Why it matters transactionally:
+- Is persisted DB-backed data involved?:
+- Classification: schema constraint / transactional rule / transport concern:
 
 ## Candidate LogicBank lanes considered
 
@@ -34,6 +36,15 @@ Document each lane considered and why it was accepted or rejected:
 - Function / event / rule entrypoint:
 - Why the starter declarative subset was insufficient:
 - Why an upstream advanced LogicBank pattern was insufficient, if applicable:
+- Why this replacement lane is safer or more correct than LogicBank here:
+
+Weak arguments that are not acceptable by themselves:
+
+- easier for the endpoint or frontend
+- faster to ship
+- easier than modeling the rule
+- already had a service helper
+- simpler to keep it in one route
 
 ## Transaction and model scope
 

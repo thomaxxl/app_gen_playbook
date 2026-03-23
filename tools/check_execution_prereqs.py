@@ -27,6 +27,7 @@ DEFAULT_APP_WORKSPACE_DIR = "../agp_workspace/app"
 BACKEND_IMPORT_PROBE = (
     "import fastapi, httpx, jsonschema, logic_bank, pytest, safrs, sqlalchemy, uvicorn, yaml"
 )
+CHANGE_RUN_MODES = {"iterative-change-run", "app-only-hotfix"}
 
 
 @dataclass
@@ -149,7 +150,7 @@ def backend_requirements_path(repo_root: Path) -> Path:
     return app_workspace_path(repo_root) / "backend" / "requirements.txt"
 
 
-def check_app_workspace(repo_root: Path) -> CheckResult:
+def check_app_workspace(repo_root: Path, *, run_mode: str = "new-full-run") -> CheckResult:
     app_path = app_workspace_path(repo_root)
     configured_target = configured_app_workspace_target(repo_root)
     configured_value = configured_app_workspace_dir_value(repo_root)
@@ -182,6 +183,17 @@ def check_app_workspace(repo_root: Path) -> CheckResult:
                 "app_workspace",
                 "ok",
                 f"app workspace located at {app_path} ({config_hint})",
+            )
+        if run_mode in CHANGE_RUN_MODES:
+            return CheckResult(
+                "app_workspace",
+                "ok",
+                "\n".join(
+                    [
+                        f"app workspace reuse allowed for {run_mode}: {app_path}",
+                        f"{config_hint} expects {configured_target}, but change-run mode keeps using the current repo-local app workspace",
+                    ]
+                ),
             )
         return CheckResult(
             "app_workspace",
@@ -645,11 +657,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--output")
+    parser.add_argument("--run-mode", default="new-full-run")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     results = [
-        check_app_workspace(repo_root),
+        check_app_workspace(repo_root, run_mode=args.run_mode),
         check_backend_venv(repo_root),
         check_node_modules(repo_root),
         check_frontend_preview(repo_root),

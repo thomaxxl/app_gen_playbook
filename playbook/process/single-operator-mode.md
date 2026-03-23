@@ -14,7 +14,8 @@ same artifact and inbox discipline as a multi-agent run.
 - do not skip inbox handoffs just because the same operator holds the next role
 - create the same handoff markdown files that a multi-agent run would create
 - move processed handoffs into `processed/` as usual
-- maintain separate `context.md` files per role directory
+- maintain separate `context.md` files per role directory and keep them
+  compact, durable, and relevant to future turns or future runs only
 - preserve filename timestamps and ordering
 - record any deviation taken only because the run was single-operator
 - preserve `inflight/` traces when recovering interrupted work

@@ -89,6 +89,21 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertIn(str(actual_target.resolve()), result.detail)
         self.assertIn(str(configured_target.resolve()), result.detail)
 
+    def test_check_app_workspace_allows_repo_local_directory_for_iterate_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=../agp_workspace/app\n", encoding="utf-8")
+            (repo_root / "app").mkdir()
+
+            result = check_execution_prereqs.check_app_workspace(
+                repo_root,
+                run_mode="iterative-change-run",
+            )
+
+        self.assertEqual(result.status, "ok")
+        self.assertIn("reuse allowed for iterative-change-run", result.detail)
+        self.assertIn("current repo-local app workspace", result.detail)
+
     def test_runtime_env_value_reads_repo_env_when_process_env_is_unset(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
