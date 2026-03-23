@@ -14,7 +14,7 @@ from orchestrator_common import (
     snapshot_repo_files,
     write_json,
 )
-from routing_resolver import resolve_writable_paths
+from routing_resolver import resolve_forbidden_paths, resolve_writable_paths
 
 
 def allowed_prefixes(
@@ -62,6 +62,10 @@ def is_allowed_change(
     if relative_path.startswith("runs/current/role-state/") and relative_path.endswith(".md"):
         if "/inbox/" in relative_path:
             return True
+
+    forbidden_prefixes = resolve_forbidden_paths(repo_root, runtime_role)
+    if any(path_matches_rule(relative_path, prefix) for prefix in forbidden_prefixes):
+        return False
 
     valid_prefixes = allowed_prefixes(repo_root, runtime_role, message_path=message_path) + ignored_prefixes(ignore_runtime_roles)
     return any(path_matches_rule(relative_path, prefix) for prefix in valid_prefixes)

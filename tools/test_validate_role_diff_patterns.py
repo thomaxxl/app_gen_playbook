@@ -68,6 +68,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_rejects_cross_role_context_write(self) -> None:
+        self.assertFalse(
+            is_allowed_change(
+                self.repo_root,
+                "product_manager",
+                "runs/current/role-state/backend/context.md",
+                [],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

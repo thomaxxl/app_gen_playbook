@@ -30,6 +30,12 @@ task bundle:
   `runs/current/changes/<change_id>/role-loads/<role>.yaml` when it exists
 - then load only the affected artifacts and app paths explicitly named by the
   inbox item, task bundle, or role-load manifest
+- when the role-load manifest contains exact candidate artifacts, read app
+  paths, or write app paths, treat those exact entries as the default scope
+  boundary for both reads and writes
+- when the role-load manifest is still template-only or otherwise empty, fall
+  back to `affected-artifacts.md` and `affected-app-paths.md` instead of
+  widening the packet
 
 ## Negative rules
 

@@ -25,6 +25,9 @@ Rules:
   affected artifacts and app paths required by the current task
 - when a role-load manifest exists for the active role, it MUST become the
   default scope boundary for change reads and writes
+- template-only role-load manifests do not justify broad fallback; until the
+  manifest is populated, the resolver MUST narrow from `affected-artifacts.md`
+  and `affected-app-paths.md`
 - change-run task bundles MUST NOT justify reading whole artifact trees or
   whole `app/frontend/` or `app/backend/` subtrees by default
 - if `request.md` is a review-style critique that lists concrete defects,

@@ -1,10 +1,73 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any, Mapping
 
-from orchestrator_common import relpath
+from orchestrator_common import path_matches_rule, relpath, role_state_dir_names
+
+
+CHANGE_RUN_MODES = {"iterative-change-run", "app-only-hotfix"}
+CHANGE_PHASE_PREFIX = "phase-I"
+PLACEHOLDER_PREFIXES = (
+    "fill with ",
+    "fill only ",
+    "fill ",
+    "(none)",
+)
+DEFAULT_CHANGE_ARTIFACT_RULES = {
+    "product_manager": (
+        "runs/current/artifacts/product/**",
+        "runs/current/artifacts/architecture/**",
+        "runs/current/evidence/**",
+        "runs/current/changes/*/candidate/artifacts/product/**",
+    ),
+    "architect": (
+        "runs/current/artifacts/product/**",
+        "runs/current/artifacts/architecture/**",
+        "runs/current/artifacts/ux/**",
+        "runs/current/artifacts/backend-design/**",
+        "runs/current/evidence/**",
+        "runs/current/changes/*/candidate/artifacts/architecture/**",
+    ),
+    "frontend": (
+        "runs/current/artifacts/ux/**",
+        "runs/current/artifacts/architecture/**",
+        "runs/current/evidence/**",
+        "runs/current/changes/*/candidate/artifacts/ux/**",
+    ),
+    "backend": (
+        "runs/current/artifacts/backend-design/**",
+        "runs/current/artifacts/architecture/**",
+        "runs/current/artifacts/product/business-rules.md",
+        "runs/current/artifacts/product/conceptual-domain-model.md",
+        "runs/current/artifacts/product/resource-behavior-matrix.md",
+        "runs/current/artifacts/product/traceability-matrix.md",
+        "runs/current/evidence/**",
+        "runs/current/changes/*/candidate/artifacts/backend-design/**",
+    ),
+    "qa": (
+        "runs/current/artifacts/product/**",
+        "runs/current/artifacts/architecture/**",
+        "runs/current/artifacts/ux/**",
+        "runs/current/evidence/**",
+    ),
+    "deployment": (
+        "runs/current/artifacts/devops/**",
+        "runs/current/artifacts/architecture/runtime-bom.md",
+        "runs/current/artifacts/architecture/dependency-provisioning.md",
+        "runs/current/evidence/**",
+        "runs/current/changes/*/candidate/artifacts/devops/**",
+    ),
+    "ceo": (
+        "runs/current/**",
+        "app/**",
+        "playbook/**",
+        "scripts/**",
+        "tools/**",
+    ),
+}
 
 
 def parse_yaml_subset(path: Path) -> Any:
@@ -196,6 +259,173 @@ def _condition_active(repo_root: Path, condition: str, enabled_features: set[str
     return False
 
 
+def _is_placeholder_value(value: str) -> bool:
+    normalized = value.strip().lower()
+    return any(normalized.startswith(prefix) for prefix in PLACEHOLDER_PREFIXES)
+
+
+def _clean_declared_paths(values: list[str]) -> list[str]:
+    cleaned: list[str] = []
+    for value in values:
+        normalized = value.strip().strip("`")
+        if not normalized or _is_placeholder_value(normalized):
+            continue
+        cleaned.append(normalized)
+    return cleaned
+
+
+def _parse_markdown_path_list(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+
+    results: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        code_match = re.match(r"^[-*]\s+`([^`]+)`\s*$", line)
+        if code_match:
+            results.append(code_match.group(1).strip())
+            continue
+        text_match = re.match(r"^[-*]\s+(.+?)\s*$", line)
+        if text_match:
+            value = text_match.group(1).strip()
+            if "/" in value or value.endswith((".md", ".yaml", ".json", ".py", ".ts", ".tsx", ".sh")):
+                results.append(value.strip("`"))
+    return _clean_declared_paths(results)
+
+
+def _load_run_status(repo_root: Path) -> Mapping[str, Any]:
+    path = repo_root / "runs" / "current" / "orchestrator" / "run-status.json"
+    if not path.exists():
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) else {}
+
+
+def _active_change_context(repo_root: Path) -> dict[str, Any] | None:
+    status = _load_run_status(repo_root)
+    change_id = status.get("change_id")
+    if not isinstance(change_id, str) or not change_id.strip():
+        return None
+
+    current_phase = str(status.get("current_phase", "")).strip()
+    mode = str(status.get("mode", "")).strip()
+    if mode not in CHANGE_RUN_MODES and not current_phase.startswith(CHANGE_PHASE_PREFIX):
+        return None
+
+    change_root = repo_root / "runs" / "current" / "changes" / change_id
+    if not change_root.exists():
+        return None
+
+    return {
+        "change_id": change_id,
+        "change_root": change_root,
+        "affected_artifacts": _parse_markdown_path_list(change_root / "affected-artifacts.md"),
+        "affected_app_paths": _parse_markdown_path_list(change_root / "affected-app-paths.md"),
+    }
+
+
+def _load_role_load_manifest(change_root: Path, runtime_role: str) -> tuple[str | None, Mapping[str, Any]]:
+    manifest_role = canonical_manifest_role(runtime_role)
+    manifest_path = change_root / "role-loads" / f"{manifest_role}.yaml"
+    if not manifest_path.exists():
+        return None, {}
+    payload = parse_yaml_subset(manifest_path)
+    if not isinstance(payload, dict):
+        raise ValueError(f"Role-load manifest must decode to a mapping: {manifest_path}")
+    return _repo_rel(change_root.parents[3], manifest_path), payload
+
+
+def _matches_any_rule(path: str, rules: list[str]) -> bool:
+    return any(path_matches_rule(path, rule) for rule in rules if rule)
+
+
+def _change_scoped_read_paths(
+    repo_root: Path,
+    runtime_role: str,
+    role_config: Mapping[str, Any],
+    bundle_artifacts: list[str],
+    message_required_reads: list[str],
+    change_context: Mapping[str, Any],
+    role_load_payload: Mapping[str, Any],
+) -> list[str]:
+    affected_artifacts = list(change_context.get("affected_artifacts", []))
+    affected_app_paths = list(change_context.get("affected_app_paths", []))
+
+    declared_read_artifacts = _clean_declared_paths(_string_list(role_load_payload, "read_artifacts"))
+    declared_candidate_artifacts = _clean_declared_paths(_string_list(role_load_payload, "candidate_artifacts"))
+    declared_verification_inputs = _clean_declared_paths(_string_list(role_load_payload, "verification_inputs"))
+    declared_read_app_paths = _clean_declared_paths(_string_list(role_load_payload, "read_app_paths"))
+    declared_write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
+
+    explicit_message_artifacts = [
+        path
+        for path in message_required_reads
+        if path.startswith("runs/current/artifacts/")
+        or path.startswith("runs/current/changes/")
+        or path.startswith("runs/current/evidence/")
+    ]
+    explicit_message_app_paths = [path for path in message_required_reads if path.startswith("app/")]
+
+    reads: list[str] = []
+    declared_artifacts = declared_read_artifacts + declared_candidate_artifacts + declared_verification_inputs
+    if declared_artifacts:
+        reads.extend(declared_artifacts)
+    else:
+        candidate_set = set(bundle_artifacts) | set(explicit_message_artifacts)
+        default_artifact_rules = list(DEFAULT_CHANGE_ARTIFACT_RULES.get(runtime_role, ()))
+        reads.extend(
+            path
+            for path in affected_artifacts
+            if path in candidate_set and _matches_any_rule(path, default_artifact_rules)
+        )
+        role_writable_rules = _string_list(role_config, "writable")
+        reads.extend(
+            path
+            for path in affected_artifacts
+            if path not in reads and _matches_any_rule(path, role_writable_rules)
+        )
+
+    declared_app_paths = declared_read_app_paths + declared_write_app_paths
+    if declared_app_paths:
+        reads.extend(declared_app_paths)
+    else:
+        app_rules = [rule for rule in _string_list(role_config, "writable") if rule.startswith("app/")]
+        reads.extend(path for path in affected_app_paths if _matches_any_rule(path, app_rules))
+
+    reads.extend(explicit_message_artifacts)
+    reads.extend(explicit_message_app_paths)
+    return _clean_declared_paths(reads)
+
+
+def _narrow_change_writable_paths(
+    writable: list[str],
+    role_load_payload: Mapping[str, Any],
+) -> list[str]:
+    candidate_artifacts = _clean_declared_paths(_string_list(role_load_payload, "candidate_artifacts"))
+    write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
+    verification_inputs = _clean_declared_paths(_string_list(role_load_payload, "verification_inputs"))
+
+    if not candidate_artifacts and not write_app_paths and not verification_inputs:
+        return writable
+
+    narrowed: list[str] = []
+    for rule in writable:
+        if candidate_artifacts and (
+            rule.startswith("runs/current/artifacts/") or rule.startswith("runs/current/changes/*/candidate/artifacts/")
+        ):
+            continue
+        if write_app_paths and rule.startswith("app/"):
+            continue
+        if verification_inputs and rule.startswith("runs/current/changes/*/verification/"):
+            continue
+        narrowed.append(rule)
+
+    narrowed.extend(candidate_artifacts)
+    narrowed.extend(write_app_paths)
+    narrowed.extend(verification_inputs)
+    return narrowed
+
+
 def resolve_read_packet(
     repo_root: Path,
     runtime_role: str,
@@ -206,6 +436,7 @@ def resolve_read_packet(
     include_message_path: Path | None = None,
 ) -> dict[str, Any]:
     role_config = resolve_role_config(repo_root, runtime_role)
+    change_context = _active_change_context(repo_root)
     summary_path, bundle_path = resolve_phase_bundle(
         repo_root,
         runtime_role,
@@ -226,6 +457,7 @@ def resolve_read_packet(
         read_paths.append(summary_path)
 
     bundle_payload: Mapping[str, Any] = {}
+    bundle_artifacts: list[str] = []
     if bundle_path:
         read_paths.append(bundle_path)
         bundle_payload = parse_yaml_subset(repo_root / bundle_path)
@@ -233,7 +465,7 @@ def resolve_read_packet(
             raise ValueError(f"Task bundle must decode to a mapping: {bundle_path}")
         read_paths.extend(_string_list(bundle_payload, "always_load"))
         read_paths.extend(_string_list(bundle_payload, "required_phase"))
-        read_paths.extend(_string_list(bundle_payload, "required_artifacts"))
+        bundle_artifacts.extend(_string_list(bundle_payload, "required_artifacts"))
 
         conditional = bundle_payload.get("conditional_artifacts", {})
         if isinstance(conditional, dict):
@@ -242,9 +474,43 @@ def resolve_read_packet(
                 if not isinstance(condition, str) or not _condition_active(repo_root, condition, enabled_features):
                     continue
                 if isinstance(paths, list):
-                    read_paths.extend(item for item in paths if isinstance(item, str))
+                    bundle_artifacts.extend(item for item in paths if isinstance(item, str))
                 elif isinstance(paths, str):
-                    read_paths.append(paths)
+                    bundle_artifacts.append(paths)
+
+    role_load_relpath: str | None = None
+    role_load_payload: Mapping[str, Any] = {}
+    if change_context is not None:
+        change_root = Path(change_context["change_root"])
+        for name in (
+            "request.md",
+            "classification.yaml",
+            "impact-manifest.yaml",
+            "affected-artifacts.md",
+            "affected-app-paths.md",
+            "reopened-gates.md",
+        ):
+            path = change_root / name
+            if path.exists():
+                read_paths.append(_repo_rel(repo_root, path))
+
+        role_load_relpath, role_load_payload = _load_role_load_manifest(change_root, runtime_role)
+        if role_load_relpath:
+            read_paths.append(role_load_relpath)
+
+        read_paths.extend(
+            _change_scoped_read_paths(
+                repo_root,
+                runtime_role,
+                role_config,
+                bundle_artifacts,
+                message_required_reads or [],
+                change_context,
+                role_load_payload,
+            )
+        )
+    else:
+        read_paths.extend(bundle_artifacts)
 
     for path in message_required_reads or []:
         if isinstance(path, str):
@@ -265,6 +531,9 @@ def resolve_read_packet(
         "phase_summary": summary_path,
         "task_bundle": bundle_path,
         "task_bundle_payload": bundle_payload,
+        "change_context": change_context,
+        "role_load_manifest": role_load_relpath,
+        "role_load_payload": role_load_payload,
         "read_paths": deduped_reads,
     }
 
@@ -291,17 +560,37 @@ def resolve_writable_paths(
     if isinstance(bundle_payload, dict):
         writable.extend(_string_list(bundle_payload, "writable_targets"))
 
-    writable.extend(
-        [
-            "runs/current/role-state/*/inbox/*.md",
-            "runs/current/role-state/*/processed/*.md",
-            "runs/current/role-state/*/context.md",
-        ]
-    )
+    role_load_payload = packet.get("role_load_payload", {})
+    if isinstance(role_load_payload, dict):
+        writable = _narrow_change_writable_paths(writable, role_load_payload)
+
+    writable.append("runs/current/role-state/*/inbox/*.md")
+    for role_state_dir in role_state_dir_names(runtime_role):
+        writable.extend(
+            [
+                f"runs/current/role-state/{role_state_dir}/inflight/*.md",
+                f"runs/current/role-state/{role_state_dir}/processed/*.md",
+                f"runs/current/role-state/{role_state_dir}/context.md",
+            ]
+        )
 
     seen: set[str] = set()
     deduped: list[str] = []
     for path in writable:
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        deduped.append(path)
+    return deduped
+
+
+def resolve_forbidden_paths(repo_root: Path, runtime_role: str) -> list[str]:
+    role_config = resolve_role_config(repo_root, runtime_role)
+    forbidden = _string_list(role_config, "cannot_write")
+
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for path in forbidden:
         if not path or path in seen:
             continue
         seen.add(path)

@@ -14,7 +14,7 @@ from orchestrator_common import (
     relpath,
     resolve_repo_root,
 )
-from routing_resolver import resolve_read_packet, resolve_writable_paths
+from routing_resolver import resolve_forbidden_paths, resolve_read_packet, resolve_writable_paths
 
 
 def dedupe_paths(paths: list[str]) -> list[str]:
@@ -110,6 +110,7 @@ def emit_full_prompt(
     sections: dict[str, list[str] | str],
     read_paths: list[str],
     write_paths: list[str],
+    forbidden_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} agent for app_gen_playbook.\n")
@@ -122,6 +123,11 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in write_paths:
         print(f"- {path}")
+
+    if forbidden_paths:
+        print("\nForbidden writes:\n")
+        for path in forbidden_paths:
+            print(f"- {path}")
 
     if canonical_outputs:
         print("\nCanonical outputs for this turn:\n")
@@ -172,6 +178,7 @@ def emit_short_prompt(
     sections: dict[str, list[str] | str],
     read_paths: list[str],
     write_paths: list[str],
+    forbidden_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
     print(f"You are the {display_role} runtime worker for app_gen_playbook.")
@@ -188,6 +195,11 @@ def emit_short_prompt(
     for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if forbidden_paths:
+        print("Forbidden writes:")
+        for path in forbidden_paths:
+            print(f"- {absolutize(repo_root, path)}")
+        print("")
     if canonical_outputs:
         print("Canonical outputs:")
         for path in canonical_outputs:
@@ -240,6 +252,7 @@ def main() -> int:
         explicit_phase=headers.get("phase"),
         message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
     )
+    forbidden_paths = resolve_forbidden_paths(repo_root, args.runtime_role)
 
     if args.mode == "short":
         emit_short_prompt(
@@ -250,6 +263,7 @@ def main() -> int:
             sections,
             read_paths,
             write_paths,
+            forbidden_paths,
             canonical_outputs,
         )
     else:
@@ -262,6 +276,7 @@ def main() -> int:
             sections,
             read_paths,
             write_paths,
+            forbidden_paths,
             canonical_outputs,
         )
 
