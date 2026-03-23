@@ -294,6 +294,21 @@ Repeated architect self-notes that only restate "no new frontend/browser proof
 was available" are not allowed once the orchestrator log or current inboxes
 already show a proof-producing frontend turn.
 
+If the Architect inbox already contains a CEO-origin recovery or requeue note
+for the same `change_id` and live-proof topic, the Architect MUST process that
+CEO directive before claiming any self-addressed verification follow-up on the
+same blocker. The Architect MUST NOT create or retain an architect-to-architect
+"wait for frontend proof", "await browser proof", or "do not claim without
+proof" note while that CEO recovery directive is still pending.
+
+In that situation the next Architect turn MUST do one of these in-turn:
+
+- reconcile the architecture decision against the already logged proof
+- emit one concrete owner-directed deficiency handoff that states exactly why
+  the available proof is insufficient
+- supersede the stale self-addressed wait note with the CEO-directed recovery
+  path and stop the self-loop
+
 The Architect MUST also require that the rule was first classified as schema
 constraint, transactional rule, or transport concern, and MUST reject designs
 that push schema constraints or fat transport logic into the LogicBank lane
