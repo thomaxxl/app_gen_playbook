@@ -259,6 +259,22 @@ repeats connection-refused evidence. The Architect MUST either:
 Repeated self-reprobe notes are allowed only after a materially new runtime
 attempt has happened and changed the evidence.
 
+If the Architect inbox already contains one or more blocked self-addressed
+live-runtime reprobe notes for the same `change_id`, treat that backlog as
+stale loop debt, not as independent work items that justify more architect
+reprobe notes. In that case the next Architect turn MUST:
+
+- collapse the backlog to one current recovery action
+- either run one bounded local runtime start/verification attempt in-turn or
+  emit one owner-directed startup-failure handoff with the exact failed
+  command and probes
+- archive or supersede the stale architect-to-architect reprobe notes instead
+  of extending the chain
+
+The Architect MUST NOT create a fresh architect-to-architect blocked note when
+the only new fact is still "no listener is present" or "connection refused"
+and no runtime start attempt occurred in that same turn.
+
 The Architect MUST also require that the rule was first classified as schema
 constraint, transactional rule, or transport concern, and MUST reject designs
 that push schema constraints or fat transport logic into the LogicBank lane
