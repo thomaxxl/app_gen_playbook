@@ -921,6 +921,113 @@ class RunPlaybookResumeTests(unittest.TestCase):
                 operator_action_text,
             )
 
+    def test_resume_restores_run_mode_before_prereq_check(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            copy_runner_scripts(source_repo, repo_root)
+
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "role-state").mkdir(parents=True, exist_ok=True)
+            seed_delivery_approval(repo_root)
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=../agp_workspace/app\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "orchestrator" / "run-status.json").write_text(
+                '{"status":"interrupted","mode":"iterative-change-run","current_phase":"","change_id":"CR-test"}\n',
+                encoding="utf-8",
+            )
+            (repo_root / "app").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "frontend").mkdir(parents=True, exist_ok=True)
+            (repo_root / "app" / "frontend" / "package.json").write_text(
+                '{"scripts":{"preview":"vite preview","capture:ui-previews":"playwright test ui-previews.e2e.spec.ts"}}\n',
+                encoding="utf-8",
+            )
+
+            tools_dir = repo_root / "tools"
+            write_executable(
+                tools_dir / "session_registry.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "reconcile_worker_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_run_recoverability.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "checkpoint_run_state.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "recover_run_queue.py",
+                "#!/usr/bin/env python3\nimport sys\nraise SystemExit(1)\n",
+            )
+            write_executable(
+                tools_dir / "check_phase5_ready.py",
+                "#!/usr/bin/env python3\nprint('phase 5 ready')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_orchestrator_liveness.py",
+                "#!/usr/bin/env python3\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_completion.py",
+                "#!/usr/bin/env python3\nprint('run is complete')\nraise SystemExit(0)\n",
+            )
+            write_executable(
+                tools_dir / "check_execution_prereqs.py",
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env python3
+                    import argparse
+                    from pathlib import Path
+
+                    parser = argparse.ArgumentParser()
+                    parser.add_argument("--repo-root", required=True)
+                    parser.add_argument("--output")
+                    parser.add_argument("--run-mode")
+                    args = parser.parse_args()
+                    if args.output:
+                        path = Path(args.output)
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        if args.run_mode == "iterative-change-run":
+                            path.write_text(
+                                "---\\nowner: devops\\nphase: execution-environment-preflight\\nstatus: ready-for-handoff\\nlast_updated_by: devops\\n---\\n\\n# Execution Environment Prerequisites\\n\\n- `app_workspace`: `ok` (required)\\n  - app workspace reuse allowed for iterative-change-run\\n- `python_venv`: `ok` (required)\\n  - verified imports\\n- `node_packages`: `ok` (required)\\n  - vite resolved\\n- `frontend_preview`: `ok` (required)\\n  - preview script declared\\n- `port_bind`: `ok` (required)\\n  - localhost bind succeeded\\n- `playwright_screenshot`: `ok` (required)\\n  - captured screenshot at smoke.png\\n",
+                                encoding="utf-8",
+                            )
+                            raise SystemExit(0)
+                        path.write_text(
+                            f"- [ ] `app_workspace`: `blocked` (required)\\n  - prereq checker saw wrong run mode: {args.run_mode}\\n",
+                            encoding="utf-8",
+                        )
+                    raise SystemExit(1)
+                    """
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                env={**os.environ, **{"RUN_DASHBOARD_ENABLED": "0"}},
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertIn("playbook run complete", result.stderr)
+            execution_prereqs = (
+                repo_root / "runs" / "current" / "artifacts" / "devops" / "execution-prereqs.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("reuse allowed for iterative-change-run", execution_prereqs)
+            self.assertNotIn("wrong run mode", execution_prereqs)
+
     def test_resume_clears_stale_execution_prereq_operator_action_when_prereqs_are_now_ready(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
 

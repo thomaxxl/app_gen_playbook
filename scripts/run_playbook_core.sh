@@ -3950,6 +3950,20 @@ prepare_resume() {
     --repo-root "$ROOT" \
     --lease-seconds "$LEASE_SECONDS" >/dev/null || true
   if [[ -f "$RUN_STATUS_JSON" ]]; then
+    RUN_MODE_NAME="$(python3 - "$RUN_STATUS_JSON" "$RUN_MODE_NAME" <<'PY'
+from __future__ import annotations
+import json, sys
+from pathlib import Path
+path = Path(sys.argv[1])
+default = sys.argv[2]
+payload = json.loads(path.read_text(encoding="utf-8"))
+mode = str(payload.get("mode", "")).strip()
+if mode in {"new-full-run", "iterative-change-run", "app-only-hotfix"}:
+    print(mode)
+else:
+    print(default)
+PY
+)"
     ACTIVE_CHANGE_ID="$(python3 - "$RUN_STATUS_JSON" <<'PY'
 from __future__ import annotations
 import json, sys
