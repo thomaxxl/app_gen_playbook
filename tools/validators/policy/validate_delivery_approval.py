@@ -5,6 +5,13 @@ import argparse
 import json
 from pathlib import Path
 
+if __package__ in {None, ""}:
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from delivery_gate_common import delivery_approval_recorded  # type: ignore[import-not-found]
+else:
+    from delivery_gate_common import delivery_approval_recorded
 
 def collect_issues(repo_root: Path) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
@@ -35,15 +42,13 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
                 "reason": "missing delivery-approved artifact",
             }
         )
-    else:
-        text = approval_path.read_text(encoding="utf-8")
-        if "status: approved" not in text and "approved_by: ceo" not in text:
-            issues.append(
-                {
-                    "path": approval_path.relative_to(repo_root).as_posix(),
-                    "reason": "delivery-approved artifact does not record CEO approval",
-                }
-            )
+    elif not delivery_approval_recorded(repo_root):
+        issues.append(
+            {
+                "path": approval_path.relative_to(repo_root).as_posix(),
+                "reason": "delivery-approved artifact does not record CEO approval",
+            }
+        )
     return issues
 
 

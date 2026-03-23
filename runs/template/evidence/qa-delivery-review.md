@@ -12,6 +12,7 @@ starter_status: pending-review-evidence
 - qa_decision: pending
 - run_sh_validation: pending
 - basic_user_testing: pending
+- workflow_discoverability: pending
 - frontend_runtime_errors: pending
 - backend_runtime_errors: pending
 - metadata_leakage: pending
@@ -32,6 +33,7 @@ Accepted pass values for final approval are:
 - `qa_decision: pass`
 - `run_sh_validation: pass`
 - `basic_user_testing: pass`
+- `workflow_discoverability: pass`
 - `frontend_runtime_errors: pass`
 - `backend_runtime_errors: pass`
 - `metadata_leakage: pass-on-tested-surfaces`

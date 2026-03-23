@@ -21,6 +21,15 @@ def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
     scripts_dir.mkdir(parents=True, exist_ok=True)
     for script_name in ("run_playbook.sh", "run_playbook_core.sh"):
         shutil.copy2(source_repo / "scripts" / script_name, scripts_dir / script_name)
+    tools_dir = repo_root / "tools"
+    tools_dir.mkdir(parents=True, exist_ok=True)
+    for tool_name in (
+        "archive_stale_correction_notes.py",
+        "check_delivery_gate_status.py",
+        "delivery_gate_common.py",
+        "orchestrator_common.py",
+    ):
+        shutil.copy2(source_repo / "tools" / tool_name, tools_dir / tool_name)
     contracts_dir = repo_root / "tools" / "contracts"
     contracts_dir.mkdir(parents=True, exist_ok=True)
     write_executable(
@@ -1269,9 +1278,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
             self.assertIn("playbook run complete", result.stderr)
             self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "pause-requested.md").exists())
-            archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "pause-archive"
-            archived = list(archive_dir.glob("pause-requested.startup-cleared.*.md"))
-            self.assertTrue(archived)
+            self.assertFalse((repo_root / "runs" / "current" / "evidence" / "orchestrator" / "pause-archive").exists())
 
     def test_resume_clears_kill_requested_and_continues(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]
@@ -1346,9 +1353,7 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
             self.assertIn("playbook run complete", result.stderr)
             self.assertFalse((repo_root / "runs" / "current" / "orchestrator" / "kill-requested.md").exists())
-            archive_dir = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "kill-archive"
-            archived = list(archive_dir.glob("kill-requested.startup-cleared.*.md"))
-            self.assertTrue(archived)
+            self.assertFalse((repo_root / "runs" / "current" / "evidence" / "orchestrator" / "kill-archive").exists())
 
     def test_resume_clears_stale_operator_action_when_run_is_already_complete(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]

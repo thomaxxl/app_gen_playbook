@@ -1670,29 +1670,11 @@ EOF
 }
 
 qa_delivery_review_approved() {
-  [[ -f "$QA_DELIVERY_REVIEW_MD" ]] || return 1
-  grep -Eq '^status:[[:space:]]*(ready-for-handoff|approved)$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?qa_decision:[[:space:]]*(approved|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?run_sh_validation:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?basic_user_testing:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?workflow_discoverability:[[:space:]]*(passed|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?frontend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?backend_runtime_errors:[[:space:]]*(none|pass)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?metadata_leakage:[[:space:]]*(none|pass-on-tested-surfaces)[[:space:]]*$' "$QA_DELIVERY_REVIEW_MD" || return 1
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?review_summary:[[:space:]]*.+$' "$QA_DELIVERY_REVIEW_MD" || return 1
+  "$PLAYBOOK_PYTHON" "$ROOT/tools/check_delivery_gate_status.py" --repo-root "$ROOT" --qa-terminal >/dev/null
 }
 
 delivery_approved() {
-  [[ -f "$DELIVERY_APPROVED_MD" ]] || return 1
-  [[ -f "$CEO_DELIVERY_VALIDATION_MD" ]] || return 1
-  grep -Eq '^status:[[:space:]]*ready-for-handoff$' "$CEO_DELIVERY_VALIDATION_MD" || return 1
-
-  if grep -Eq '^status:[[:space:]]*approved$' "$DELIVERY_APPROVED_MD"; then
-    return 0
-  fi
-
-  grep -Eq '^[[:space:]]*(-[[:space:]]*)?approved_by:[[:space:]]*ceo[[:space:]]*$' "$DELIVERY_APPROVED_MD" \
-    && grep -Eq '^[[:space:]]*(-[[:space:]]*)?approved_at:[[:space:]]*.+$' "$DELIVERY_APPROVED_MD"
+  "$PLAYBOOK_PYTHON" "$ROOT/tools/check_delivery_gate_status.py" --repo-root "$ROOT" --delivery-recorded >/dev/null
 }
 
 process_orchestrator_inbox() {
@@ -2162,38 +2144,28 @@ clear_completed_run_operator_action_required() {
 clear_pause_requested_on_startup() {
   [[ -f "$PAUSE_REQUESTED_MD" ]] || return 1
 
-  local archive_dir="$EVIDENCE_ROOT/pause-archive"
-  local stamp archived_path
-  mkdir -p "$archive_dir"
-  stamp="$(date -u +%Y%m%d-%H%M%S)"
-  archived_path="$archive_dir/pause-requested.startup-cleared.${stamp}.md"
-  mv "$PAUSE_REQUESTED_MD" "$archived_path"
-  log "pause-requested-cleared-on-startup archived=${archived_path#$ROOT/}"
+  rm -f "$PAUSE_REQUESTED_MD"
+  log "pause-requested-cleared-on-startup deleted=${PAUSE_REQUESTED_MD#$ROOT/}"
   append_recovery_log \
     "Pause Request Cleared On Startup" \
-    "Archived stale pause request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
+    "Deleted stale pause request before runner startup:\n- ${PAUSE_REQUESTED_MD#$ROOT/}\n\nThe new playbook process started from the current run state."
   append_run_remark \
     "Pause Request Cleared On Startup" \
-    "Archived stale pause request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
+    "Deleted stale pause request before runner startup:\n- ${PAUSE_REQUESTED_MD#$ROOT/}\n\nThe new playbook process started from the current run state."
   return 0
 }
 
 clear_kill_requested_on_startup() {
   [[ -f "$KILL_REQUESTED_MD" ]] || return 1
 
-  local archive_dir="$EVIDENCE_ROOT/kill-archive"
-  local stamp archived_path
-  mkdir -p "$archive_dir"
-  stamp="$(date -u +%Y%m%d-%H%M%S)"
-  archived_path="$archive_dir/kill-requested.startup-cleared.${stamp}.md"
-  mv "$KILL_REQUESTED_MD" "$archived_path"
-  log "kill-requested-cleared-on-startup archived=${archived_path#$ROOT/}"
+  rm -f "$KILL_REQUESTED_MD"
+  log "kill-requested-cleared-on-startup deleted=${KILL_REQUESTED_MD#$ROOT/}"
   append_recovery_log \
     "Kill Request Cleared On Startup" \
-    "Archived stale kill request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
+    "Deleted stale kill request before runner startup:\n- ${KILL_REQUESTED_MD#$ROOT/}\n\nThe new playbook process started from the current run state."
   append_run_remark \
     "Kill Request Cleared On Startup" \
-    "Archived stale kill request before runner startup:\n- ${archived_path#$ROOT/}\n\nThe new playbook process started from the current run state."
+    "Deleted stale kill request before runner startup:\n- ${KILL_REQUESTED_MD#$ROOT/}\n\nThe new playbook process started from the current run state."
   return 0
 }
 

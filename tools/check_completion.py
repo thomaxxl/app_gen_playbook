@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 
+from delivery_gate_common import delivery_approval_terminal, qa_delivery_review_terminal
 from orchestrator_common import (
     CORE_DISPLAY_ROLES,
     DISPLAY_TO_RUNTIME,
@@ -95,37 +96,6 @@ def metadata_status(path: Path) -> str:
     if not path.exists():
         return ""
     return str(parse_metadata_block(path).get("status", "")).strip().lower()
-
-
-def qa_delivery_review_terminal(repo_root: Path) -> bool:
-    path = repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md"
-    if not path.exists():
-        return False
-    text = path.read_text(encoding="utf-8")
-    checks = (
-        re.search(r"(?im)^(?:-\s*)?qa_decision:\s*(approved|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?run_sh_validation:\s*(passed|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?basic_user_testing:\s*(passed|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?workflow_discoverability:\s*(passed|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?frontend_runtime_errors:\s*(none|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?backend_runtime_errors:\s*(none|pass)\s*$", text),
-        re.search(r"(?im)^(?:-\s*)?metadata_leakage:\s*(none|pass-on-tested-surfaces)\s*$", text),
-    )
-    return all(checks)
-
-
-def delivery_approval_terminal(repo_root: Path) -> bool:
-    approval_path = repo_root / "runs" / "current" / "orchestrator" / "delivery-approved.md"
-    validation_path = repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md"
-    acceptance_review = repo_root / "runs" / "current" / "artifacts" / "product" / "acceptance-review.md"
-    integration_review = repo_root / "runs" / "current" / "artifacts" / "architecture" / "integration-review.md"
-    return (
-        metadata_status(approval_path) == "approved"
-        and metadata_status(validation_path) == "ready-for-handoff"
-        and metadata_status(acceptance_review) == "approved"
-        and metadata_status(integration_review) in READY_ARTIFACT_STATUSES
-        and qa_delivery_review_terminal(repo_root)
-    )
 
 
 def active_role_queues_present(repo_root: Path) -> bool:

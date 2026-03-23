@@ -659,9 +659,9 @@ When `--resume` is used, the orchestrator MUST:
 - resume a stored Codex session only when the inflight state is still
   consistent
 - rebuild from repo state when session continuity is missing or unsafe
-- archive `runs/current/orchestrator/pause-requested.md` if it exists, because
+- delete `runs/current/orchestrator/pause-requested.md` if it exists, because
   runner startup is an explicit operator decision to continue
-- archive `runs/current/orchestrator/kill-requested.md` if it exists, because
+- delete `runs/current/orchestrator/kill-requested.md` if it exists, because
   runner startup is an explicit operator decision to continue after a forced
   stop
 - consume `runs/current/orchestrator/ceo-progress-followup-requested.md` into

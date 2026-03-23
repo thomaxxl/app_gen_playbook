@@ -201,7 +201,7 @@ directly.
 
 The orchestrator will drain current in-flight work, then exit cleanly when
 `pause-requested.md` exists. The next `scripts/run_playbook.sh` startup,
-including `--resume`, will archive that pause file before the runner enters
+including `--resume`, will delete that pause file before the runner enters
 the main control loop.
 
 ## Completion rule

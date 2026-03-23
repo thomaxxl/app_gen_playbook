@@ -183,6 +183,78 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertNotIn("acceptance-review-coverage", kinds)
             self.assertNotIn("qa-review-coverage", kinds)
 
+    def test_legacy_terminal_delivery_artifacts_still_suppress_stale_coverage_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/integration-review.md",
+                "owner: architect\nphase: phase-6-integration-review\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/qa-delivery-review.md",
+                "\n".join(
+                    [
+                        "- qa_decision: pass",
+                        "- run_sh_validation: pass",
+                        "- basic_user_testing: pass",
+                        "- frontend_runtime_errors: pass-on-tested-path",
+                        "- backend_runtime_errors: pass-on-tested-path",
+                        "- metadata_leakage: pass-on-tested-surface",
+                    ]
+                ),
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ceo-delivery-validation.md",
+                "owner: ceo\nphase: delivery-approval\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/delivery-approved.md",
+                "\n".join(
+                    [
+                        "owner: ceo",
+                        "change_id: CR-20260322-201349",
+                        "decision: approved",
+                        "approved_at: 2026-03-22T22:27:04+01:00",
+                    ]
+                ),
+            )
+
+            with (
+                patch(
+                    "check_completion.collect_frontend_route_coverage_issues",
+                    return_value=[{"path": "app/frontend/src/App.tsx", "reason": "route drift"}],
+                ),
+                patch(
+                    "check_completion.collect_preview_coverage_issues",
+                    return_value=[{"path": "runs/current/evidence/ui-previews/manifest.md", "reason": "preview drift"}],
+                ),
+                patch(
+                    "check_completion.collect_integration_review_coverage_issues",
+                    return_value=[{"path": "runs/current/artifacts/architecture/integration-review.md", "reason": "integration drift"}],
+                ),
+                patch(
+                    "check_completion.collect_acceptance_review_coverage_issues",
+                    return_value=[{"path": "runs/current/artifacts/product/acceptance-review.md", "reason": "acceptance drift"}],
+                ),
+                patch(
+                    "check_completion.collect_qa_review_coverage_issues",
+                    return_value=[{"path": "runs/current/evidence/qa-delivery-review.md", "reason": "qa drift"}],
+                ),
+            ):
+                blockers = collect_blockers(repo_root)
+
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("frontend-route-coverage", kinds)
+            self.assertNotIn("preview-coverage", kinds)
+            self.assertNotIn("integration-review-coverage", kinds)
+            self.assertNotIn("acceptance-review-coverage", kinds)
+            self.assertNotIn("qa-review-coverage", kinds)
+
     def test_interrupted_run_status_blocks_completion(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
