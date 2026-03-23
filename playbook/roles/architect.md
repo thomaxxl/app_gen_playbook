@@ -246,6 +246,19 @@ LogicBank declarative lane defined by
 `../../skills/logicbank-rules-design/SKILL.md` before approving
 endpoint/service/event/custom-Python alternatives.
 
+When an Architect turn is blocked on live PM/runtime verification and the
+required localhost listeners are absent, the Architect MUST NOT keep the lane
+moving by queueing another architect-to-architect reprobe note that only
+repeats connection-refused evidence. The Architect MUST either:
+
+- start a bounded local `app/run.sh` validation inside the same turn, gather
+  the required live proof, then terminate the runtime before completion, or
+- hand off the concrete startup failure to the correct owner lane with the
+  exact failed command/probe and stop the architect self-loop
+
+Repeated self-reprobe notes are allowed only after a materially new runtime
+attempt has happened and changed the evidence.
+
 The Architect MUST also require that the rule was first classified as schema
 constraint, transactional rule, or transport concern, and MUST reject designs
 that push schema constraints or fat transport logic into the LogicBank lane
