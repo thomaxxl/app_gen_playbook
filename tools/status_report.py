@@ -13,6 +13,7 @@ from typing import Any
 from check_completion import collect_blockers
 from check_orchestrator_liveness import collect_liveness, latest_log_activity, latest_worker_heartbeat
 from check_phase5_ready import collect_phase5_blockers
+from execution_scope import active_scope_context
 from orchestrator_common import (
     RUN_ARTIFACT_TEMPLATE_DIRS,
     iter_required_artifact_templates,
@@ -67,7 +68,12 @@ PHASE_LABELS = {
     "phase-I2-product-and-scope-delta": "Phase I2 - Product and scope delta",
     "phase-I3-architecture-and-contract-delta": "Phase I3 - Architecture and contract delta",
     "phase-I4-design-delta": "Phase I4 - Design delta",
+    "phase-I4-frontend-design-delta": "Phase I4 - Frontend design delta",
+    "phase-I4-backend-design-delta": "Phase I4 - Backend design delta",
+    "phase-I4-devops-delta": "Phase I4 - DevOps delta",
     "phase-I5-implementation-delta": "Phase I5 - Implementation delta",
+    "phase-I5-frontend-implementation-delta": "Phase I5 - Frontend implementation delta",
+    "phase-I5-backend-implementation-delta": "Phase I5 - Backend implementation delta",
     "phase-I6-integration-and-regression-review": "Phase I6 - Integration and regression review",
     "phase-I7-change-acceptance": "Phase I7 - Change acceptance",
 }
@@ -78,14 +84,15 @@ CHANGE_PHASE_ORDER = (
     "phase-I2-product-and-scope-delta",
     "phase-I3-architecture-and-contract-delta",
     "phase-I4-design-delta",
+    "phase-I4-frontend-design-delta",
+    "phase-I4-backend-design-delta",
+    "phase-I4-devops-delta",
     "phase-I5-implementation-delta",
+    "phase-I5-frontend-implementation-delta",
+    "phase-I5-backend-implementation-delta",
     "phase-I6-integration-and-regression-review",
     "phase-I7-change-acceptance",
 )
-CHANGE_GATE_ALIASES = {
-    "phase-I5-frontend-implementation-delta": "phase-I5-implementation-delta",
-    "phase-I5-backend-implementation-delta": "phase-I5-implementation-delta",
-}
 
 STATUS_SCORES = {
     "missing": 0.0,
@@ -177,13 +184,12 @@ def parse_reopened_gates(change_root: Path | None) -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()
     for candidate in candidates:
-        normalized = CHANGE_GATE_ALIASES.get(candidate, candidate)
-        if normalized not in CHANGE_PHASE_ORDER:
+        if candidate not in CHANGE_PHASE_ORDER:
             continue
-        if normalized in seen:
+        if candidate in seen:
             continue
-        seen.add(normalized)
-        ordered.append(normalized)
+        seen.add(candidate)
+        ordered.append(candidate)
     return ordered
 
 
@@ -197,6 +203,13 @@ def compute_change_run_phase(
     run_status: dict[str, Any],
     roles: dict[str, dict[str, Any]],
 ) -> str:
+    scope_context = active_scope_context(repo_root)
+    active_phases = [
+        str(phase)
+        for phase in (scope_context.get("classification", {}).get("active_phases") or scope_context.get("config", {}).get("active_phases") or [])
+        if str(phase).strip()
+    ] or list(CHANGE_PHASE_ORDER)
+
     if role_has_pending_work(roles, "product_manager"):
         return "phase-I1-change-intake-and-triage"
 
@@ -205,19 +218,26 @@ def compute_change_run_phase(
         return "phase-I2-product-and-scope-delta"
 
     if role_has_pending_work(roles, "architect"):
-        for phase in ("phase-I3-architecture-and-contract-delta", "phase-I4-design-delta"):
+        for phase in ("phase-I3-architecture-and-contract-delta", "phase-I6-integration-and-regression-review"):
             if phase in reopened_gates:
                 return phase
 
-    if role_has_pending_work(roles, "frontend") or role_has_pending_work(roles, "backend"):
-        for phase in ("phase-I5-implementation-delta", "phase-I6-integration-and-regression-review"):
+    if role_has_pending_work(roles, "frontend"):
+        for phase in ("phase-I4-frontend-design-delta", "phase-I4-design-delta", "phase-I5-frontend-implementation-delta", "phase-I5-implementation-delta"):
             if phase in reopened_gates:
                 return phase
+    if role_has_pending_work(roles, "backend"):
+        for phase in ("phase-I4-backend-design-delta", "phase-I4-design-delta", "phase-I5-backend-implementation-delta", "phase-I5-implementation-delta"):
+            if phase in reopened_gates:
+                return phase
+    if role_has_pending_work(roles, "deployment"):
+        if "phase-I4-devops-delta" in reopened_gates:
+            return "phase-I4-devops-delta"
 
     if role_has_pending_work(roles, "qa"):
         return "phase-I7-change-acceptance"
 
-    for phase in CHANGE_PHASE_ORDER:
+    for phase in active_phases:
         if phase == "phase-I2-product-and-scope-delta" and any(
             candidate != "phase-I2-product-and-scope-delta" for candidate in reopened_gates
         ):
@@ -461,6 +481,10 @@ def stage_progress(phases: dict[str, dict[str, Any]], phase5_ready: bool) -> dic
 
 def report_payload(repo_root: Path) -> dict[str, Any]:
     run_status = load_json(repo_root / "runs" / "current" / "orchestrator" / "run-status.json")
+    scope_context = active_scope_context(repo_root)
+    if not run_status.get("scope_profile") and scope_context.get("scope_profile"):
+        run_status = dict(run_status)
+        run_status["scope_profile"] = scope_context["scope_profile"]
     roles = queue_summary(repo_root)
     workers = {}
     workers_root = repo_root / "runs" / "current" / "orchestrator" / "workers"
@@ -523,6 +547,7 @@ def format_markdown(payload: dict[str, Any]) -> str:
     lines.append(f"- generated_at: `{payload['generated_at']}`")
     lines.append(f"- run_status: `{payload['run_status'].get('status', 'unknown')}`")
     lines.append(f"- mode: `{payload['run_status'].get('mode', '')}`")
+    lines.append(f"- scope_profile: `{payload['run_status'].get('scope_profile', '')}`")
     lines.append(f"- current_phase: `{payload['current_phase']['label']}`")
     lines.append(f"- phase5_ready: `{payload['phase5_ready']}`")
     lines.append(f"- completion_complete: `{payload['completion']['complete']}`")

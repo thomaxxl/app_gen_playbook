@@ -16,16 +16,20 @@ reading assignment.
 7. load the current role's Tier 1 core read set
 8. load the active task bundle
 9. expand only `required_artifacts` from the task bundle
-10. expand `conditional_artifacts` only when the condition is true
-11. ignore `reference_only` artifacts unless a cross-layer issue or explicit
+10. expand `required_candidate_artifacts` when the active task bundle declares
+    them
+11. expand `conditional_artifacts` only when the condition is true
+12. ignore `reference_only` artifacts unless a cross-layer issue or explicit
     task requires them
-12. expand only the enabled capability packs assigned to the current role
-13. record the resolved load set in the role `context.md`
+13. expand only the enabled capability packs assigned to the current role
+14. record the resolved load set in the role `context.md`
 
 For `iterative-change-run` and `app-only-hotfix`, insert this rule after the
 task bundle:
 
 - load the current change workspace under `runs/current/changes/<change_id>/`
+- read `scope_profile`, `active_roles`, `active_phases`, and the active policy
+  slice from `classification.yaml`
 - load the active role-load manifest under
   `runs/current/changes/<change_id>/role-loads/<role>.yaml` when it exists
 - then load only the affected artifacts and app paths explicitly named by the
@@ -33,6 +37,8 @@ task bundle:
 - when the role-load manifest contains exact candidate artifacts, read app
   paths, or write app paths, treat those exact entries as the default scope
   boundary for both reads and writes
+- when the task bundle declares `required_candidate_artifacts`, treat those as
+  primary design-delta inputs before widening back to accepted baseline files
 - when the role-load manifest is still template-only or otherwise empty, fall
   back to `affected-artifacts.md` and `affected-app-paths.md` instead of
   widening the packet

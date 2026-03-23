@@ -1,0 +1,6 @@
+id: gate-quality-devops-delta
+title: Quality gate policy for devops-only deltas
+includes:
+  - evidence-core
+  - product-scope-core
+  - gate-coverage-core

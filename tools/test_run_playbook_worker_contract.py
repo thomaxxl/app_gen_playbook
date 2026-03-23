@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -7,7 +8,28 @@ from pathlib import Path
 class RunPlaybookWorkerContractTests(unittest.TestCase):
     def runner_core(self) -> str:
         repo_root = Path(__file__).resolve().parents[1]
-        return (repo_root / "scripts" / "run_playbook_core.sh").read_text(encoding="utf-8")
+        scripts_dir = repo_root / "scripts"
+        core_path = scripts_dir / "run_playbook_core.sh"
+        core_text = core_path.read_text(encoding="utf-8")
+        parts_dir = scripts_dir / "run_playbook_core"
+        if not parts_dir.is_dir():
+            return core_text
+
+        part_text_by_name = {
+            path.name: path.read_text(encoding="utf-8")
+            for path in sorted(parts_dir.glob("*.sh"))
+        }
+
+        def inline_part(match: re.Match[str]) -> str:
+            part_name = match.group(1)
+            return f'{match.group(0)}\n{part_text_by_name.get(part_name, "")}'
+
+        return re.sub(
+            r'^source_run_playbook_core_part "([^"]+)"$',
+            inline_part,
+            core_text,
+            flags=re.MULTILINE,
+        )
 
     def runner_wrapper(self) -> str:
         repo_root = Path(__file__).resolve().parents[1]
@@ -381,6 +403,7 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
         script = self.runner_wrapper()
 
         self.assertIn('CORE_SCRIPT="$SCRIPT_DIR/run_playbook_core.sh"', script)
+        self.assertIn('CORE_PARTS_DIR="$SCRIPT_DIR/run_playbook_core"', script)
         self.assertIn('if [[ "${1:-}" == "--ceo-delivery-validate" ]]; then', script)
         self.assertIn('ceo_delivery_validate()', script)
         self.assertIn('RUN_SH_VALIDATE_FRONTEND_URL="$frontend_url"', script)
@@ -390,7 +413,8 @@ class RunPlaybookWorkerContractTests(unittest.TestCase):
     def test_wrapper_attempts_ceo_repair_when_core_has_syntax_errors(self) -> None:
         script = self.runner_wrapper()
 
-        self.assertIn('if ! syntax_output="$(bash -n "$CORE_SCRIPT" 2>&1)"; then', script)
+        self.assertIn('core_runner_syntax_check()', script)
+        self.assertIn('if ! syntax_output="$(core_runner_syntax_check 2>&1)"; then', script)
         self.assertIn("run_wrapper_ceo_core_syntax_repair()", script)
         self.assertIn('warning: run_playbook_core.sh failed bash -n; attempting CEO repair path via wrapper.', script)
 

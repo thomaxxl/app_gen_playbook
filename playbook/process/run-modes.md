@@ -6,6 +6,22 @@ The playbook supports exactly three run modes:
 - `iterative-change-run`
 - `app-only-hotfix`
 
+Run mode is only the baseline axis.
+
+Use `scope_profile` as the execution axis:
+
+- `fullstack`
+- `frontend-only`
+- `backend-only`
+- `rules-only`
+- `devops-only`
+
+Mental model:
+
+- mode answers the baseline relationship
+- scope answers which slices are active
+- the change packet answers the exact artifacts, app paths, and gates reopened
+
 ## `new-full-run`
 
 Use this mode when:
@@ -54,6 +70,9 @@ Behavior:
   reopen at Phase I1/I2 and MUST NOT show the app as complete until Product
   Manager has classified the iteration prompt and the active change packet is
   accepted
+- the active packet MUST record `scope_profile`, `active_roles`,
+  `active_phases`, and the active policy slice so partial frontend/backend/
+  rules/devops execution is explicit
 
 ## `app-only-hotfix`
 

@@ -18,6 +18,7 @@ required_artifacts:
 writable_targets:
   - runs/current/changes/*/impact-manifest.yaml
   - runs/current/changes/*/affected-artifacts.md
+  - runs/current/changes/*/affected-candidate-artifacts.md
   - runs/current/changes/*/affected-app-paths.md
   - runs/current/changes/*/reopened-gates.md
   - runs/current/changes/*/role-loads/**

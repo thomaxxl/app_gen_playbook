@@ -16,6 +16,39 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_required_reads_accept_markdown_wrapped_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/runtime-contract-reconciliation.md",
+                "owner: architect\nphase: phase-6-integration-review\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/runtime-discovery-status.md",
+                "owner: backend\nphase: phase-5-parallel-implementation\nstatus: ready-for-handoff\n",
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: frontend",
+                        "",
+                        "## Required Reads",
+                        "- `runs/current/artifacts/architecture/runtime-contract-reconciliation.md`",
+                        "- `runs/current/artifacts/backend-design/runtime-discovery-status.md`",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_requested_outputs_completed_alias_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

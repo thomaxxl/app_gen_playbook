@@ -63,6 +63,13 @@ def normalize_runtime_role(value: str | None) -> str | None:
     return DISPLAY_TO_RUNTIME.get(stripped)
 
 
+def normalize_path_token(value: str) -> str:
+    stripped = value.strip()
+    if len(stripped) >= 2 and stripped[0] == "`" and stripped[-1] == "`":
+        return stripped[1:-1].strip()
+    return stripped
+
+
 def referenced_paths(values: list[str]) -> set[str]:
     results: set[str] = set()
     for value in values:
@@ -116,7 +123,11 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
     headers = parse_message_headers(message_text)
     sections = parse_message_sections(message_text, headers=headers)
     gate_status = str(sections.get("gate status", "unspecified")).strip().lower()
-    required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+    required_reads = [
+        normalize_path_token(item)
+        for item in sections.get("required reads", [])
+        if isinstance(item, str)
+    ]
     sender_runtime_role = normalize_runtime_role(message_header_field(headers, "from"))
 
     blockers: list[dict[str, str]] = []

@@ -13,6 +13,7 @@ product_manager:
     - runs/current/changes/*/request.md
     - runs/current/changes/*/classification.yaml
     - runs/current/changes/*/affected-artifacts.md
+    - runs/current/changes/*/affected-candidate-artifacts.md
     - runs/current/changes/*/affected-app-paths.md
     - runs/current/changes/*/reopened-gates.md
     - runs/current/changes/*/candidate/artifacts/product/**
@@ -47,6 +48,7 @@ architect:
     - runs/current/role-state/architect/**
     - runs/current/changes/*/impact-manifest.yaml
     - runs/current/changes/*/affected-artifacts.md
+    - runs/current/changes/*/affected-candidate-artifacts.md
     - runs/current/changes/*/affected-app-paths.md
     - runs/current/changes/*/reopened-gates.md
     - runs/current/changes/*/role-loads/**

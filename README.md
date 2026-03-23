@@ -200,6 +200,8 @@ For authoritative iteration on an existing app:
 
 ```bash
 ./scripts/run_playbook.sh --mode iterate path/to/change_request.md
+./scripts/run_playbook.sh --mode iterate --scope frontend-only path/to/change_request.md
+./scripts/run_playbook.sh --mode iterate --scope backend-only path/to/change_request.md
 ```
 
 That iteration lane now uses:
@@ -207,6 +209,13 @@ That iteration lane now uses:
 - the portable accepted baseline under `app/docs/playbook-baseline/current/`
 - the live change workspace under `runs/current/changes/<change_id>/`
 - promotion into the accepted baseline only at change acceptance
+
+Partial execution is now first-class:
+
+- `--mode` chooses the baseline relationship
+- `--scope` chooses the active slice
+- the resulting change packet records the exact active roles, phases, app
+  paths, candidate artifacts, and gate profiles
 
 For interrupted-run continuation:
 

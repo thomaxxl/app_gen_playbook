@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+from execution_scope import DEFAULT_SCOPE_PROFILE, resolve_scope_config
 from orchestrator_common import resolve_repo_root
 
 
@@ -74,7 +75,22 @@ def ordered_unique(values: list[str]) -> list[str]:
     return ordered
 
 
-def detect_review_delta_defaults(request_text: str, mode: str) -> dict[str, object] | None:
+def string_list(value: object) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    return []
+
+
+def detect_review_delta_defaults(
+    repo_root: Path,
+    request_text: str,
+    mode: str,
+    *,
+    scope_profile: str,
+    scope_config: dict[str, object],
+) -> dict[str, object] | None:
     if mode != "iterative-change-run":
         return None
 
@@ -89,15 +105,32 @@ def detect_review_delta_defaults(request_text: str, mode: str) -> dict[str, obje
         "runs/current/artifacts/product/acceptance-criteria.md",
         "runs/current/artifacts/product/custom-pages.md",
     ]
-    affected_app_paths: list[str] = []
-    reopened_gates = [
+    affected_app_paths: list[str] = string_list(scope_config.get("default_app_paths"))
+    reopened_gates = string_list(scope_config.get("default_reopened_gates")) or [
         "phase-I2-product-and-scope-delta",
         "phase-I3-architecture-and-contract-delta",
         "phase-I7-change-acceptance",
     ]
     implementation_lanes: list[str] = []
+    candidate_artifacts = string_list(scope_config.get("default_candidate_artifacts"))
+    active_roles = string_list(scope_config.get("active_roles"))
+    active_phases = string_list(scope_config.get("active_phases"))
+    active_policy_profiles = string_list(
+        (scope_config.get("gate_profiles") or {}).get("quality")
+    )
+    baseline_source = str(scope_config.get("baseline_source", "accepted-artifacts"))
 
     if contains_any(lowered, UI_REVIEW_MARKERS):
+        if scope_profile == DEFAULT_SCOPE_PROFILE:
+            scope_profile = "frontend-only"
+            scoped_defaults = resolve_scope_config(repo_root, run_mode=mode, scope_profile=scope_profile)
+            affected_app_paths = string_list(scoped_defaults.get("default_app_paths"))
+            reopened_gates = string_list(scoped_defaults.get("default_reopened_gates")) or reopened_gates
+            candidate_artifacts = string_list(scoped_defaults.get("default_candidate_artifacts"))
+            active_roles = string_list(scoped_defaults.get("active_roles"))
+            active_phases = string_list(scoped_defaults.get("active_phases"))
+            active_policy_profiles = string_list((scoped_defaults.get("gate_profiles") or {}).get("quality"))
+            baseline_source = str(scoped_defaults.get("baseline_source", baseline_source))
         domains.extend(["ux", "frontend"])
         affected_artifacts.extend(
             [
@@ -107,17 +140,13 @@ def detect_review_delta_defaults(request_text: str, mode: str) -> dict[str, obje
                 "runs/current/artifacts/ux/navigation.md",
             ]
         )
-        affected_app_paths.append("app/frontend/src/**")
-        reopened_gates.extend(
-            [
-                "phase-I4-design-delta",
-                "phase-I5-frontend-implementation-delta",
-                "phase-I6-integration-and-regression-review",
-            ]
-        )
+        if not affected_app_paths:
+            affected_app_paths.append("app/frontend/**")
         implementation_lanes.append("frontend")
 
     return {
+        "scope_profile": scope_profile,
+        "baseline_source": baseline_source,
         "request_shape": "review-findings",
         "review_findings_present": True,
         "review_requires_delta": True,
@@ -127,9 +156,13 @@ def detect_review_delta_defaults(request_text: str, mode: str) -> dict[str, obje
             "It enumerates concrete defects and recommendations, so it MUST be treated as a change "
             "delta unless later phases cite exact evidence that every raised issue is already resolved."
         ),
+        "active_roles": ordered_unique(active_roles),
+        "active_phases": ordered_unique(active_phases),
+        "active_policy_profiles": ordered_unique(active_policy_profiles),
         "affected_domains": ordered_unique(domains),
         "affected_artifacts": ordered_unique(affected_artifacts),
         "affected_app_paths": ordered_unique(affected_app_paths),
+        "affected_candidate_artifacts": ordered_unique(candidate_artifacts),
         "reopened_gates": ordered_unique(reopened_gates),
         "implementation_lanes": ordered_unique(implementation_lanes),
     }
@@ -140,6 +173,7 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--input", required=True)
     parser.add_argument("--mode", required=True)
+    parser.add_argument("--scope-profile", default=DEFAULT_SCOPE_PROFILE)
     args = parser.parse_args()
 
     repo_root = resolve_repo_root(args.repo_root)
@@ -147,16 +181,43 @@ def main() -> int:
     if not input_path.exists():
         raise SystemExit(f"error: input file not found: {input_path}")
     request_text = input_path.read_text(encoding="utf-8")
+    scope_config = resolve_scope_config(repo_root, run_mode=args.mode, scope_profile=args.scope_profile)
 
     stamp = utc_stamp()
     change_id = f"CR-{stamp}"
     change_dir = repo_root / "runs" / "current" / "changes" / change_id
     change_dir.mkdir(parents=True, exist_ok=True)
     (change_dir / "request.md").write_text(request_text, encoding="utf-8")
-    review_defaults = detect_review_delta_defaults(request_text, args.mode)
+    review_defaults = detect_review_delta_defaults(
+        repo_root,
+        request_text,
+        args.mode,
+        scope_profile=args.scope_profile,
+        scope_config=scope_config,
+    )
+    active_scope_profile = str((review_defaults or {}).get("scope_profile") or args.scope_profile or DEFAULT_SCOPE_PROFILE)
+    active_scope_config = resolve_scope_config(repo_root, run_mode=args.mode, scope_profile=active_scope_profile)
+    active_roles = string_list((review_defaults or {}).get("active_roles")) or string_list(active_scope_config.get("active_roles"))
+    active_phases = string_list((review_defaults or {}).get("active_phases")) or string_list(active_scope_config.get("active_phases"))
+    active_policy_profiles = string_list((review_defaults or {}).get("active_policy_profiles")) or string_list(
+        (active_scope_config.get("gate_profiles") or {}).get("quality")
+    )
+    baseline_source = str((review_defaults or {}).get("baseline_source") or active_scope_config.get("baseline_source", "accepted-artifacts"))
+    default_candidate_artifacts = string_list((review_defaults or {}).get("affected_candidate_artifacts")) or string_list(
+        active_scope_config.get("default_candidate_artifacts")
+    )
+    default_app_paths = string_list((review_defaults or {}).get("affected_app_paths")) or string_list(
+        active_scope_config.get("default_app_paths")
+    )
+    default_reopened_gates = string_list((review_defaults or {}).get("reopened_gates")) or string_list(
+        active_scope_config.get("default_reopened_gates")
+    )
+    default_domains = string_list((review_defaults or {}).get("affected_domains"))
     classification_lines = [
         f"change_id: {change_id}",
         f"requested_mode: {args.mode}",
+        f"scope_profile: {active_scope_profile}",
+        f"baseline_source: {baseline_source}",
     ]
     if review_defaults:
         classification_lines.extend(
@@ -169,13 +230,19 @@ def main() -> int:
         )
     classification_lines.extend(
         [
+            "active_roles:",
+            *(f"  - {role}" for role in active_roles),
+            "active_phases:",
+            *(f"  - {phase}" for phase in active_phases),
+            "active_policy_profiles:",
+            *(f"  - {profile}" for profile in active_policy_profiles),
             "reason: >",
             f"  {review_defaults['reason'] if review_defaults else 'Fill with the scoped reason this request belongs in the selected change lane.'}",
             "affected_domains:",
         ]
     )
-    if review_defaults:
-        classification_lines.extend(f"  - {domain}" for domain in review_defaults["affected_domains"])
+    if default_domains:
+        classification_lines.extend(f"  - {domain}" for domain in default_domains)
     else:
         classification_lines.append("  - Fill with the affected design and implementation domains.")
     classification_lines.extend(
@@ -192,16 +259,32 @@ def main() -> int:
     )
     impact_lines = [
         f"change_id: {change_id}",
+        f"scope_profile: {active_scope_profile}",
+        f"baseline_source: {baseline_source}",
         "baseline_id: Fill with the accepted portable baseline id.",
     ]
     if review_defaults:
         impact_lines.extend(
             [
                 "review_requires_delta: true",
+                "active_roles:",
+            ]
+        )
+        impact_lines.extend(f"  - {role}" for role in active_roles)
+        impact_lines.extend(
+            [
+                "active_phases:",
+            ]
+        )
+        impact_lines.extend(f"  - {phase}" for phase in active_phases)
+        impact_lines.extend(
+            [
                 "affected_artifacts:",
             ]
         )
         impact_lines.extend(f"  - {artifact}" for artifact in review_defaults["affected_artifacts"])
+        impact_lines.append("affected_candidate_artifacts:")
+        impact_lines.extend(f"  - {artifact}" for artifact in default_candidate_artifacts)
         impact_lines.append("affected_app_paths:")
         if review_defaults["affected_app_paths"]:
             impact_lines.extend(f"  - {path}" for path in review_defaults["affected_app_paths"])
@@ -209,20 +292,49 @@ def main() -> int:
             impact_lines.append("  - Fill with exact app paths only if implementation is truly required.")
         impact_lines.append("reopened_gates:")
         impact_lines.extend(f"  - {gate}" for gate in review_defaults["reopened_gates"])
+        impact_lines.append("active_policy_profiles:")
+        impact_lines.extend(
+            [f"  - {profile}" for profile in active_policy_profiles]
+            or ["  - Fill with the active policy profiles for this slice."]
+        )
         impact_lines.append("implementation_lanes:")
         if review_defaults["implementation_lanes"]:
             impact_lines.extend(f"  - {lane}" for lane in review_defaults["implementation_lanes"])
         else:
             impact_lines.append("  - Fill with frontend, backend, and devops only when impacted.")
     else:
+        impact_lines.append("active_roles:")
+        impact_lines.extend([f"  - {role}" for role in active_roles] or ["  - Fill with the roles this slice reopens."])
+        impact_lines.append("active_phases:")
+        impact_lines.extend([f"  - {phase}" for phase in active_phases] or ["  - Fill with the phases this slice reopens."])
         impact_lines.extend(
             [
                 "affected_artifacts:",
                 "  - Fill with exact accepted artifacts reopened by this change.",
-                "affected_app_paths:",
-                "  - Fill with exact app paths the implementation may touch.",
-                "reopened_gates:",
-                "  - Fill only reopened gates.",
+                "affected_candidate_artifacts:",
+            ]
+        )
+        impact_lines.extend(
+            [f"  - {path}" for path in default_candidate_artifacts]
+            or ["  - Fill with exact candidate artifacts this slice may update."]
+        )
+        impact_lines.append("affected_app_paths:")
+        impact_lines.extend(
+            [f"  - {path}" for path in default_app_paths]
+            or ["  - Fill with exact app paths the implementation may touch."]
+        )
+        impact_lines.append("reopened_gates:")
+        impact_lines.extend(
+            [f"  - {gate}" for gate in default_reopened_gates]
+            or ["  - Fill only reopened gates."]
+        )
+        impact_lines.append("active_policy_profiles:")
+        impact_lines.extend(
+            [f"  - {profile}" for profile in active_policy_profiles]
+            or ["  - Fill with the active policy profiles for this slice."]
+        )
+        impact_lines.extend(
+            [
                 "implementation_lanes:",
                 "  - Fill with frontend, backend, and devops only when impacted.",
             ]
@@ -255,6 +367,19 @@ def main() -> int:
         affected_artifacts_body,
         encoding="utf-8",
     )
+    affected_candidate_artifacts_body = (
+        "# Affected Candidate Artifacts\n\n"
+        + (
+            "\n".join(f"- `{path}`" for path in default_candidate_artifacts)
+            if default_candidate_artifacts
+            else "- Fill with the exact `runs/current/changes/<change_id>/candidate/artifacts/**` paths this change may update."
+        )
+        + "\n"
+    )
+    (change_dir / "affected-candidate-artifacts.md").write_text(
+        affected_candidate_artifacts_body,
+        encoding="utf-8",
+    )
     if review_defaults:
         affected_app_paths_body = "\n".join(
             [
@@ -273,10 +398,11 @@ def main() -> int:
             ]
         )
     else:
-        affected_app_paths_body = (
-            "# Affected App Paths\n\n"
-            "- Fill with the exact `app/` paths this change is allowed to touch.\n"
-        )
+        affected_app_paths_body = "# Affected App Paths\n\n"
+        if default_app_paths:
+            affected_app_paths_body += "\n".join(f"- `{path}`" for path in default_app_paths) + "\n"
+        else:
+            affected_app_paths_body += "- Fill with the exact `app/` paths this change is allowed to touch.\n"
     (change_dir / "affected-app-paths.md").write_text(
         affected_app_paths_body,
         encoding="utf-8",
@@ -294,10 +420,11 @@ def main() -> int:
             ]
         )
     else:
-        reopened_gates_body = (
-            "# Reopened Gates\n\n"
-            "- Fill with only the gates this change must reopen.\n"
-        )
+        reopened_gates_body = "# Reopened Gates\n\n"
+        if default_reopened_gates:
+            reopened_gates_body += "\n".join(f"- `{gate}`" for gate in default_reopened_gates) + "\n"
+        else:
+            reopened_gates_body += "- Fill with only the gates this change must reopen.\n"
     (change_dir / "reopened-gates.md").write_text(
         reopened_gates_body,
         encoding="utf-8",
@@ -305,10 +432,13 @@ def main() -> int:
     role_loads_dir = change_dir / "role-loads"
     role_loads_dir.mkdir(parents=True, exist_ok=True)
     for role_name in ("product_manager", "architect", "frontend", "backend", "devops"):
+        is_active = role_name in active_roles
         (role_loads_dir / f"{role_name}.yaml").write_text(
             "\n".join(
                 [
                     f"change_id: {change_id}",
+                    f"scope_profile: {active_scope_profile}",
+                    f"active: {'true' if is_active else 'false'}",
                     "baseline_id: Fill with the portable accepted baseline id.",
                     "read_artifacts:",
                     "  - Fill with exact baseline or candidate artifacts for this role.",
@@ -385,6 +515,7 @@ def main() -> int:
                 f"topic: {topic}",
                 f"change_id: {change_id}",
                 f"change_type: {args.mode}",
+                f"scope_profile: {active_scope_profile}",
                 "purpose: classify and route the requested app change",
                 "",
                 "## Required Reads",
@@ -393,11 +524,13 @@ def main() -> int:
                 f"- runs/current/changes/{change_id}/classification.yaml",
                 f"- runs/current/changes/{change_id}/impact-manifest.yaml",
                 f"- runs/current/changes/{change_id}/affected-artifacts.md",
+                f"- runs/current/changes/{change_id}/affected-candidate-artifacts.md",
                 f"- runs/current/changes/{change_id}/affected-app-paths.md",
                 f"- runs/current/changes/{change_id}/reopened-gates.md",
                 "",
                 "## Requested Outputs",
                 "- classify the request and select the proper run mode",
+                "- confirm or refine the execution scope profile before handing off implementation lanes",
                 "- update only the candidate product delta artifacts as needed",
                 "- keep the change workspace narrow and current",
                 "- hand off the impacted lanes",

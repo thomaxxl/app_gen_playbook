@@ -64,6 +64,7 @@ Use this file as the discovery entrypoint for the playbook library.
 
 - [routing/role-core.yaml](routing/role-core.yaml)
 - [routing/phase-bundles.yaml](routing/phase-bundles.yaml)
+- [routing/execution-scopes.yaml](routing/execution-scopes.yaml)
 - [routing/capability-map.yaml](routing/capability-map.yaml)
 
 Canonical policy split:

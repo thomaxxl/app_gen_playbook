@@ -21,6 +21,10 @@ def copy_runner_scripts(source_repo: Path, repo_root: Path) -> None:
     scripts_dir.mkdir(parents=True, exist_ok=True)
     for script_name in ("run_playbook.sh", "run_playbook_core.sh"):
         shutil.copy2(source_repo / "scripts" / script_name, scripts_dir / script_name)
+    source_parts_dir = source_repo / "scripts" / "run_playbook_core"
+    target_parts_dir = scripts_dir / "run_playbook_core"
+    if source_parts_dir.is_dir():
+        shutil.copytree(source_parts_dir, target_parts_dir, dirs_exist_ok=True)
     tools_dir = repo_root / "tools"
     tools_dir.mkdir(parents=True, exist_ok=True)
     for tool_name in (

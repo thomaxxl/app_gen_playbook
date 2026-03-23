@@ -56,6 +56,20 @@ pick_mode() {
   printf '%s\n' "$mode"
 }
 
+pick_scope() {
+  local scope
+  while true; do
+    scope="$(ask "Execution scope (fullstack, frontend-only, backend-only, rules-only, devops-only)" "fullstack")"
+    case "$scope" in
+      fullstack|frontend-only|backend-only|rules-only|devops-only) break ;;
+      *)
+        echo "Unsupported scope: $scope"
+        ;;
+    esac
+  done
+  printf '%s\n' "$scope"
+}
+
 pick_role() {
   local role
   while true; do
@@ -117,8 +131,9 @@ if [[ "$mode" == "resume" ]]; then
   fi
 else
   run_mode="$(pick_mode)"
+  scope_profile="$(pick_scope)"
   input_file="$(resolve_input)"
-  cmd+=(--mode "$run_mode" "$input_file")
+  cmd+=(--mode "$run_mode" --scope "$scope_profile" "$input_file")
   if [[ "$use_yolo" == "yes" ]]; then
     cmd+=(--yolo)
   fi

@@ -237,6 +237,11 @@ export type RelationshipExecuteRequest = {
   routeTemplate: string;
 };
 
+export type RelationshipResolution<T> =
+  | { kind: "resolved"; value: T }
+  | { kind: "empty"; reason: string }
+  | { kind: "unresolved"; reason: string };
+
 export type RelationshipLoadSource =
   | "embedded"
   | "relationship-route"
@@ -255,34 +260,69 @@ function normalizeRelationshipRouteTemplate(
   );
 }
 
+function humanizeResolutionReason(reason: string): string {
+  return reason
+    .replace(/^missing-/, "missing ")
+    .replace(/^malformed-/, "malformed ")
+    .replace(/^incomplete-/, "incomplete ")
+    .replace(/-/g, " ");
+}
+
+function relationshipMetadataIssue(
+  relationship: ResourceRelationshipMeta,
+): string | null {
+  if (relationship.resolutionStatus === "unresolved") {
+    return relationship.resolutionReason ?? "missing-relationship-metadata";
+  }
+  return null;
+}
+
+function buildRelationshipResolutionMessage(
+  relationship: ResourceRelationshipMeta,
+  reason: string,
+): string {
+  return `Relationship metadata incomplete for ${relationship.label} (${relationship.targetResource}): ${humanizeResolutionReason(reason)}.`;
+}
+
 export function resolveRelationshipExecuteRequest(
   schema: Schema,
   relationship: ResourceRelationshipMeta,
   recordId: string | number | undefined,
-): RelationshipExecuteRequest | null {
+): RelationshipResolution<RelationshipExecuteRequest> {
+  const metadataIssue = relationshipMetadataIssue(relationship);
+  if (metadataIssue) {
+    return { kind: "unresolved", reason: metadataIssue };
+  }
+
   const routeTemplate = normalizeRelationshipRouteTemplate(schema, relationship);
+  if (!routeTemplate) {
+    return { kind: "unresolved", reason: "missing-relationship-route-template" };
+  }
   if (recordId === undefined || recordId === null || recordId === "") {
-    return null;
+    return { kind: "unresolved", reason: "missing-parent-id" };
   }
   const segments = routeTemplate.split("/").filter(Boolean);
   const placeholderIndex = segments.findIndex((segment) => segment === "{id}");
   if (placeholderIndex <= 0 || placeholderIndex >= segments.length - 1) {
-    return null;
+    return { kind: "unresolved", reason: "malformed-relationship-route-template" };
   }
 
   const resource = segments.slice(0, placeholderIndex).join("/");
   const action = segments.slice(placeholderIndex + 1).join("/");
   if (!resource || !action) {
-    return null;
+    return { kind: "unresolved", reason: "malformed-relationship-route-template" };
   }
 
   const id = recordId as string | number;
   return {
-    action,
-    id,
-    resource,
-    routePath: routeTemplate.replace("{id}", String(id)).replace(/^\/+/, ""),
-    routeTemplate,
+    kind: "resolved",
+    value: {
+      action,
+      id,
+      resource,
+      routePath: routeTemplate.replace("{id}", String(id)).replace(/^\/+/, ""),
+      routeTemplate,
+    },
   };
 }
 
@@ -342,21 +382,37 @@ export function buildRelatedId(
   record: Record<string, unknown>,
   relationship: ResourceRelationshipMeta,
   delimiter: string,
-): string | undefined {
+): RelationshipResolution<string> {
+  const metadataIssue = relationshipMetadataIssue(relationship);
+  if (metadataIssue) {
+    return { kind: "unresolved", reason: metadataIssue };
+  }
+
+  if (relationship.fks.length === 0) {
+    return { kind: "unresolved", reason: "missing-relationship-keys" };
+  }
+
   const values = relationship.fks
     .map((fk) => record[fk])
-    .filter((value) => value !== undefined && value !== null && value !== "")
-    .map((value) => String(value));
+    .map((value) => (value !== undefined && value !== null && value !== "" ? String(value) : null));
 
-  if (values.length !== relationship.fks.length) {
-    return undefined;
+  const resolvedValues = values.filter((value): value is string => Boolean(value));
+  if (resolvedValues.length === 0) {
+    return { kind: "empty", reason: "no-related-value" };
   }
 
-  if (values.length === 1) {
-    return values[0];
+  if (resolvedValues.length !== relationship.fks.length) {
+    return { kind: "unresolved", reason: "incomplete-composite-key" };
   }
 
-  return values.join(relationship.compositeDelimiter ?? delimiter);
+  if (resolvedValues.length === 1) {
+    return { kind: "resolved", value: resolvedValues[0] };
+  }
+
+  return {
+    kind: "resolved",
+    value: resolvedValues.join(relationship.compositeDelimiter ?? delimiter),
+  };
 }
 
 export function getRelatedRecordLabel(
@@ -443,6 +499,34 @@ export function RelatedRecordSummary({
   );
 }
 
+export function RelationshipResolutionAlert({
+  direction,
+  relationship,
+  reason,
+}: {
+  direction: "toone" | "tomany";
+  relationship: ResourceRelationshipMeta;
+  reason: string;
+}) {
+  return (
+    <div
+      data-testid={`relationship-resolution-error:${direction}:${relationship.name}`}
+      data-relationship-fetch-source="unresolved"
+      data-relationship-resolution-reason={reason}
+    >
+      <Typography color="error" sx={{ fontWeight: 700, mb: 1 }}>
+        Relationship metadata incomplete
+      </Typography>
+      <Typography variant="body2">
+        {relationship.label} · {relationship.targetResource}
+      </Typography>
+      <Typography color="text.secondary" variant="body2">
+        {buildRelationshipResolutionMessage(relationship, reason)}
+      </Typography>
+    </div>
+  );
+}
+
 export function RelatedRecordDialogLink({
   parentRecord,
   relationship,
@@ -484,18 +568,34 @@ export function RelatedRecordDialogLink({
     () => getRelatedRecordLabel(parentRecord, relationship, targetMeta),
     [parentRecord, relationship, targetMeta],
   );
+  const unresolvedReason = useMemo(() => {
+    if (executeRequest.kind === "unresolved" && relatedId.kind !== "resolved") {
+      return executeRequest.reason;
+    }
+    if (relatedId.kind === "unresolved") {
+      return relatedId.reason;
+    }
+    return null;
+  }, [executeRequest, relatedId]);
+  const displayLabel = label === "-" && unresolvedReason ? relationship.label : label;
   const canOpen = Boolean(
     embeddedRelated
-    || relatedId
-    || executeRequest,
+    || executeRequest.kind !== "empty"
+    || relatedId.kind !== "empty",
   );
 
   useEffect(() => {
     setRelated(embeddedRelated);
     setLoading(false);
     setError(null);
-    setLoadSource(embeddedRelated ? "embedded" : "unresolved");
-  }, [embeddedRelated, relatedId]);
+    setLoadSource(
+      embeddedRelated
+        ? "embedded"
+        : unresolvedReason
+          ? "unresolved"
+          : "empty",
+    );
+  }, [embeddedRelated, unresolvedReason]);
 
   useEffect(() => {
     if (!open || embeddedRelated) {
@@ -508,12 +608,12 @@ export function RelatedRecordDialogLink({
 
     const load = async () => {
       try {
-        if (executeRequest) {
+        if (executeRequest.kind === "resolved") {
           const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
-            executeRequest.resource,
+            executeRequest.value.resource,
             {
-              action: executeRequest.action,
-              id: executeRequest.id,
+              action: executeRequest.value.action,
+              id: executeRequest.value.id,
               method: "GET",
             },
           );
@@ -528,14 +628,27 @@ export function RelatedRecordDialogLink({
           }
         }
 
-        if (!relatedId) {
+        if (relatedId.kind === "unresolved") {
           if (!cancelled) {
-            setLoadSource("empty");
+            setRelated(null);
+            setLoading(false);
+            setError(null);
+            setLoadSource("unresolved");
           }
-          throw new Error("Missing related id and no relationship-route payload was available.");
+          return;
         }
 
-        const result = await dataProvider.getOne(relationship.targetResource, { id: relatedId });
+        if (relatedId.kind !== "resolved") {
+          if (!cancelled) {
+            setRelated(null);
+            setLoading(false);
+            setError(null);
+            setLoadSource("empty");
+          }
+          return;
+        }
+
+        const result = await dataProvider.getOne(relationship.targetResource, { id: relatedId.value });
         if (!cancelled) {
           setRelated(result.data as Record<string, unknown>);
           setLoading(false);
@@ -583,7 +696,11 @@ export function RelatedRecordDialogLink({
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    const navigationId = relatedId ?? (related?.id != null ? String(related.id) : undefined);
+    const navigationId = relatedId.kind === "resolved"
+      ? relatedId.value
+      : related?.id != null
+        ? String(related.id)
+        : undefined;
     if (!navigationId) {
       return;
     }
@@ -591,15 +708,15 @@ export function RelatedRecordDialogLink({
     redirect(mode, relationship.targetResource, navigationId);
   };
 
-  if (!canOpen || label === "-") {
-    return <Typography component="span" variant="body2">{label}</Typography>;
+  if (!canOpen || displayLabel === "-") {
+    return <Typography component="span" variant="body2">{displayLabel}</Typography>;
   }
 
   return (
     <>
       <Button
         data-testid={`relationship-dialog-link:${surface}:${relationship.name}`}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
         data-relationship-target-resource={relationship.targetResource}
         onClick={handleOpen}
         size="small"
@@ -611,7 +728,7 @@ export function RelatedRecordDialogLink({
         }}
         variant="text"
       >
-        {label}
+        {displayLabel}
       </Button>
       <Dialog
         data-testid={`relationship-dialog:${surface}:${relationship.name}`}
@@ -620,12 +737,12 @@ export function RelatedRecordDialogLink({
         onClose={handleClose}
         open={open}
       >
-        <DialogTitle>{label}</DialogTitle>
+        <DialogTitle>{displayLabel}</DialogTitle>
         <DialogContent dividers>
           <div
             data-testid={`relationship-dialog-state:${surface}:${relationship.name}`}
             data-relationship-fetch-source={loadSource}
-            data-relationship-route-path={executeRequest?.routePath ?? ""}
+            data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
             style={{
               display: "flex",
               gap: "8px",
@@ -647,7 +764,14 @@ export function RelatedRecordDialogLink({
           {!loading && !error && related ? (
             <RelatedRecordSummary data={related} resource={relationship.targetResource} />
           ) : null}
-          {!loading && !error && !related ? (
+          {!loading && !error && !related && loadSource === "unresolved" && unresolvedReason ? (
+            <RelationshipResolutionAlert
+              direction="toone"
+              reason={unresolvedReason}
+              relationship={relationship}
+            />
+          ) : null}
+          {!loading && !error && !related && loadSource !== "unresolved" ? (
             <Typography color="text.secondary">No related record.</Typography>
           ) : null}
         </DialogContent>
@@ -689,9 +813,18 @@ export function SingleRelationshipTab({
   const relatedId = useMemo(
     () => record
       ? buildRelatedId(record as Record<string, unknown>, relationship, schema.delimiter)
-      : undefined,
+      : { kind: "unresolved", reason: "missing-parent-record" } satisfies RelationshipResolution<string>,
     [record, relationship, schema.delimiter],
   );
+  const unresolvedReason = useMemo(() => {
+    if (executeRequest.kind === "unresolved" && relatedId.kind !== "resolved") {
+      return executeRequest.reason;
+    }
+    if (relatedId.kind === "unresolved") {
+      return relatedId.reason;
+    }
+    return null;
+  }, [executeRequest, relatedId]);
 
   useEffect(() => {
     if (!record) {
@@ -716,12 +849,12 @@ export function SingleRelationshipTab({
 
     const load = async () => {
       try {
-        if (executeRequest) {
+        if (executeRequest.kind === "resolved") {
           const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
-            executeRequest.resource,
+            executeRequest.value.resource,
             {
-              action: executeRequest.action,
-              id: executeRequest.id,
+              action: executeRequest.value.action,
+              id: executeRequest.value.id,
               method: "GET",
             },
           );
@@ -736,7 +869,17 @@ export function SingleRelationshipTab({
           }
         }
 
-        if (!relatedId) {
+        if (relatedId.kind === "unresolved") {
+          if (!cancelled) {
+            setRelated(null);
+            setLoading(false);
+            setError(null);
+            setLoadSource("unresolved");
+          }
+          return;
+        }
+
+        if (relatedId.kind !== "resolved") {
           if (!cancelled) {
             setRelated(null);
             setLoading(false);
@@ -746,7 +889,7 @@ export function SingleRelationshipTab({
           return;
         }
 
-        const result = await dataProvider.getOne(relationship.targetResource, { id: relatedId });
+        const result = await dataProvider.getOne(relationship.targetResource, { id: relatedId.value });
         if (!cancelled) {
           setRelated(result.data as Record<string, unknown>);
           setLoading(false);
@@ -780,7 +923,7 @@ export function SingleRelationshipTab({
         data-testid={`relationship-tab-panel:toone:${relationship.name}`}
         data-relationship-direction="toone"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
         <Loading />
       </div>
@@ -793,7 +936,7 @@ export function SingleRelationshipTab({
         data-testid={`relationship-tab-panel:toone:${relationship.name}`}
         data-relationship-direction="toone"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
         <Typography color="error" sx={{ pt: 2 }}>
           {error}
@@ -808,11 +951,19 @@ export function SingleRelationshipTab({
         data-testid={`relationship-tab-panel:toone:${relationship.name}`}
         data-relationship-direction="toone"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
-        <Typography color="text.secondary" sx={{ pt: 2 }}>
-          No related record.
-        </Typography>
+        {loadSource === "unresolved" && unresolvedReason ? (
+          <RelationshipResolutionAlert
+            direction="toone"
+            reason={unresolvedReason}
+            relationship={relationship}
+          />
+        ) : (
+          <Typography color="text.secondary" sx={{ pt: 2 }}>
+            No related record.
+          </Typography>
+        )}
       </div>
     );
   }
@@ -822,7 +973,7 @@ export function SingleRelationshipTab({
       data-testid={`relationship-tab-panel:toone:${relationship.name}`}
       data-relationship-direction="toone"
       data-relationship-fetch-source={loadSource}
-      data-relationship-route-path={executeRequest?.routePath ?? ""}
+      data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
     >
       <RelatedRecordSummary data={related} resource={relationship.targetResource} />
     </div>

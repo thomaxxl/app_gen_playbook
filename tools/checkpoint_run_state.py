@@ -46,6 +46,7 @@ def cmd_init_run(args: argparse.Namespace) -> int:
     payload = {
         "run_id": f"RUN-{now.replace(':', '').replace('-', '')}",
         "mode": args.mode,
+        "scope_profile": args.scope_profile or "fullstack",
         "status": args.status,
         "change_id": args.change_id or "",
         "current_phase": "",
@@ -63,6 +64,8 @@ def cmd_set_run_status(args: argparse.Namespace) -> int:
     payload["status"] = args.status
     if args.mode:
         payload["mode"] = args.mode
+    if args.scope_profile is not None:
+        payload["scope_profile"] = args.scope_profile
     if args.current_phase is not None:
         payload["current_phase"] = args.current_phase
     if args.change_id is not None:
@@ -133,6 +136,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_run = sub.add_parser("init-run")
     init_run.add_argument("--repo-root", required=True)
     init_run.add_argument("--mode", required=True)
+    init_run.add_argument("--scope-profile")
     init_run.add_argument("--status", default="active")
     init_run.add_argument("--change-id")
 
@@ -140,6 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     set_status.add_argument("--repo-root", required=True)
     set_status.add_argument("--status", required=True)
     set_status.add_argument("--mode")
+    set_status.add_argument("--scope-profile")
     set_status.add_argument("--current-phase")
     set_status.add_argument("--change-id")
 

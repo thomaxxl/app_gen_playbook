@@ -59,6 +59,7 @@ class ContractPolicyTests(unittest.TestCase):
             phase="phase-7-product-acceptance",
             run_mode="new",
             gate="acceptance",
+            scope_profile=None,
             features=[],
             profiles=[],
         )
@@ -77,11 +78,27 @@ class ContractPolicyTests(unittest.TestCase):
             phase="phase-8-qa-pre-delivery-validation",
             run_mode="new",
             gate="quality",
+            scope_profile=None,
             features=[],
             profiles=[],
         )
         self.assertIn("role-qa", payload["active_profiles"])
         self.assertIn("GATE-COV-003", payload["active_requirement_ids"])
+
+    def test_resolve_policy_uses_scope_specific_gate_profiles(self) -> None:
+        payload = resolve_policy(
+            self.repo_root,
+            role="frontend",
+            phase="phase-6-integration-review",
+            run_mode="iterative-change-run",
+            gate="quality",
+            scope_profile="frontend-only",
+            features=[],
+            profiles=[],
+        )
+        self.assertIn("gate-quality-frontend-delta", payload["active_profiles"])
+        self.assertIn("FE-ADAPTER-001", payload["active_requirement_ids"])
+        self.assertNotIn("BE-SAFRS-REL-001", payload["active_requirement_ids"])
 
     def test_resolve_policy_for_ceo_delivery_gate_includes_delivery_requirement(self) -> None:
         payload = resolve_policy(
@@ -90,6 +107,7 @@ class ContractPolicyTests(unittest.TestCase):
             phase="phase-8-qa-pre-delivery-validation",
             run_mode="new-full-run",
             gate="delivery",
+            scope_profile=None,
             features=[],
             profiles=[],
         )

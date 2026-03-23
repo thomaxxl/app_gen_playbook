@@ -12,6 +12,7 @@ import yaml
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from execution_scope import active_scope_context, active_scope_gate_profiles
 from contracts.load_context import (
     feature_profile_ids,
     gate_profile_id,
@@ -58,19 +59,42 @@ def resolve_policy(
     phase: str | None,
     run_mode: str | None,
     gate: str | None,
+    scope_profile: str | None,
     features: list[str] | None,
     profiles: list[str] | None,
 ) -> dict[str, Any]:
     registry = compile_registry(repo_root)
+    active_scope = active_scope_context(repo_root)
+    resolved_scope_profile = scope_profile or str(active_scope.get("scope_profile", "")).strip() or None
+    use_scoped_gate_profiles = scope_profile is not None
+    if not use_scoped_gate_profiles:
+        active_run_mode = str(active_scope.get("run_mode", "")).strip()
+        if run_mode and active_run_mode and run_mode == active_run_mode:
+            use_scoped_gate_profiles = True
     requested_profiles: list[str] = []
     for candidate in (
         role_profile_id(role),
         phase,
         run_mode_profile_id(run_mode),
-        gate_profile_id(gate),
     ):
         if candidate:
             requested_profiles.append(candidate)
+    scoped_gate_profiles = (
+        active_scope_gate_profiles(
+            repo_root,
+            gate,
+            run_mode=run_mode,
+            scope_profile=resolved_scope_profile,
+        )
+        if gate and use_scoped_gate_profiles
+        else []
+    )
+    if scoped_gate_profiles:
+        requested_profiles.extend(scoped_gate_profiles)
+    else:
+        gate_profile = gate_profile_id(gate)
+        if gate_profile:
+            requested_profiles.append(gate_profile)
     requested_profiles.extend(feature_profile_ids(features))
     requested_profiles.extend(profiles or [])
 
@@ -109,6 +133,7 @@ def resolve_policy(
         "phase": phase,
         "run_mode": run_mode,
         "gate": gate,
+        "scope_profile": resolved_scope_profile,
         "features_enabled": features or [],
         "active_profiles": active_profiles,
         "active_requirement_ids": sorted(requirement_ids),
@@ -123,6 +148,7 @@ def main() -> int:
     parser.add_argument("--phase", help="phase id such as phase-7-product-acceptance")
     parser.add_argument("--run-mode", help="run mode such as new, iterate, or hotfix")
     parser.add_argument("--gate", help="gate name such as quality or acceptance")
+    parser.add_argument("--scope-profile", help="execution scope profile such as fullstack or frontend-only")
     parser.add_argument("--feature", action="append", default=[], help="enabled feature id")
     parser.add_argument("--profile", action="append", default=[], help="explicit extra profile id")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of YAML")
@@ -136,6 +162,7 @@ def main() -> int:
             phase=args.phase,
             run_mode=args.run_mode,
             gate=args.gate,
+            scope_profile=args.scope_profile,
             features=args.feature,
             profiles=args.profile,
         )

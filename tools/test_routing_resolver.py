@@ -22,6 +22,44 @@ class RoutingResolverTests(unittest.TestCase):
         self.write(repo_root, ".git", "")
         self.write(
             repo_root,
+            "playbook/routing/execution-scopes.yaml",
+            "\n".join(
+                [
+                    "fullstack:",
+                    "  active_roles:",
+                    "    - product_manager",
+                    "    - architect",
+                    "    - frontend",
+                    "    - backend",
+                    "  iterative-change-run:",
+                    "    active_phases:",
+                    "      - phase-I1-change-intake-and-triage",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "frontend-only:",
+                    "  active_roles:",
+                    "    - product_manager",
+                    "    - architect",
+                    "    - frontend",
+                    "  iterative-change-run:",
+                    "    active_phases:",
+                    "      - phase-I1-change-intake-and-triage",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
             "playbook/routing/role-core.yaml",
             "\n".join(
                 [
@@ -65,6 +103,8 @@ class RoutingResolverTests(unittest.TestCase):
                     "required_artifacts:",
                     "  - runs/current/artifacts/ux/navigation.md",
                     "  - runs/current/artifacts/backend-design/model-design.md",
+                    "required_candidate_artifacts:",
+                    "  - runs/current/changes/*/candidate/artifacts/ux/**",
                     "writable_targets:",
                     "  - app/frontend/**",
                     "  - runs/current/artifacts/ux/**",
@@ -91,7 +131,29 @@ class RoutingResolverTests(unittest.TestCase):
             + "\n",
         )
         self.write(repo_root, "runs/current/changes/CR-1/request.md", "# Request\n")
-        self.write(repo_root, "runs/current/changes/CR-1/classification.yaml", "kind: change\n")
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/classification.yaml",
+            "\n".join(
+                [
+                    "kind: change",
+                    "scope_profile: frontend-only",
+                    "active_roles:",
+                    "  - product_manager",
+                    "  - architect",
+                    "  - frontend",
+                    "active_phases:",
+                    "  - phase-I1-change-intake-and-triage",
+                    "  - phase-I2-product-and-scope-delta",
+                    "  - phase-I3-architecture-and-contract-delta",
+                    "  - phase-I4-frontend-design-delta",
+                    "  - phase-I5-frontend-implementation-delta",
+                    "  - phase-I6-integration-and-regression-review",
+                    "  - phase-I7-change-acceptance",
+                ]
+            )
+            + "\n",
+        )
         self.write(repo_root, "runs/current/changes/CR-1/impact-manifest.yaml", "change_id: CR-1\n")
         self.write(repo_root, "runs/current/changes/CR-1/reopened-gates.md", "# Reopened Gates\n- Frontend revalidation\n")
         self.write(
@@ -103,6 +165,18 @@ class RoutingResolverTests(unittest.TestCase):
                     "",
                     "- `runs/current/artifacts/ux/navigation.md`",
                     "- `runs/current/artifacts/backend-design/model-design.md`",
+                    "- `runs/current/changes/CR-1/candidate/artifacts/ux/screen-delta.md`",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/affected-candidate-artifacts.md",
+            "\n".join(
+                [
+                    "# Affected Candidate Artifacts",
+                    "",
                     "- `runs/current/changes/CR-1/candidate/artifacts/ux/screen-delta.md`",
                 ]
             )
@@ -155,6 +229,7 @@ class RoutingResolverTests(unittest.TestCase):
 
         self.assertIn("runs/current/changes/CR-1/request.md", read_paths)
         self.assertIn("runs/current/changes/CR-1/affected-artifacts.md", read_paths)
+        self.assertIn("runs/current/changes/CR-1/affected-candidate-artifacts.md", read_paths)
         self.assertIn("runs/current/changes/CR-1/affected-app-paths.md", read_paths)
         self.assertIn("runs/current/changes/CR-1/role-loads/frontend.yaml", read_paths)
         self.assertIn("runs/current/artifacts/ux/navigation.md", read_paths)

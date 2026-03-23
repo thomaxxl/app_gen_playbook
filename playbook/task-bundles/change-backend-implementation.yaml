@@ -16,6 +16,10 @@ required_artifacts:
   - runs/current/artifacts/architecture/resource-naming.md
   - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/dependency-provisioning.md
+required_candidate_artifacts:
+  - runs/current/changes/*/candidate/artifacts/backend-design/**
+  - runs/current/changes/*/candidate/artifacts/architecture/**
+  - runs/current/changes/*/candidate/artifacts/product/**
 writable_targets:
   - runs/current/changes/*/verification/**
   - runs/current/role-state/backend/**

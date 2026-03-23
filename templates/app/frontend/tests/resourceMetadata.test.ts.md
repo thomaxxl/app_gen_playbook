@@ -68,7 +68,7 @@ describe("resourceMetadata", () => {
     ]);
   });
 
-  it("documents the sparse-relationship fallback expectation", () => {
+  it("resolves sparse tab_groups relationships into canonical parent-route metadata", () => {
     const sparseYaml = {
       resources: {
         Device: {
@@ -78,19 +78,31 @@ describe("resourceMetadata", () => {
           tab_groups: {
             related: {
               label: "Related",
-              relationships: ["sessions"],
+              relationships: ["session_events", "alerts"],
             },
           },
           attributes: {
             name: { type: "text" },
           },
         },
-        Session: {
-          endpoint: "/api/sessions",
-          label: "Sessions",
+        SessionEvent: {
+          endpoint: "/api/session_events",
+          label: "Session Events",
           user_key: "name",
           attributes: {
             name: { type: "text" },
+            device_id: {
+              type: "reference",
+              reference: "Device",
+            },
+          },
+        },
+        Alert: {
+          endpoint: "/api/alerts",
+          label: "Alerts",
+          user_key: "message",
+          attributes: {
+            message: { type: "text" },
             device_id: {
               type: "reference",
               reference: "Device",
@@ -102,16 +114,25 @@ describe("resourceMetadata", () => {
 
     const sparseSchema = normalizeAdminYaml(adaptAdminYamlForClient(sparseYaml));
     const deviceMeta = buildResourceMeta(sparseSchema, sparseYaml, "Device");
-    const sessionMeta = buildResourceMeta(sparseSchema, sparseYaml, "Session");
+    const sessionEventMeta = buildResourceMeta(sparseSchema, sparseYaml, "SessionEvent");
 
     expect(deviceMeta.name).toBe("Device");
     expect(deviceMeta.endpoint).toBe("/api/devices");
-    expect(deviceMeta.relationships.map((relationship) => relationship.name)).toContain("sessions");
-    expect(deviceMeta.relationshipByName.sessions.direction).toBe("tomany");
-    expect(deviceMeta.relationshipByName.sessions.targetResource).toBe("Session");
-    expect(deviceMeta.relationshipByName.sessions.fks).toContain("device_id");
-    expect(sessionMeta.relationshipByName.device.direction).toBe("toone");
-    expect(sessionMeta.attributes.find((attribute) => attribute.name === "device_id")?.relationship?.name).toBe(
+    expect(deviceMeta.relationships.map((relationship) => relationship.name).slice(0, 2)).toEqual([
+      "session_events",
+      "alerts",
+    ]);
+    expect(deviceMeta.relationshipByName.session_events.direction).toBe("tomany");
+    expect(deviceMeta.relationshipByName.session_events.targetResource).toBe("SessionEvent");
+    expect(deviceMeta.relationshipByName.session_events.fks).toContain("device_id");
+    expect(deviceMeta.relationshipByName.session_events.includePath).toBe("session_events");
+    expect(deviceMeta.relationshipByName.session_events.relationshipRouteTemplate).toBe(
+      "/api/devices/{id}/session_events",
+    );
+    expect(deviceMeta.relationshipByName.session_events.resolutionStatus).toBe("resolved");
+    expect(deviceMeta.relationshipByName.alerts.targetResource).toBe("Alert");
+    expect(sessionEventMeta.relationshipByName.device.direction).toBe("toone");
+    expect(sessionEventMeta.attributes.find((attribute) => attribute.name === "device_id")?.relationship?.name).toBe(
       "device",
     );
   });
@@ -122,4 +143,5 @@ Notes:
 
 - At minimum, the generated runtime MUST prove one sparse relationship example
   where `tab_groups` plus fallback inference still produce a usable
-  relationship metadata entry.
+  relationship metadata entry with stable `includePath`,
+  `relationshipRouteTemplate`, and ordered `tab_groups` relationships.

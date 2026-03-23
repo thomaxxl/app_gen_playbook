@@ -14,6 +14,72 @@ def write_file(path: Path, content: str) -> None:
 
 
 class CheckCompletionTests(unittest.TestCase):
+    def test_backend_only_scope_skips_frontend_specific_completion_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "playbook/routing/execution-scopes.yaml",
+                "\n".join(
+                    [
+                        "fullstack:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - architect",
+                        "    - frontend",
+                        "    - backend",
+                        "backend-only:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - architect",
+                        "    - backend",
+                        "    - qa",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I1-change-intake-and-triage",
+                        "      - phase-I2-product-and-scope-delta",
+                        "      - phase-I3-architecture-and-contract-delta",
+                        "      - phase-I4-backend-design-delta",
+                        "      - phase-I5-backend-implementation-delta",
+                        "      - phase-I6-integration-and-regression-review",
+                        "      - phase-I7-change-acceptance",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"active","mode":"iterative-change-run","current_phase":"","change_id":"CR-1","scope_profile":"backend-only"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/classification.yaml",
+                "scope_profile: backend-only\nactive_roles:\n  - product_manager\n  - architect\n  - backend\n  - qa\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+
+            with patch("check_completion.required_run_artifact_paths", return_value=[]), patch(
+                "check_completion.collect_integration_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_acceptance_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_frontend_route_coverage_issues", return_value=[{"path": "app/frontend/src/App.tsx", "reason": "route drift"}]
+            ), patch(
+                "check_completion.collect_preview_coverage_issues", return_value=[{"path": "runs/current/evidence/ui-previews/manifest.md", "reason": "preview drift"}]
+            ), patch(
+                "check_completion.collect_qa_review_coverage_issues", return_value=[{"path": "runs/current/evidence/qa-delivery-review.md", "reason": "qa drift"}]
+            ), patch(
+                "check_completion.audit_backend_orm_safrs", return_value=[]
+            ):
+                blockers = collect_blockers(repo_root)
+
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("frontend-route-coverage", kinds)
+            self.assertNotIn("preview-coverage", kinds)
+            self.assertNotIn("qa-review-coverage", kinds)
+
     def test_terminal_delivery_approval_does_not_hide_blocked_quality_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

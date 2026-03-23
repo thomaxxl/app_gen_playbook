@@ -13,6 +13,7 @@ if [[ "$ROOT" != "$EXPECTED_ROOT" ]]; then
 fi
 
 CORE_SCRIPT="$SCRIPT_DIR/run_playbook_core.sh"
+CORE_PARTS_DIR="$SCRIPT_DIR/run_playbook_core"
 RUN_ROOT="$ROOT/runs/current"
 STATE_ROOT="$RUN_ROOT/role-state"
 ORCH_ROOT="$RUN_ROOT/orchestrator"
@@ -134,6 +135,31 @@ activate_playbook_backend_venv() {
 
 PLAYBOOK_PYTHON="python3"
 activate_playbook_backend_venv || true
+
+core_runner_syntax_check() {
+  local syntax_output path
+  local paths=("$CORE_SCRIPT")
+  local part_paths=()
+
+  if [[ ! -d "$CORE_PARTS_DIR" ]]; then
+    echo "missing core runner parts directory: $CORE_PARTS_DIR" >&2
+    return 1
+  fi
+
+  mapfile -t part_paths < <(find "$CORE_PARTS_DIR" -maxdepth 1 -type f -name '*.sh' | sort)
+  if [[ "${#part_paths[@]}" -eq 0 ]]; then
+    echo "missing core runner parts under: $CORE_PARTS_DIR" >&2
+    return 1
+  fi
+  paths+=("${part_paths[@]}")
+
+  for path in "${paths[@]}"; do
+    if ! syntax_output="$(bash -n "$path" 2>&1)"; then
+      printf '%s failed bash -n:\n%s\n' "${path#$ROOT/}" "$syntax_output" >&2
+      return 1
+    fi
+  done
+}
 
 ensure_host_runtime_dependency_links() {
   [[ "$PLAYBOOK_RUNTIME_ENV" == "host" ]] || return 0
@@ -308,10 +334,11 @@ purpose: repair a bash syntax error in scripts/run_playbook_core.sh so the playb
 - playbook/process/orchestrator-runtime.md
 - scripts/run_playbook.sh
 - scripts/run_playbook_core.sh
+- scripts/run_playbook_core/
 
 ## Requested Outputs
 - update runs/current/remarks.md with the syntax-block diagnosis and repair
-- repair scripts/run_playbook_core.sh so bash -n passes
+- repair scripts/run_playbook_core.sh and any sourced file under scripts/run_playbook_core/ so bash -n passes
 - update runs/current/role-state/ceo/context.md
 
 ## Dependencies
@@ -321,7 +348,7 @@ purpose: repair a bash syntax error in scripts/run_playbook_core.sh so the playb
 - blocked
 
 ## Blocking Issues
-- scripts/run_playbook_core.sh currently fails bash syntax validation
+- the core runner or one of its sourced shell parts currently fails bash syntax validation
 
 ## Notes
 - wrapper-detected syntax error:
@@ -357,8 +384,8 @@ EOF
     echo "error: wrapper CEO repair attempt did not update runs/current/remarks.md." >&2
     return 1
   fi
-  if ! bash -n "$CORE_SCRIPT" >/dev/null 2>&1; then
-    echo "error: wrapper CEO repair attempt finished, but run_playbook_core.sh still fails bash -n." >&2
+  if ! core_runner_syntax_check >/dev/null 2>&1; then
+    echo "error: wrapper CEO repair attempt finished, but the core runner still fails bash -n." >&2
     return 1
   fi
 
@@ -494,9 +521,13 @@ if [[ ! -f "$CORE_SCRIPT" ]]; then
   echo "error: missing core runner script: $CORE_SCRIPT" >&2
   exit 1
 fi
+if [[ ! -d "$CORE_PARTS_DIR" ]]; then
+  echo "error: missing core runner parts directory: $CORE_PARTS_DIR" >&2
+  exit 1
+fi
 
 syntax_output=""
-if ! syntax_output="$(bash -n "$CORE_SCRIPT" 2>&1)"; then
+if ! syntax_output="$(core_runner_syntax_check 2>&1)"; then
   echo "warning: run_playbook_core.sh failed bash -n; attempting CEO repair path via wrapper." >&2
   if run_wrapper_ceo_core_syntax_repair "$syntax_output"; then
     exec bash "$CORE_SCRIPT" "$@"

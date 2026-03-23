@@ -42,6 +42,10 @@ The generated relationship runtime SHOULD also expose stable `data-testid` and
 and relationship tabs so the generic Playwright smoke can prove these
 behaviors without hardcoding one app's domain model.
 
+When relationship synthesis fails, the runtime MUST expose a distinct
+unresolved/configuration state instead of quietly degrading to a generic empty
+message.
+
 The runtime MUST remain functional even when normalized relationship metadata
 is partial. It MUST combine:
 
@@ -146,6 +150,23 @@ If fallback inference still cannot establish a safe relationship definition,
 the runtime MUST fail visibly rather than silently showing raw ids or empty
 tabs as if the contract were complete.
 
+The runtime MUST keep these states separate:
+
+- `empty`: the relationship definition is valid, but there is no related
+  record or collection data
+- `unresolved`: the runtime could not safely derive route metadata,
+  related-id metadata, or reverse-join metadata
+
+For unresolved cases, the runtime MUST render a visible error state with:
+
+- a clear title such as `Relationship metadata incomplete`
+- the relationship name and target resource
+- a stable `data-testid`
+- `data-relationship-fetch-source="unresolved"`
+
+It MUST NOT silently fall back to `No related record.` or
+`No related records.` for unresolved metadata.
+
 ## Minimal sparse example
 
 The runtime MUST be able to handle the sparse example defined in:
@@ -249,6 +270,10 @@ Required behavior:
 - tab visibility MUST honor relationship-level hide flags
 - list row actions inside `tomany` tabs MUST keep the icon-only edit/delete
   pattern
+- `tomany` datagrids MUST expose a stable row-action area with icon-only edit
+  and delete controls
+- summary/show overview relationship items MUST use the same dialog-link lane
+  as list cells and MUST NOT regress to inert text
 
 For `tomany` tabs:
 
@@ -261,6 +286,9 @@ For `tomany` tabs:
 - if the relationship has no direct foreign-key mapping, the runtime MUST
   infer the reverse join from the target resource's `toone` relationship back
   to the parent when that mapping is available
+- row-action clicks MUST NOT accidentally trigger row-level show navigation
+- if the canonical relationship route cannot be resolved safely, the tab MUST
+  show the unresolved/error lane instead of a benign empty-state message
 
 For `toone` tabs:
 
@@ -304,8 +332,17 @@ The frontend validation suite MUST prove at least one end-to-end example of:
 - opening the related-record dialog from that list
 - the dialog showing `EDIT` and `VIEW`
 - a generated show page with both `toone` and `tomany` relationship tabs
-- a sparse-schema relationship example where `tab_groups` plus fallback
-  inference still produce a working `tomany` tab
+- a `tomany` tab row-action area with icon-only edit/delete controls
+
+The frontend validation suite MUST also include a deterministic runtime test
+for sparse fallback, separate from the generic live-app Playwright smoke. That
+test MUST prove:
+
+- `tab_groups` ordering survives adaptation
+- multi-word resource-name matching works
+- reverse-join inference produces a usable `tomany` mapping
+- synthesized metadata includes a canonical parent relationship route template
+- the UI runtime can load a sparse `tomany` relationship through that route
 
 If a run explicitly disables or replaces relationship tabs or related-record
 popups, that exception MUST be documented in the run-owned UX artifacts before

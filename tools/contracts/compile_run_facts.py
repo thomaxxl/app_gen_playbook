@@ -11,6 +11,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from contracts.load_context import normalized_repo_root
+from execution_scope import active_scope_context
 from validators.coverage.compile_product_scope import compile_product_scope_payload
 from validators.coverage.extract_frontend_surface_registry import extract_frontend_surface_registry_payload
 from validators.coverage.generate_review_plan import generate_review_plan_payload
@@ -42,11 +43,31 @@ def _gate_state_payload(repo_root: Path) -> dict[str, Any]:
     run_status = {}
     if run_status_path.exists():
         run_status = json.loads(run_status_path.read_text(encoding="utf-8"))
+    scope_context = active_scope_context(repo_root)
+    classification_policy_profiles = scope_context.get("classification", {}).get("active_policy_profiles") or []
+    if isinstance(classification_policy_profiles, dict):
+        normalized_policy_profiles: dict[str, list[str]] = {}
+        for gate_name, profiles in classification_policy_profiles.items():
+            if isinstance(profiles, str):
+                normalized_policy_profiles[str(gate_name)] = [profiles]
+            elif isinstance(profiles, list):
+                normalized_policy_profiles[str(gate_name)] = [str(profile) for profile in profiles if str(profile).strip()]
+        active_policy_profiles: dict[str, Any] | list[str] = normalized_policy_profiles
+    else:
+        active_policy_profiles = list(classification_policy_profiles)
     return {
         "run_status": {
             "status": str(run_status.get("status", "")),
             "current_phase": str(run_status.get("current_phase", "")),
             "change_id": str(run_status.get("change_id", "")),
+            "scope_profile": str(run_status.get("scope_profile", "") or scope_context.get("scope_profile", "")),
+        },
+        "execution_scope": {
+            "scope_profile": str(scope_context.get("scope_profile", "")),
+            "active_roles": list(scope_context.get("classification", {}).get("active_roles") or scope_context.get("config", {}).get("active_roles") or []),
+            "active_phases": list(scope_context.get("classification", {}).get("active_phases") or scope_context.get("config", {}).get("active_phases") or []),
+            "active_policy_profiles": active_policy_profiles,
+            "baseline_source": str(scope_context.get("classification", {}).get("baseline_source", "") or scope_context.get("config", {}).get("baseline_source", "")),
         },
         "artifacts": {
             "integration_review": "runs/current/artifacts/architecture/integration-review.md",

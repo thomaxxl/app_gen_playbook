@@ -12,6 +12,7 @@ At minimum, that packet SHOULD carry:
 - `classification.yaml`
 - `impact-manifest.yaml`
 - `affected-artifacts.md`
+- `affected-candidate-artifacts.md`
 - `affected-app-paths.md`
 - `reopened-gates.md`
 - `role-loads/*.yaml`
@@ -21,10 +22,17 @@ At minimum, that packet SHOULD carry:
 
 Rules:
 
+- change packets MUST make execution scope executable, not merely descriptive
+- `classification.yaml` MUST record `scope_profile`, `active_roles`,
+  `active_phases`, and the active policy slice
 - change-run read sets MUST load the current change packet plus only the exact
   affected artifacts and app paths required by the current task
+- `affected-candidate-artifacts.md` MUST name the candidate design deltas that
+  implementation is expected to consume
 - when a role-load manifest exists for the active role, it MUST become the
   default scope boundary for change reads and writes
+- Architect MUST populate role-load manifests for every active role during
+  Phase I3 for every non-hotfix change
 - template-only role-load manifests do not justify broad fallback; until the
   manifest is populated, the resolver MUST narrow from `affected-artifacts.md`
   and `affected-app-paths.md`

@@ -111,6 +111,8 @@ export interface ResourceRelationshipMeta {
   hideList?: boolean;
   hideShow?: boolean;
   hideEdit?: boolean;
+  resolutionStatus: "resolved" | "unresolved";
+  resolutionReason?: string;
 }
 
 interface SchemaRelationshipInput {
@@ -125,6 +127,19 @@ interface SchemaRelationshipInput {
   label?: string;
   name?: string;
   targetResource?: string;
+}
+
+function buildRelationshipMetaRecord(
+  input: Omit<ResourceRelationshipMeta, "resolutionStatus"> & {
+    resolutionReason?: string;
+    resolutionStatus?: "resolved" | "unresolved";
+  },
+): ResourceRelationshipMeta {
+  return {
+    ...input,
+    resolutionReason: input.resolutionReason,
+    resolutionStatus: input.resolutionStatus ?? "resolved",
+  };
 }
 
 function getRawResource(rawYaml: RawAdminYaml, resource: string): RawResource | undefined {
@@ -389,20 +404,16 @@ function buildRelationshipMeta(
 
     const direction = inferRelationshipDirection(name, input.direction);
     const targetResource = inferTargetResource(rawYaml, name, input.targetResource);
-    if (!targetResource) {
-      throw new Error(`Unable to infer target resource for relationship '${name}' on '${resource}'.`);
-    }
-
     const fallbackFks = direction === "toone"
       ? inferTooneForeignKeys(rawAttributeMap, name)
-      : inferTomanyForeignKeys(rawYaml, resource, targetResource);
+      : inferTomanyForeignKeys(rawYaml, resource, targetResource ?? "");
     const fks = [...new Set([...(input.fks ?? []), ...fallbackFks])];
 
-    relationshipsByName.set(name, {
+    relationshipsByName.set(name, buildRelationshipMetaRecord({
       name,
       label: normalizeLabel(input.label, name),
       direction,
-      targetResource,
+      targetResource: targetResource ?? input.targetResource ?? name,
       parentResource: resource,
       parentEndpoint,
       includePath: name,
@@ -414,7 +425,9 @@ function buildRelationshipMeta(
       hideList: input.hideList,
       hideShow: input.hideShow,
       hideEdit: input.hideEdit,
-    });
+      resolutionReason: targetResource ? undefined : "missing-target-resource",
+      resolutionStatus: targetResource ? "resolved" : "unresolved",
+    }));
   }
 
   for (const [attributeName, rawAttribute] of rawAttributeMap.entries()) {
@@ -425,24 +438,20 @@ function buildRelationshipMeta(
     }
 
     const targetResource = inferTargetResource(rawYaml, relationshipName, rawAttribute.reference);
-    if (!targetResource) {
-      throw new Error(
-        `Unable to infer target resource for foreign key '${attributeName}' on '${resource}'.`,
-      );
-    }
-
-    relationshipsByName.set(relationshipName, {
+    relationshipsByName.set(relationshipName, buildRelationshipMetaRecord({
       name: relationshipName,
       label: normalizeLabel(rawAttribute.label, relationshipName),
       direction: "toone",
-      targetResource,
+      targetResource: targetResource ?? rawAttribute.reference ?? relationshipName,
       parentResource: resource,
       parentEndpoint,
       includePath: relationshipName,
       relationshipRouteTemplate: `${parentEndpoint}/{id}/${relationshipName}`,
       fks: [attributeName],
       attributes: [attributeName],
-    });
+      resolutionReason: targetResource ? undefined : "missing-target-resource",
+      resolutionStatus: targetResource ? "resolved" : "unresolved",
+    }));
   }
 
   const orderedNames = Object.values(rawResource?.tab_groups ?? {}).flatMap(
@@ -463,28 +472,24 @@ function buildRelationshipMeta(
 
     const direction = inferRelationshipDirection(relationshipName, undefined);
     const targetResource = inferTargetResource(rawYaml, relationshipName, undefined);
-    if (!targetResource) {
-      throw new Error(
-        `Unable to infer target resource for tab-group relationship '${relationshipName}' on '${resource}'.`,
-      );
-    }
-
     const fks = direction === "toone"
       ? inferTooneForeignKeys(rawAttributeMap, relationshipName)
-      : inferTomanyForeignKeys(rawYaml, resource, targetResource);
+      : inferTomanyForeignKeys(rawYaml, resource, targetResource ?? "");
 
-    relationshipsByName.set(relationshipName, {
+    relationshipsByName.set(relationshipName, buildRelationshipMetaRecord({
       name: relationshipName,
       label: normalizeLabel(undefined, relationshipName),
       direction,
-      targetResource,
+      targetResource: targetResource ?? relationshipName,
       parentResource: resource,
       parentEndpoint,
       includePath: relationshipName,
       relationshipRouteTemplate: `${parentEndpoint}/{id}/${relationshipName}`,
       fks,
       attributes: [],
-    });
+      resolutionReason: targetResource ? undefined : "missing-target-resource",
+      resolutionStatus: targetResource ? "resolved" : "unresolved",
+    }));
   }
 
   const orderedRelationships = orderedRelationshipNames

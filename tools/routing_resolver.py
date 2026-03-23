@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Mapping
 
+from execution_scope import active_scope_context
 from orchestrator_common import path_matches_rule, relpath, role_state_dir_names
 
 
@@ -319,7 +320,9 @@ def _active_change_context(repo_root: Path) -> dict[str, Any] | None:
     return {
         "change_id": change_id,
         "change_root": change_root,
+        "classification": active_scope_context(repo_root).get("classification", {}),
         "affected_artifacts": _parse_markdown_path_list(change_root / "affected-artifacts.md"),
+        "affected_candidate_artifacts": _parse_markdown_path_list(change_root / "affected-candidate-artifacts.md"),
         "affected_app_paths": _parse_markdown_path_list(change_root / "affected-app-paths.md"),
     }
 
@@ -344,11 +347,13 @@ def _change_scoped_read_paths(
     runtime_role: str,
     role_config: Mapping[str, Any],
     bundle_artifacts: list[str],
+    bundle_candidate_artifact_rules: list[str],
     message_required_reads: list[str],
     change_context: Mapping[str, Any],
     role_load_payload: Mapping[str, Any],
 ) -> list[str]:
     affected_artifacts = list(change_context.get("affected_artifacts", []))
+    affected_candidate_artifacts = list(change_context.get("affected_candidate_artifacts", []))
     affected_app_paths = list(change_context.get("affected_app_paths", []))
 
     declared_read_artifacts = _clean_declared_paths(_string_list(role_load_payload, "read_artifacts"))
@@ -383,6 +388,16 @@ def _change_scoped_read_paths(
             path
             for path in affected_artifacts
             if path not in reads and _matches_any_rule(path, role_writable_rules)
+        )
+        candidate_rules = bundle_candidate_artifact_rules or [
+            rule
+            for rule in role_writable_rules
+            if rule.startswith("runs/current/changes/*/candidate/artifacts/")
+        ]
+        reads.extend(
+            path
+            for path in affected_candidate_artifacts
+            if path not in reads and _matches_any_rule(path, candidate_rules)
         )
 
     declared_app_paths = declared_read_app_paths + declared_write_app_paths
@@ -458,6 +473,7 @@ def resolve_read_packet(
 
     bundle_payload: Mapping[str, Any] = {}
     bundle_artifacts: list[str] = []
+    bundle_candidate_artifact_rules: list[str] = []
     if bundle_path:
         read_paths.append(bundle_path)
         bundle_payload = parse_yaml_subset(repo_root / bundle_path)
@@ -466,6 +482,7 @@ def resolve_read_packet(
         read_paths.extend(_string_list(bundle_payload, "always_load"))
         read_paths.extend(_string_list(bundle_payload, "required_phase"))
         bundle_artifacts.extend(_string_list(bundle_payload, "required_artifacts"))
+        bundle_candidate_artifact_rules.extend(_string_list(bundle_payload, "required_candidate_artifacts"))
 
         conditional = bundle_payload.get("conditional_artifacts", {})
         if isinstance(conditional, dict):
@@ -487,6 +504,7 @@ def resolve_read_packet(
             "classification.yaml",
             "impact-manifest.yaml",
             "affected-artifacts.md",
+            "affected-candidate-artifacts.md",
             "affected-app-paths.md",
             "reopened-gates.md",
         ):
@@ -504,6 +522,7 @@ def resolve_read_packet(
                 runtime_role,
                 role_config,
                 bundle_artifacts,
+                bundle_candidate_artifact_rules,
                 message_required_reads or [],
                 change_context,
                 role_load_payload,

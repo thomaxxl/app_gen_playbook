@@ -24,6 +24,9 @@ alone, the change lane SHOULD restore or verify it from
 The Product Manager MUST record:
 
 - the chosen run mode
+- the chosen `scope_profile`
 - the reason for that choice
 - the affected product areas
-- the likely affected architecture, UX, backend, and DevOps lanes
+- the exact active roles and phases
+- the likely affected architecture, UX, backend, rules, and DevOps lanes
+- the exact affected app paths, candidate artifacts, and reopened gates

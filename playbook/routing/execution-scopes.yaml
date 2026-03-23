@@ -1,0 +1,310 @@
+fullstack:
+  title: Full stack delivery
+  description: Product, UX, frontend, backend, rules, and deployment lanes may all reopen.
+  active_roles:
+    - product_manager
+    - architect
+    - frontend
+    - backend
+    - qa
+    - devops
+  new-full-run:
+    active_phases:
+      - phase-0-intake-and-framing
+      - phase-1-product-definition
+      - phase-2-architecture-contract
+      - phase-3-ux-and-interaction-design
+      - phase-4-backend-design-and-rules-mapping
+      - phase-5-frontend-implementation
+      - phase-5-backend-implementation
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    gate_profiles:
+      quality:
+        - gate-quality
+      acceptance:
+        - gate-acceptance
+      delivery:
+        - gate-delivery
+  iterative-change-run:
+    baseline_source: accepted-artifacts
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-frontend-design-delta
+      - phase-I4-backend-design-delta
+      - phase-I4-devops-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality
+      acceptance:
+        - gate-acceptance
+      delivery:
+        - gate-delivery
+    default_reopened_gates:
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-frontend-design-delta
+      - phase-I4-backend-design-delta
+      - phase-I4-devops-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    default_candidate_artifacts:
+      - runs/current/changes/*/candidate/artifacts/product/**
+      - runs/current/changes/*/candidate/artifacts/architecture/**
+      - runs/current/changes/*/candidate/artifacts/ux/**
+      - runs/current/changes/*/candidate/artifacts/backend-design/**
+      - runs/current/changes/*/candidate/artifacts/devops/**
+    default_app_paths:
+      - app/frontend/**
+      - app/backend/**
+      - app/rules/**
+      - app/reference/admin.yaml
+      - app/install.sh
+      - app/run.sh
+  app-only-hotfix:
+    baseline_source: portable-baseline
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality
+      acceptance:
+        - gate-acceptance
+
+frontend-only:
+  title: Frontend-only slice
+  description: Use when the backend/rules baseline stays authoritative and only the UI/UX slice is reopened.
+  active_roles:
+    - product_manager
+    - architect
+    - frontend
+    - qa
+  new-full-run:
+    active_phases:
+      - phase-0-intake-and-framing
+      - phase-1-product-definition
+      - phase-2-architecture-contract
+      - phase-3-ux-and-interaction-design
+      - phase-5-frontend-implementation
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    gate_profiles:
+      quality:
+        - gate-quality-frontend-delta
+      acceptance:
+        - gate-acceptance-frontend-delta
+      delivery:
+        - gate-delivery
+  iterative-change-run:
+    baseline_source: external-project
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-frontend-design-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-frontend-delta
+      acceptance:
+        - gate-acceptance-frontend-delta
+      delivery:
+        - gate-delivery
+    default_reopened_gates:
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-frontend-design-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    default_candidate_artifacts:
+      - runs/current/changes/*/candidate/artifacts/product/**
+      - runs/current/changes/*/candidate/artifacts/architecture/**
+      - runs/current/changes/*/candidate/artifacts/ux/**
+    default_app_paths:
+      - app/frontend/**
+  app-only-hotfix:
+    baseline_source: external-project
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I5-frontend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-frontend-delta
+      acceptance:
+        - gate-acceptance-frontend-delta
+
+backend-only:
+  title: Backend-only slice
+  description: Use when API, ORM, persistence, or service behavior changes without reopening frontend delivery.
+  active_roles:
+    - product_manager
+    - architect
+    - backend
+    - qa
+  new-full-run:
+    active_phases:
+      - phase-0-intake-and-framing
+      - phase-1-product-definition
+      - phase-2-architecture-contract
+      - phase-4-backend-design-and-rules-mapping
+      - phase-5-backend-implementation
+      - phase-6-integration-review
+      - phase-7-product-acceptance
+      - phase-8-qa-pre-delivery-validation
+    gate_profiles:
+      quality:
+        - gate-quality-backend-delta
+      acceptance:
+        - gate-acceptance-backend-delta
+      delivery:
+        - gate-delivery
+  iterative-change-run:
+    baseline_source: external-project
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-backend-design-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-backend-delta
+      acceptance:
+        - gate-acceptance-backend-delta
+      delivery:
+        - gate-delivery
+    default_reopened_gates:
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-backend-design-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    default_candidate_artifacts:
+      - runs/current/changes/*/candidate/artifacts/product/**
+      - runs/current/changes/*/candidate/artifacts/architecture/**
+      - runs/current/changes/*/candidate/artifacts/backend-design/**
+    default_app_paths:
+      - app/backend/**
+      - app/rules/**
+      - app/reference/admin.yaml
+  app-only-hotfix:
+    baseline_source: external-project
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-backend-delta
+      acceptance:
+        - gate-acceptance-backend-delta
+
+rules-only:
+  title: Rules-only slice
+  description: Use when persisted business logic changes stay on the backend/rules lane and the UI/API shape remains approved.
+  active_roles:
+    - product_manager
+    - architect
+    - backend
+    - qa
+  iterative-change-run:
+    baseline_source: accepted-artifacts
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-backend-design-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-rules-delta
+      acceptance:
+        - gate-acceptance-rules-delta
+      delivery:
+        - gate-delivery
+    default_reopened_gates:
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-backend-design-delta
+      - phase-I5-backend-implementation-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    default_candidate_artifacts:
+      - runs/current/changes/*/candidate/artifacts/product/**
+      - runs/current/changes/*/candidate/artifacts/backend-design/**
+    default_app_paths:
+      - app/rules/**
+      - app/backend/**
+
+devops-only:
+  title: DevOps-only slice
+  description: Use when deployment/runtime packaging changes without reopening product, frontend, or backend implementation by default.
+  active_roles:
+    - product_manager
+    - architect
+    - devops
+    - qa
+  iterative-change-run:
+    baseline_source: portable-baseline
+    active_phases:
+      - phase-I1-change-intake-and-triage
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-devops-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    gate_profiles:
+      quality:
+        - gate-quality-devops-delta
+      acceptance:
+        - gate-acceptance-devops-delta
+      delivery:
+        - gate-delivery
+    default_reopened_gates:
+      - phase-I2-product-and-scope-delta
+      - phase-I3-architecture-and-contract-delta
+      - phase-I4-devops-delta
+      - phase-I6-integration-and-regression-review
+      - phase-I7-change-acceptance
+    default_candidate_artifacts:
+      - runs/current/changes/*/candidate/artifacts/architecture/**
+      - runs/current/changes/*/candidate/artifacts/devops/**
+    default_app_paths:
+      - app/.gitignore
+      - app/Dockerfile
+      - app/docker-compose.yml
+      - app/nginx.conf
+      - app/entrypoint.sh
+      - app/install.sh
+      - app/run.sh

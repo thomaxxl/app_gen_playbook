@@ -17,6 +17,10 @@ the sidecar policy registry under `specs/policy/`, especially:
 - `specs/policy/profiles/gate-quality.yaml`
 - `specs/policy/profiles/gate-acceptance.yaml`
 
+For partial-scope change runs, the active gate profile MUST come from the
+current execution scope in `playbook/routing/execution-scopes.yaml` rather
+than assuming the fullstack gate bundle.
+
 The playbook is also a SAFRS-family integration testbed. If a run discovers an
 upstream framework or client bug in `safrs`, `safrs-jsonapi-client`,
 `logicbank`, or a closely related shared dependency, the issue MUST be logged

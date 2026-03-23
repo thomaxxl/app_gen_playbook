@@ -7,10 +7,118 @@ from pathlib import Path
 
 
 class CreateChangeRequestTests(unittest.TestCase):
+    def write_scope_manifest(self, repo_root: Path) -> None:
+        path = repo_root / "playbook/routing/execution-scopes.yaml"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(
+                [
+                    "fullstack:",
+                    "  active_roles:",
+                    "    - product_manager",
+                    "    - architect",
+                    "    - frontend",
+                    "    - backend",
+                    "    - qa",
+                    "    - devops",
+                    "  iterative-change-run:",
+                    "    baseline_source: accepted-artifacts",
+                    "    active_phases:",
+                    "      - phase-I1-change-intake-and-triage",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    gate_profiles:",
+                    "      quality:",
+                    "        - gate-quality",
+                    "    default_reopened_gates:",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    default_candidate_artifacts:",
+                    "      - runs/current/changes/*/candidate/artifacts/product/**",
+                    "      - runs/current/changes/*/candidate/artifacts/ux/**",
+                    "    default_app_paths:",
+                    "      - app/frontend/**",
+                    "frontend-only:",
+                    "  active_roles:",
+                    "    - product_manager",
+                    "    - architect",
+                    "    - frontend",
+                    "    - qa",
+                    "  iterative-change-run:",
+                    "    baseline_source: external-project",
+                    "    active_phases:",
+                    "      - phase-I1-change-intake-and-triage",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    gate_profiles:",
+                    "      quality:",
+                    "        - gate-quality-frontend-delta",
+                    "    default_reopened_gates:",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-frontend-design-delta",
+                    "      - phase-I5-frontend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    default_candidate_artifacts:",
+                    "      - runs/current/changes/*/candidate/artifacts/product/**",
+                    "      - runs/current/changes/*/candidate/artifacts/ux/**",
+                    "    default_app_paths:",
+                    "      - app/frontend/**",
+                    "backend-only:",
+                    "  active_roles:",
+                    "    - product_manager",
+                    "    - architect",
+                    "    - backend",
+                    "    - qa",
+                    "  iterative-change-run:",
+                    "    baseline_source: external-project",
+                    "    active_phases:",
+                    "      - phase-I1-change-intake-and-triage",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-backend-design-delta",
+                    "      - phase-I5-backend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    gate_profiles:",
+                    "      quality:",
+                    "        - gate-quality-backend-delta",
+                    "    default_reopened_gates:",
+                    "      - phase-I2-product-and-scope-delta",
+                    "      - phase-I3-architecture-and-contract-delta",
+                    "      - phase-I4-backend-design-delta",
+                    "      - phase-I5-backend-implementation-delta",
+                    "      - phase-I6-integration-and-regression-review",
+                    "      - phase-I7-change-acceptance",
+                    "    default_candidate_artifacts:",
+                    "      - runs/current/changes/*/candidate/artifacts/backend-design/**",
+                    "    default_app_paths:",
+                    "      - app/backend/**",
+                    "      - app/rules/**",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
     def test_creates_narrow_change_packet_and_inbox_reads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            self.write_scope_manifest(repo_root)
             input_path = repo_root / "request.md"
             input_path.write_text("# Change Request\n\nTest\n", encoding="utf-8")
             script_path = Path(__file__).resolve().parent / "create_change_request.py"
@@ -37,6 +145,7 @@ class CreateChangeRequestTests(unittest.TestCase):
             self.assertTrue((change_root / "classification.yaml").exists())
             self.assertTrue((change_root / "impact-manifest.yaml").exists())
             self.assertTrue((change_root / "affected-artifacts.md").exists())
+            self.assertTrue((change_root / "affected-candidate-artifacts.md").exists())
             self.assertTrue((change_root / "affected-app-paths.md").exists())
             self.assertTrue((change_root / "reopened-gates.md").exists())
             self.assertTrue((change_root / "role-loads" / "frontend.yaml").exists())
@@ -52,6 +161,7 @@ class CreateChangeRequestTests(unittest.TestCase):
             self.assertIn(f"runs/current/changes/{change_id}/classification.yaml", inbox_text)
             self.assertIn(f"runs/current/changes/{change_id}/impact-manifest.yaml", inbox_text)
             self.assertIn(f"runs/current/changes/{change_id}/affected-artifacts.md", inbox_text)
+            self.assertIn(f"runs/current/changes/{change_id}/affected-candidate-artifacts.md", inbox_text)
             self.assertIn(f"runs/current/changes/{change_id}/affected-app-paths.md", inbox_text)
             self.assertIn(f"runs/current/changes/{change_id}/reopened-gates.md", inbox_text)
             self.assertNotIn("runs/current/artifacts/product/", inbox_text.replace(
@@ -63,6 +173,8 @@ class CreateChangeRequestTests(unittest.TestCase):
             ).replace(
                 f"runs/current/changes/{change_id}/affected-artifacts.md", ""
             ).replace(
+                f"runs/current/changes/{change_id}/affected-candidate-artifacts.md", ""
+            ).replace(
                 f"runs/current/changes/{change_id}/affected-app-paths.md", ""
             ).replace(
                 f"runs/current/changes/{change_id}/reopened-gates.md", ""
@@ -72,6 +184,7 @@ class CreateChangeRequestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            self.write_scope_manifest(repo_root)
             input_path = repo_root / "request.md"
             input_path.write_text(
                 "\n".join(
@@ -117,19 +230,23 @@ class CreateChangeRequestTests(unittest.TestCase):
             self.assertIn("request_shape: review-findings", classification)
             self.assertIn("review_requires_delta: true", classification)
             self.assertIn("baseline_challenge: true", classification)
+            self.assertIn("scope_profile: frontend-only", classification)
             self.assertIn("  - product", classification)
             self.assertIn("  - ux", classification)
             self.assertIn("  - frontend", classification)
             self.assertNotIn("  - backend-design", classification)
             self.assertNotIn("  - devops", classification)
+            self.assertIn("active_roles:", classification)
+            self.assertIn("  - frontend", classification)
 
             impact_manifest = (change_root / "impact-manifest.yaml").read_text(encoding="utf-8")
             self.assertIn("review_requires_delta: true", impact_manifest)
+            self.assertIn("scope_profile: frontend-only", impact_manifest)
             self.assertIn("runs/current/artifacts/product/acceptance-criteria.md", impact_manifest)
             self.assertIn("runs/current/artifacts/ux/custom-view-specs.md", impact_manifest)
-            self.assertIn("app/frontend/src/**", impact_manifest)
+            self.assertIn("app/frontend/**", impact_manifest)
             self.assertNotIn("app/backend/src/**", impact_manifest)
-            self.assertIn("phase-I4-design-delta", impact_manifest)
+            self.assertIn("phase-I4-frontend-design-delta", impact_manifest)
             self.assertIn("phase-I5-frontend-implementation-delta", impact_manifest)
             self.assertIn("  - frontend", impact_manifest)
             self.assertNotIn("  - backend", impact_manifest)
@@ -141,6 +258,49 @@ class CreateChangeRequestTests(unittest.TestCase):
             reopened_gates = (change_root / "reopened-gates.md").read_text(encoding="utf-8")
             self.assertIn("phase-I2-product-and-scope-delta", reopened_gates)
             self.assertIn("phase-I7-change-acceptance", reopened_gates)
+
+    def test_explicit_scope_profile_seeds_matching_packet(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            self.write_scope_manifest(repo_root)
+            input_path = repo_root / "request.md"
+            input_path.write_text("# Change Request\n\nBackend only.\n", encoding="utf-8")
+            script_path = Path(__file__).resolve().parent / "create_change_request.py"
+
+            result = subprocess.run(
+                [
+                    "python3",
+                    str(script_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--input",
+                    str(input_path),
+                    "--mode",
+                    "iterative-change-run",
+                    "--scope-profile",
+                    "backend-only",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            change_id = result.stdout.strip()
+            change_root = repo_root / "runs/current/changes" / change_id
+
+            classification = (change_root / "classification.yaml").read_text(encoding="utf-8")
+            self.assertIn("scope_profile: backend-only", classification)
+            self.assertIn("baseline_source: external-project", classification)
+            self.assertIn("  - backend", classification)
+            self.assertNotIn("  - frontend", classification)
+            self.assertIn("phase-I4-backend-design-delta", classification)
+            self.assertNotIn("phase-I4-frontend-design-delta", classification)
+
+            impact_manifest = (change_root / "impact-manifest.yaml").read_text(encoding="utf-8")
+            self.assertIn("app/backend/**", impact_manifest)
+            self.assertIn("app/rules/**", impact_manifest)
+            self.assertIn("runs/current/changes/*/candidate/artifacts/backend-design/**", impact_manifest)
 
 
 if __name__ == "__main__":

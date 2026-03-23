@@ -1,0 +1,6 @@
+id: gate-acceptance-devops-delta
+title: Acceptance gate policy for devops-only deltas
+includes:
+  - evidence-core
+  - product-scope-core
+  - gate-coverage-core

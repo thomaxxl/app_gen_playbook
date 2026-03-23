@@ -373,6 +373,7 @@ def report_markdown(report: dict[str, Any]) -> str:
         f"- Role: `{context.get('role') or 'unspecified'}`",
         f"- Phase: `{context.get('phase') or 'unspecified'}`",
         f"- Run mode: `{context.get('run_mode') or 'unspecified'}`",
+        f"- Scope profile: `{context.get('scope_profile') or 'unspecified'}`",
         f"- Gate: `{context.get('gate') or 'unspecified'}`",
         "",
         "## Results",
@@ -424,6 +425,7 @@ def main() -> int:
     parser.add_argument("--phase", help="phase id")
     parser.add_argument("--run-mode", help="run mode")
     parser.add_argument("--gate", help="gate name")
+    parser.add_argument("--scope-profile", help="execution scope profile")
     parser.add_argument("--feature", action="append", default=[], help="enabled feature id")
     parser.add_argument("--profile", action="append", default=[], help="explicit profile id")
     parser.add_argument("--strict-manual-controls", action="store_true", help="require matching attestations for requirements that declare manual attestation")
@@ -439,6 +441,7 @@ def main() -> int:
         phase=args.phase,
         run_mode=args.run_mode,
         gate=args.gate,
+        scope_profile=args.scope_profile,
         features=args.feature,
         profiles=args.profile,
     )
@@ -468,6 +471,7 @@ def main() -> int:
             "phase": payload.get("phase"),
             "run_mode": payload.get("run_mode"),
             "gate": payload.get("gate"),
+            "scope_profile": payload.get("scope_profile"),
             "active_profiles": payload["active_profiles"],
             "active_requirement_ids": payload["active_requirement_ids"],
             "strict_manual_controls": args.strict_manual_controls,

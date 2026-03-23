@@ -1,0 +1,17 @@
+change_id: CR-template
+requested_mode: iterative-change-run
+scope_profile: fullstack
+baseline_source: accepted-artifacts
+active_roles:
+  - Fill with the roles this slice reopens.
+active_phases:
+  - Fill with the active phases for this slice.
+active_policy_profiles:
+  - Fill with the gate profiles this slice activates.
+reason: >
+  Fill with the scoped reason this request belongs in the selected change lane.
+affected_domains:
+  - Fill with the affected domains.
+needs_baseline_alignment: false
+likely_feature_packs:
+  - Fill only when a feature pack is likely reopened by this change.

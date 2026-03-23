@@ -25,8 +25,11 @@ resolved. Matching the accepted baseline alone is not sufficient proof.
 - compatibility classification
 - migration decision
 - role-load manifests under `runs/current/changes/<change_id>/role-loads/`
-- updated `affected-artifacts.md`, `affected-app-paths.md`, and
+- updated `affected-artifacts.md`, `affected-candidate-artifacts.md`,
+  `affected-app-paths.md`, and
   `reopened-gates.md` when architecture analysis changes the delta boundary
+- mandatory populated role-load manifests for every active role in the change
+  scope unless the packet is explicitly closed as a no-op
 - routed frontend/backend/devops handoffs
 - no-op closure only when the current app and packet evidence explicitly answer
   the review findings, not merely when current hashes match the accepted

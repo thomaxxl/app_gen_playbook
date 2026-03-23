@@ -162,14 +162,23 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
             repo_root / "specs" / "contracts" / "frontend" / "relationship-ui.md": [
                 "canonical parent relationship routes",
                 "how to build the parent relationship URL",
+                "Relationship metadata incomplete",
+                "row-action area",
+                "icon-only edit/delete",
+                "deterministic runtime test",
             ],
             repo_root / "specs" / "contracts" / "frontend" / "validation.md": [
                 "relationship-route behavior is proven",
+                "row-action area with icon-only edit/delete controls",
+                "unresolved relationship metadata produces a visible configuration/runtime error state",
+                "deterministic runtime/UI proof",
             ],
             repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "admin" / "resourceMetadata.ts.md": [
                 "relationshipRouteTemplate",
                 "parentEndpoint",
                 "includePath",
+                'resolutionStatus: "resolved" | "unresolved"',
+                "resolutionReason",
             ],
             repo_root / "templates" / "app" / "frontend" / "shared-runtime" / "relationshipUi.tsx.md": [
                 "resolveRelationshipExecuteRequest",
@@ -179,6 +188,17 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 'data-testid={`relationship-dialog-link:${surface}:',
                 'data-testid={`relationship-dialog-state:${surface}:',
                 "data-relationship-fetch-source",
+                "RelationshipResolutionAlert",
+                "relationship-resolution-error:",
+                'data-relationship-fetch-source="unresolved"',
+            ],
+            repo_root / "templates" / "app" / "frontend" / "tests" / "relationshipRuntime.test.tsx.md": [
+                "Relationship metadata incomplete",
+                "relationship-resolution-error:toone:",
+                "relationship-row-action:edit:",
+                "relationship-row-action:delete:",
+                'action: "session_events"',
+                "relationship-tab-panel:tomany:session_events",
             ],
             repo_root / "templates" / "app" / "frontend" / "tests" / "smoke.e2e.spec.ts.md": [
                 "findListRelationshipDialogCandidate",
@@ -192,6 +212,9 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
                 "relationship-dialog-state:",
                 "data-relationship-fetch-source",
                 "data-relationship-route-path",
+                "assertTomanyRelationshipRowActions",
+                "relationship-row-action:edit:",
+                "relationship-row-action:delete:",
                 "EDIT",
                 "VIEW",
                 'expect(["embedded", "relationship-route", "id-fallback"]).toContain(fetchSource)',
@@ -218,7 +241,9 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
             "relationshipRouteTemplate",
             "routePath",
             "data-relationship-fetch-source",
-            "action: executeRequest.action",
+            "RelationshipResolutionAlert",
+            "relationship-resolution-error:",
+            "executeRequest.value.action",
             "dataProvider.execute<",
             "RelatedRecordSummary",
             "SingleRelationshipTab",
@@ -267,6 +292,12 @@ def collect_relationship_route_issues(repo_root: Path) -> list[dict[str, str]]:
             "ManyRelationshipTab",
             "SingleRelationshipTab",
             "RelatedRecordDialogLink",
+            "RelationshipTabRowActions",
+            "relationship-row-actions:",
+            "relationship-row-action:edit:",
+            "relationship-row-action:delete:",
+            "DeleteWithConfirmButton",
+            "EditButton",
             'surface="list"',
             'surface="summary"',
             'relationship-tab-panel:tomany:',
@@ -400,6 +431,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "data-testid={`relationship-dialog-link:${surface}:",
             "data-testid={`relationship-dialog-state:${surface}:",
             "data-relationship-fetch-source",
+            "RelationshipResolutionAlert",
+            "relationship-resolution-error:",
             "RelatedRecordSummary(",
             "SingleRelationshipTab(",
             "dataProvider.getOne(",
@@ -445,6 +478,12 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "ManyRelationshipTab(",
             "SingleRelationshipTab",
             "RelatedRecordDialogLink",
+            "RelationshipTabRowActions",
+            "relationship-row-actions:",
+            "relationship-row-action:edit:",
+            "relationship-row-action:delete:",
+            "DeleteWithConfirmButton",
+            "EditButton",
             'surface="list"',
             'surface="summary"',
             'relationship-tab-panel:tomany:',
@@ -529,6 +568,9 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "relationship-dialog-state:",
             "data-relationship-fetch-source",
             "data-relationship-route-path",
+            "assertTomanyRelationshipRowActions",
+            "relationship-row-action:edit:",
+            "relationship-row-action:delete:",
             'expect(["embedded", "relationship-route", "id-fallback"]).toContain(fetchSource)',
             "EDIT",
             "VIEW",
@@ -543,6 +585,34 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
                         f"generated Playwright smoke is missing relationship proof token: {token}",
                     )
                 )
+
+    relationship_runtime_test = tests_root / "relationshipRuntime.test.tsx"
+    relationship_runtime_test_text = _read(relationship_runtime_test)
+    if relationship_runtime_test_text:
+        for token in (
+            "Relationship metadata incomplete",
+            "relationship-resolution-error:toone:",
+            "relationship-row-action:edit:",
+            "relationship-row-action:delete:",
+            'action: "session_events"',
+            "relationship-tab-panel:tomany:session_events",
+        ):
+            if token not in relationship_runtime_test_text:
+                issues.append(
+                    _issue(
+                        repo_root,
+                        relationship_runtime_test,
+                        f"generated deterministic relationship runtime test is missing token: {token}",
+                    )
+                )
+    else:
+        issues.append(
+            _issue(
+                repo_root,
+                relationship_runtime_test,
+                "generated frontend runtime is missing the deterministic sparse/unresolved relationship test",
+            )
+        )
 
     usability = repo_root / "runs" / "current" / "evidence" / "frontend-usability.md"
     if _is_non_stub(usability):

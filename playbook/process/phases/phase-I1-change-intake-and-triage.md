@@ -18,9 +18,13 @@ accepted baseline.
 - a product-owned change workspace under `runs/current/changes/<change_id>/`
 - packet files for `request.md`, `classification.yaml`,
   `impact-manifest.yaml`, `affected-artifacts.md`,
+  `affected-candidate-artifacts.md`,
   `affected-app-paths.md`, and `reopened-gates.md`
 - change classification
+- execution-scope classification
 - affected-domain summary
 - Architect inbox handoff
 - explicit baseline-challenge note in the change packet when the request is a
   review-style critique of the accepted app
+- explicit `scope_profile`, `active_roles`, and `active_phases` so partial
+  frontend/backend/rules/devops runs are routable from the start

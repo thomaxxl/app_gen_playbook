@@ -1,0 +1,8 @@
+id: gate-acceptance-frontend-delta
+title: Acceptance gate policy for frontend-only deltas
+includes:
+  - evidence-core
+  - frontend-core
+  - product-scope-core
+  - ux-coverage-core
+  - gate-coverage-core

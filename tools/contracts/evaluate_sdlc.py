@@ -56,6 +56,7 @@ def compute_sdlc_state(repo_root: Path, *, run_mode: str, current_phase: str | N
             phase=policy_phase,
             run_mode=policy_run_mode,
             gate="quality" if phase_id in {"phase-6-integration-review", "phase-8-qa-pre-delivery-validation"} else ("acceptance" if phase_id == "phase-7-product-acceptance" else None),
+            scope_profile=None,
             features=[],
             profiles=[],
         )

@@ -27,8 +27,9 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             repo_root / "scripts" / "monitor.sh",
             repo_root / "scripts" / "status_report.sh",
         )
+        runner_parts = tuple(sorted((repo_root / "scripts" / "run_playbook_core").glob("*.sh")))
 
-        for script in scripts:
+        for script in (*scripts, *runner_parts):
             result = subprocess.run(
                 ["bash", "-n", str(script)],
                 check=False,
@@ -206,7 +207,13 @@ class ShellScriptSyntaxTests(unittest.TestCase):
 
     def test_prereq_operator_action_note_escapes_skill_names_in_source(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
-        script_text = (source_repo_root / "scripts" / "run_playbook_core.sh").read_text(encoding="utf-8")
+        script_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (
+                [source_repo_root / "scripts" / "run_playbook_core.sh"]
+                + sorted((source_repo_root / "scripts" / "run_playbook_core").glob("*.sh"))
+            )
+        )
         self.assertIn(r"(\`playwright-skill\` and \`openapi-to-admin-yaml\`)", script_text)
         self.assertNotIn("(`playwright-skill` and `openapi-to-admin-yaml`)", script_text)
 

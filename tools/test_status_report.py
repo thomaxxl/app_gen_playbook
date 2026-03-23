@@ -92,6 +92,74 @@ class StatusReportTests(unittest.TestCase):
                 "Phase I3 - Architecture and contract delta",
             )
 
+    def test_iterative_change_run_uses_scope_specific_frontend_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+
+            write_file(
+                repo_root / "playbook/routing/execution-scopes.yaml",
+                "\n".join(
+                    [
+                        "fullstack:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - architect",
+                        "    - frontend",
+                        "    - backend",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I1-change-intake-and-triage",
+                        "      - phase-I2-product-and-scope-delta",
+                        "      - phase-I3-architecture-and-contract-delta",
+                        "      - phase-I4-frontend-design-delta",
+                        "      - phase-I5-frontend-implementation-delta",
+                        "      - phase-I6-integration-and-regression-review",
+                        "      - phase-I7-change-acceptance",
+                        "frontend-only:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - architect",
+                        "    - frontend",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I1-change-intake-and-triage",
+                        "      - phase-I2-product-and-scope-delta",
+                        "      - phase-I3-architecture-and-contract-delta",
+                        "      - phase-I4-frontend-design-delta",
+                        "      - phase-I5-frontend-implementation-delta",
+                        "      - phase-I6-integration-and-regression-review",
+                        "      - phase-I7-change-acceptance",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"active","mode":"iterative-change-run","current_phase":"","change_id":"CR-789","scope_profile":"frontend-only"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-789/classification.yaml",
+                "scope_profile: frontend-only\nactive_phases:\n  - phase-I1-change-intake-and-triage\n  - phase-I2-product-and-scope-delta\n  - phase-I3-architecture-and-contract-delta\n  - phase-I4-frontend-design-delta\n  - phase-I5-frontend-implementation-delta\n  - phase-I6-integration-and-regression-review\n  - phase-I7-change-acceptance\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-789/promotion.yaml",
+                "change_id: CR-789\naccepted_at: ''\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-789/reopened-gates.md",
+                "# Reopened Gates\n\n- `phase-I4-frontend-design-delta`\n- `phase-I5-frontend-implementation-delta`\n",
+            )
+            write_file(
+                repo_root / "runs/current/role-state/frontend/inbox/change.md",
+                "from: architect\nto: frontend\n",
+            )
+
+            payload = report_payload(repo_root)
+
+            self.assertEqual(payload["current_phase_code"], "phase-I4-frontend-design-delta")
+            self.assertEqual(payload["current_phase"]["label"], "Phase I4 - Frontend design delta")
+
 
 if __name__ == "__main__":
     unittest.main()

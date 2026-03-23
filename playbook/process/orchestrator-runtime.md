@@ -4,10 +4,13 @@ This file defines the expected runtime behavior of `scripts/run_playbook.sh`.
 
 The top-level `scripts/run_playbook.sh` entrypoint is a resilient wrapper.
 The main orchestration logic lives in `scripts/run_playbook_core.sh`.
+That entrypoint now sources the categorized shell modules under
+`scripts/run_playbook_core/`.
 The wrapper MUST remain small enough to:
 
 - delegate normal execution into `run_playbook_core.sh`
-- detect shell-syntax failure in `run_playbook_core.sh`
+- detect shell-syntax failure in `run_playbook_core.sh` and its sourced
+  `scripts/run_playbook_core/*.sh` parts
 - give CEO an emergency repair path even when the core script cannot start
 - host CEO-only delivery validation helpers such as
   `scripts/run_playbook.sh --ceo-delivery-validate`

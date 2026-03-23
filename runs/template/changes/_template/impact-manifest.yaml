@@ -1,0 +1,20 @@
+change_id: CR-template
+scope_profile: fullstack
+baseline_source: accepted-artifacts
+baseline_id: Fill with the accepted portable baseline id.
+active_roles:
+  - Fill with the roles this slice reopens.
+active_phases:
+  - Fill with the phases this slice reopens.
+affected_artifacts:
+  - Fill with exact accepted artifacts reopened by this change.
+affected_candidate_artifacts:
+  - Fill with exact candidate artifacts this slice may update.
+affected_app_paths:
+  - Fill with exact app paths this slice may touch.
+reopened_gates:
+  - Fill only reopened gates.
+active_policy_profiles:
+  - Fill with the active policy profiles for this slice.
+implementation_lanes:
+  - Fill with frontend, backend, rules, or devops only when impacted.

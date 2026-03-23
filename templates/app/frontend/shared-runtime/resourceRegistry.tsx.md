@@ -19,8 +19,10 @@ import {
   Datagrid,
   DateField,
   DateInput,
+  DeleteWithConfirmButton,
   ListContextProvider,
   Edit,
+  EditButton,
   FunctionField,
   List,
   Loading,
@@ -53,6 +55,7 @@ import {
   getRecordRelationValues,
   getDefaultRelationshipTabIndex,
   type RelationshipLoadSource,
+  RelationshipResolutionAlert,
   RelatedRecordDialogLink,
   resolveRelationshipExecuteRequest,
   SingleRelationshipTab,
@@ -492,7 +495,51 @@ function isBackReferenceItem(
   );
 }
 
-function ManyRelationshipTab({
+function RelationshipTabRowActions({
+  relationshipName,
+}: {
+  relationshipName: string;
+}) {
+  const record = useRecordContext<Record<string, unknown>>();
+
+  if (!record?.id) {
+    return null;
+  }
+
+  const stopRowNavigation = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  return (
+    <Box
+      data-testid={`relationship-row-actions:${relationshipName}:${String(record.id)}`}
+      onClick={stopRowNavigation}
+      onMouseDown={stopRowNavigation}
+      sx={{ alignItems: "center", display: "flex", gap: 1 }}
+    >
+      <EditButton
+        aria-label={`Edit related ${relationshipName}`}
+        data-testid={`relationship-row-action:edit:${relationshipName}:${String(record.id)}`}
+        label=""
+        onClick={stopRowNavigation}
+        sx={{ minWidth: 0, px: 0.5 }}
+      />
+      <DeleteWithConfirmButton
+        aria-label={`Delete related ${relationshipName}`}
+        confirmContent="Delete this related record?"
+        confirmTitle="Delete related record?"
+        data-testid={`relationship-row-action:delete:${relationshipName}:${String(record.id)}`}
+        label=""
+        mutationMode="pessimistic"
+        onClick={stopRowNavigation}
+        sx={{ minWidth: 0, px: 0.5 }}
+      />
+    </Box>
+  );
+}
+
+export function ManyRelationshipTab({
   parentResource,
   relationship,
 }: {
@@ -532,6 +579,9 @@ function ManyRelationshipTab({
   const [loadSource, setLoadSource] = useState<RelationshipLoadSource>(
     embeddedRows.length > 0 ? "embedded" : "unresolved",
   );
+  const unresolvedReason = executeRequest.kind === "unresolved"
+    ? executeRequest.reason
+    : null;
 
   useEffect(() => {
     if (embeddedRows.length > 0) {
@@ -542,11 +592,11 @@ function ManyRelationshipTab({
       return;
     }
 
-    if (!executeRequest || parentId === undefined || parentId === null || parentId === "") {
+    if (executeRequest.kind === "unresolved") {
       setRows([]);
       setLoading(false);
       setError(null);
-      setLoadSource("empty");
+      setLoadSource("unresolved");
       return;
     }
 
@@ -557,10 +607,10 @@ function ManyRelationshipTab({
     const load = async () => {
       try {
         const routeResult = await dataProvider.execute<Record<string, unknown> | Record<string, unknown>[]>(
-          executeRequest.resource,
+          executeRequest.value.resource,
           {
-            action: executeRequest.action,
-            id: executeRequest.id,
+            action: executeRequest.value.action,
+            id: executeRequest.value.id,
             method: "GET",
           },
         );
@@ -601,7 +651,7 @@ function ManyRelationshipTab({
         data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
         data-relationship-direction="tomany"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
         <Loading />
       </Box>
@@ -614,7 +664,7 @@ function ManyRelationshipTab({
         data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
         data-relationship-direction="tomany"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
         <Typography color="error" sx={{ pt: 2 }}>
           {error}
@@ -629,11 +679,19 @@ function ManyRelationshipTab({
         data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
         data-relationship-direction="tomany"
         data-relationship-fetch-source={loadSource}
-        data-relationship-route-path={executeRequest?.routePath ?? ""}
+        data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
       >
-        <Typography color="text.secondary" sx={{ pt: 2 }}>
-          No related records.
-        </Typography>
+        {loadSource === "unresolved" && unresolvedReason ? (
+          <RelationshipResolutionAlert
+            direction="tomany"
+            reason={unresolvedReason}
+            relationship={relationship}
+          />
+        ) : (
+          <Typography color="text.secondary" sx={{ pt: 2 }}>
+            No related records.
+          </Typography>
+        )}
       </Box>
     );
   }
@@ -643,11 +701,16 @@ function ManyRelationshipTab({
       data-testid={`relationship-tab-panel:tomany:${relationship.name}`}
       data-relationship-direction="tomany"
       data-relationship-fetch-source={loadSource}
-      data-relationship-route-path={executeRequest?.routePath ?? ""}
+      data-relationship-route-path={executeRequest.kind === "resolved" ? executeRequest.value.routePath : ""}
     >
       <ListContextProvider value={listContext}>
         <Datagrid bulkActionButtons={false} rowClick="show">
           {items.map((item) => renderListField(item, schema))}
+          <FunctionField
+            key={`relationship-row-actions:${relationship.name}`}
+            label=""
+            render={() => <RelationshipTabRowActions relationshipName={relationship.name} />}
+          />
         </Datagrid>
       </ListContextProvider>
     </Box>

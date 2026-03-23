@@ -1,0 +1,8 @@
+id: gate-quality-frontend-delta
+title: Quality gate policy for frontend-only deltas
+includes:
+  - evidence-core
+  - frontend-core
+  - product-scope-core
+  - ux-coverage-core
+  - gate-coverage-core

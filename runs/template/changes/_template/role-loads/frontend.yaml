@@ -1,0 +1,16 @@
+change_id: CR-template
+scope_profile: fullstack
+active: true
+baseline_id: Fill with the portable accepted baseline id.
+read_artifacts:
+  - Fill with exact baseline or candidate artifacts for this role.
+candidate_artifacts:
+  - Fill with exact candidate artifacts this role may edit.
+read_app_paths:
+  - Fill with exact app paths this role may read.
+write_app_paths:
+  - Fill with exact app paths this role may change.
+required_feature_packs:
+  - Fill only enabled feature packs needed by this change.
+verification_inputs:
+  - Fill with exact regression or evidence files required for this role.

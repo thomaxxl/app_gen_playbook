@@ -30,7 +30,9 @@ type RelationshipDialogCandidate = {
 
 type RelationshipTabCandidate = {
   fetchSource: string;
+  panelTestId: string;
   path: string;
+  relationshipName: string;
   resourceName: string;
   routePath: string;
   tabLabel: string;
@@ -241,6 +243,8 @@ async function findRelationshipTabCandidate(
 
         sawDirection = true;
         const fetchSource = await panel.getAttribute("data-relationship-fetch-source") ?? "";
+        const panelTestId = await panel.getAttribute("data-testid") ?? "";
+        const relationshipName = panelTestId.split(":").slice(2).join(":");
         const routePath = await panel.getAttribute("data-relationship-route-path") ?? "";
 
         if (direction === "tomany") {
@@ -259,7 +263,9 @@ async function findRelationshipTabCandidate(
 
         return {
           fetchSource,
+          panelTestId,
           path,
+          relationshipName,
           resourceName: resource.name,
           routePath,
           tabLabel,
@@ -303,6 +309,45 @@ async function assertRelationshipDialogFlow(
   if (fetchSource === "relationship-route") {
     await expect(dialogState).toHaveAttribute("data-relationship-route-path", /.+/);
   }
+}
+
+async function assertTomanyRelationshipRowActions(
+  page: Page,
+  candidate: RelationshipTabCandidate,
+) {
+  await page.goto(candidate.path);
+  await assertBasicPageHealth(page);
+
+  const tab = page.getByRole("tab", { name: candidate.tabLabel });
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+
+  const panel = page.getByTestId(candidate.panelTestId);
+  await expect(panel).toBeVisible();
+
+  const rowActions = await firstVisible(
+    panel.locator(`[data-testid^="relationship-row-actions:${candidate.relationshipName}:"]`),
+  );
+  if (!rowActions) {
+    throw new Error(`Tomany tab ${candidate.relationshipName} did not render a row action area.`);
+  }
+
+  const editButton = await firstVisible(
+    panel.locator(`[data-testid^="relationship-row-action:edit:${candidate.relationshipName}:"]`),
+  );
+  if (!editButton) {
+    throw new Error(`Tomany tab ${candidate.relationshipName} did not render an edit row action.`);
+  }
+
+  const deleteButton = await firstVisible(
+    panel.locator(`[data-testid^="relationship-row-action:delete:${candidate.relationshipName}:"]`),
+  );
+  if (!deleteButton) {
+    throw new Error(`Tomany tab ${candidate.relationshipName} did not render a delete row action.`);
+  }
+
+  await editButton.click();
+  await expect.poll(() => page.url()).toContain("/edit");
 }
 
 test("generated app loads without blank screens, loops, or crashes", async ({
@@ -356,6 +401,7 @@ test("generated relationship tabs prove toone summary and canonical tomany route
   await expect
     .poll(() => apiResponses.some((url) => url.includes(`/${tomanyCandidate.routePath}`)))
     .toBe(true);
+  await assertTomanyRelationshipRowActions(page, tomanyCandidate);
 
   const tooneCandidate = await findRelationshipTabCandidate(page, request, adminResources, "toone", {
     requireRelationshipRoute: false,
@@ -380,7 +426,11 @@ Required smoke coverage:
 - the dialog proof MUST verify `EDIT` and `VIEW`
 - at least one `tomany` tab MUST prove `data-relationship-fetch-source`
   equals `relationship-route`
+- that `tomany` proof MUST also prove a row action area with icon-only edit and
+  delete controls
 - at least one `toone` tab MUST prove related content renders through the
   generated tab runtime
 - the smoke MUST stay domain-agnostic by discovering resources from
   `admin.yaml` instead of hardcoding one app's route inventory
+- sparse fallback proof belongs in deterministic runtime tests, not in this
+  generic live-app smoke

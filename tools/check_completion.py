@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 
 from delivery_gate_common import delivery_approval_terminal, qa_delivery_review_terminal
+from execution_scope import active_scope_context
 from orchestrator_common import (
     CORE_DISPLAY_ROLES,
     DISPLAY_TO_RUNTIME,
@@ -55,6 +56,26 @@ REQUIRED_EVIDENCE_OUTPUTS = (
     ("runs/current/evidence/quality/coverage-report.md", "architect", "phase-6-integration-review"),
     ("runs/current/evidence/quality/review-plan.json", "architect", "phase-6-integration-review"),
 )
+FRONTEND_APP_OUTPUTS = {
+    "app/frontend/package.json",
+    "app/frontend/vite.config.ts",
+}
+BACKEND_APP_OUTPUTS = {
+    "app/reference/admin.yaml",
+    "app/backend/requirements.txt",
+    "app/backend/run.py",
+    "app/rules/rules.py",
+}
+DEVOPS_APP_OUTPUTS = {
+    "app/.gitignore",
+    "app/install.sh",
+    "app/run.sh",
+}
+FRONTEND_EVIDENCE_OUTPUTS = {
+    "runs/current/evidence/frontend-usability.md",
+    "runs/current/evidence/frontend-browser-proof.md",
+    "runs/current/evidence/ui-previews/manifest.md",
+}
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
@@ -281,6 +302,19 @@ def ui_preview_validation_value(text: str, role: str) -> str:
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     delivery_terminal = delivery_approval_terminal(repo_root)
+    scope_context = active_scope_context(repo_root)
+    active_roles = {
+        str(role)
+        for role in (
+            scope_context.get("classification", {}).get("active_roles")
+            or scope_context.get("config", {}).get("active_roles")
+            or []
+        )
+        if str(role).strip()
+    }
+    frontend_active = "frontend" in active_roles or not active_roles
+    backend_active = "backend" in active_roles or not active_roles
+    devops_active = "devops" in active_roles or "deployment" in active_roles
 
     blockers.extend(collect_run_status_issues(repo_root))
 
@@ -327,27 +361,28 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 }
             )
     else:
-        for issue in collect_frontend_route_coverage_issues(repo_root):
-            blockers.append(
-                {
-                    "kind": "frontend-route-coverage",
-                    "path": issue["path"],
-                    "owner": "frontend",
-                    "phase": "phase-5-parallel-implementation",
-                    "reason": issue["reason"],
-                }
-            )
+        if frontend_active:
+            for issue in collect_frontend_route_coverage_issues(repo_root):
+                blockers.append(
+                    {
+                        "kind": "frontend-route-coverage",
+                        "path": issue["path"],
+                        "owner": "frontend",
+                        "phase": "phase-5-parallel-implementation",
+                        "reason": issue["reason"],
+                    }
+                )
 
-        for issue in collect_preview_coverage_issues(repo_root):
-            blockers.append(
-                {
-                    "kind": "preview-coverage",
-                    "path": issue["path"],
-                    "owner": "architect",
-                    "phase": "phase-6-integration-review",
-                    "reason": issue["reason"],
-                }
-            )
+            for issue in collect_preview_coverage_issues(repo_root):
+                blockers.append(
+                    {
+                        "kind": "preview-coverage",
+                        "path": issue["path"],
+                        "owner": "architect",
+                        "phase": "phase-6-integration-review",
+                        "reason": issue["reason"],
+                    }
+                )
 
         for issue in collect_integration_review_coverage_issues(repo_root):
             blockers.append(
@@ -371,16 +406,17 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 }
             )
 
-        for issue in collect_qa_review_coverage_issues(repo_root):
-            blockers.append(
-                {
-                    "kind": "qa-review-coverage",
-                    "path": issue["path"],
-                    "owner": "qa",
-                    "phase": "phase-8-qa-pre-delivery-validation",
-                    "reason": issue["reason"],
-                }
-            )
+        if frontend_active:
+            for issue in collect_qa_review_coverage_issues(repo_root):
+                blockers.append(
+                    {
+                        "kind": "qa-review-coverage",
+                        "path": issue["path"],
+                        "owner": "qa",
+                        "phase": "phase-8-qa-pre-delivery-validation",
+                        "reason": issue["reason"],
+                    }
+                )
 
     for required_path, template_meta in required_run_artifact_paths(repo_root):
         owner = str(template_meta.get("owner", "")).strip()
@@ -520,6 +556,12 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
             )
 
     for relative_path, owner in REQUIRED_APP_OUTPUTS:
+        if relative_path in FRONTEND_APP_OUTPUTS and not frontend_active:
+            continue
+        if relative_path in BACKEND_APP_OUTPUTS and not backend_active:
+            continue
+        if relative_path in DEVOPS_APP_OUTPUTS and not devops_active:
+            continue
         path = repo_root / relative_path
         if not path.exists():
             blockers.append(
@@ -533,6 +575,8 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
             )
 
     for relative_path, owner, phase in REQUIRED_EVIDENCE_OUTPUTS:
+        if relative_path in FRONTEND_EVIDENCE_OUTPUTS and not frontend_active:
+            continue
         path = repo_root / relative_path
         if not path.exists():
             blockers.append(
@@ -672,17 +716,18 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         }
                     )
 
-    backend_audit_issues = audit_backend_orm_safrs(repo_root)
-    for issue in backend_audit_issues:
-        blockers.append(
-            {
-                "kind": "backend-orm-safrs-audit-failed",
-                "path": "app/backend/src/my_app",
-                "owner": "backend",
-                "phase": "phase-6-integration-review",
-                "reason": issue,
-            }
-        )
+    if backend_active:
+        backend_audit_issues = audit_backend_orm_safrs(repo_root)
+        for issue in backend_audit_issues:
+            blockers.append(
+                {
+                    "kind": "backend-orm-safrs-audit-failed",
+                    "path": "app/backend/src",
+                    "owner": "backend",
+                    "phase": "phase-6-integration-review",
+                    "reason": issue,
+                }
+            )
 
     return blockers
 

@@ -1,0 +1,7 @@
+id: gate-quality-backend-delta
+title: Quality gate policy for backend-only deltas
+includes:
+  - evidence-core
+  - backend-core
+  - product-scope-core
+  - gate-coverage-core

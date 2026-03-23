@@ -31,6 +31,7 @@ of approved rules whose `Frontend Mirror` field is not `none` in:
   - one summary/show-surface relationship dialog
   - `EDIT` and `VIEW` inside that dialog
   - one `tomany` tab loaded through the canonical parent relationship lane
+  - one `tomany` tab row-action area with icon-only edit/delete controls
 
 If dependency maintenance changes direct frontend versions during a run, the
 agent MUST sync those versions back into the playbook dependency contract and
@@ -98,6 +99,8 @@ frontend package template before treating the playbook baseline as current.
   lane rather than only rendering preloaded text
 - the frontend does not require a custom endpoint merely to show DB-backed
   related data that SAFRS already exposes under the parent resource
+- unresolved relationship metadata produces a visible configuration/runtime
+  error state instead of silently degrading to `No related record(s)`
 - custom SAFRS methods or raw JSON service calls use
   `dataProvider.execute(resource, params)` rather than component-level `fetch(...)`
 - absence of related-item tabs or related-record popups is a failure unless a
@@ -242,6 +245,11 @@ The starter frontend MUST ship automated tests for:
   resource such as `FlightStatus` resolving through `schema.resourceByType`
 - sparse relationship fallback resolution when normalized relationship
   metadata is partial
+- a deterministic runtime/UI proof that a sparse `tab_groups` relationship can
+  load a `tomany` tab through the canonical parent relationship route
+- a deterministic runtime/UI proof that unresolved relationship metadata
+  renders a visible `Relationship metadata incomplete` state instead of a
+  generic empty state
 - render-time resource-registration failure with a visible fallback screen
 - grouped search-filter composition when `q` and other list filters are both
   present
@@ -254,10 +262,15 @@ The starter frontend MUST ship automated tests for:
 - at least one browser-level smoke opens a generated related-record dialog or
   show-page relationship tab and confirms related content renders from the
   canonical SAFRS relationship path
+- that browser-level smoke proves icon-only edit/delete row actions exist on
+  at least one generated `tomany` relationship tab
 - Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`
 
 These tests do not replace browser-level QA, but they are the minimum
+deterministic proof layer for metadata synthesis and sparse fallback. The
+generic Playwright smoke MUST stay focused on live generated-app behavior and
+MUST NOT be the only claimed proof for sparse relationship fallback.
 executable contract for the frontend starter.
 
 ## Mandatory Playwright smoke validation
