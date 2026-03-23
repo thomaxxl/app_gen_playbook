@@ -186,6 +186,11 @@ frontend adapter analysis defined by
 `../../skills/safrs-jsonapi-client-frontend/SKILL.md` before approving a
 non-default lane.
 
+When approving landing-page, dashboard, related-data, grouped-form, or
+advanced MUI surface decisions for a database-driven frontend, the Architect
+MUST require the UX analysis defined by `../../skills/mui-db-admin-ux/SKILL.md`
+before accepting a generic CRUD layout or a non-standard UI exception.
+
 If a relationship is intentionally not public, that MUST be a documented SAFRS
 decision using ordinary SAFRS controls such as hidden relationships or
 relationship item-mode choices, not an implicit omission followed by a custom

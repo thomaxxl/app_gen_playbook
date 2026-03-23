@@ -91,6 +91,15 @@ Disabled or irrelevant UX/UI packs MUST NOT be:
 - copied into `app/`
 - treated as default UX guidance
 
+For database-driven admin apps with multiple resources, foreign keys,
+dashboard-style entry surfaces, or custom views, the agent SHOULD promote
+these on-demand files into its practical core read set before frontend design
+or implementation starts:
+
+- [theme-and-layout.md](theme-and-layout.md)
+- [custom-views.md](custom-views.md)
+- [errors.md](errors.md)
+
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also
 shipped under `../../templates/`.

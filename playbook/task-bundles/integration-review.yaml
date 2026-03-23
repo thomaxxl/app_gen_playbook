@@ -24,6 +24,10 @@ required_artifacts:
   - runs/current/artifacts/ux/navigation.md
   - runs/current/artifacts/ux/landing-strategy.md
   - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/resource-view-strategy.md
+  - runs/current/artifacts/ux/relationship-surface-plan.md
+  - runs/current/artifacts/ux/dashboard-data-plan.md
+  - runs/current/artifacts/ux/form-grouping-plan.md
   - runs/current/artifacts/ux/state-handling.md
   - runs/current/artifacts/backend-design/model-design.md
   - runs/current/artifacts/backend-design/resource-exposure-policy.md

@@ -9,6 +9,11 @@ required_phase:
   - playbook/process/phases/phase-I5-implementation-delta.md
 required_artifacts:
   - runs/current/artifacts/ux/navigation.md
+  - runs/current/artifacts/ux/landing-strategy.md
+  - runs/current/artifacts/ux/resource-view-strategy.md
+  - runs/current/artifacts/ux/relationship-surface-plan.md
+  - runs/current/artifacts/ux/dashboard-data-plan.md
+  - runs/current/artifacts/ux/form-grouping-plan.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/dependency-provisioning.md

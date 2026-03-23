@@ -2,6 +2,7 @@ id: frontend-core
 title: Frontend core policy
 requirement_ids:
   - FE-USABILITY-001
+  - FE-UX-001
   - FE-ADAPTER-001
   - FE-ADAPTER-002
   - FE-ADAPTER-003

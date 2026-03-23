@@ -19,6 +19,10 @@ required_artifacts:
   - runs/current/artifacts/ux/navigation.md
   - runs/current/artifacts/ux/landing-strategy.md
   - runs/current/artifacts/ux/screen-inventory.md
+  - runs/current/artifacts/ux/resource-view-strategy.md
+  - runs/current/artifacts/ux/relationship-surface-plan.md
+  - runs/current/artifacts/ux/dashboard-data-plan.md
+  - runs/current/artifacts/ux/form-grouping-plan.md
   - runs/current/artifacts/ux/custom-view-specs.md
   - runs/current/evidence/contract-samples.md
   - runs/current/evidence/frontend-usability.md

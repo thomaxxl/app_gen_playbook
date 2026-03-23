@@ -12,6 +12,7 @@ from validators.policy.validate_frontend_adapter_contracts import (
     collect_no_direct_fetch_issues,
     collect_relationship_route_issues,
     collect_search_wrapper_issues,
+    collect_ux_skill_issues,
 )
 
 
@@ -28,6 +29,7 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
         self.assertEqual(collect_adapter_lane_issues(self.repo_root), [])
         self.assertEqual(collect_install_source_issues(self.repo_root), [])
         self.assertEqual(collect_search_wrapper_issues(self.repo_root), [])
+        self.assertEqual(collect_ux_skill_issues(self.repo_root), [])
         self.assertEqual(collect_relationship_route_issues(self.repo_root), [])
         self.assertEqual(collect_execute_usage_issues(self.repo_root), [])
         self.assertEqual(collect_no_direct_fetch_issues(self.repo_root), [])
@@ -55,6 +57,26 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
             self.assertTrue(
                 any("skills/safrs-jsonapi-client-frontend/SKILL.md" in issue["reason"] for issue in issues)
             )
+
+    def test_ux_skill_validator_detects_missing_skill_load(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / ".git").mkdir()
+            for rel in (
+                "playbook/process/read-sets/frontend-design-core.md",
+                "playbook/process/read-sets/frontend-implementation-core.md",
+                "playbook/process/read-sets/architect-authoring-core.md",
+                "playbook/process/read-sets/architect-review-core.md",
+                "playbook/roles/frontend.md",
+                "playbook/roles/architect.md",
+                "specs/contracts/frontend/validation.md",
+                "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+                "skills/mui-db-admin-ux/SKILL.md",
+            ):
+                write_file(repo_root / rel, "placeholder\n")
+
+            issues = collect_ux_skill_issues(repo_root)
+            self.assertTrue(any("skills/mui-db-admin-ux/SKILL.md" in issue["reason"] for issue in issues))
 
     def test_search_wrapper_validator_detects_legacy_avoid_package_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

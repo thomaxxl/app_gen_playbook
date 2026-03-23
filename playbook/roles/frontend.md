@@ -59,6 +59,15 @@ The Frontend agent MUST treat:
 
 as core implementation contract, not as optional polish material.
 
+For database-driven MUI admin apps, the Frontend agent MUST also treat:
+
+- `../../specs/contracts/frontend/home-and-entry.md`
+- `../../specs/contracts/frontend/theme-and-layout.md`
+- `../../specs/contracts/frontend/custom-views.md`
+- `../../specs/contracts/frontend/errors.md`
+
+as normal UX implementation input rather than on-demand nice-to-have guidance.
+
 Unless the run-owned UX artifacts explicitly put mobile in scope, mobile UX
 and narrow-screen behavior may be ignored for now and are non-blocking.
 
@@ -87,6 +96,18 @@ Whenever the work touches:
 
 the Frontend agent MUST load and apply
 `../../skills/safrs-jsonapi-client-frontend/SKILL.md`.
+
+Whenever the work touches:
+
+- landing pages, dashboards, or custom views
+- resource-class layout choices
+- relationship dialogs, tabs, or inline related-data rendering
+- grouped forms or dense data-entry flows
+- choice of MUI surfaces such as dialogs, tabs, drawers, accordions, or
+  summary cards
+
+the Frontend agent MUST load and apply
+`../../skills/mui-db-admin-ux/SKILL.md`.
 
 For SAFRS or ApiLogicServer frontends, `safrs-jsonapi-client` is the
 canonical adapter. Local shared-runtime code MAY wrap or extend it, but it

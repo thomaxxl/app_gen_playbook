@@ -83,12 +83,21 @@ def collect_issues(repo_root: Path) -> list[str]:
     issues: list[str] = []
     landing_strategy = repo_root / "runs" / "current" / "artifacts" / "ux" / "landing-strategy.md"
     custom_view_specs = repo_root / "runs" / "current" / "artifacts" / "ux" / "custom-view-specs.md"
+    required_ux_artifacts = (
+        repo_root / "runs" / "current" / "artifacts" / "ux" / "resource-view-strategy.md",
+        repo_root / "runs" / "current" / "artifacts" / "ux" / "relationship-surface-plan.md",
+        repo_root / "runs" / "current" / "artifacts" / "ux" / "dashboard-data-plan.md",
+        repo_root / "runs" / "current" / "artifacts" / "ux" / "form-grouping-plan.md",
+    )
     src_root = repo_root / "app" / "frontend" / "src"
 
     if not src_root.exists():
         return ["missing app/frontend/src/ for frontend usability review"]
     if not landing_strategy.exists():
         return ["missing runs/current/artifacts/ux/landing-strategy.md for frontend usability review"]
+    for artifact_path in required_ux_artifacts:
+        if not artifact_path.exists():
+            issues.append(f"missing {artifact_path.relative_to(repo_root).as_posix()} for frontend usability review")
 
     source_text, _ = collect_source_text(src_root)
     landing_text = landing_strategy.read_text(encoding="utf-8")

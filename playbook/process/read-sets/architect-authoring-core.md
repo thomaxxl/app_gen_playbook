@@ -19,6 +19,7 @@ Required startup reads:
 - `../../../specs/architecture/data-sourcing-contract.md`
 - `../../../skills/safrs-api-design/SKILL.md`
 - `../../../skills/logicbank-rules-design/SKILL.md`
+- `../../../skills/mui-db-admin-ux/SKILL.md`
 - `../../../skills/safrs-jsonapi-client-frontend/SKILL.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`

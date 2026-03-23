@@ -17,6 +17,10 @@ Always load:
 This role controls UX artifacts and frontend code. It does not invent product
 rules, backend semantics, or packaging policy.
 
+For database-driven MUI layout and related-data decisions, load:
+
+- `../../../skills/mui-db-admin-ux/SKILL.md`
+
 Load backend or feature-pack material only when the current task requires it
 and the load plan allows it.
 

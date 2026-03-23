@@ -62,6 +62,18 @@ When a page shows compact metrics or overview information, the starter UI
 SHOULD use the shared `SummaryCard` pattern or an equivalent documented
 structure.
 
+## Dialog and tab defaults
+
+The starter UI SHOULD treat these as first-class layout tools for
+database-driven apps:
+
+- dialogs for related-record preview, quick inspection, and destructive confirmation
+- tabs for related-data show pages, settings sections, and parent-child flows
+
+If the UX artifacts deliberately avoid dialogs or tabs for a resource that has
+meaningful related data, that choice SHOULD be documented rather than left as
+an implicit omission.
+
 ## Icon sizing and alignment
 
 Visible app-facing icons SHOULD:

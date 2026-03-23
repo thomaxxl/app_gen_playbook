@@ -98,6 +98,62 @@ def collect_adapter_lane_issues(repo_root: Path) -> list[dict[str, str]]:
     )
 
 
+def collect_ux_skill_issues(repo_root: Path) -> list[dict[str, str]]:
+    return _check_required_tokens(
+        repo_root,
+        {
+            repo_root / "playbook" / "process" / "read-sets" / "frontend-design-core.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+                "specs/contracts/frontend/theme-and-layout.md",
+                "specs/contracts/frontend/custom-views.md",
+                "specs/contracts/frontend/errors.md",
+            ],
+            repo_root / "playbook" / "process" / "read-sets" / "frontend-implementation-core.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+                "specs/contracts/frontend/theme-and-layout.md",
+                "specs/contracts/frontend/custom-views.md",
+                "specs/contracts/frontend/errors.md",
+            ],
+            repo_root / "playbook" / "process" / "read-sets" / "architect-authoring-core.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+            ],
+            repo_root / "playbook" / "process" / "read-sets" / "architect-review-core.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+            ],
+            repo_root / "playbook" / "roles" / "frontend.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+                "landing pages, dashboards, or custom views",
+                "grouped forms or dense data-entry flows",
+            ],
+            repo_root / "playbook" / "roles" / "architect.md": [
+                "skills/mui-db-admin-ux/SKILL.md",
+                "advanced MUI surface decisions",
+            ],
+            repo_root / "skills" / "mui-db-admin-ux" / "SKILL.md": [
+                "resource-view-strategy.md",
+                "relationship-surface-plan.md",
+                "dashboard-data-plan.md",
+                "form-grouping-plan.md",
+                "Never render raw foreign-key ids",
+                "Show pages with meaningful relationships use tabs by default",
+            ],
+            repo_root / "specs" / "contracts" / "frontend" / "validation.md": [
+                "resource-view-strategy.md",
+                "relationship-surface-plan.md",
+                "dashboard-data-plan.md",
+                "form-grouping-plan.md",
+            ],
+            repo_root / "playbook" / "process" / "phases" / "phase-3-ux-and-interaction-design.md": [
+                "resource-view-strategy.md",
+                "relationship-surface-plan.md",
+                "dashboard-data-plan.md",
+                "form-grouping-plan.md",
+            ],
+        },
+        "missing frontend UX skill or planning contract input",
+    )
+
+
 def collect_install_source_issues(repo_root: Path) -> list[dict[str, str]]:
     return _check_required_tokens(
         repo_root,

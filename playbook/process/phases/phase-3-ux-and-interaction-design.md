@@ -13,8 +13,11 @@ Design the user journey and page behavior before implementation diverges.
 - define landing strategy and primary entry CTA hierarchy
 - define the hero/landing treatment that appears before any resource-grid
   content on the primary entry surface
+- define per-resource view strategy instead of using one generic CRUD layout
 - define default entry, return-path, and page-header behavior
 - define per-resource CRUD layouts
+- define where related data appears inline, in dialogs, or in tabs
+- define which dashboard and landing summaries require joined API data
 - define form grouping, content clarity, and field-level guidance
 - define loading/error/empty states
 - define success and destructive-confirmation behavior
@@ -35,6 +38,10 @@ Design the user journey and page behavior before implementation diverges.
 - `runs/current/artifacts/ux/landing-strategy.md`
 - `runs/current/artifacts/ux/iconography.md`
 - `runs/current/artifacts/ux/screen-inventory.md`
+- `runs/current/artifacts/ux/resource-view-strategy.md`
+- `runs/current/artifacts/ux/relationship-surface-plan.md`
+- `runs/current/artifacts/ux/dashboard-data-plan.md`
+- `runs/current/artifacts/ux/form-grouping-plan.md`
 - `runs/current/artifacts/ux/field-visibility-matrix.md`
 - `runs/current/artifacts/ux/custom-view-specs.md`
 - `runs/current/artifacts/ux/state-handling.md`
@@ -49,6 +56,13 @@ Design the user journey and page behavior before implementation diverges.
   main routes
 - the primary entry route, entry-page proof cues, and CTA hierarchy are
   documented in `landing-strategy.md`
+- per-resource layout defaults are documented in
+  `resource-view-strategy.md`
+- relationship dialogs, tabs, and inline-label strategy are documented in
+  `relationship-surface-plan.md`
+- dashboard and landing data dependencies are documented in
+  `dashboard-data-plan.md`
+- grouped-form requirements are documented in `form-grouping-plan.md`
 - the entry strategy explicitly defines a hero/landing surface instead of
   defaulting to a raw React-admin grid as the first impression
 - the visible icon system and icon mapping decisions are documented in

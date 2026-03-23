@@ -48,6 +48,45 @@ requirements:
       Replace debug-shell copy with real product copy and update the reviewed
       frontend usability evidence before handoff.
 
+  - id: FE-UX-001
+    title: Frontend UX skill and planning artifacts are required
+    class: load_policy
+    normative: MUST
+    severity: error
+    family: frontend-core
+    owner_roles:
+      - frontend
+      - architect
+    applies_when:
+      roles:
+        - frontend
+        - architect
+      phases:
+        - phase-3-ux-and-interaction-design
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+      gates:
+        - quality
+    source_docs:
+      - playbook/process/read-sets/frontend-design-core.md
+      - playbook/process/read-sets/frontend-implementation-core.md
+      - playbook/process/phases/phase-3-ux-and-interaction-design.md
+      - playbook/roles/frontend.md
+      - playbook/roles/architect.md
+      - skills/mui-db-admin-ux/SKILL.md
+      - specs/contracts/frontend/validation.md
+    description: >
+      Database-driven MUI frontend work must load the dedicated UX skill and
+      carry explicit planning artifacts for resource view strategy,
+      relationship surfaces, dashboard data, and form grouping.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_frontend_adapter_contracts.py::collect_ux_skill_issues
+    remediation: >
+      Load the UX skill through the normal frontend and architect read sets and
+      complete the required run-owned UX planning artifacts before treating the
+      frontend slice as ready.
+
   - id: FE-ADAPTER-001
     title: Frontend uses the package-backed SAFRS adapter lane
     class: artifact_shape

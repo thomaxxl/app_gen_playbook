@@ -20,6 +20,7 @@ required_artifacts:
   - runs/current/artifacts/architecture/data-sourcing-contract.md
   - runs/current/artifacts/architecture/route-and-entry-model.md
   - runs/current/artifacts/architecture/generated-vs-custom.md
+  - runs/current/artifacts/architecture/resource-classification.md
 conditional_artifacts:
   custom_pages:
     - runs/current/artifacts/product/custom-pages.md

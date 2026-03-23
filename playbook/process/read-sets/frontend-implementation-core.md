@@ -13,10 +13,15 @@ Required startup reads:
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/contracts/frontend/README.md`
 - `../../../specs/contracts/frontend/data-sourcing.md`
+- `../../../specs/contracts/frontend/home-and-entry.md`
 - `../../../specs/contracts/frontend/relationship-ui.md`
 - `../../../specs/contracts/frontend/ui-principles.md`
+- `../../../specs/contracts/frontend/theme-and-layout.md`
+- `../../../specs/contracts/frontend/custom-views.md`
+- `../../../specs/contracts/frontend/errors.md`
 - `../../../specs/contracts/frontend/accessibility.md`
 - `../../../specs/contracts/frontend/validation.md`
+- `../../../skills/mui-db-admin-ux/SKILL.md`
 - `../../../skills/safrs-jsonapi-client-frontend/SKILL.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../../runs/current/artifacts/architecture/load-plan.md`

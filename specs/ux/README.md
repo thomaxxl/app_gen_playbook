@@ -18,6 +18,10 @@ Template files:
 - `landing-strategy.md`
 - `navigation.md`
 - `screen-inventory.md`
+- `resource-view-strategy.md`
+- `relationship-surface-plan.md`
+- `dashboard-data-plan.md`
+- `form-grouping-plan.md`
 - `field-visibility-matrix.md`
 - `custom-view-specs.md`
 - `state-handling.md`
@@ -35,6 +39,10 @@ The run-owned UX artifacts produced from these templates MUST capture:
 - entry-page strategy, primary CTA hierarchy, and proof/reassurance structure
 - icon-system choices when iconography is a visible UX decision
 - navigation and page hierarchy
+- per-resource view-class strategy instead of one generic CRUD layout
+- related-data rendering strategy for dialogs, tabs, and inline labels
+- joined dashboard and landing data requirements
+- grouped-form decisions for dense or complex forms
 - page-shell and header decisions
 - form grouping and field-level content guidance
 - loading, empty, error, success, and recovery behavior

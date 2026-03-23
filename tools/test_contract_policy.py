@@ -28,6 +28,7 @@ class ContractPolicyTests(unittest.TestCase):
         self.assertIn("BE-RULES-LOGICBANK-001", registry.requirements)
         self.assertIn("BE-RULES-EVID-001", registry.requirements)
         self.assertIn("BE-RULES-RUNTIME-001", registry.requirements)
+        self.assertIn("FE-UX-001", registry.requirements)
         self.assertIn("FE-SAFRS-REL-001", registry.requirements)
         self.assertIn("FE-ADAPTER-001", registry.requirements)
         self.assertIn("FE-ADAPTER-004", registry.requirements)

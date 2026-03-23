@@ -25,6 +25,14 @@ validators:
     default_path: app/frontend/src
     summary_pass: frontend usability guard passed
     summary_fail_template: "{count} frontend usability issue(s)"
+  tools/validators/policy/validate_frontend_adapter_contracts.py::collect_ux_skill_issues:
+    adapter: issue_list
+    module: validators.policy.validate_frontend_adapter_contracts
+    callable: collect_ux_skill_issues
+    path_field: path
+    message_field: reason
+    summary_pass: frontend UX skill and planning contract passed
+    summary_fail_template: "{count} frontend UX skill/planning issue(s)"
   tools/validators/policy/validate_frontend_adapter_contracts.py::collect_adapter_lane_issues:
     adapter: issue_list
     module: validators.policy.validate_frontend_adapter_contracts

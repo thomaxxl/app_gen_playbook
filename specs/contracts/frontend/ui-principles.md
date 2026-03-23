@@ -134,6 +134,29 @@ metadata is available.
 The frontend MUST reuse the shared relationship helpers instead of inventing a
 second relationship display pattern.
 
+When a readable related label appears in a list or summary surface, the
+default lane SHOULD be a preview dialog rather than forcing a page hop.
+
+Show pages with meaningful related data SHOULD use tabs or another documented
+multi-surface pattern instead of burying all relationships below the main
+record body.
+
+## Dashboard and summary surfaces
+
+Entry pages, dashboards, and custom views SHOULD answer workflow questions,
+not just route users into generic CRUD lists.
+
+When a landing or dashboard surface shows counts, blockers, freshness cues,
+or multi-resource summaries, that data MUST come from the approved API lane
+rather than hardcoded frontend literals.
+
+## MUI surface selection
+
+Dialogs, tabs, drawers, accordions, and summary cards are encouraged when
+they reduce navigation cost or improve comprehension.
+
+They MUST NOT be added as decorative complexity only.
+
 ## Iconography consistency
 
 The UI MUST avoid mixing icon families inside the same repeated visible

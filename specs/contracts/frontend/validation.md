@@ -76,6 +76,9 @@ frontend package template before treating the playbook baseline as current.
   than direct component-level `fetch(...)` calls
 - `runs/current/artifacts/ux/landing-strategy.md` exists and is not left as
   placeholder text
+- `runs/current/artifacts/ux/resource-view-strategy.md`,
+  `relationship-surface-plan.md`, `dashboard-data-plan.md`, and
+  `form-grouping-plan.md` exist and are not left as placeholder text
 - the app declares exactly one primary entry route across
   `landing-strategy.md` and `navigation.md`
 - explicit `resourcePages` are wired into the app
@@ -147,6 +150,14 @@ frontend package template before treating the playbook baseline as current.
   through the React-admin dataProvider rather than direct fetches
 - `Home` matches the task, title, primary CTA, and proof structure described in
   `landing-strategy.md`
+- generated lists, show pages, dialogs, and tabs match the resource-class and
+  relationship presentation strategy defined in
+  `resource-view-strategy.md` and `relationship-surface-plan.md`
+- dashboard and landing surfaces fetch the joined API-backed data required by
+  `dashboard-data-plan.md` instead of substituting static placeholders for
+  dynamic operational information
+- forms that `form-grouping-plan.md` marks as grouped do not degrade into one
+  long unsectioned field wall
 - required custom pages match `custom-view-specs.md` and `screen-inventory.md`
   instead of collapsing into generic metadata/status panels
 - at least one generated list, one generated show page, and one generated form

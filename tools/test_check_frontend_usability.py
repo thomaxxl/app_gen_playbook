@@ -16,6 +16,13 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
     def test_accepts_expected_entry_and_custom_cta_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
             write_file(
                 repo_root / "runs/current/artifacts/ux/landing-strategy.md",
                 "\n".join(
@@ -53,6 +60,13 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
     def test_flags_missing_primary_cta_and_recovery_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
             write_file(
                 repo_root / "runs/current/artifacts/ux/landing-strategy.md",
                 "\n".join(
@@ -74,6 +88,22 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
             issues = collect_issues(repo_root)
             self.assertTrue(any("primary CTA label not found" in issue for issue in issues))
             self.assertTrue(any("forbidden recovery/debug copy" in issue for issue in issues))
+
+    def test_flags_missing_new_ux_planning_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.jsx",
+                'export default function App() { return "Library Overview Add Song"; }',
+            )
+
+            issues = collect_issues(repo_root)
+            self.assertTrue(any("resource-view-strategy.md" in issue for issue in issues))
+            self.assertTrue(any("relationship-surface-plan.md" in issue for issue in issues))
 
 
 if __name__ == "__main__":
