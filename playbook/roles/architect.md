@@ -275,6 +275,25 @@ The Architect MUST NOT create a fresh architect-to-architect blocked note when
 the only new fact is still "no listener is present" or "connection refused"
 and no runtime start attempt occurred in that same turn.
 
+When an Architect turn is blocked waiting for live frontend/browser proof from
+another role, the Architect MUST first check the current
+`../../runs/current/evidence/orchestrator/logs/orchestrator.log` and the
+current role-state evidence for proof that may already have landed earlier in
+the same control window. The Architect MUST NOT emit a fresh
+architect-to-architect "await frontend proof" or "await browser proof" note if
+that awaited proof is already logged.
+
+If awaited frontend/browser proof is already logged, the Architect MUST either:
+
+- reconcile the architecture decision against that current proof in the same
+  turn, or
+- record the exact reason the available proof is inadequate or stale and hand
+  off the concrete deficiency to the correct owner lane
+
+Repeated architect self-notes that only restate "no new frontend/browser proof
+was available" are not allowed once the orchestrator log or current inboxes
+already show a proof-producing frontend turn.
+
 The Architect MUST also require that the rule was first classified as schema
 constraint, transactional rule, or transport concern, and MUST reject designs
 that push schema constraints or fat transport logic into the LogicBank lane
