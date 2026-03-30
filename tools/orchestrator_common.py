@@ -114,6 +114,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/ux/",
+        "runs/current/evidence/frontend-browser-proof.md",
         "runs/current/evidence/frontend-usability.md",
         "runs/current/evidence/ui-previews/**",
         "runs/current/role-state/frontend/",

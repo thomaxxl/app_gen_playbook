@@ -88,6 +88,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_allows_frontend_browser_proof_refresh(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "frontend",
+                "runs/current/evidence/frontend-browser-proof.md",
+                [],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

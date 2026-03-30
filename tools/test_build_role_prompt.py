@@ -114,6 +114,22 @@ class BuildRolePromptTests(unittest.TestCase):
             ["runs/current/evidence/frontend-browser-proof.md"],
         )
 
+    def test_build_read_only_required_paths_excludes_frontend_browser_proof_when_writable(self) -> None:
+        read_paths = [
+            "runs/current/evidence/frontend-browser-proof.md",
+            "runs/current/evidence/frontend-usability.md",
+            "runs/current/evidence/ui-previews/manifest.md",
+        ]
+        write_paths = [
+            "runs/current/evidence/frontend-browser-proof.md",
+            "runs/current/evidence/frontend-usability.md",
+            "runs/current/evidence/ui-previews/**",
+        ]
+
+        read_only = build_read_only_required_paths(read_paths, write_paths)
+
+        self.assertEqual(read_only, [])
+
     def test_build_read_paths_prefers_manifest_bundle_resolution_over_full_role_file(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         message_text = "\n".join(
