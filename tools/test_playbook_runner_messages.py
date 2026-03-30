@@ -76,6 +76,27 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             message = Message.parse(path)
             self.assertTrue(message.is_parked_dependency_reminder())
 
+    def test_self_wait_state_reminder_detection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "message.md"
+            path.write_text(
+                "---\n"
+                "from: architect\n"
+                "to: architect\n"
+                "topic: phase-6-frontend-blockers-remain-pending\n"
+                "purpose: keep the architect rerun queued while the remaining frontend-owned blockers are still unresolved\n"
+                "change_id:\n"
+                "---\n\n"
+                "## Gate Status\n"
+                "- blocked pending frontend recovery\n\n"
+                "## Notes\n"
+                "- no architect-owned blocker state changed in this turn\n"
+                "- remaining blockers are preview `runtime-failed`, missing browser-reviewed story proof, and open UX route-inventory drift\n",
+                encoding="utf-8",
+            )
+            message = Message.parse(path)
+            self.assertTrue(message.is_parked_dependency_reminder())
+
     def test_orchestrator_normalizes_devops_scope_role_to_deployment(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

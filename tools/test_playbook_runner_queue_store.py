@@ -86,6 +86,42 @@ class PlaybookRunnerQueueStoreTests(unittest.TestCase):
             self.assertFalse(parked.exists())
             self.assertTrue((role_root / "processed" / "20240101-parked.parked.md").exists())
 
+    def test_claim_archives_self_wait_state_reminder_before_returning_actionable_work(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            queue = QueueStore(PlaybookPaths(repo_root))
+            role_root = repo_root / "runs" / "current" / "role-state" / "architect"
+            inflight = role_root / "inflight"
+            inbox = role_root / "inbox"
+            inflight.mkdir(parents=True)
+            inbox.mkdir(parents=True)
+
+            wait_state = inflight / "20240101-wait.md"
+            wait_state.write_text(
+                "---\n"
+                "from: architect\n"
+                "to: architect\n"
+                "topic: phase-6-frontend-blockers-remain-pending\n"
+                "purpose: keep the architect rerun queued while the remaining frontend-owned blockers are still unresolved\n"
+                "change_id:\n"
+                "---\n\n"
+                "## Gate Status\n"
+                "- blocked pending frontend recovery\n\n"
+                "## Notes\n"
+                "- no architect-owned blocker state changed in this turn\n"
+                "- remaining blockers are preview `runtime-failed`, missing browser-reviewed story proof, and open UX route-inventory drift\n",
+                encoding="utf-8",
+            )
+            actionable = inbox / "20240102-actionable.md"
+            actionable.write_text("from: orchestrator\nto: architect\ntopic: recovery\n", encoding="utf-8")
+
+            claim = queue.claim_next("architect")
+            self.assertIsNotNone(claim)
+            assert claim is not None
+            self.assertEqual(claim.path.name, "20240102-actionable.md")
+            self.assertFalse(wait_state.exists())
+            self.assertTrue((role_root / "processed" / "20240101-wait.parked.md").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

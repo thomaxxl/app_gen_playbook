@@ -7,6 +7,7 @@ from typing import Iterable
 
 
 _HEADER_KEY_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_ -]*:\s*")
+_SELF_WAIT_STATE_RE = re.compile(r"\bno [a-z0-9_-]+-owned blocker state changed in this turn\b")
 
 
 def _normalize_key(value: str) -> str:
@@ -83,13 +84,23 @@ class Message:
     def is_parked_dependency_reminder(self) -> bool:
         if self.sender.strip().lower() != self.receiver.strip().lower():
             return False
-        if self.gate_status.strip().lower() != "blocked":
+        if not self.gate_status.strip().lower().startswith("blocked"):
             return False
         body = self.normalized_body
-        return (
+        if (
             "parked dependency reminder" in body
             and "not active" in body
             and "only claim this item on a turn" in body
+        ):
+            return True
+        return (
+            bool(_SELF_WAIT_STATE_RE.search(body))
+            and (
+                "remaining blockers are" in body
+                or "rerun queued" in body
+                or "remain-pending" in self.topic.strip().lower()
+                or "remain pending" in self.topic.strip().lower()
+            )
         )
 
     @classmethod
