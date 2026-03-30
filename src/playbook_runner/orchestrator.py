@@ -14,7 +14,7 @@ from execution_scope import active_scope_roles
 from orchestrator_common import parse_message_headers, parse_message_sections
 from routing_resolver import resolve_read_packet, resolve_writable_paths
 
-from .codex_runner import CodexRunner
+from .codex_runner import CodexRunner, expand_add_dirs
 from .config import RunnerConfig
 from .legacy_tools import LegacyTools
 from .markdown_log import append_markdown_log
@@ -122,6 +122,27 @@ def add_dir_from_rule(repo_root: Path, rule: str) -> Path | None:
     if base.suffix or base.name.startswith("."):
         return base.parent
     return base
+
+
+def canonical_add_dir_keys(add_dirs: Iterable[Path]) -> list[str]:
+    keys: list[str] = []
+    seen: set[str] = set()
+    for path in expand_add_dirs(add_dirs):
+        key = str(path.resolve()) if path.exists() else str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        keys.append(key)
+    return keys
+
+
+def root_set_covers(current_roots: Iterable[str], stored_roots: Iterable[str]) -> bool:
+    stored_paths = [Path(root) for root in stored_roots]
+    for current in current_roots:
+        current_path = Path(current)
+        if not any(current_path == stored or current_path.is_relative_to(stored) for stored in stored_paths):
+            return False
+    return True
 
 
 class Orchestrator:
@@ -477,6 +498,27 @@ class Orchestrator:
             add_dirs.append(candidate)
         return add_dirs
 
+    def resolve_resume_id(self, runtime_role: str, role_dir: Path, add_dirs: list[Path]) -> tuple[str, list[str]]:
+        entry = self.tools.session_entry(self.paths.sessions_json, runtime_role)
+        resume_id = str(entry.get("resume_id", "")).strip()
+        if not resume_id:
+            return "", []
+
+        stored_cwd = str(entry.get("cwd", "")).strip()
+        if stored_cwd and stored_cwd != str(role_dir):
+            return "", []
+
+        stored_roots = entry.get("writable_roots", [])
+        if not isinstance(stored_roots, list) or not all(isinstance(item, str) for item in stored_roots):
+            return "", []
+
+        current_roots = canonical_add_dir_keys(add_dirs)
+        if not current_roots:
+            return resume_id, list(stored_roots)
+        if root_set_covers(current_roots, stored_roots):
+            return resume_id, list(stored_roots)
+        return "", []
+
     def run_role_once(self, runtime_role: str) -> bool:
         claim = self.queue.claim_next(runtime_role, block_new_claims=self.steering_blocks_new_claims())
         if not claim:
@@ -510,12 +552,18 @@ class Orchestrator:
         role_dir = self.paths.role_dir(runtime_role)
         model = self.role_model(runtime_role)
         add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)
-        self.log_line(f"agent-start role={runtime_role} model={model or '<default>'} message={message_path.name} session=new")
+        session_roots = canonical_add_dir_keys(add_dirs)
+        resume_id, stored_session_roots = self.resolve_resume_id(runtime_role, role_dir, add_dirs)
+        if resume_id and stored_session_roots:
+            session_roots = stored_session_roots
+        self.log_line(
+            f"agent-start role={runtime_role} model={model or '<default>'} message={message_path.name} session={resume_id or 'new'}"
+        )
         self.tools.start_worker(
             role=runtime_role,
             claimed_message=message_path.name,
             change_id=self.active_change_id,
-            session_id="",
+            session_id=resume_id,
             prompt_file=str(prompt_file),
         )
         self.tools.validate_role_diff_snapshot(snapshot_file)
@@ -527,7 +575,7 @@ class Orchestrator:
             jsonl_file=jsonl_file,
             model=model,
             add_dirs=add_dirs,
-            resume_id=None,
+            resume_id=resume_id or None,
         )
         ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
         if codex_result.returncode != 0:
@@ -569,7 +617,14 @@ class Orchestrator:
             )
             raise RunnerError(f"Codex output invalid for role {runtime_role}")
 
-        self.tools.session_record_from_jsonl(self.paths.sessions_json, runtime_role, jsonl_file, model or "<default>", role_dir)
+        self.tools.session_record_from_jsonl(
+            self.paths.sessions_json,
+            runtime_role,
+            jsonl_file,
+            model or "<default>",
+            role_dir,
+            writable_roots=session_roots,
+        )
         self.tools.sync_session(role=runtime_role, registry=self.paths.sessions_json)
         self.validate_role_outputs(runtime_role, snapshot_file, validation_file, message_path)
 

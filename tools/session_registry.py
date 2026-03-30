@@ -112,6 +112,7 @@ def cmd_set(args: argparse.Namespace) -> int:
         "thread_id": args.thread_id or args.resume_id,
         "model": args.model,
         "cwd": args.cwd,
+        "writable_roots": list(args.writable_root or []),
         "last_used_at": utc_now(),
     }
     save_registry(path, data)
@@ -150,6 +151,7 @@ def cmd_record_from_jsonl(args: argparse.Namespace) -> int:
         "thread_id": parsed.thread_id or parsed.resume_id,
         "model": args.model,
         "cwd": args.cwd,
+        "writable_roots": list(args.writable_root or []),
         "last_used_at": utc_now(),
         "source_jsonl": args.jsonl,
     }
@@ -189,6 +191,7 @@ def build_parser() -> argparse.ArgumentParser:
     set_parser.add_argument("--thread-id")
     set_parser.add_argument("--model", required=True)
     set_parser.add_argument("--cwd", required=True)
+    set_parser.add_argument("--writable-root", action="append", default=[])
 
     remove_parser = sub.add_parser("remove")
     remove_parser.add_argument("--registry", required=True)
@@ -203,6 +206,7 @@ def build_parser() -> argparse.ArgumentParser:
     record_parser.add_argument("--jsonl", required=True)
     record_parser.add_argument("--model", required=True)
     record_parser.add_argument("--cwd", required=True)
+    record_parser.add_argument("--writable-root", action="append", default=[])
 
     return parser
 

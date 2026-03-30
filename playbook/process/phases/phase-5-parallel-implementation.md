@@ -55,10 +55,11 @@ concrete dependency manifests in `app/` from the template lane plus the
 run-owned `runtime-bom.md`.
 
 During implementation, role-local `context.md`, owned artifacts, and inbox
-traces remain the durable source of truth. The runner SHOULD start a fresh
-Codex session for each turn so the resolved read/write packet stays aligned
-with the active sandbox; stored session history is diagnostic only and MUST
-NOT replace those durable records.
+traces remain the durable source of truth. The runner MAY reuse a stored
+Codex session only when the current turn's resolved writable roots are already
+covered by that session; otherwise it MUST start a fresh turn-scoped session
+so the sandbox stays aligned with the active routing packet. Stored session
+history is advisory only and MUST NOT replace those durable records.
 
 Every implementation agent MUST terminate any server, watcher, preview, or
 helper process it started for the turn before moving the claimed inflight item

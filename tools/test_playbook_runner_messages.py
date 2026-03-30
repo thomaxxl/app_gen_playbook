@@ -199,6 +199,129 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             self.assertIn("runs/current/role-state/architect", resolved)
             self.assertIn("playbook/process/phases", resolved)
 
+    def test_resume_allowed_when_current_roots_fit_stored_session_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            sessions = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "sessions.json"
+            sessions.parent.mkdir(parents=True, exist_ok=True)
+            role_dir = repo_root / "runs" / "current" / "role-state" / "architect"
+            role_dir.mkdir(parents=True, exist_ok=True)
+            sessions.write_text(
+                (
+                    "{\n"
+                    '  "version": 1,\n'
+                    '  "roles": {\n'
+                    '    "architect": {\n'
+                    '      "resume_id": "sess-123",\n'
+                    f'      "cwd": "{role_dir}",\n'
+                    '      "writable_roots": [\n'
+                    f'        "{repo_root / "runs" / "current" / "evidence"}",\n'
+                    f'        "{repo_root / "runs" / "current" / "artifacts" / "architecture"}"\n'
+                    "      ]\n"
+                    "    }\n"
+                    "  }\n"
+                    "}\n"
+                ),
+                encoding="utf-8",
+            )
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            resume_id, stored_roots = orchestrator.resolve_resume_id(
+                "architect",
+                role_dir,
+                [
+                    repo_root / "runs" / "current" / "evidence" / "ui-previews",
+                    repo_root / "runs" / "current" / "artifacts" / "architecture",
+                ],
+            )
+            self.assertEqual(resume_id, "sess-123")
+            self.assertEqual(
+                stored_roots,
+                [
+                    str(repo_root / "runs" / "current" / "evidence"),
+                    str(repo_root / "runs" / "current" / "artifacts" / "architecture"),
+                ],
+            )
+
+    def test_resume_forces_fresh_session_when_turn_needs_new_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            sessions = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "sessions.json"
+            sessions.parent.mkdir(parents=True, exist_ok=True)
+            role_dir = repo_root / "runs" / "current" / "role-state" / "architect"
+            role_dir.mkdir(parents=True, exist_ok=True)
+            sessions.write_text(
+                (
+                    "{\n"
+                    '  "version": 1,\n'
+                    '  "roles": {\n'
+                    '    "architect": {\n'
+                    '      "resume_id": "sess-123",\n'
+                    f'      "cwd": "{role_dir}",\n'
+                    '      "writable_roots": [\n'
+                    f'        "{repo_root / "runs" / "current" / "artifacts" / "architecture"}"\n'
+                    "      ]\n"
+                    "    }\n"
+                    "  }\n"
+                    "}\n"
+                ),
+                encoding="utf-8",
+            )
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            resume_id, stored_roots = orchestrator.resolve_resume_id(
+                "architect",
+                role_dir,
+                [
+                    repo_root / "runs" / "current" / "artifacts" / "architecture",
+                    repo_root / "runs" / "current" / "evidence" / "ui-previews",
+                ],
+            )
+            self.assertEqual(resume_id, "")
+            self.assertEqual(stored_roots, [])
+
     def test_retryable_codex_failure_detects_usage_limit(self) -> None:
         detail = "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Mar 25th, 2026 5:59 PM."
         self.assertTrue(is_retryable_codex_failure(detail))

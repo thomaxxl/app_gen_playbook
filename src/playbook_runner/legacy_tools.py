@@ -117,11 +117,32 @@ class LegacyTools:
         result = self.run("session_registry.py", "get", "--registry", str(registry), "--role", role, check=False)
         return result.stdout.strip()
 
+    def session_entry(self, registry: Path, role: str) -> dict[str, Any]:
+        if not registry.exists():
+            return {}
+        data = json.loads(registry.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+        roles = data.get("roles", {})
+        if not isinstance(roles, dict):
+            return {}
+        entry = roles.get(role, {})
+        return entry if isinstance(entry, dict) else {}
+
     def session_remove(self, registry: Path, role: str) -> None:
         self.run("session_registry.py", "remove", "--registry", str(registry), "--role", role, check=False)
 
-    def session_record_from_jsonl(self, registry: Path, role: str, jsonl: Path, model: str, cwd: Path) -> None:
-        self.run(
+    def session_record_from_jsonl(
+        self,
+        registry: Path,
+        role: str,
+        jsonl: Path,
+        model: str,
+        cwd: Path,
+        *,
+        writable_roots: list[str] | None = None,
+    ) -> None:
+        args = [
             "session_registry.py",
             "record-from-jsonl",
             "--registry",
@@ -134,6 +155,11 @@ class LegacyTools:
             model,
             "--cwd",
             str(cwd),
+        ]
+        for root in writable_roots or []:
+            args.extend(["--writable-root", root])
+        self.run(
+            *args,
         )
 
     def check_completion(self) -> tuple[bool, str]:

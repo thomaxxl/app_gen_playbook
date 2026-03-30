@@ -30,8 +30,9 @@ The orchestrator MUST:
 - process exactly one inbox message per Codex role invocation
 - keep durable run state in artifacts, inbox traces, and role-local
   `context.md`
-- start a fresh Codex exec session for each role turn so the sandbox and
-  writable roots always match the resolved routing packet for that message
+- use `codex exec resume` only when the current turn's resolved writable roots
+  are already a subset of the stored session roots for that role; otherwise
+  start a fresh session so the sandbox stays aligned with the routing packet
 - log visible start and finish lines for every agent turn
 - stop and surface a clear reason when the run becomes non-progressing
 - treat missing or placeholder quality evidence as a gate blocker, not as an
@@ -69,7 +70,7 @@ That start log MUST include at least:
 - runtime role
 - inbox filename
 - model
-- whether the invocation is a fresh session
+- whether the invocation is a fresh session or a resumed session
 
 For every successful Codex role invocation, the orchestrator MUST emit a
 visible finish log line.
@@ -134,11 +135,22 @@ The role-local durable source of truth remains:
 
 Codex session history MUST NOT be treated as authoritative run state.
 
-The orchestrator SHOULD keep per-role session records only as audit/debug
-evidence. It MUST NOT rely on `codex exec resume` for normal turn dispatch,
-because the installed Codex CLI cannot widen `--cd` / `--add-dir` roots on a
-resumed session and that would let the sandbox drift away from the resolved
-routing packet.
+The orchestrator MUST treat session records as advisory metadata, not as
+authoritative run state.
+
+Because the installed Codex CLI cannot widen `--cd` / `--add-dir` roots on
+`codex exec resume`, the orchestrator MUST compare the current turn's resolved
+read/write roots with the stored session roots before deciding to resume.
+
+Resume is allowed only when:
+
+- the stored role cwd still matches the role-local working directory
+- a stored `resume_id` exists
+- every current resolved writable root is already inside the stored session
+  root set
+
+If a turn needs any new writable root, the orchestrator MUST start a fresh
+session for that turn and update the stored session roots afterward.
 
 ## Model-selection rule
 
