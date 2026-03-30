@@ -101,7 +101,7 @@ def parse_markdown_table_text(text: str) -> list[dict[str, str]]:
         line = raw_line.strip()
         if not line.startswith("|") or not line.endswith("|"):
             continue
-        cells = [cell.strip() for cell in raw_line.strip().strip("|").split("|")]
+        cells = [cell.strip().strip("`") for cell in raw_line.strip().strip("|").split("|")]
         if header is None:
             header = cells
             continue
@@ -170,7 +170,12 @@ def extract_child_sections(text: str, level: int) -> dict[str, str]:
 
 
 def parse_csv_values(value: str) -> list[str]:
-    return [item.strip() for item in value.split(",") if item.strip()]
+    values: list[str] = []
+    for item in value.split(","):
+        cleaned = item.strip().strip("`")
+        if cleaned:
+            values.append(cleaned)
+    return values
 
 
 def parse_key_value_fields(text: str) -> dict[str, str]:
@@ -197,7 +202,8 @@ def parse_primary_cta_targets(text: str) -> list[str]:
 
 
 def normalized_text(text: str) -> str:
-    return re.sub(r"\s+", " ", text.strip().lower())
+    cleaned = text.strip().strip("`")
+    return re.sub(r"\s+", " ", cleaned.lower())
 
 
 def story_rows(repo_root: Path) -> list[dict[str, str]]:

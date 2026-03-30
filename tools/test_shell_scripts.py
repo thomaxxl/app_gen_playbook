@@ -14,6 +14,13 @@ def write_executable(path: Path, content: str) -> None:
     path.chmod(0o755)
 
 
+def copy_runner_package(source_repo_root: Path, repo_root: Path) -> None:
+    src_root = repo_root / "src" / "playbook_runner"
+    src_root.mkdir(parents=True, exist_ok=True)
+    for path in sorted((source_repo_root / "src" / "playbook_runner").glob("*.py")):
+        shutil.copy2(path, src_root / path.name)
+
+
 class ShellScriptSyntaxTests(unittest.TestCase):
     def test_top_level_scripts_have_valid_bash_syntax(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
@@ -27,9 +34,8 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             repo_root / "scripts" / "monitor.sh",
             repo_root / "scripts" / "status_report.sh",
         )
-        runner_parts = tuple(sorted((repo_root / "scripts" / "run_playbook_core").glob("*.sh")))
 
-        for script in (*scripts, *runner_parts):
+        for script in scripts:
             result = subprocess.run(
                 ["bash", "-n", str(script)],
                 check=False,
@@ -174,6 +180,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             scripts_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_repo_root / "scripts" / "run_playbook.sh", scripts_dir / "run_playbook.sh")
             (scripts_dir / "run_playbook.sh").chmod(0o755)
+            copy_runner_package(source_repo_root, repo_root)
 
             write_executable(
                 repo_root / "app" / "run.sh",
@@ -205,18 +212,6 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             self.assertTrue(runtime_log.is_file())
             self.assertEqual(runtime_log.read_text(encoding="utf-8"), "")
 
-    def test_prereq_operator_action_note_escapes_skill_names_in_source(self) -> None:
-        source_repo_root = Path(__file__).resolve().parents[1]
-        script_text = "\n".join(
-            path.read_text(encoding="utf-8")
-            for path in (
-                [source_repo_root / "scripts" / "run_playbook_core.sh"]
-                + sorted((source_repo_root / "scripts" / "run_playbook_core").glob("*.sh"))
-            )
-        )
-        self.assertIn(r"(\`playwright-skill\` and \`openapi-to-admin-yaml\`)", script_text)
-        self.assertNotIn("(`playwright-skill` and `openapi-to-admin-yaml`)", script_text)
-
     def test_ceo_delivery_validation_succeeds_when_run_script_emits_logs(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
 
@@ -228,6 +223,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             scripts_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_repo_root / "scripts" / "run_playbook.sh", scripts_dir / "run_playbook.sh")
             (scripts_dir / "run_playbook.sh").chmod(0o755)
+            copy_runner_package(source_repo_root, repo_root)
 
             write_executable(
                 repo_root / "app" / "run.sh",
@@ -247,7 +243,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
                 0,
                 msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}",
             )
-            self.assertIn("validated frontend=", result.stdout)
+            self.assertIn("booted successfully", result.stdout)
 
             validation_md = repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md"
             self.assertTrue(validation_md.is_file())

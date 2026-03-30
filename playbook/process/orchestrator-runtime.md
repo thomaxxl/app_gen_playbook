@@ -2,18 +2,17 @@
 
 This file defines the expected runtime behavior of `scripts/run_playbook.sh`.
 
-The top-level `scripts/run_playbook.sh` entrypoint is a resilient wrapper.
-The main orchestration logic lives in `scripts/run_playbook_core.sh`.
-That entrypoint now sources the categorized shell modules under
-`scripts/run_playbook_core/`.
-The wrapper MUST remain small enough to:
+The shell entrypoints under `scripts/` are now thin bootstrap wrappers only.
+They are responsible for:
 
-- delegate normal execution into `run_playbook_core.sh`
-- detect shell-syntax failure in `run_playbook_core.sh` and its sourced
-  `scripts/run_playbook_core/*.sh` parts
-- give CEO an emergency repair path even when the core script cannot start
-- host CEO-only delivery validation helpers such as
-  `scripts/run_playbook.sh --ceo-delivery-validate`
+- repo-root discovery
+- loading `.env` and `app/.runtime.local.env`
+- activating the backend virtualenv when present
+- delegating into the Python control plane under `src/playbook_runner/`
+
+The orchestration state machine, queue claims, message parsing, and Codex turn
+dispatch now live in the Python runner package rather than in sourced Bash
+modules.
 
 ## Purpose
 
@@ -117,14 +116,8 @@ Codex subprocess.
 
 Every maintained shell entrypoint under `scripts/` MUST continue to pass
 `bash -n`. Playbook validation MUST treat shell-syntax regressions as release
-blocking, because a broken runner cannot self-recover once the shell parser
-fails before startup.
-
-If a role turn repairs `scripts/run_playbook.sh` or
-`scripts/run_playbook_core.sh` while the orchestrator is already running, the
-current shell process MUST restart itself through `scripts/run_playbook.sh
---resume` before the next control cycle. Continuing with stale shell function
-definitions is a runner defect.
+blocking, because a broken bootstrap still prevents the Python control plane
+from starting.
 
 ## Session model
 

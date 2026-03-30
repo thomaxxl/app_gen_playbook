@@ -73,7 +73,10 @@ exception.
   for the active run. Its target is configured by `APP_WORKSPACE_DIR` in
   `.env`, and defaults to the sibling workspace `../agp_workspace/app`.
 - `scripts/run_playbook.sh`
-  The top-level orchestrator entrypoint for a new run.
+  Thin bootstrap entrypoint for the Python orchestrator.
+- `src/playbook_runner/`
+  The Python control plane for queue claims, message parsing, state
+  transitions, and Codex dispatch.
 - `scripts/run_playbook_interactive.sh`
   Interactive wrapper for run configuration and dispatch.
 - `scripts/clean.sh`

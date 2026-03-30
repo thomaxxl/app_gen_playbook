@@ -293,6 +293,44 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertNotIn("runs/current/artifacts/ux/**", writable)
         self.assertNotIn("runs/current/changes/*/candidate/artifacts/ux/**", writable)
 
+    def test_change_run_writable_scope_honors_write_artifacts_in_role_load_manifest(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/frontend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "  - runs/current/artifacts/ux/navigation.md",
+                    "candidate_artifacts:",
+                    "  - runs/current/changes/CR-1/candidate/artifacts/ux/screen-delta.md",
+                    "write_artifacts:",
+                    "  - runs/current/artifacts/ux/navigation.md",
+                    "read_app_paths:",
+                    "  - app/frontend/src/App.tsx",
+                    "write_app_paths:",
+                    "  - app/frontend/src/App.tsx",
+                    "verification_inputs:",
+                    "  - runs/current/changes/CR-1/verification/regression-plan.md",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "frontend",
+            explicit_task_bundle="playbook/task-bundles/frontend-implementation.yaml",
+        )
+
+        self.assertIn("runs/current/artifacts/ux/navigation.md", writable)
+        self.assertIn("runs/current/changes/CR-1/candidate/artifacts/ux/screen-delta.md", writable)
+        self.assertIn("app/frontend/src/App.tsx", writable)
+        self.assertIn("runs/current/changes/CR-1/verification/regression-plan.md", writable)
+        self.assertNotIn("runs/current/artifacts/ux/**", writable)
+        self.assertNotIn("runs/current/changes/*/candidate/artifacts/ux/**", writable)
+
     def test_forbidden_paths_and_diff_validation_enforce_cannot_write(self) -> None:
         repo_root = self.build_repo()
 

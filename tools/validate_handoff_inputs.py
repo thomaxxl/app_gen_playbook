@@ -170,9 +170,11 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
     for artifact_path in bundle_required:
         candidate = repo_root / artifact_path
         artifact_owner = owner_for_run_artifact(repo_root, candidate) or ""
+        blocked_recovery_sender = gate_status == "blocked" and sender_runtime_role in {"orchestrator", "ceo"}
+        if blocked_recovery_sender and artifact_owner == runtime_role:
+            continue
         if (
-            gate_status == "blocked"
-            and sender_runtime_role in {"orchestrator", "ceo"}
+            blocked_recovery_sender
             and (
                 artifact_path in allowed_missing
                 or (artifact_owner and artifact_owner != runtime_role)

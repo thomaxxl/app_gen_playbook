@@ -54,6 +54,12 @@ Required steps:
     - `install.sh`
     - `run.sh`
     - `README.md`
+    and seed the baseline starter frontend shell files from
+    `../../templates/app/frontend/`, including at least:
+    - `package.json`
+    - `vite.config.ts`
+    - the TypeScript/Vite shell and shared-runtime baseline required for
+      frontend bootstrap
     - `BUSINESS_RULES.md` when available
     Docker/container delivery files may also be seeded from
     `../../templates/app/deployment/` when that lane is in scope:

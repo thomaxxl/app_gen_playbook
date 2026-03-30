@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import re
+import yaml
 
 from check_completion import collect_blockers
 from orchestrator_common import (
@@ -13,6 +15,8 @@ from orchestrator_common import (
     RUN_ARTIFACT_TEMPLATE_DIRS,
     all_role_state_dirs,
     iter_required_artifact_templates,
+    parse_message_headers,
+    parse_message_sections,
     parse_metadata_block,
     preferred_role_state_dir,
     resolve_repo_root,
@@ -192,6 +196,7 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
 COMPLETION_BLOCKER_RECOVERY_PHASE_OVERRIDES = {
     # Completion can observe this from phase 6, but repairing generated backend
     # source is phase-5 implementation work.
+    "app/backend/src": "phase-5-parallel-implementation",
     "app/backend/src/my_app": "phase-5-parallel-implementation",
 }
 ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
@@ -317,6 +322,17 @@ REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
 )
+RECOVERY_REQUEUE_COOLDOWN = timedelta(minutes=30)
+SOURCE_SCOPE_PATH_PATTERN = re.compile(r"`((?:specs|playbook|tools|scripts|skills)/[^`]+)`")
+SOURCE_SCOPE_INLINE_PATH_PATTERN = re.compile(r"((?:specs|playbook|tools|scripts|skills)/[A-Za-z0-9_./-]+)")
+SOURCE_SCOPE_NEGATED_PATH_PATTERN = re.compile(
+    r"no change (?:is )?required in `((?:specs|playbook|tools|scripts|skills)/[^`]+)`",
+    re.IGNORECASE,
+)
+SOURCE_SCOPE_HINT_PATTERN = re.compile(
+    r"(source[- ]scope|source[- ]repair|source-maintenance|write[- ]scope|playbook-maintenance|normative source)",
+    re.IGNORECASE,
+)
 
 PHASE_REQUIRED_READS = {
     "phase-1-product-definition": (
@@ -361,8 +377,25 @@ class ArtifactNeed:
     extra_reads: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class SourceScopeEscalation:
+    topic_slug: str
+    required_reads: tuple[str, ...]
+    requested_paths: tuple[str, ...]
+    blocking_issues: tuple[str, ...]
+    message_paths: tuple[Path, ...]
+
+
 def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+
+def note_timestamp(path: Path) -> datetime | None:
+    stem, _, _ = path.name.partition("-from-")
+    try:
+        return datetime.strptime(stem, "%Y%m%d-%H%M%S").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
 
 
 def active_core_roles() -> tuple[str, ...]:
@@ -375,6 +408,15 @@ def role_pending(repo_root: Path, role: str) -> bool:
             directory = role_root / subdir
             if directory.exists() and any(directory.glob("*.md")):
                 return True
+    return False
+
+
+def orchestrator_pending(repo_root: Path) -> bool:
+    role_root = repo_root / "runs" / "current" / "role-state" / "orchestrator"
+    for subdir in ("inbox", "inflight"):
+        directory = role_root / subdir
+        if directory.exists() and any(directory.glob("*.md")):
+            return True
     return False
 
 
@@ -446,7 +488,7 @@ def extra_reads_for_completion_blocker(path: str) -> tuple[str, ...]:
         if relative_path == path:
             return extra_reads
 
-    if path == "app/backend/src/my_app":
+    if path in {"app/backend/src", "app/backend/src/my_app"}:
         return (
             "playbook/task-bundles/backend-implementation.yaml",
             "playbook/process/phases/phase-5-parallel-implementation.md",
@@ -564,6 +606,246 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
     return targets
 
 
+def _source_scope_paths(lines: list[str]) -> tuple[str, ...]:
+    found: list[str] = []
+    for line in lines:
+        found.extend(SOURCE_SCOPE_PATH_PATTERN.findall(line))
+    return tuple(_ordered_unique(found))
+
+
+def _all_source_scope_paths(lines: list[str]) -> tuple[str, ...]:
+    found: list[str] = []
+    for line in lines:
+        found.extend(SOURCE_SCOPE_PATH_PATTERN.findall(line))
+        found.extend(SOURCE_SCOPE_INLINE_PATH_PATTERN.findall(line))
+    return tuple(_ordered_unique(found))
+
+
+def _negated_source_scope_paths(lines: list[str]) -> tuple[str, ...]:
+    found: list[str] = []
+    for line in lines:
+        found.extend(SOURCE_SCOPE_NEGATED_PATH_PATTERN.findall(line))
+    return tuple(_ordered_unique(found))
+
+
+def _slugify_topic(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
+    return slug or "source-contract-recovery"
+
+
+def collect_source_scope_escalations(repo_root: Path) -> list[SourceScopeEscalation]:
+    inbox_dir = repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox"
+    if not inbox_dir.exists():
+        return []
+
+    grouped: dict[tuple[str, ...], dict[str, object]] = {}
+    for message_path in sorted(inbox_dir.glob("*.md")):
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        if headers.get("to", "").strip().lower() != "orchestrator":
+            continue
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads_section = [
+            item
+            for item in sections.get("required reads", [])
+            if isinstance(item, str)
+        ]
+        requested_outputs = [
+            item
+            for item in sections.get("requested outputs", [])
+            if isinstance(item, str)
+        ]
+        source_scope_context = [
+            *requested_outputs,
+            *required_reads_section,
+            *[item for item in sections.get("notes", []) if isinstance(item, str)],
+            *[item for item in sections.get("blocking issues", []) if isinstance(item, str)],
+            *[item for item in sections.get("requested orchestrator action", []) if isinstance(item, str)],
+            *[item for item in sections.get("current state", []) if isinstance(item, str)],
+            headers.get("topic", ""),
+            headers.get("purpose", ""),
+        ]
+        requested_paths = _source_scope_paths(requested_outputs)
+        if not requested_paths and any(SOURCE_SCOPE_HINT_PATTERN.search(line) for line in source_scope_context if line):
+            negated_paths = set(_negated_source_scope_paths(source_scope_context))
+            candidate_paths = [
+                path
+                for path in _all_source_scope_paths(source_scope_context)
+                if path not in negated_paths and (repo_root / path).exists()
+            ]
+            requested_paths = tuple(candidate_paths)
+        if not requested_paths:
+            continue
+
+        key = requested_paths
+        current = grouped.get(key)
+        topic_slug = _slugify_topic(headers.get("topic", "source-contract-recovery"))
+        required_reads = [
+            message_path.relative_to(repo_root).as_posix(),
+            *required_reads_section,
+        ]
+        blocking_issues = [
+            item
+            for item in sections.get("blocking issues", [])
+            if isinstance(item, str)
+        ]
+        if current is None:
+            grouped[key] = {
+                "topic_slug": topic_slug,
+                "required_reads": required_reads,
+                "blocking_issues": blocking_issues,
+                "message_paths": [message_path],
+            }
+            continue
+
+        current["required_reads"] = _ordered_unique(list(current["required_reads"]) + required_reads)
+        current["blocking_issues"] = _ordered_unique(list(current["blocking_issues"]) + blocking_issues)
+        current["message_paths"] = list(current["message_paths"]) + [message_path]
+        current["topic_slug"] = topic_slug
+
+    escalations: list[SourceScopeEscalation] = []
+    for requested_paths, payload in grouped.items():
+        escalations.append(
+            SourceScopeEscalation(
+                topic_slug=str(payload["topic_slug"]),
+                required_reads=tuple(_ordered_unique(list(payload["required_reads"]))),
+                requested_paths=requested_paths,
+                blocking_issues=tuple(_ordered_unique(list(payload["blocking_issues"]))),
+                message_paths=tuple(payload["message_paths"]),
+            )
+        )
+    return escalations
+
+
+def format_source_scope_note(repo_root: Path, escalation: SourceScopeEscalation, change_id: str) -> str:
+    required_reads = _ordered_unique(["runs/current/remarks.md", *escalation.required_reads, *escalation.requested_paths])
+
+    lines: list[str] = [
+        "from: orchestrator",
+        "to: ceo",
+        f"topic: {escalation.topic_slug}",
+        "purpose: restore progress by resolving source-contract or playbook write-scope escalations that runtime roles cannot satisfy",
+        f"change_id: {change_id}",
+        "",
+        "## Required Reads",
+    ]
+    for item in required_reads:
+        lines.append(f"- {item}")
+
+    lines.extend(
+        [
+            "",
+            "## Requested Outputs",
+            "- repair the normative source-contract or playbook files listed below using the CEO write boundary",
+        ]
+    )
+    for item in escalation.requested_paths:
+        lines.append(f"- edit `{item}`")
+    lines.extend(
+        [
+            "- if the source contract is repaired, issue the downstream handoff needed to unblock the affected runtime role",
+            "- do not route this contradiction back into the same blocked runtime write boundary unchanged",
+            "",
+            "## Dependencies",
+            "- CEO/playbook-maintenance write scope",
+            "",
+            "## Gate Status",
+            "- blocked",
+            "",
+            "## Blocking Issues",
+        ]
+    )
+    if escalation.blocking_issues:
+        for item in escalation.blocking_issues:
+            lines.append(f"- {item}")
+    else:
+        lines.append("- orchestrator received a source-contract write-scope escalation that no active runtime role can currently satisfy")
+    lines.extend(
+        [
+            "",
+            "## Notes",
+            "- generated from orchestrator inbox escalations requesting source-contract-capable maintenance",
+            "- archive the triggering orchestrator escalation(s) only after this CEO turn is queued",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _archive_orchestrator_escalation(repo_root: Path, message_path: Path) -> Path:
+    processed_dir = repo_root / "runs" / "current" / "role-state" / "orchestrator" / "processed"
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    target = processed_dir / f"{message_path.stem}.escalated.md"
+    message_path.replace(target)
+    return target
+
+
+def write_source_scope_notes(repo_root: Path, change_id: str) -> list[Path]:
+    if role_pending(repo_root, "ceo"):
+        return []
+
+    created: list[Path] = []
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%d-%H%M%S")
+    ceo_root = preferred_role_state_dir(repo_root, "ceo")
+    inbox_dir = ceo_root / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+
+    for index, escalation in enumerate(collect_source_scope_escalations(repo_root), start=1):
+        archived_paths: list[Path] = []
+        for message_path in escalation.message_paths:
+            if message_path.exists():
+                archived_paths.append(_archive_orchestrator_escalation(repo_root, message_path))
+            else:
+                archived_paths.append(
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "orchestrator"
+                    / "processed"
+                    / f"{message_path.stem}.escalated.md"
+                )
+        archived_reads = [path.relative_to(repo_root).as_posix() for path in archived_paths]
+        original_reads = {path.relative_to(repo_root).as_posix() for path in escalation.message_paths}
+        escalation_for_note = SourceScopeEscalation(
+            topic_slug=escalation.topic_slug,
+            required_reads=tuple(
+                _ordered_unique(
+                    archived_reads
+                    + [read for read in escalation.required_reads if read not in original_reads]
+                )
+            ),
+            requested_paths=escalation.requested_paths,
+            blocking_issues=escalation.blocking_issues,
+            message_paths=tuple(archived_paths),
+        )
+        note_text = format_source_scope_note(repo_root, escalation_for_note, change_id)
+        duplicate_recent_note = False
+        for lane in ("inbox", "inflight", "processed"):
+            lane_root = ceo_root / lane
+            if not lane_root.exists():
+                continue
+            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{escalation.topic_slug}.md"):
+                existing_timestamp = note_timestamp(existing_path)
+                if existing_timestamp is None or existing_timestamp < cutoff:
+                    continue
+                if existing_path.read_text(encoding="utf-8") == note_text:
+                    duplicate_recent_note = True
+                    break
+            if duplicate_recent_note:
+                break
+        if duplicate_recent_note:
+            continue
+
+        suffix = "" if index == 1 else f"-{index}"
+        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{escalation.topic_slug}{suffix}.md"
+        note_path.write_text(note_text, encoding="utf-8")
+        created.append(note_path)
+
+    return created
+
+
 def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], change_id: str) -> str:
     phase_labels = sorted({need.phase for need in needs}, key=lambda phase: PHASE_ORDER.get(phase, 99))
     required_reads: list[str] = ["runs/current/remarks.md"]
@@ -631,14 +913,113 @@ def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], 
     return "\n".join(lines) + "\n"
 
 
+def _string_list(payload: dict[str, object], field: str) -> list[str]:
+    value = payload.get(field)
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
+def _ordered_unique(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for item in items:
+        if item in seen:
+            continue
+        seen.add(item)
+        ordered.append(item)
+    return ordered
+
+
+def sync_change_role_load_for_recovery(
+    repo_root: Path,
+    change_id: str,
+    role: str,
+    needs: list[ArtifactNeed],
+) -> None:
+    if not change_id:
+        return
+
+    manifest_role = ROLE_LABELS.get(role, role)
+    role_load_path = (
+        repo_root
+        / "runs"
+        / "current"
+        / "changes"
+        / change_id
+        / "role-loads"
+        / f"{manifest_role}.yaml"
+    )
+    if not role_load_path.exists():
+        return
+
+    payload = yaml.safe_load(role_load_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict):
+        return
+
+    read_artifacts = _string_list(payload, "read_artifacts")
+    write_artifacts = _string_list(payload, "write_artifacts")
+    read_app_paths = _string_list(payload, "read_app_paths")
+    write_app_paths = _string_list(payload, "write_app_paths")
+
+    changed = False
+    for need in needs:
+        relative_path = need.path.relative_to(repo_root).as_posix()
+        if relative_path.startswith("runs/current/artifacts/") or relative_path.startswith("runs/current/facts/"):
+            new_read_artifacts = _ordered_unique(read_artifacts + [relative_path])
+            new_write_artifacts = _ordered_unique(write_artifacts + [relative_path])
+            changed = changed or new_read_artifacts != read_artifacts or new_write_artifacts != write_artifacts
+            read_artifacts = new_read_artifacts
+            write_artifacts = new_write_artifacts
+            continue
+
+        if relative_path.startswith("app/"):
+            new_read_app_paths = _ordered_unique(read_app_paths + [relative_path])
+            new_write_app_paths = _ordered_unique(write_app_paths + [relative_path])
+            changed = changed or new_read_app_paths != read_app_paths or new_write_app_paths != write_app_paths
+            read_app_paths = new_read_app_paths
+            write_app_paths = new_write_app_paths
+
+    if not changed:
+        return
+
+    payload["read_artifacts"] = read_artifacts
+    payload["write_artifacts"] = write_artifacts
+    payload["read_app_paths"] = read_app_paths
+    payload["write_app_paths"] = write_app_paths
+    role_load_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
 def write_recovery_notes(repo_root: Path, targets: dict[str, list[ArtifactNeed]], change_id: str) -> list[Path]:
     created: list[Path] = []
-    stamp = utc_stamp()
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%d-%H%M%S")
     for role, needs in sorted(targets.items()):
+        sync_change_role_load_for_recovery(repo_root, change_id, role, needs)
+        note_text = format_recovery_note(repo_root, role, needs, change_id)
+        role_root = preferred_role_state_dir(repo_root, role)
+        cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+        duplicate_recent_note = False
+        for lane in ("inbox", "inflight", "processed"):
+            lane_root = role_root / lane
+            if not lane_root.exists():
+                continue
+            for existing_path in lane_root.glob(f"*-from-orchestrator-to-{role}-recovery.md"):
+                existing_timestamp = note_timestamp(existing_path)
+                if existing_timestamp is None or existing_timestamp < cutoff:
+                    continue
+                if existing_path.read_text(encoding="utf-8") == note_text:
+                    duplicate_recent_note = True
+                    break
+            if duplicate_recent_note:
+                break
+        if duplicate_recent_note:
+            continue
+
         inbox_dir = preferred_role_state_dir(repo_root, role) / "inbox"
         inbox_dir.mkdir(parents=True, exist_ok=True)
         note_path = inbox_dir / f"{stamp}-from-orchestrator-to-{role}-recovery.md"
-        note_path.write_text(format_recovery_note(repo_root, role, needs, change_id), encoding="utf-8")
+        note_path.write_text(note_text, encoding="utf-8")
         created.append(note_path)
     return created
 
@@ -652,6 +1033,7 @@ def main() -> int:
     repo_root = resolve_repo_root(args.repo_root)
     targets = select_recovery_targets(repo_root)
     created = write_recovery_notes(repo_root, targets, args.change_id)
+    created.extend(write_source_scope_notes(repo_root, args.change_id))
     for path in created:
         print(path)
     return 0

@@ -201,6 +201,15 @@ EXCLUDED_SUFFIXES = {
     ".pyd",
     ".sqlite",
     ".sqlite3",
+    ".sqlite-journal",
+    ".sqlite-wal",
+    ".sqlite-shm",
+    ".sqlite3-journal",
+    ".sqlite3-wal",
+    ".sqlite3-shm",
+    ".db-journal",
+    ".db-wal",
+    ".db-shm",
     ".db",
     ".tsbuildinfo",
 }
@@ -401,6 +410,9 @@ def should_ignore_path(path: Path, repo_root: Path) -> bool:
     if relative.startswith("runs/current/orchestrator/"):
         return True
 
+    if relative.startswith("runs/current/facts/"):
+        return True
+
     if any(part in EXCLUDED_DIR_NAMES for part in parts[:-1]):
         return True
 
@@ -415,9 +427,15 @@ def should_ignore_path(path: Path, repo_root: Path) -> bool:
 
 def snapshot_repo_files(repo_root: Path) -> dict[str, str]:
     snapshot: dict[str, str] = {}
+    visited_roots: set[str] = set()
 
-    for root, dirs, files in os.walk(repo_root):
+    for root, dirs, files in os.walk(repo_root, followlinks=True):
         root_path = Path(root)
+        root_real = os.path.realpath(root)
+        if root_real in visited_roots:
+            dirs[:] = []
+            continue
+        visited_roots.add(root_real)
         dirs[:] = [
             directory
             for directory in dirs

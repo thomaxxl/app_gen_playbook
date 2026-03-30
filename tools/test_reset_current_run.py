@@ -7,6 +7,11 @@ from pathlib import Path
 from reset_current_run import reset_current_run
 
 
+def write_template(path: Path, target: str, body: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"# `{target}`\n\n```txt\n{body}```\n", encoding="utf-8")
+
+
 class ResetCurrentRunTests(unittest.TestCase):
     def test_seeds_generated_app_subtree_roots(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -16,6 +21,12 @@ class ResetCurrentRunTests(unittest.TestCase):
             (template_dir / "artifacts" / "architecture").mkdir(parents=True)
             (template_dir / "role-state").mkdir(parents=True)
             (template_dir / "README.md").write_text("# template\n", encoding="utf-8")
+            write_template(repo_root / "templates" / "app" / "project" / ".gitignore.md", "app/.gitignore", "root-ignore\n")
+            write_template(repo_root / "templates" / "app" / "project" / "install.sh.md", "app/install.sh", "#!/usr/bin/env bash\necho install\n")
+            write_template(repo_root / "templates" / "app" / "project" / "run.sh.md", "app/run.sh", "#!/usr/bin/env bash\necho run\n")
+            write_template(repo_root / "templates" / "app" / "project" / "README.app.md", "app/README.md", "# App\n")
+            write_template(repo_root / "templates" / "app" / "frontend" / "package.json.md", "frontend/package.json", "{\n  \"name\": \"seeded\"\n}\n")
+            write_template(repo_root / "templates" / "app" / "frontend" / "vite.config.ts.md", "frontend/vite.config.ts", "export default {};\n")
 
             reset_current_run(repo_root)
 
@@ -37,6 +48,12 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertIn("keeping only compact durable context relevant to future turns or future runs", ceo_agents)
             qa_agents = (repo_root / "runs" / "current" / "role-state" / "qa" / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("independently validate the delivered app before CEO approval", qa_agents)
+            self.assertEqual((repo_root / "app" / ".gitignore").read_text(encoding="utf-8"), "root-ignore")
+            self.assertEqual((repo_root / "app" / "README.md").read_text(encoding="utf-8"), "# App")
+            self.assertIn('"name": "seeded"', (repo_root / "app" / "frontend" / "package.json").read_text(encoding="utf-8"))
+            self.assertEqual((repo_root / "app" / "frontend" / "vite.config.ts").read_text(encoding="utf-8"), "export default {};")
+            self.assertTrue((repo_root / "app" / "install.sh").stat().st_mode & 0o111)
+            self.assertTrue((repo_root / "app" / "run.sh").stat().st_mode & 0o111)
 
 
 if __name__ == "__main__":

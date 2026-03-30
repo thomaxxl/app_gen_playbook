@@ -126,6 +126,10 @@ To start a new run:
 11. seed local `../../app/` from the relevant `../../templates/app/` files
     needed for the generated-app baseline local runtime. Docker/container
     delivery files may also be seeded when that lane is being attempted.
+    That starter seeding MUST include the baseline frontend shell files such
+    as `app/frontend/package.json`, `app/frontend/vite.config.ts`, the
+    TypeScript/Vite shell, and the shared-runtime bootstrap files required by
+    `../../specs/contracts/frontend/scaffold.md`.
 12. materialize concrete dependency manifests in `../../app/` from the
     template sources plus the run-owned `runtime-bom.md` before install
 

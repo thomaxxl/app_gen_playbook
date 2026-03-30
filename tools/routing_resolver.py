@@ -358,6 +358,7 @@ def _change_scoped_read_paths(
 
     declared_read_artifacts = _clean_declared_paths(_string_list(role_load_payload, "read_artifacts"))
     declared_candidate_artifacts = _clean_declared_paths(_string_list(role_load_payload, "candidate_artifacts"))
+    declared_write_artifacts = _clean_declared_paths(_string_list(role_load_payload, "write_artifacts"))
     declared_verification_inputs = _clean_declared_paths(_string_list(role_load_payload, "verification_inputs"))
     declared_read_app_paths = _clean_declared_paths(_string_list(role_load_payload, "read_app_paths"))
     declared_write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
@@ -372,7 +373,12 @@ def _change_scoped_read_paths(
     explicit_message_app_paths = [path for path in message_required_reads if path.startswith("app/")]
 
     reads: list[str] = []
-    declared_artifacts = declared_read_artifacts + declared_candidate_artifacts + declared_verification_inputs
+    declared_artifacts = (
+        declared_read_artifacts
+        + declared_candidate_artifacts
+        + declared_write_artifacts
+        + declared_verification_inputs
+    )
     if declared_artifacts:
         reads.extend(declared_artifacts)
     else:
@@ -417,15 +423,18 @@ def _narrow_change_writable_paths(
     role_load_payload: Mapping[str, Any],
 ) -> list[str]:
     candidate_artifacts = _clean_declared_paths(_string_list(role_load_payload, "candidate_artifacts"))
+    write_artifacts = _clean_declared_paths(_string_list(role_load_payload, "write_artifacts"))
     write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
     verification_inputs = _clean_declared_paths(_string_list(role_load_payload, "verification_inputs"))
 
-    if not candidate_artifacts and not write_app_paths and not verification_inputs:
+    artifact_writes = candidate_artifacts + write_artifacts
+
+    if not artifact_writes and not write_app_paths and not verification_inputs:
         return writable
 
     narrowed: list[str] = []
     for rule in writable:
-        if candidate_artifacts and (
+        if artifact_writes and (
             rule.startswith("runs/current/artifacts/") or rule.startswith("runs/current/changes/*/candidate/artifacts/")
         ):
             continue
@@ -436,6 +445,7 @@ def _narrow_change_writable_paths(
         narrowed.append(rule)
 
     narrowed.extend(candidate_artifacts)
+    narrowed.extend(write_artifacts)
     narrowed.extend(write_app_paths)
     narrowed.extend(verification_inputs)
     return narrowed

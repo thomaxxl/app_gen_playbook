@@ -64,6 +64,8 @@ Those manifests name:
 
 - exact baseline artifacts to read
 - exact candidate artifacts to edit
+- exact reopened baseline or fact artifacts to edit when the change
+  explicitly reopens accepted sources
 - exact app paths to read or write
 - feature packs reopened by the change
 - verification inputs required for the role

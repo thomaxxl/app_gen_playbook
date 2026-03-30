@@ -10,16 +10,29 @@ if __package__ in {None, ""}:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from coverage.common import normalized_repo_root, write_json  # type: ignore[import-not-found]
+    from coverage.common import normalized_repo_root, navigation_rows, write_json  # type: ignore[import-not-found]
     from coverage.compile_product_scope import compile_product_scope_payload  # type: ignore[import-not-found]
 else:
-    from .common import normalized_repo_root, write_json
+    from .common import normalized_repo_root, navigation_rows, write_json
     from .compile_product_scope import compile_product_scope_payload
 
 
 def generate_review_plan_payload(repo_root: Path) -> tuple[dict[str, Any], list[str]]:
     scope, issues = compile_product_scope_payload(repo_root)
     route_lookup = {route["route_id"]: route for route in scope.get("required_visible_routes", [])}
+    for row in navigation_rows(repo_root):
+        route_id = str(row.get("Route ID", "")).strip()
+        path = str(row.get("Path", "")).strip()
+        if not route_id:
+            continue
+        route_lookup.setdefault(
+            route_id,
+            {
+                "route_id": route_id,
+                "path": path,
+                "page_label": str(row.get("Label", "")).strip(),
+            },
+        )
     story_reviews: list[dict[str, Any]] = []
     surface_index: dict[tuple[str, str], dict[str, Any]] = {}
     stories = scope.get("required_story_reviews", [])

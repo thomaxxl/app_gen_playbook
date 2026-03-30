@@ -78,6 +78,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_allows_frontend_generated_app_write(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "frontend",
+                "app/frontend/vite.config.ts",
+                [],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

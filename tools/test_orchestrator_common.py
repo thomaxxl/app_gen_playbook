@@ -60,6 +60,39 @@ class RelpathTests(unittest.TestCase):
             snapshot = snapshot_repo_files(repo_root)
             self.assertIn("app/.venv_test/bin/python3", snapshot)
 
+    def test_snapshot_follows_repo_local_symlinked_directory_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_root = tmp_path / "repo"
+            external_root = tmp_path / "workspace" / "app"
+
+            repo_root.mkdir()
+            (repo_root / ".git").mkdir()
+            external_root.mkdir(parents=True)
+
+            (external_root / "frontend").mkdir()
+            (external_root / "frontend" / "vite.config.ts").write_text("export default {}\n", encoding="utf-8")
+
+            (repo_root / "app").symlink_to(external_root, target_is_directory=True)
+
+            snapshot = snapshot_repo_files(repo_root)
+            self.assertIn("app/frontend/vite.config.ts", snapshot)
+
+    def test_snapshot_ignores_transient_sqlite_journal_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_root = tmp_path / "repo"
+
+            repo_root.mkdir()
+            (repo_root / ".git").mkdir()
+
+            journal = repo_root / "run_dashboard" / "run_dashboard.sqlite3-journal"
+            journal.parent.mkdir(parents=True)
+            journal.write_text("transient\n", encoding="utf-8")
+
+            snapshot = snapshot_repo_files(repo_root)
+            self.assertNotIn("run_dashboard/run_dashboard.sqlite3-journal", snapshot)
+
     def test_owner_for_run_artifact_falls_back_to_run_metadata_when_no_template_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

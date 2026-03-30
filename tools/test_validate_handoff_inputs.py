@@ -324,6 +324,65 @@ class ValidateHandoffInputsTests(unittest.TestCase):
             report = validate_message(repo_root, "product_manager", message_path)
             self.assertTrue(report["valid"], json.dumps(report, indent=2))
 
+    def test_blocked_recovery_note_allows_owned_stub_bundle_prerequisite(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(repo_root / "runs/current/remarks.md", "# remarks\n")
+            write_file(
+                repo_root / "runs/current/artifacts/product/brief.md",
+                "owner: product_manager\nphase: phase-1-product-definition\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/capability-profile.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/load-plan.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "playbook/task-bundles/phase-2-architecture-contract.yaml",
+                "\n".join(
+                    [
+                        "name: phase-2-architecture-contract",
+                        "role: architect",
+                        "required_artifacts:",
+                        "  - runs/current/artifacts/product/brief.md",
+                        "  - runs/current/artifacts/architecture/capability-profile.md",
+                        "  - runs/current/artifacts/architecture/load-plan.md",
+                    ]
+                ),
+            )
+            message_path = repo_root / "runs/current/role-state/architect/inflight/recovery.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: orchestrator",
+                        "to: architect",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/remarks.md",
+                        "- playbook/task-bundles/phase-2-architecture-contract.yaml",
+                        "",
+                        "## Requested Outputs",
+                        "- create or replace runs/current/artifacts/architecture/capability-profile.md",
+                        "- create or replace runs/current/artifacts/architecture/load-plan.md",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Blocking Issues",
+                        "- stub: runs/current/artifacts/architecture/capability-profile.md",
+                        "- stub: runs/current/artifacts/architecture/load-plan.md",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "architect", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_recovery_note_allows_missing_declared_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

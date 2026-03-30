@@ -444,6 +444,8 @@ def main() -> int:
                     "  - Fill with exact baseline or candidate artifacts for this role.",
                     "candidate_artifacts:",
                     "  - Fill with exact candidate artifacts this role may edit.",
+                    "write_artifacts:",
+                    "  - Fill with exact accepted baseline or fact artifacts this role may edit when the change explicitly reopens them.",
                     "read_app_paths:",
                     "  - Fill with exact app paths this role may read.",
                     "write_app_paths:",

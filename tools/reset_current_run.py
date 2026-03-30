@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 from pathlib import Path
 
@@ -24,6 +25,47 @@ ARTIFACT_DIRS = (
     "ux",
     "backend-design",
     "devops",
+)
+
+STARTER_APP_TEMPLATE_FILES = (
+    "templates/app/project/.gitignore.md",
+    "templates/app/project/install.sh.md",
+    "templates/app/project/run.sh.md",
+    "templates/app/project/README.app.md",
+    "templates/app/frontend/package.json.md",
+    "templates/app/frontend/tsconfig.json.md",
+    "templates/app/frontend/tsconfig.app.json.md",
+    "templates/app/frontend/tsconfig.node.json.md",
+    "templates/app/frontend/vite.config.ts.md",
+    "templates/app/frontend/vitest.config.ts.md",
+    "templates/app/frontend/playwright.config.ts.md",
+    "templates/app/frontend/main.tsx.md",
+    "templates/app/frontend/theme.ts.md",
+    "templates/app/frontend/vite-env.d.ts.md",
+    "templates/app/frontend/PageHero.tsx.md",
+    "templates/app/frontend/PageHeader.tsx.md",
+    "templates/app/frontend/EmptyState.tsx.md",
+    "templates/app/frontend/ErrorState.tsx.md",
+    "templates/app/frontend/FormSection.tsx.md",
+    "templates/app/frontend/SectionBlock.tsx.md",
+    "templates/app/frontend/QuickActionCard.tsx.md",
+    "templates/app/frontend/SummaryCard.tsx.md",
+    "templates/app/frontend/SchemaDrivenAdminApp.tsx.md",
+    "templates/app/frontend/shared-runtime/admin/adminSchema.ts.md",
+    "templates/app/frontend/shared-runtime/admin/schemaContext.tsx.md",
+    "templates/app/frontend/shared-runtime/admin/resourceMetadata.ts.md",
+    "templates/app/frontend/shared-runtime/admin/createSearchEnabledDataProvider.ts.md",
+    "templates/app/frontend/shared-runtime/resourceRegistry.tsx.md",
+    "templates/app/frontend/shared-runtime/relationshipUi.tsx.md",
+    "templates/app/frontend/shared-runtime/files/uploadAwareDataProvider.ts.md",
+    "templates/app/frontend/shared-runtime/files/fileValueAdapters.ts.md",
+    "templates/app/frontend/shared-runtime/files/fileFieldHelpers.ts.md",
+    "templates/app/frontend/fs-promises.ts.md",
+)
+
+TEMPLATE_TARGET_RE = re.compile(r"^#\s+`([^`]+)`\s*$")
+CODE_FENCE_RE = re.compile(
+    r"(?ms)^(?P<fence>`{3,})(?P<info>[^\n]*)\n(?P<body>.*?)(?:\n(?P=fence))[ \t]*"
 )
 
 
@@ -53,6 +95,41 @@ def role_agents_content(runtime_role: str) -> str:
         "- Do not silently edit another role's owned artifact area or app subtree.\n"
         f"- {role_rule}.\n"
     )
+
+
+def template_target_path(repo_root: Path, template_path: Path) -> Path:
+    first_line = template_path.read_text(encoding="utf-8").splitlines()[0].strip()
+    match = TEMPLATE_TARGET_RE.match(first_line)
+    if not match:
+        raise ValueError(f"template does not declare a target path header: {template_path}")
+    declared = match.group(1).strip()
+    if declared.startswith("app/"):
+        return repo_root / declared
+    return repo_root / "app" / declared
+
+
+def extract_template_body(template_path: Path) -> str:
+    text = template_path.read_text(encoding="utf-8")
+    match = CODE_FENCE_RE.search(text)
+    if not match:
+        raise ValueError(f"template does not contain a fenced body: {template_path}")
+    return match.group("body")
+
+
+def materialize_template_file(repo_root: Path, template_rel: str) -> None:
+    template_path = repo_root / template_rel
+    if not template_path.exists():
+        return
+    target_path = template_target_path(repo_root, template_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(extract_template_body(template_path), encoding="utf-8")
+    if target_path.suffix == ".sh":
+        target_path.chmod(0o755)
+
+
+def seed_generated_app_starter(repo_root: Path) -> None:
+    for template_rel in STARTER_APP_TEMPLATE_FILES:
+        materialize_template_file(repo_root, template_rel)
 
 
 def reset_current_run(repo_root: Path) -> Path:
@@ -143,6 +220,8 @@ def reset_current_run(repo_root: Path) -> Path:
         "reference",
     ):
         (app_root / relative).mkdir(parents=True, exist_ok=True)
+
+    seed_generated_app_starter(repo_root)
 
     return current_dir
 

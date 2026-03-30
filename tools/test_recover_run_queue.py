@@ -4,7 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from recover_run_queue import select_recovery_targets, write_recovery_notes
+import yaml
+
+from recover_run_queue import ArtifactNeed, select_recovery_targets, write_recovery_notes, write_source_scope_notes
 
 
 def write_template(path: Path, owner: str, phase: str) -> None:
@@ -133,6 +135,146 @@ def write_required_phase6_evidence(repo_root: Path) -> None:
 
 
 class RecoverRunQueueTests(unittest.TestCase):
+    def test_orchestrator_source_scope_escalation_creates_ceo_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("orchestrator", "ceo"):
+                ensure_role_dirs(repo_root, role)
+
+            escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260329-212400-from-architect-to-orchestrator-preview-status-gate-vs-enum-write-scope.md"
+            write_file(
+                escalation,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: orchestrator",
+                        "topic: preview-status-gate-vs-enum-write-scope",
+                        "purpose: route a source-contract contradiction to a write-scope-capable turn",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/evidence/ui-previews/manifest.md",
+                        "- specs/contracts/frontend/validation.md",
+                        "- playbook/process/phases/phase-6-integration-review.md",
+                        "",
+                        "## Requested Outputs",
+                        "- schedule a turn that can edit `specs/contracts/frontend/validation.md`",
+                        "- schedule a turn that can edit `playbook/process/phases/phase-6-integration-review.md`",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Blocking Issues",
+                        "- architect runtime cannot edit the required source files",
+                        "",
+                    ]
+                ),
+            )
+
+            created = write_source_scope_notes(repo_root, "")
+            self.assertEqual(len(created), 1)
+
+            ceo_note = created[0]
+            self.assertIn("/role-state/ceo/inbox/", ceo_note.as_posix())
+            note_text = ceo_note.read_text(encoding="utf-8")
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("edit `specs/contracts/frontend/validation.md`", note_text)
+            self.assertIn("edit `playbook/process/phases/phase-6-integration-review.md`", note_text)
+
+            archived = repo_root / "runs/current/role-state/orchestrator/processed/20260329-212400-from-architect-to-orchestrator-preview-status-gate-vs-enum-write-scope.escalated.md"
+            self.assertTrue(archived.exists())
+            self.assertFalse(escalation.exists())
+            self.assertIn(archived.relative_to(repo_root).as_posix(), note_text)
+            self.assertNotIn(escalation.relative_to(repo_root).as_posix(), note_text)
+
+    def test_source_scope_escalation_can_infer_requested_path_from_required_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("orchestrator", "ceo"):
+                ensure_role_dirs(repo_root, role)
+            write_file(repo_root / "playbook/process/phases/phase-6-integration-review.md", "# phase 6\n")
+            write_file(repo_root / "specs/architecture/integration-review.md", "# integration review\n")
+
+            escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260330-074500-from-architect-to-orchestrator-preview-status-source-repair.md"
+            write_file(
+                escalation,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: orchestrator",
+                        "topic: preview-status-source-repair",
+                        "purpose: route the required source-maintenance follow-up",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/artifacts/architecture/integration-review.md",
+                        "- playbook/process/phases/phase-6-integration-review.md",
+                        "- specs/architecture/integration-review.md",
+                        "",
+                        "## Requested Outputs",
+                        "- route a source-maintenance turn that updates the normative preview-status contract",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                        "",
+                        "## Notes",
+                        "- no change is required in `specs/architecture/integration-review.md`; the repair belongs in the Phase 6 process source",
+                        "",
+                    ]
+                ),
+            )
+
+            created = write_source_scope_notes(repo_root, "")
+            self.assertEqual(len(created), 1)
+            note_text = created[0].read_text(encoding="utf-8")
+            self.assertIn("edit `playbook/process/phases/phase-6-integration-review.md`", note_text)
+            self.assertNotIn("edit `specs/architecture/integration-review.md`", note_text)
+            self.assertNotIn("edit `playbook/spec`", note_text)
+
+    def test_recovery_note_syncs_change_role_load_for_recovered_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            ensure_role_dirs(repo_root, "product_manager")
+
+            change_id = "CR-test"
+            role_load_path = repo_root / "runs/current/changes" / change_id / "role-loads/product_manager.yaml"
+            write_file(
+                role_load_path,
+                "\n".join(
+                    [
+                        f"change_id: {change_id}",
+                        "scope_profile: frontend-only",
+                        "active: true",
+                        "baseline_id: REL-test",
+                        "read_artifacts:",
+                        "  - runs/current/artifacts/product/user-stories.md",
+                        "write_artifacts:",
+                        "  - runs/current/artifacts/product/user-stories.md",
+                        "read_app_paths: []",
+                        "write_app_paths: []",
+                        "verification_inputs: []",
+                        "",
+                    ]
+                ),
+            )
+
+            needs = [
+                ArtifactNeed(
+                    role="product_manager",
+                    phase="phase-7-product-acceptance",
+                    path=repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                    reason="missing",
+                )
+            ]
+
+            created = write_recovery_notes(repo_root, {"product_manager": needs}, change_id)
+            self.assertEqual(len(created), 1)
+
+            payload = yaml.safe_load(role_load_path.read_text(encoding="utf-8"))
+            self.assertIn("runs/current/artifacts/product/acceptance-review.md", payload["read_artifacts"])
+            self.assertIn("runs/current/artifacts/product/acceptance-review.md", payload["write_artifacts"])
+
     def test_missing_docker_files_do_not_trigger_deployment_recovery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -305,7 +447,7 @@ class RecoverRunQueueTests(unittest.TestCase):
 
             self.assertEqual(set(targets), {"backend"})
             backend_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["backend"]}
-            self.assertEqual(backend_paths, {"app/backend/src/my_app"})
+            self.assertEqual(backend_paths, {"app/backend/src"})
             backend_phases = {need.phase for need in targets["backend"]}
             self.assertEqual(backend_phases, {"phase-5-parallel-implementation"})
 
@@ -358,6 +500,40 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("specs/ux/README.md", note)
             self.assertIn("specs/ux/iconography.md", note)
             self.assertIn("runs/current/artifacts/ux/iconography.md", note)
+
+    def test_does_not_repeat_identical_recent_recovery_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "\n".join(
+                    [
+                        "# UI Preview Manifest",
+                        "",
+                        "capture_status: captured",
+                        "content_validation_status: reviewed",
+                        "frontend_validation: approved",
+                        "architect_validation: approved",
+                        "product_manager_validation: pending-review",
+                        "review_conclusion: pending-review",
+                        "",
+                    ]
+                ),
+            )
+            write_file(repo_root / "runs/current/evidence/ui-previews/admin-entry.png", "fake image")
+
+            targets = select_recovery_targets(repo_root)
+            first_created = write_recovery_notes(repo_root, targets, "test-change")
+            self.assertEqual(len(first_created), 1)
+
+            second_created = write_recovery_notes(repo_root, targets, "test-change")
+            self.assertEqual(second_created, [])
 
     def test_does_not_requeue_architect_runtime_bom_while_devops_queue_is_active(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

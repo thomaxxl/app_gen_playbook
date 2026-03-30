@@ -20,6 +20,7 @@ RESOURCE_NAME_RE = re.compile(r'name="([A-Za-z0-9_:-]+)"')
 ROUTE_PATH_RE = re.compile(r'path="([^"]+)"')
 PRIMARY_ROUTE_CONST_RE = re.compile(r'const\s+primaryRoute\s*=\s*"([^"]+)"')
 OBJECT_TO_RE = re.compile(r"\bto:\s*\"([^\"]+)\"")
+PRIMARY_CTA_TARGET_RE = re.compile(r"primaryCtaTarget:\s*\"([^\"]+)\"")
 
 
 def normalize_hash_path(path: str) -> str:
@@ -68,6 +69,7 @@ def extract_frontend_surface_registry_payload(repo_root: Path) -> tuple[dict[str
         const_match = PRIMARY_ROUTE_CONST_RE.search(home_text)
         if const_match is not None:
             cta_targets.append(normalize_hash_path(const_match.group(1)))
+        cta_targets.extend(normalize_hash_path(value) for value in PRIMARY_CTA_TARGET_RE.findall(home_text))
         cta_targets.extend(normalize_hash_path(value) for value in OBJECT_TO_RE.findall(home_text))
         cta_targets = sorted(set(cta_targets))
 
