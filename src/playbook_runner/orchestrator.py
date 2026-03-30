@@ -459,6 +459,15 @@ class Orchestrator:
             message=message_path,
         )
         if not valid:
+            self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
+            self.append_remark(
+                "Role diff validation failed",
+                f"Role:\n- {runtime_role}\n\n"
+                f"Message:\n- {message_path.name}\n\n"
+                f"Validation evidence:\n- {validation_file.relative_to(self.config.repo_root)}\n\n"
+                "The turn modified files outside its allowed write scope. "
+                "Resume after correcting the ownership or prompt-routing issue.",
+            )
             raise RunnerError(f"role diff validation failed for {runtime_role}")
 
     def resolve_turn_add_dirs(self, runtime_role: str, message_path: Path) -> list[Path]:

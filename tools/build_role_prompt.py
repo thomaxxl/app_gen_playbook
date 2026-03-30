@@ -8,6 +8,7 @@ from pathlib import Path
 from orchestrator_common import (
     RUNTIME_TO_DISPLAY,
     canonical_artifacts_for_role_phases,
+    path_matches_rule,
     parse_message_headers,
     parse_message_sections,
     phase_name_from_phase_doc,
@@ -101,6 +102,18 @@ def build_canonical_outputs(
     return dedupe_paths(outputs)
 
 
+def build_read_only_required_paths(read_paths: list[str], write_paths: list[str]) -> list[str]:
+    read_only: list[str] = []
+    for path in read_paths:
+        normalized = path.strip()
+        if not normalized.startswith(("runs/current/", "app/")):
+            continue
+        if any(path_matches_rule(normalized, rule) for rule in write_paths):
+            continue
+        read_only.append(normalized)
+    return dedupe_paths(read_only)
+
+
 def emit_full_prompt(
     repo_root: Path,
     display_role: str,
@@ -110,6 +123,7 @@ def emit_full_prompt(
     sections: dict[str, list[str] | str],
     read_paths: list[str],
     write_paths: list[str],
+    read_only_required_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
@@ -123,6 +137,11 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in write_paths:
         print(f"- {path}")
+
+    if read_only_required_paths:
+        print("\nRead-only required files:\n")
+        for path in read_only_required_paths:
+            print(f"- {path}")
 
     if forbidden_paths:
         print("\nForbidden writes:\n")
@@ -178,6 +197,7 @@ def emit_short_prompt(
     sections: dict[str, list[str] | str],
     read_paths: list[str],
     write_paths: list[str],
+    read_only_required_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
 ) -> None:
@@ -195,6 +215,11 @@ def emit_short_prompt(
     for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if read_only_required_paths:
+        print("Read-only required files:")
+        for path in read_only_required_paths:
+            print(f"- {absolutize(repo_root, path)}")
+        print("")
     if forbidden_paths:
         print("Forbidden writes:")
         for path in forbidden_paths:
@@ -252,6 +277,7 @@ def main() -> int:
         explicit_phase=headers.get("phase"),
         message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
     )
+    read_only_required_paths = build_read_only_required_paths(read_paths, write_paths)
     forbidden_paths = resolve_forbidden_paths(repo_root, args.runtime_role)
 
     if args.mode == "short":
@@ -263,6 +289,7 @@ def main() -> int:
             sections,
             read_paths,
             write_paths,
+            read_only_required_paths,
             forbidden_paths,
             canonical_outputs,
         )
@@ -276,6 +303,7 @@ def main() -> int:
             sections,
             read_paths,
             write_paths,
+            read_only_required_paths,
             forbidden_paths,
             canonical_outputs,
         )
