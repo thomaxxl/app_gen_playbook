@@ -305,20 +305,76 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             self.assertGreaterEqual(import_probe_calls, 2)
             self.assertTrue(any(command[:4] == [str(python_path), "-m", "pip", "install"] for command in calls))
 
-    def test_check_backend_venv_does_not_install_in_preprovisioned_mode(self) -> None:
+    def test_check_backend_venv_repairs_backend_venv_in_legacy_preprovisioned_alias_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             requirements_path = repo_root / "app" / "backend" / "requirements.txt"
             requirements_path.parent.mkdir(parents=True, exist_ok=True)
             requirements_path.write_text("fastapi\njsonschema\nsafrs\n", encoding="utf-8")
+            python_path = repo_root / "app" / "backend" / ".venv" / "bin" / "python"
+            python_path.parent.mkdir(parents=True, exist_ok=True)
+            python_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            python_path.chmod(0o755)
+            calls: list[list[str]] = []
+            import_probe_calls = 0
 
             with unittest.mock.patch.dict("os.environ", {"DEPENDENCY_PROVISIONING_MODE": "preprovisioned-reuse-only"}, clear=False):
-                with unittest.mock.patch("check_execution_prereqs.subprocess.run") as mock_run:
+                def fake_run(args, capture_output=False, text=False, **kwargs):
+                    nonlocal import_probe_calls
+                    command = list(args)
+                    calls.append(command)
+                    if command[:4] == [str(python_path), "-m", "pip", "install"]:
+                        return subprocess.CompletedProcess(command, 0, "", "")
+                    if command[0] == str(python_path) and command[1] == "-c":
+                        import_probe_calls += 1
+                        if import_probe_calls == 1:
+                            return subprocess.CompletedProcess(command, 1, "", "missing import")
+                        return subprocess.CompletedProcess(command, 0, "", "")
+                    raise AssertionError(f"unexpected command: {command}")
+
+                with unittest.mock.patch("check_execution_prereqs.subprocess.run", side_effect=fake_run):
                     result = check_execution_prereqs.check_backend_venv(repo_root)
 
-            self.assertEqual(result.status, "blocked")
-            self.assertIn("missing backend python", result.detail)
-            mock_run.assert_not_called()
+            self.assertEqual(result.status, "ok")
+            self.assertIn("repaired backend venv dependencies", result.detail)
+            self.assertGreaterEqual(import_probe_calls, 2)
+            self.assertTrue(any(command[:4] == [str(python_path), "-m", "pip", "install"] for command in calls))
+
+    def test_check_playwright_screenshot_installs_chromium_when_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            playwright_path = repo_root / "app" / "frontend" / "node_modules" / ".bin" / "playwright"
+            playwright_path.parent.mkdir(parents=True, exist_ok=True)
+            playwright_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            playwright_path.chmod(0o755)
+
+            with tempfile.TemporaryDirectory() as screenshot_tmp:
+                screenshot_path = Path(screenshot_tmp) / "smoke.png"
+
+                class _TmpDir:
+                    def __enter__(self):
+                        return screenshot_tmp
+
+                    def __exit__(self, exc_type, exc, tb):
+                        return False
+
+                def fake_run(args, capture_output=False, text=False, **kwargs):
+                    command = list(args)
+                    if command[:2] == [str(playwright_path), "screenshot"]:
+                        if screenshot_path.exists():
+                            return subprocess.CompletedProcess(command, 0, "", "")
+                        return subprocess.CompletedProcess(command, 1, "", "browser executable doesn't exist")
+                    if command[:3] == [str(playwright_path), "install", "chromium"]:
+                        screenshot_path.write_bytes(b"png")
+                        return subprocess.CompletedProcess(command, 0, "", "")
+                    raise AssertionError(f"unexpected command: {command}")
+
+                with unittest.mock.patch("check_execution_prereqs.tempfile.TemporaryDirectory", return_value=_TmpDir()):
+                    with unittest.mock.patch("check_execution_prereqs.subprocess.run", side_effect=fake_run):
+                        result = check_execution_prereqs.check_playwright_screenshot(repo_root)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("captured screenshot", result.detail)
 
     def test_frontend_node_modules_path_resolves_relative_override_from_app_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

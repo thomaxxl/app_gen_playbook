@@ -29,7 +29,9 @@ The active run MUST freeze dependency provisioning policy in:
 Allowed modes:
 
 - `clean-install`
-- `preprovisioned-reuse-only`
+- `reuse-preferred`
+- `preprovisioned-reuse-only` as a legacy compatibility alias for
+  `reuse-preferred`
 
 `clean-install` means the generated app may create or install local dependency
 roots when they are absent.
@@ -39,9 +41,11 @@ first dependency root that must be materialized. The playbook's Python tooling
 should then use that same backend venv for subsequent checks and runtime
 automation.
 
-`preprovisioned-reuse-only` means dependencies are expected to exist before the
-playbook tries to use them. In that mode, roles may verify and normalize the
-approved roots, but MUST NOT create or install them.
+`reuse-preferred` means dependencies should be reused from approved existing
+roots when possible, but the playbook may still create or repair them in those
+approved roots when they are missing or incomplete. The older name
+`preprovisioned-reuse-only` remains a compatibility alias for the same
+behavior.
 
 The accepted artifact records policy only. Host-specific absolute paths MUST
 remain local-only.
@@ -65,18 +69,20 @@ through a literal local `./node_modules` path.
 The generated app MUST NOT rely on symlinking the entire `backend/` or
 `frontend/` trees as the package-management strategy.
 
-In `preprovisioned-reuse-only` mode specifically:
+In `reuse-preferred` mode specifically:
 
-- the operator is responsible for preparing the Python and JavaScript
-  dependency roots before `scripts/run_playbook.sh` starts
+- the operator MAY prepare the Python and JavaScript dependency roots before
+  `scripts/run_playbook.sh` starts to speed up repeated runs
 - the approved backend roots are `BACKEND_VENV` or an existing `backend/.venv`
 - the approved frontend roots are `FRONTEND_NODE_MODULES_DIR` or an existing
   `frontend/node_modules`
-- DevOps MAY create only the explicit `frontend/node_modules` symlink when the
-  target already exists
-- generated scripts MUST NOT create a backend virtualenv, create an external
-  node_modules target directory, or install missing packages
-- missing dependencies are an operator or environment block, not a repair task
+- DevOps and generated scripts SHOULD reuse those roots when they are already
+  valid
+- DevOps and generated scripts MAY create the explicit
+  `frontend/node_modules` symlink and MAY create or repair the target
+  dependency directory when it is missing
+- generated scripts MAY create a backend virtualenv, install missing packages,
+  and install Playwright browser runtimes inside the approved roots
 
 ## Frontend policy
 
@@ -142,11 +148,12 @@ Before packaging is treated as viable, DevOps MUST verify:
 - any optional local dependency-root override still degrades cleanly to the
   normal clean-environment install path when the override is absent
 
-If the active provisioning mode is `preprovisioned-reuse-only`, the
-orchestrator and DevOps MUST perform a dependency preflight before DevOps,
-Frontend, or Backend continue implementation work. If the declared dependency
-roots are missing or incomplete, the run MUST stop with an operator-action
-block instead of trying to install packages.
+If the active provisioning mode is `reuse-preferred`, the orchestrator and
+DevOps SHOULD perform a dependency preflight before DevOps, Frontend, or
+Backend continue implementation work. If the declared dependency roots are
+missing or incomplete, the run SHOULD repair or install them in the approved
+roots instead of treating that condition as an automatic operator-action
+block.
 
 ## Change proposal rule
 

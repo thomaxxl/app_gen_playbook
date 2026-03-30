@@ -50,8 +50,9 @@ It is intended to read current-run status from the mirrored
   upstream `https://github.com/thomaxxl/safrs-jsonapi-client` checkout into
   `tmp/safrs-jsonapi-client`, then installs the frontend with that local
   checkout as the `safrs-jsonapi-client` source.
-- In `preprovisioned-reuse-only` mode, it validates the prepared dependency
-  roots and stops if anything is missing.
+- In `reuse-preferred` mode, it reuses the prepared dependency roots first and
+  repairs or installs them in those approved locations when they are missing
+  or incomplete.
 
 If frontend installs are slow in your environment, keep the generated `app/`
 directory local and persistent between sessions and, when needed, set
@@ -71,7 +72,7 @@ If you prefer not to create those links manually, you can also use a local-only
 
 ```bash
 cat > .runtime.local.env <<'EOF'
-DEPENDENCY_PROVISIONING_MODE=preprovisioned-reuse-only
+DEPENDENCY_PROVISIONING_MODE=reuse-preferred
 BACKEND_VENV="$HOME/venv"
 FRONTEND_NODE_MODULES_DIR="$HOME/.cache/my-app/frontend-node_modules"
 EOF
@@ -79,13 +80,14 @@ EOF
 
 With that file in place:
 
-- `install.sh` validates `BACKEND_VENV` instead of creating a fallback
-  backend venv
+- `install.sh` validates `BACKEND_VENV` first and then repairs or creates the
+  backend venv there when needed
 - `install.sh` keeps `frontend/node_modules` as a managed symlink to
-  `FRONTEND_NODE_MODULES_DIR` when the target already exists
+  `FRONTEND_NODE_MODULES_DIR` and may create or repair that approved target
+  when needed
 - `run.sh` uses those same local overrides automatically
-- the playbook does not install missing Python, npm, or Playwright packages in
-  that mode
+- the playbook may still install missing Python, npm, or Playwright packages
+  inside those approved roots
 
 Do not symlink the whole `backend/` or `frontend/` directories. Only the
 explicit `frontend/node_modules` link is supported for this local reuse path.
@@ -150,8 +152,8 @@ other one is terminated too.
 If dependencies are missing, `run.sh` must stop immediately.
 
 - In `clean-install` mode, it should tell you to run `./install.sh`.
-- In `preprovisioned-reuse-only` mode, it should tell you to fix the prepared
-  dependency roots instead of implying that installs are allowed.
+- In `reuse-preferred` mode, it should still tell you to run `./install.sh`,
+  which may repair the approved dependency roots in place.
 
 `run.sh` is expected to work with the stock macOS Bash `3.2` shell as well as
 newer Linux Bash environments.
@@ -183,8 +185,8 @@ Notes:
 - The generated app root SHOULD be ready to become its own repository without
   restructuring first.
 - Prefer documenting the active `DEPENDENCY_PROVISIONING_MODE` explicitly.
-- Make it explicit that `./install.sh` prepares Playwright only in
-  `clean-install` mode.
+- Make it explicit that `reuse-preferred` is the preferred reuse lane and that
+  `preprovisioned-reuse-only` is only a legacy compatibility alias.
 - Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
 - Document the canonical `/app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.

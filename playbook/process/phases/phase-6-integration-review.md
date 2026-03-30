@@ -102,7 +102,8 @@ readiness note in:
 - verify docs match what was built
 - reject undocumented business-rule drift
 - verify the required Playwright skill/runtime lane is available and install or
-  provision it only when the active dependency-provisioning policy allows that
+  repair its browser/runtime dependencies inside the approved dependency roots
+  when they are missing
 - run the basic Playwright smoke suite as the final pre-delivery step, with
   the skill as the preferred browser-driving wrapper
 - populate the full quality evidence pack under `runs/current/evidence/quality/`

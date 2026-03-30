@@ -47,7 +47,9 @@ dependency_provisioning:
 Allowed `mode` values:
 
 - `clean-install`
-- `preprovisioned-reuse-only`
+- `reuse-preferred`
+- `preprovisioned-reuse-only` as a legacy compatibility alias for
+  `reuse-preferred`
 
 ## Clean-install mode
 
@@ -62,10 +64,13 @@ In this mode, the run MAY allow:
   into it before frontend install
 - running `pip install`, `npm install`, and Playwright preparation commands
 
-## Preprovisioned reuse-only mode
+## Reuse-preferred mode
 
-Use `preprovisioned-reuse-only` when the operator is responsible for preparing
-dependency roots before `scripts/run_playbook.sh` starts.
+Use `reuse-preferred` when the operator or prior runs may already have usable
+dependency roots and the run should prefer reusing them before materializing
+fresh ones.
+
+`preprovisioned-reuse-only` is accepted as a legacy alias for this same mode.
 
 In this mode:
 
@@ -78,10 +83,15 @@ In this mode:
   already-existing `app/frontend/node_modules`
 - the approved local SAFRS frontend source root is an already-existing
   `app/tmp/safrs-jsonapi-client`
-- agents MUST verify and reuse those roots
-- agents MUST NOT create a new virtualenv
-- agents MUST NOT run dependency installation commands
-- agents MUST stop with a clear block if a required dependency is missing
+- agents SHOULD verify and reuse those roots when they already exist
+- agents MAY create or repair the approved backend virtualenv when it is
+  missing or incomplete
+- agents MAY run dependency installation commands inside the approved backend
+  and frontend roots
+- agents MAY install Playwright browser runtimes when browser validation needs
+  them
+- agents MUST keep whole-tree backend/frontend symlinks out of scope; only the
+  explicit local `frontend/node_modules` link remains allowed
 
 ## Local path rule
 

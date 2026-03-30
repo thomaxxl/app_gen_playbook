@@ -10,7 +10,15 @@ from pathlib import Path
 from orchestrator_common import resolve_repo_root
 
 
-MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
+MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|reuse-preferred|preprovisioned-reuse-only)\s*$")
+
+
+def normalize_mode(raw: str) -> str:
+    if raw == "preprovisioned-reuse-only":
+        return "reuse-preferred"
+    if raw in {"clean-install", "reuse-preferred"}:
+        return raw
+    return ""
 
 
 def load_runtime_env(path: Path) -> dict[str, str]:
@@ -49,7 +57,7 @@ def provisioning_mode(repo_root: Path) -> str:
     match = MODE_PATTERN.search(artifact.read_text(encoding="utf-8"))
     if not match:
         return "clean-install"
-    return match.group(1)
+    return normalize_mode(match.group(1)) or "clean-install"
 
 
 def backend_python(app_root: Path, env: dict[str, str]) -> Path | None:
@@ -121,7 +129,7 @@ def main() -> int:
 
     repo_root = resolve_repo_root(args.repo_root)
     mode = provisioning_mode(repo_root)
-    if mode != "preprovisioned-reuse-only":
+    if mode != "reuse-preferred":
         return 0
 
     app_root = repo_root / "app"
@@ -152,25 +160,24 @@ def main() -> int:
     if not errors:
         return 0
 
-    print("Dependency provisioning mode: preprovisioned-reuse-only")
+    print("Dependency provisioning mode: reuse-preferred")
     print()
-    print("The active run requires pre-provisioned dependency reuse.")
-    print("The playbook will not create environments or install missing packages in this mode.")
+    print("The active run prefers reusing prepared dependency roots when they exist.")
+    print("Missing or incomplete roots are repairable inside the approved backend/frontend locations.")
     print()
-    print("Problems:")
+    print("Current findings:")
     for error in errors:
         print(f"- {error}")
     print()
-    print("Expected local inputs:")
+    print("Expected local inputs when reuse is desired:")
     print("- app/.runtime.local.env or exported env vars for BACKEND_VENV / FRONTEND_NODE_MODULES_DIR")
     print("- BACKEND_VENV=... or an existing app/backend/.venv")
     print("- FRONTEND_NODE_MODULES_DIR=... or an existing app/frontend/node_modules")
     print()
     print("Resolution:")
-    print("- provision the missing dependency roots outside the playbook")
-    print("- update app/.runtime.local.env or create the approved local symlinks/paths")
-    print("- resume the run after the dependency roots validate")
-    return 1
+    print("- reuse the prepared dependency roots when they already exist")
+    print("- otherwise allow the playbook or generated install lane to create/repair them in place")
+    return 0
 
 
 if __name__ == "__main__":

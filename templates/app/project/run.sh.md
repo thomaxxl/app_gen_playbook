@@ -89,6 +89,10 @@ if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
   FRONTEND_NODE_MODULES_DIR="$(normalize_path "$FRONTEND_NODE_MODULES_DIR")"
 fi
 
+if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+  DEPENDENCY_PROVISIONING_MODE="reuse-preferred"
+fi
+
 BACKEND_PYTHON="python3"
 if [[ -n "$BACKEND_VENV_DIR" ]]; then
   BACKEND_PYTHON="$BACKEND_VENV_DIR/bin/python"
@@ -182,17 +186,17 @@ require_installed_dependencies() {
   fi
 
   {
-    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
-      echo "Pre-provisioned dependencies are missing or incomplete."
+    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "reuse-preferred" ]]; then
+      echo "Preferred reused dependencies are missing or incomplete."
     else
       echo "Dependencies are not installed."
     fi
     for item in "${missing[@]}"; do
       echo "- Missing $item"
     done
-    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
-      echo "Check BACKEND_VENV / FRONTEND_NODE_MODULES_DIR or the prepared backend/.venv / frontend/node_modules paths."
-      echo "In preprovisioned-reuse-only mode, the playbook does not install missing packages."
+    if [[ "$DEPENDENCY_PROVISIONING_MODE" == "reuse-preferred" ]]; then
+      echo "Check BACKEND_VENV / FRONTEND_NODE_MODULES_DIR or the preferred backend/.venv / frontend/node_modules paths."
+      echo "Run ./install.sh to repair or install dependencies in those approved roots."
     else
       echo "Run ./install.sh from $PROJECT_DIR before starting ./run.sh."
     fi
@@ -319,9 +323,9 @@ Notes:
 - The backend and frontend should still remain runnable independently.
 - `run.sh` MUST fail with a clear `./install.sh` instruction when the backend
   or frontend dependencies have not been installed yet.
-- When `DEPENDENCY_PROVISIONING_MODE=preprovisioned-reuse-only`, `run.sh`
-  MUST fail with a dependency-reuse message instead of implying that package
-  installation is expected.
+- When `DEPENDENCY_PROVISIONING_MODE=reuse-preferred`, `run.sh` MUST still
+  direct the operator to `./install.sh`, which may repair the approved
+  dependency roots in place.
 - If `backend/.venv` exists, including as a symlink to a prepared venv,
   `run.sh` SHOULD treat it as the installed backend environment.
 - If the operator wants to reuse a prepared backend virtualenv or external

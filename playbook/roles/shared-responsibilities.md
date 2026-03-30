@@ -41,16 +41,18 @@ details that need more precision than the global summary.
   hand off. If persistent runtime work is required, it must be explicitly
   orchestrator-owned and recorded as such.
 
-When `dependency_provisioning.mode = preprovisioned-reuse-only`:
+When `dependency_provisioning.mode = reuse-preferred` or the legacy alias
+`preprovisioned-reuse-only`:
 
-- no role may create a new virtualenv
-- no role may run `pip install`, `pip wheel`, `npm install`, `npm ci`,
+- roles SHOULD reuse the approved dependency roots first when they already
+  exist
+- roles MAY create or repair the backend virtualenv, frontend dependency tree,
+  and Playwright browser runtime inside the approved roots
+- roles MAY run `pip install`, `pip wheel`, `npm install`, `npm ci`,
   `pnpm install`, `yarn install`, `playwright install`, or equivalent
-  dependency-mutating commands
-- no role may auto-install tools through implicit package-manager behavior
-- roles may only verify, reuse, and normalize the approved dependency roots
-- missing dependencies are an operator or environment block, not a role-owned
-  repair task
+  dependency-mutating commands when that repair is needed to advance the run
+- roles MUST keep those repairs inside the approved backend/frontend dependency
+  roots and MUST NOT silently redesign package sources or versions
 
 When a run-owned or implementation surface needs dynamic, time-varying,
 database-backed, workflow-backed, or environment-backed data:

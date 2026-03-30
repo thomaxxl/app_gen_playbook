@@ -67,9 +67,12 @@ environment variables.
 
 Preferred override keys:
 
-- `DEPENDENCY_PROVISIONING_MODE=clean-install|preprovisioned-reuse-only`
+- `DEPENDENCY_PROVISIONING_MODE=clean-install|reuse-preferred`
 - `BACKEND_VENV=/absolute/or/project-relative/path/to/venv`
 - `FRONTEND_NODE_MODULES_DIR=/absolute/or/project-relative/path/to/node_modules`
+
+`preprovisioned-reuse-only` remains accepted as a legacy compatibility alias
+for `reuse-preferred`.
 
 Use `backend/.venv` or `BACKEND_VENV` for Python dependency reuse instead of
 symlinking whole backend directories. The playbook's Python tooling SHOULD use
@@ -84,8 +87,9 @@ The generated `app/install.sh` SHOULD follow the declared provisioning mode:
 
 - in `clean-install` mode, it MAY create local dependency roots and install
   missing packages
-- in `preprovisioned-reuse-only` mode, it MUST behave as a preflight
-  validator, not an installer
+- in `reuse-preferred` mode, it SHOULD reuse prepared dependency roots first
+  but MAY still create or repair them in the approved locations when they are
+  missing or incomplete
 
 If frontend package extraction is slow on the target filesystem, the operator
 SHOULD point `NPM_CONFIG_CACHE` at a persistent local-disk path such as

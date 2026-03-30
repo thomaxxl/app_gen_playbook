@@ -12,10 +12,10 @@ The key behavior is:
 
 - honor `DEPENDENCY_PROVISIONING_MODE`
 - in `clean-install` mode, install backend and frontend dependencies locally
-- in `preprovisioned-reuse-only` mode, validate the prepared dependency roots
-  without creating environments or installing packages
+- in `reuse-preferred` mode, reuse prepared dependency roots first but repair
+  or install them in place when they are missing or incomplete
 - optionally realize `FRONTEND_NODE_MODULES_DIR` as a managed
-  `frontend/node_modules` symlink only when the external target already exists
+  `frontend/node_modules` symlink
 - never symlink whole `backend/` or `frontend/` trees
 
 ```sh
@@ -62,6 +62,10 @@ if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
   FRONTEND_NODE_MODULES_DIR="$(normalize_path "$FRONTEND_NODE_MODULES_DIR")"
 fi
 
+if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
+  DEPENDENCY_PROVISIONING_MODE="reuse-preferred"
+fi
+
 file_sha256() {
   if command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$1" | awk '{print $1}'
@@ -104,16 +108,8 @@ ensure_frontend_node_modules_path() {
     return
   fi
 
-  if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
-    if [[ ! -d "$FRONTEND_NODE_MODULES_DIR" ]]; then
-      echo "FRONTEND_NODE_MODULES_DIR target is missing: $FRONTEND_NODE_MODULES_DIR" >&2
-      echo "In preprovisioned-reuse-only mode, ./install.sh will not create it." >&2
-      exit 1
-    fi
-  else
-    mkdir -p "$(dirname "$FRONTEND_NODE_MODULES_DIR")"
-    mkdir -p "$FRONTEND_NODE_MODULES_DIR"
-  fi
+  mkdir -p "$(dirname "$FRONTEND_NODE_MODULES_DIR")"
+  mkdir -p "$FRONTEND_NODE_MODULES_DIR"
 
   if [[ -L "$link_path" ]]; then
     current_target="$(normalize_path "$(readlink "$link_path")" "$FRONTEND_DIR")"
@@ -196,38 +192,7 @@ ensure_safrs_jsonapi_client_installed() {
   npm install "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO"
 }
 
-if [[ "$DEPENDENCY_PROVISIONING_MODE" == "preprovisioned-reuse-only" ]]; then
-  ensure_frontend_node_modules_path
-
-  if [[ -z "$BACKEND_VENV_DIR" ]]; then
-    echo "Missing backend dependency root." >&2
-    echo "Set BACKEND_VENV in .runtime.local.env or provide backend/.venv." >&2
-    echo "In preprovisioned-reuse-only mode, ./install.sh will not create a virtualenv." >&2
-    exit 1
-  fi
-
-  if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
-    echo "Missing backend interpreter: $BACKEND_VENV_DIR/bin/python" >&2
-    echo "In preprovisioned-reuse-only mode, ./install.sh will not create or repair the backend venv." >&2
-    exit 1
-  fi
-
-  if ! backend_dependencies_ready "$BACKEND_VENV_DIR/bin/python"; then
-    echo "Backend dependencies are incomplete in $BACKEND_VENV_DIR." >&2
-    echo "Expected fastapi, jsonschema, logic_bank, safrs, and uvicorn to already be installed." >&2
-    exit 1
-  fi
-
-  if ! frontend_dependencies_ready "$FRONTEND_DIR/node_modules"; then
-    echo "Frontend dependencies are incomplete in $FRONTEND_DIR/node_modules." >&2
-    echo "Expected vite, react, react-dom, @playwright/test, the local tmp/safrs-jsonapi-client checkout, and the installed safrs-jsonapi-client package to already exist." >&2
-    echo "In preprovisioned-reuse-only mode, ./install.sh will not run npm or Playwright installers." >&2
-    exit 1
-  fi
-
-  echo "Dependency validation completed for preprovisioned-reuse-only mode."
-  exit 0
-fi
+ensure_frontend_node_modules_path
 
 if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
   echo "Creating backend virtualenv at $BACKEND_VENV_DIR"
@@ -309,8 +274,9 @@ Notes:
 - In `clean-install` mode, the backend venv is the canonical Python runtime.
   `install.sh` MUST create or repair `backend/.venv` or the declared
   `BACKEND_VENV` before the playbook continues.
-- In `preprovisioned-reuse-only` mode, `install.sh` becomes a validator. It
-  MUST NOT create a virtualenv, run pip, run npm, or install Playwright.
+- In `reuse-preferred` mode, `install.sh` SHOULD reuse prepared dependency
+  roots first, but it MAY still create or repair them when they are missing or
+  incomplete.
 - `install.sh` SHOULD be idempotent for the frontend. If `frontend/node_modules`
   already matches `package-lock.json`, it SHOULD skip `npm install` rather than
   reinstalling packages on every run.
@@ -323,12 +289,13 @@ Notes:
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to
   that external directory.
-- In `preprovisioned-reuse-only` mode, the generated app MUST NOT create the
-  external `FRONTEND_NODE_MODULES_DIR` target directory.
+- In `reuse-preferred` mode, the generated app MAY create the external
+  `FRONTEND_NODE_MODULES_DIR` target directory when it is the approved
+  dependency root for the run.
 - Do not symlink whole `backend/` or `frontend/` directories. Only the
   explicit `frontend/node_modules` link is allowed in this local override path.
 - If repeated installs are slow on a mounted or ephemeral filesystem, prefer a
   persistent local-disk npm cache such as `NPM_CONFIG_CACHE="$HOME/.npm"`.
-- `install.sh` SHOULD prepare the Playwright delivery gate only in
-  `clean-install` mode. In `preprovisioned-reuse-only` mode, missing
-  Playwright packages or browser runtimes are an operator block.
+- `install.sh` SHOULD prepare the Playwright delivery gate in both
+  `clean-install` and `reuse-preferred` modes when the browser runtime is
+  needed and missing.

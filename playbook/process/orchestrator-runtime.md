@@ -524,11 +524,11 @@ other required gate blocker.
 
 When
 `runs/current/artifacts/architecture/dependency-provisioning.md` declares
-`mode: preprovisioned-reuse-only`, the orchestrator MUST run a dependency
-preflight before dispatching DevOps, Frontend, or Backend work. If the
-declared prepared dependency roots are missing or incomplete, the orchestrator
-MUST write `runs/current/orchestrator/operator-action-required.md` and stop
-instead of invoking installer behavior indirectly through the roles.
+`mode: reuse-preferred` or the legacy alias `mode: preprovisioned-reuse-only`,
+the orchestrator MUST run a dependency preflight before dispatching DevOps,
+Frontend, or Backend work. If the declared preferred dependency roots are
+missing or incomplete, the orchestrator SHOULD route a repair/install-capable
+turn instead of treating that condition as an automatic operator-action block.
 
 If a newer pending `from: operator` inbox or inflight note exists after an
 earlier `runs/current/orchestrator/operator-action-required.md` was written,

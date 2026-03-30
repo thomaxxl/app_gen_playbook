@@ -21,7 +21,7 @@ PORT_BIND_RETRY_ATTEMPTS = 20
 PORT_BIND_RETRY_DELAY_SECONDS = 0.5
 REQUIRED_REPO_SKILLS = ("playwright-skill", "openapi-to-admin-yaml")
 SAFRS_JSONAPI_CLIENT_REPO_URL = "https://github.com/thomaxxl/safrs-jsonapi-client"
-MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|preprovisioned-reuse-only)\s*$")
+MODE_PATTERN = re.compile(r"(?mi)^mode:\s*(clean-install|reuse-preferred|preprovisioned-reuse-only)\s*$")
 APP_WORKSPACE_DIR_ENV = "APP_WORKSPACE_DIR"
 DEFAULT_APP_WORKSPACE_DIR = "../agp_workspace/app"
 BACKEND_IMPORT_PROBE = (
@@ -107,17 +107,26 @@ def configured_app_workspace_target(repo_root: Path) -> Path:
     return candidate.resolve(strict=False)
 
 
+def normalize_dependency_mode(raw_mode: str) -> str:
+    if raw_mode == "preprovisioned-reuse-only":
+        return "reuse-preferred"
+    if raw_mode in {"clean-install", "reuse-preferred"}:
+        return raw_mode
+    return ""
+
+
 def dependency_provisioning_mode(repo_root: Path) -> str:
     env_mode = runtime_env_value(repo_root, "DEPENDENCY_PROVISIONING_MODE")
-    if env_mode in {"clean-install", "preprovisioned-reuse-only"}:
-        return env_mode
+    normalized_env_mode = normalize_dependency_mode(env_mode)
+    if normalized_env_mode:
+        return normalized_env_mode
     artifact = repo_root / "runs" / "current" / "artifacts" / "architecture" / "dependency-provisioning.md"
     if not artifact.exists():
         return "clean-install"
     match = MODE_PATTERN.search(artifact.read_text(encoding="utf-8"))
     if not match:
         return "clean-install"
-    return match.group(1)
+    return normalize_dependency_mode(match.group(1)) or "clean-install"
 
 
 def backend_venv_dir(repo_root: Path) -> Path:
@@ -264,17 +273,8 @@ def ensure_backend_venv_ready(repo_root: Path) -> tuple[bool, str]:
     requirements_path = backend_requirements_path(repo_root)
     venv_dir = backend_venv_dir(repo_root)
     python_path = backend_python_path(repo_root)
-    mode = dependency_provisioning_mode(repo_root)
     created = False
     installed = False
-
-    if mode == "preprovisioned-reuse-only":
-        if not python_path.exists():
-            return False, f"missing backend python: {python_path}"
-        probe = run_backend_import_probe(python_path)
-        if probe.returncode == 0:
-            return True, f"verified imports via {python_path}"
-        return False, f"dependency imports failed via {python_path}: {(probe.stderr or probe.stdout).strip()}"
 
     if not requirements_path.exists():
         return False, f"missing backend requirements manifest: {requirements_path}"
@@ -595,18 +595,38 @@ def check_playwright_screenshot(repo_root: Path) -> CheckResult:
 
     with tempfile.TemporaryDirectory(prefix="playwright-check-") as tmpdir:
         screenshot_path = Path(tmpdir) / "smoke.png"
+        screenshot_command = [
+            str(playwright_path),
+            "screenshot",
+            "--browser",
+            "chromium",
+            "data:text/html,<html><body><h1>playbook-check</h1></body></html>",
+            str(screenshot_path),
+        ]
         proc = subprocess.run(
-            [
-                str(playwright_path),
-                "screenshot",
-                "--browser",
-                "chromium",
-                "data:text/html,<html><body><h1>playbook-check</h1></body></html>",
-                str(screenshot_path),
-            ],
+            screenshot_command,
             capture_output=True,
             text=True,
         )
+        if proc.returncode != 0:
+            install_proc = subprocess.run(
+                [str(playwright_path), "install", "chromium"],
+                capture_output=True,
+                text=True,
+            )
+            if install_proc.returncode == 0:
+                proc = subprocess.run(
+                    screenshot_command,
+                    capture_output=True,
+                    text=True,
+                )
+            else:
+                return CheckResult(
+                    "playwright_screenshot",
+                    "blocked",
+                    (install_proc.stderr or install_proc.stdout).strip()
+                    or "failed to install the Playwright Chromium runtime",
+                )
         if proc.returncode == 0 and screenshot_path.exists():
             return CheckResult("playwright_screenshot", "ok", f"captured screenshot at {screenshot_path.name}")
         return CheckResult(

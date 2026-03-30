@@ -33,7 +33,8 @@ Convert product requirements into a stable cross-layer contract.
 - define query/search expectations the frontend relies on
 - define test obligations by layer
 - define whether dependency handling is `clean-install` or
-  `preprovisioned-reuse-only`
+  `reuse-preferred` (with `preprovisioned-reuse-only` accepted only as a
+  legacy compatibility alias)
 
 If the run differs from the starter trio, the Architect MUST read
 `playbook/process/rename-starter-trio-checklist.md` during this phase.

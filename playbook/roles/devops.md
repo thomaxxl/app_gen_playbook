@@ -154,22 +154,23 @@ and fold the result into `verification.md`.
 
 When
 `runs/current/artifacts/architecture/dependency-provisioning.md` declares
-`mode: preprovisioned-reuse-only`, DevOps becomes a validator and path
-normalizer, not an installer.
+`mode: reuse-preferred` or the legacy alias
+`mode: preprovisioned-reuse-only`, DevOps prefers reuse and normalization
+first, but it is still allowed to repair missing dependencies.
 
 In that mode:
 
 - DevOps MAY use `BACKEND_VENV` directly or an already-existing
   `app/backend/.venv`
-- DevOps MAY create only the single approved `app/frontend/node_modules`
-  symlink when `FRONTEND_NODE_MODULES_DIR` is set and the target already
-  exists
-- DevOps MUST NOT create the external node_modules target directory
-- DevOps MUST NOT create a backend virtualenv when the chosen backend venv is
-  absent
-- DevOps MUST NOT run package installation commands
-- DevOps MUST stop immediately with a clear block if the prepared dependency
-  roots are missing or incomplete
+- DevOps MAY create the single approved `app/frontend/node_modules` symlink
+  when `FRONTEND_NODE_MODULES_DIR` is set, including creating the target
+  directory when it is the approved dependency root for the run
+- DevOps MAY create or repair the chosen backend virtualenv when it is absent
+  or incomplete
+- DevOps MAY run package installation commands and Playwright browser installs
+  inside the approved dependency roots
+- DevOps SHOULD only stop with a clear block after a local repair/install
+  attempt still fails or the environment cannot support the required runtime
 
 When the backend venv is available, DevOps SHOULD ensure the playbook's Python
 tooling uses that same interpreter instead of drifting onto a separate system
