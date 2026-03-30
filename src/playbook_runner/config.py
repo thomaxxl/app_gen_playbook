@@ -5,6 +5,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+def normalize_runtime_env(raw_value: str) -> str:
+    normalized = raw_value.strip().lower()
+    if normalized == "sandbox":
+        return "sandbox"
+    return "host"
+
+
 @dataclass(frozen=True)
 class ModelConfig:
     fast: str
@@ -61,7 +68,7 @@ class RunnerConfig:
             poll_seconds=int(os.getenv("POLL_SECONDS", "1")),
             lease_seconds=int(os.getenv("LEASE_SECONDS", "600")),
             timeout_seconds=int(os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1500")),
-            runtime_env=os.getenv("PLAYBOOK_RUNTIME_ENV", "host"),
+            runtime_env=normalize_runtime_env(os.getenv("PLAYBOOK_RUNTIME_ENV", "host")),
             auto_start_app=os.getenv("PLAYBOOK_AUTO_START_APP", "1") == "1",
             enable_parallel_workers=os.getenv("PLAYBOOK_ENABLE_PARALLEL_WORKERS", "0") == "1",
             models=models,

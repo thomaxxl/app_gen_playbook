@@ -146,11 +146,15 @@ Resume is allowed only when:
 
 - the stored role cwd still matches the role-local working directory
 - a stored `resume_id` exists
+- the stored Codex sandbox mode still matches the current runtime mode
 - every current resolved writable root is already inside the stored session
   root set
 
 If a turn needs any new writable root, the orchestrator MUST start a fresh
-session for that turn and update the stored session roots afterward.
+session for that turn and update the stored session roots afterward. It MUST
+also start a fresh session if the previous session was created in sandbox mode
+and the current turn is now running in host mode, because `codex exec resume`
+cannot widen a sandboxed session into a host-capable one.
 
 ## Model-selection rule
 
@@ -174,6 +178,11 @@ default to `host`. `sandbox` remains an explicit opt-out for environments
 where host-side bind, app startup, or browser capture is intentionally
 unavailable.
 
+When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST launch Codex turns in
+host-capable mode rather than leaving them in the default sandbox, otherwise
+browser/runtime prereqs can pass while the actual role turns still fail inside
+a narrower execution context.
+
 If the runtime env was only the implicit default and host-mode execution
 preflight proves the current execution context forbids localhost bind
 validation, the orchestrator SHOULD auto-pivot to
@@ -195,6 +204,11 @@ That artifact SHOULD at minimum capture:
 - whether localhost bind succeeds for the declared frontend and backend ports
 - whether the approved backend runtime path can import the required FastAPI
   stack
+
+If a stale `operator-action-required.md` only tells the operator to rerun in
+host mode, and host-mode execution prereqs now pass in the current runner
+context, the orchestrator SHOULD clear that stale note automatically before
+dispatching roles.
 
 The playbook SHOULD also maintain a DevOps-owned execution-environment
 prerequisite artifact under:

@@ -157,6 +157,7 @@ class Orchestrator:
             python_bin=python_bin,
             timeout_seconds=config.timeout_seconds,
             reasoning_effort=config.models.reasoning_effort,
+            runtime_env=config.runtime_env,
             yolo=request.yolo,
         )
         self.python_bin = python_bin
@@ -227,6 +228,20 @@ class Orchestrator:
             encoding="utf-8",
         )
 
+    def write_runtime_environment_state(self) -> None:
+        source = "default"
+        if os.getenv("PLAYBOOK_RUNTIME_ENV", "").strip():
+            source = "environment"
+        payload = {
+            "runtime_env": self.config.runtime_env,
+            "source": source,
+            "runner_epoch": self.utc_now(),
+            "sandbox_mode": self.codex.sandbox_mode(),
+            "yolo": self.request.yolo,
+        }
+        self.paths.runtime_environment_json.parent.mkdir(parents=True, exist_ok=True)
+        self.paths.runtime_environment_json.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
     def blocked_exit(self, title: str, body: str) -> int:
         self.append_remark(title, body)
         self.set_run_status("blocked")
@@ -242,6 +257,7 @@ class Orchestrator:
         artifact.parent.mkdir(parents=True, exist_ok=True)
         ok, detail = self.tools.check_execution_prereqs(output=artifact, run_mode=self.run_mode_name)
         if ok:
+            self.clear_stale_runtime_operator_note()
             return
         body = (
             "Execution environment preflight failed before run startup.\n\n"
@@ -250,6 +266,20 @@ class Orchestrator:
         )
         self.write_operator_action_required("execution prereqs failed", body)
         self.blocked_exit("run requires operator action", body)
+
+    def clear_stale_runtime_operator_note(self) -> None:
+        note_path = self.paths.operator_action_required_md
+        if self.config.runtime_env != "host" or not note_path.exists():
+            return
+        note_text = note_path.read_text(encoding="utf-8")
+        if "PLAYBOOK_RUNTIME_ENV=host" not in note_text and "host execution context" not in note_text:
+            return
+        note_path.unlink()
+        self.append_remark(
+            "Cleared stale runtime operator block",
+            "Removed `runs/current/orchestrator/operator-action-required.md` after host-mode "
+            "execution prereqs passed in the current runner context.",
+        )
 
     def start_dashboard_sidecar(self) -> None:
         if os.getenv("RUN_DASHBOARD_ENABLED", "1") != "1":
@@ -313,6 +343,7 @@ class Orchestrator:
         self.tools.session_init(self.paths.sessions_json)
         self.tools.session_clear(self.paths.sessions_json)
         self.tools.init_run(mode=self.run_mode_name, scope_profile=self.request.scope)
+        self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
 
     def seed_change_run(self) -> None:
@@ -348,6 +379,7 @@ class Orchestrator:
         self.tools.snapshot_app_baseline(output=baseline_output)
         self.tools.init_run(mode=self.run_mode_name, scope_profile=self.request.scope, change_id=self.active_change_id)
         self.set_run_status("active", "phase-I1-change-intake-and-triage")
+        self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
 
     def load_run_status(self) -> dict[str, object]:
@@ -374,6 +406,7 @@ class Orchestrator:
         self.request.scope = str(payload.get("scope_profile", "")).strip() or self.request.scope
         self.clear_steering_requests_on_startup()
         self.set_run_status("active")
+        self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
         complete, _ = self.tools.check_completion()
         if not complete and self.queue.pending_actionable_count(self.active_roles()) == 0:
@@ -521,6 +554,10 @@ class Orchestrator:
         if not isinstance(stored_roots, list) or not all(isinstance(item, str) for item in stored_roots):
             return "", []
 
+        stored_sandbox_mode = str(entry.get("sandbox_mode", "")).strip() or "sandbox"
+        if stored_sandbox_mode != self.codex.sandbox_mode():
+            return "", []
+
         current_roots = canonical_add_dir_keys(add_dirs)
         if not current_roots:
             return resume_id, list(stored_roots)
@@ -633,6 +670,7 @@ class Orchestrator:
             model or "<default>",
             role_dir,
             writable_roots=session_roots,
+            sandbox_mode=self.codex.sandbox_mode(),
         )
         self.tools.sync_session(role=runtime_role, registry=self.paths.sessions_json)
         self.validate_role_outputs(runtime_role, snapshot_file, validation_file, message_path)

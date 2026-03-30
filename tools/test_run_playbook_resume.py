@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -221,6 +222,43 @@ class RunPlaybookResumeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
             self.assertFalse((orch_root / "pause-requested.md").exists())
             self.assertFalse((orch_root / "kill-requested.md").exists())
+
+    def test_resume_clears_stale_host_runtime_operator_note_when_prereqs_pass(self) -> None:
+        source_repo = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+            copy_runner(source_repo, repo_root)
+            seed_minimal_tools(repo_root, completion_rc=0)
+
+            orch_root = repo_root / "runs" / "current" / "orchestrator"
+            orch_root.mkdir(parents=True, exist_ok=True)
+            (orch_root / "run-status.json").write_text(
+                '{"mode":"iterative-change-run","scope_profile":"frontend-only","status":"blocked"}\n',
+                encoding="utf-8",
+            )
+            operator_note = orch_root / "operator-action-required.md"
+            operator_note.write_text(
+                "# Operator Action Required\n\n"
+                "Resume the run from a host execution context.\n"
+                "Set `PLAYBOOK_RUNTIME_ENV=host` before resuming.\n",
+                encoding="utf-8",
+            )
+
+            env = dict(os.environ)
+            env["PLAYBOOK_RUNTIME_ENV"] = "host"
+            result = subprocess.run(
+                ["bash", "scripts/run_playbook.sh", "--resume"],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+            self.assertFalse(operator_note.exists())
 
     def test_new_run_seeds_input_and_product_manager_inbox(self) -> None:
         source_repo = Path(__file__).resolve().parents[1]

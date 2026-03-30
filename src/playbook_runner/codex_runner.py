@@ -13,12 +13,27 @@ class CodexResult:
 
 
 class CodexRunner:
-    def __init__(self, *, repo_root: Path, python_bin: str, timeout_seconds: int, reasoning_effort: str, yolo: bool):
+    def __init__(
+        self,
+        *,
+        repo_root: Path,
+        python_bin: str,
+        timeout_seconds: int,
+        reasoning_effort: str,
+        runtime_env: str,
+        yolo: bool,
+    ):
         self.repo_root = repo_root
         self.python_bin = python_bin
         self.timeout_seconds = timeout_seconds
         self.reasoning_effort = reasoning_effort
+        self.runtime_env = runtime_env
         self.yolo = yolo
+
+    def sandbox_mode(self) -> str:
+        if self.yolo or self.runtime_env == "host":
+            return "bypass"
+        return "sandbox"
 
     def run(
         self,
@@ -34,7 +49,7 @@ class CodexRunner:
         codex_cmd: list[str] = ["codex", "exec"]
         if resume_id:
             codex_cmd.extend(["resume", resume_id])
-        if self.yolo:
+        if self.sandbox_mode() == "bypass":
             codex_cmd.append("--dangerously-bypass-approvals-and-sandbox")
         if model:
             codex_cmd.extend(["--model", model])

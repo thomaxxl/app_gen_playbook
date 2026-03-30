@@ -141,6 +141,7 @@ class LegacyTools:
         cwd: Path,
         *,
         writable_roots: list[str] | None = None,
+        sandbox_mode: str = "sandbox",
     ) -> None:
         args = [
             "session_registry.py",
@@ -155,6 +156,8 @@ class LegacyTools:
             model,
             "--cwd",
             str(cwd),
+            "--sandbox-mode",
+            sandbox_mode,
         ]
         for root in writable_roots or []:
             args.extend(["--writable-root", root])

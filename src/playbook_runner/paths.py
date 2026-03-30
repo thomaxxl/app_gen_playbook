@@ -89,6 +89,10 @@ class PlaybookPaths:
         return self.run_root / "evidence" / "host-runtime-verification.md"
 
     @property
+    def runtime_environment_json(self) -> Path:
+        return self.orchestrator_root / "runtime-environment.json"
+
+    @property
     def frontend_browser_proof_md(self) -> Path:
         return self.run_root / "evidence" / "frontend-browser-proof.md"
 
