@@ -5,13 +5,22 @@ import sys
 from pathlib import Path
 
 
+def _compact_failure_output(output: str) -> str:
+    lines = [line.rstrip() for line in output.strip().splitlines() if line.strip()]
+    if not lines:
+        return ""
+    trimmed = lines[-20:]
+    return "\n".join(trimmed)
+
+
 def codex_failure_message(jsonl_path: Path, result_path: Path) -> str | None:
     turn_failed_errors: list[str] = []
     stream_errors: list[str] = []
+    command_failures: list[str] = []
     turn_completed = False
 
     if jsonl_path.exists():
-        for raw_line in jsonl_path.read_text(encoding="utf-8").splitlines():
+        for raw_line in jsonl_path.read_text(encoding="utf-8", errors="replace").splitlines():
             line = raw_line.strip()
             if not line:
                 continue
@@ -31,9 +40,31 @@ def codex_failure_message(jsonl_path: Path, result_path: Path) -> str | None:
                 message = obj.get("message")
                 if isinstance(message, str) and message:
                     stream_errors.append(message)
+            elif event_type == "item.completed":
+                item = obj.get("item", {})
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") != "command_execution" or item.get("status") != "failed":
+                    continue
+                aggregated_output = item.get("aggregated_output")
+                if isinstance(aggregated_output, str):
+                    compact = _compact_failure_output(aggregated_output)
+                    if compact:
+                        command_failures.append(compact)
+                        continue
+                command = item.get("command")
+                exit_code = item.get("exit_code")
+                if isinstance(command, str) and command:
+                    if isinstance(exit_code, int):
+                        command_failures.append(f"command failed with exit code {exit_code}: {command}")
+                    else:
+                        command_failures.append(f"command failed: {command}")
 
     if turn_failed_errors:
         return turn_failed_errors[-1]
+
+    if command_failures:
+        return command_failures[-1]
 
     if not result_path.exists():
         return f"missing final result file: {result_path}"

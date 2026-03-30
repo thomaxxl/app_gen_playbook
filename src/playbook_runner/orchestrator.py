@@ -637,12 +637,19 @@ class Orchestrator:
                 self.append_remark("Codex usage limit interrupted role execution", body)
                 self.set_run_status("interrupted")
                 raise RunnerError(f"Codex temporarily unavailable for role {runtime_role}: {detail}")
+            body = (
+                f"Role:\n- {runtime_role}\n\n"
+                f"Message:\n- {message_path.name}\n\n"
+                f"Return code:\n- {codex_result.returncode}"
+                + (f"\n\nDetail:\n```\n{detail}\n```" if detail else "")
+                + "\n\nThe claimed message was left in `inflight/` so a later `--resume` can retry or continue from this turn."
+            )
             self.append_remark(
                 "Role execution failed",
-                f"Role:\n- {runtime_role}\n\nMessage:\n- {message_path.name}\n\nReturn code:\n- {codex_result.returncode}"
-                + (f"\n\nDetail:\n- {detail}" if detail else ""),
+                body,
             )
-            raise RunnerError(f"Codex failed for role {runtime_role}")
+            self.set_run_status("interrupted")
+            raise RunnerError(f"Codex interrupted for role {runtime_role}: {detail or f'exit code {codex_result.returncode}'}")
 
         if not ok:
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
@@ -657,11 +664,18 @@ class Orchestrator:
                 self.append_remark("Codex usage limit interrupted role execution", body)
                 self.set_run_status("interrupted")
                 raise RunnerError(f"Codex temporarily unavailable for role {runtime_role}: {detail}")
+            body = (
+                f"Role:\n- {runtime_role}\n\n"
+                f"Message:\n- {message_path.name}\n\n"
+                f"Error:\n```\n{detail or 'unknown codex error'}\n```\n\n"
+                "The claimed message was left in `inflight/` so a later `--resume` can retry or continue from this turn."
+            )
             self.append_remark(
                 "Role execution failed",
-                f"Role:\n- {runtime_role}\n\nMessage:\n- {message_path.name}\n\nError:\n- {detail or 'unknown codex error'}",
+                body,
             )
-            raise RunnerError(f"Codex output invalid for role {runtime_role}")
+            self.set_run_status("interrupted")
+            raise RunnerError(f"Codex interrupted for role {runtime_role}: {detail or 'unknown codex error'}")
 
         self.tools.session_record_from_jsonl(
             self.paths.sessions_json,

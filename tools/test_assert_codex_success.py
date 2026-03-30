@@ -77,6 +77,27 @@ class AssertCodexSuccessTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("missing final result file", result.stdout)
 
+    def test_failed_command_output_beats_missing_result_file(self) -> None:
+        result = self.run_script(
+            [
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "status": "failed",
+                        "command": "node run.js /tmp/proof.js",
+                        "aggregated_output": "Error: Quiet Current did not persist status=ready.\n",
+                        "exit_code": 1,
+                    },
+                }
+            ],
+            None,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Quiet Current did not persist status=ready.", result.stdout)
+        self.assertNotIn("missing final result file", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

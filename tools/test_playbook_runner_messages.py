@@ -10,6 +10,7 @@ from playbook_runner.config import ModelConfig, RunnerConfig
 from playbook_runner.codex_runner import CodexRunner, expand_add_dirs
 from playbook_runner.messages import Message, message_indicates_progress, message_requires_phase5_ready
 from playbook_runner.orchestrator import Orchestrator, RunRequest, add_dir_from_rule, is_retryable_codex_failure
+from playbook_runner.queue_store import ClaimedMessage
 
 
 class PlaybookRunnerMessageTests(unittest.TestCase):
@@ -467,6 +468,59 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
 
     def test_retryable_codex_failure_rejects_generic_role_error(self) -> None:
         self.assertFalse(is_retryable_codex_failure("role diff validation failed for backend"))
+
+    def test_run_role_once_surfaces_failed_command_detail_and_marks_run_interrupted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "frontend" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: backend\nto: frontend\ntopic: review-data-lane-ready\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="frontend", path=message_path, message=Message.parse(message_path))
+
+            with patch.object(orchestrator.queue, "claim_next", return_value=claim), \
+                patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})), \
+                patch.object(orchestrator.tools, "start_worker"), \
+                patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
+                patch.object(orchestrator.tools, "build_prompt"), \
+                patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]), \
+                patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=1, timed_out=False)), \
+                patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "Quiet Current did not persist status=ready.")), \
+                patch.object(orchestrator.tools, "finish_worker") as finish_worker, \
+                patch.object(orchestrator, "set_run_status") as set_run_status, \
+                patch.object(orchestrator, "append_remark"), \
+                patch.object(orchestrator, "log_line"):
+                with self.assertRaisesRegex(RuntimeError, "Codex interrupted for role frontend: Quiet Current did not persist status=ready\\."):
+                    orchestrator.run_role_once("frontend")
+
+            finish_worker.assert_called_once_with(role="frontend", status="interrupted", claimed_message=message_path.name)
+            set_run_status.assert_called_once_with("interrupted")
 
 
 if __name__ == "__main__":
