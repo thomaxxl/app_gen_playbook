@@ -72,10 +72,10 @@ def reviewable_image_files(screenshots_dir: Path) -> list[Path]:
     )
 
 
-def run_script_capture(frontend_root: Path, screenshots_dir: Path, manifest_path: Path) -> tuple[bool, str]:
+def run_script_capture(frontend_root: Path, screenshots_dir: Path, manifest_path: Path) -> tuple[bool, str, str]:
     npm_path = shutil.which("npm")
     if npm_path is None:
-        return False, "npm is not available in PATH"
+        return False, "npm is not available in PATH", "environment-blocked"
 
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
@@ -93,26 +93,26 @@ def run_script_capture(frontend_root: Path, screenshots_dir: Path, manifest_path
     except subprocess.TimeoutExpired as exc:
         detail = (exc.stderr or exc.stdout or "").strip()
         if detail:
-            return False, f"timed out after {SCRIPT_CAPTURE_TIMEOUT_SECONDS}s: {detail}"
-        return False, f"timed out after {SCRIPT_CAPTURE_TIMEOUT_SECONDS}s"
+            return False, f"timed out after {SCRIPT_CAPTURE_TIMEOUT_SECONDS}s: {detail}", "runtime-failed"
+        return False, f"timed out after {SCRIPT_CAPTURE_TIMEOUT_SECONDS}s", "runtime-failed"
 
     detail = (proc.stderr or proc.stdout).strip()
     capture_state = read_manifest_capture_status(manifest_path)
     images = reviewable_image_files(screenshots_dir)
     if proc.returncode == 0 and capture_state == "captured" and images:
-        return True, detail or "captured ui previews via npm run capture:ui-previews"
+        return True, detail or "captured ui previews via npm run capture:ui-previews", "captured"
 
     if proc.returncode == 0 and capture_state != "captured":
         message = f"capture script finished but manifest reported capture_status={capture_state or 'missing'}"
         if detail:
             message = f"{message}: {detail}"
-        return False, message
+        return False, message, capture_state or "runtime-failed"
     if proc.returncode == 0 and not images:
-        return False, detail or "capture script finished but did not write reviewable image files"
-    return False, detail or "npm run capture:ui-previews failed"
+        return False, detail or "capture script finished but did not write reviewable image files", "runtime-failed"
+    return False, detail or "npm run capture:ui-previews failed", capture_state or "runtime-failed"
 
 
-def run_capture(frontend_root: Path, url: str, output_path: Path) -> tuple[bool, str]:
+def run_capture(frontend_root: Path, url: str, output_path: Path) -> tuple[bool, str, str]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     script = f"""
 import {{ chromium }} from "playwright";
@@ -146,15 +146,17 @@ try {{
             text=True,
             timeout=CAPTURE_TIMEOUT_SECONDS,
         )
+    except FileNotFoundError:
+        return False, "node is not available in PATH", "environment-blocked"
     except subprocess.TimeoutExpired as exc:
         detail = (exc.stderr or exc.stdout or "").strip()
         if detail:
-            return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s: {detail}"
-        return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s"
+            return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s: {detail}", "runtime-failed"
+        return False, f"timed out after {CAPTURE_TIMEOUT_SECONDS}s", "runtime-failed"
     detail = (proc.stderr or proc.stdout).strip()
     if proc.returncode == 0 and output_path.exists():
-        return True, detail or f"captured {output_path.name}"
-    return False, detail or "playwright screenshot failed"
+        return True, detail or f"captured {output_path.name}", "captured"
+    return False, detail or "playwright screenshot failed", "runtime-failed"
 
 
 def write_manifest(manifest_path: Path, status: str, command: str, captured: list[tuple[str, str, str]], failures: list[tuple[str, str, str]]) -> None:
@@ -249,9 +251,9 @@ def main() -> int:
 
     if has_ui_preview_capture_script(frontend_root):
         command = "npm run capture:ui-previews"
-        ok, detail = run_script_capture(frontend_root, screenshots_dir, manifest_path)
+        ok, detail, inferred_status = run_script_capture(frontend_root, screenshots_dir, manifest_path)
         preview_files = [path.name for path in reviewable_image_files(screenshots_dir)]
-        status = read_manifest_capture_status(manifest_path) or ("captured" if ok else "environment-blocked")
+        status = read_manifest_capture_status(manifest_path) or inferred_status
         write_browser_proof(
             output_path,
             status,
@@ -276,17 +278,24 @@ def main() -> int:
     command = "node --input-type=module -e <playwright_capture_script> <url> <file>"
     captured: list[tuple[str, str, str]] = []
     failures: list[tuple[str, str, str]] = []
+    failure_states: list[str] = []
 
     for label, route in routes:
         url = normalize_url(args.base_url, route)
         filename = f"{label}.png"
-        ok, detail = run_capture(frontend_root, url, screenshots_dir / filename)
+        ok, detail, failure_state = run_capture(frontend_root, url, screenshots_dir / filename)
         if ok:
             captured.append((label, url, filename))
         else:
             failures.append((label, url, detail))
+            failure_states.append(failure_state)
 
-    status = "captured" if captured and not failures else "environment-blocked"
+    if captured and not failures:
+        status = "captured"
+    elif failures and all(state == "environment-blocked" for state in failure_states):
+        status = "environment-blocked"
+    else:
+        status = "runtime-failed"
     write_manifest(manifest_path, status, command, captured, failures)
     write_browser_proof(
         output_path,

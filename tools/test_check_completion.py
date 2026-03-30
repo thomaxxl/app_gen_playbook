@@ -674,6 +674,53 @@ class CheckCompletionTests(unittest.TestCase):
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
             self.assertTrue(any(blocker["kind"] == "ui-preview-images-missing" for blocker in matching))
 
+    def test_accepts_runtime_failed_ui_preview_manifest_capture_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "\n".join(
+                    [
+                        "# Contract Samples",
+                        "",
+                        "## SAFRS resource coverage",
+                        "- discovered from /jsonapi.json",
+                        "",
+                        "## Relationship coverage",
+                        "- relationship proof present",
+                        "",
+                        "## Approved non-SAFRS exceptions",
+                        "- none",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: runtime-failed\n",
+            )
+            write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/quality-summary.md", "present\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
+            self.assertFalse(any(blocker["kind"] == "ui-preview-manifest-unstructured" for blocker in matching))
+
     def test_accepts_bulleted_ui_preview_manifest_capture_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -844,6 +891,52 @@ class CheckCompletionTests(unittest.TestCase):
             blockers = collect_blockers(repo_root)
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
             self.assertTrue(any(blocker["kind"] == "ui-preview-fallback-invalid" for blocker in matching))
+
+    def test_runtime_failed_preview_manifest_is_allowed_but_still_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/devops/execution-prereqs.md",
+                "\n".join(
+                    [
+                        "# Execution Environment Prerequisites",
+                        "",
+                        "- `playwright_screenshot`: `ok` (required)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/frontend/package.json",
+                '{\n  "scripts": {\n    "capture:ui-previews": "playwright test ui-previews.e2e.spec.ts"\n  }\n}\n',
+            )
+            write_file(repo_root / "runs/current/evidence/contract-samples.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/frontend-usability.md", "reviewed\n")
+            write_file(repo_root / "runs/current/evidence/frontend-browser-proof.md", "reviewed\n")
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: runtime-failed\n",
+            )
+            write_file(repo_root / "runs/current/evidence/quality/crud-matrix.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/data-sourcing-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/seed-data-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/ui-copy-audit.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/test-results.md", "present\n")
+            write_file(repo_root / "runs/current/evidence/quality/quality-summary.md", "present\n")
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
+            self.assertFalse(any(blocker["kind"] == "ui-preview-manifest-unstructured" for blocker in matching))
+            self.assertTrue(any(blocker["kind"] == "ui-preview-runtime-failed" for blocker in matching))
 
     def test_reports_backend_orm_safrs_audit_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

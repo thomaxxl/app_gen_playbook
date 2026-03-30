@@ -41,6 +41,48 @@ def seed_minimal_tools(repo_root: Path, *, completion_rc: int = 0) -> None:
         ),
     )
     write_executable(
+        tools_dir / "orchestrator_common.py",
+        textwrap.dedent(
+            """\
+            def parse_message_headers(message_text):
+                headers = {}
+                for line in message_text.splitlines():
+                    if not line.strip():
+                        break
+                    if ":" not in line:
+                        break
+                    key, value = line.split(":", 1)
+                    headers[key.strip().lower()] = value.strip()
+                return headers
+
+            def parse_message_sections(message_text, headers=None):
+                sections = {}
+                current = None
+                for line in message_text.splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("## "):
+                        current = stripped[3:].strip().lower()
+                        sections[current] = []
+                        continue
+                    if current and stripped.startswith("- "):
+                        sections[current].append(stripped[2:].strip())
+                return sections
+            """
+        ),
+    )
+    write_executable(
+        tools_dir / "routing_resolver.py",
+        textwrap.dedent(
+            """\
+            def resolve_read_packet(repo_root, runtime_role, **kwargs):
+                return {"read_paths": []}
+
+            def resolve_writable_paths(repo_root, runtime_role, **kwargs):
+                return [f"runs/current/role-state/{runtime_role}/**"]
+            """
+        ),
+    )
+    write_executable(
         tools_dir / "checkpoint_run_state.py",
         textwrap.dedent(
             """\

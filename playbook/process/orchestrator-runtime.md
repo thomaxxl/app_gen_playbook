@@ -30,7 +30,8 @@ The orchestrator MUST:
 - process exactly one inbox message per Codex role invocation
 - keep durable run state in artifacts, inbox traces, and role-local
   `context.md`
-- use Codex session resume only as a speed and continuity layer
+- start a fresh Codex exec session for each role turn so the sandbox and
+  writable roots always match the resolved routing packet for that message
 - log visible start and finish lines for every agent turn
 - stop and surface a clear reason when the run becomes non-progressing
 - treat missing or placeholder quality evidence as a gate blocker, not as an
@@ -68,7 +69,7 @@ That start log MUST include at least:
 - runtime role
 - inbox filename
 - model
-- whether the invocation is a fresh session or a resumed session
+- whether the invocation is a fresh session
 
 For every successful Codex role invocation, the orchestrator MUST emit a
 visible finish log line.
@@ -133,13 +134,11 @@ The role-local durable source of truth remains:
 
 Codex session history MUST NOT be treated as authoritative run state.
 
-If a stored session cannot be resumed cleanly, the orchestrator MAY discard the
-stored session id for that role and start a fresh session.
-
-On the currently installed Codex CLI, `codex exec resume` MUST NOT be invoked
-with `--cd` or `--add-dir`. Fresh sessions MAY use those flags to establish
-the role-local workspace and writable roots, but resumed sessions MUST rely on
-the persisted session context instead.
+The orchestrator SHOULD keep per-role session records only as audit/debug
+evidence. It MUST NOT rely on `codex exec resume` for normal turn dispatch,
+because the installed Codex CLI cannot widen `--cd` / `--add-dir` roots on a
+resumed session and that would let the sandbox drift away from the resolved
+routing packet.
 
 ## Model-selection rule
 

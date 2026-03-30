@@ -21,7 +21,8 @@ The authoritative recovery state is:
 - `runs/current/orchestrator/run-status.json`
 - worker state under `runs/current/orchestrator/workers/`
 
-Codex session continuity is only an acceleration layer.
+Codex session continuity is not part of the normal dispatch path. Any stored
+session ids are diagnostic only.
 
 ## Recovery algorithm
 
@@ -48,16 +49,7 @@ A role turn is complete only when all of these are true:
 
 ## Resume policy
 
-Resume the same Codex session only when:
-
-- a stored session id exists
-- the claimed inflight item still exists
-- the session can be resumed cleanly
-- there is no ownership-violation evidence
-
-Rebuild from repo state when:
-
-- no session id exists
-- session resume fails
-- the run state is inconsistent
-- the interrupted role left partial writes that need review
+Always rebuild the next turn from repo state and the claimed inbox/inflight
+item. Ignore stored session ids for normal recovery, because resumed Codex
+sessions cannot widen the writable sandbox to match a newly resolved routing
+packet.

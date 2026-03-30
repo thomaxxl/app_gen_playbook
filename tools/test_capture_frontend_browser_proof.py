@@ -52,10 +52,11 @@ class CaptureFrontendBrowserProofTests(unittest.TestCase):
 
             with patch("capture_frontend_browser_proof.shutil.which", return_value="/usr/bin/npm"):
                 with patch("capture_frontend_browser_proof.subprocess.run", side_effect=fake_run):
-                    ok, detail = run_script_capture(frontend_root, screenshots_dir, manifest_path)
+                    ok, detail, status = run_script_capture(frontend_root, screenshots_dir, manifest_path)
 
             self.assertTrue(ok)
             self.assertIn("ok", detail)
+            self.assertEqual(status, "captured")
             self.assertEqual(read_manifest_capture_status(manifest_path), "captured")
 
     def test_run_script_capture_rejects_environment_blocked_manifest(self) -> None:
@@ -81,10 +82,38 @@ class CaptureFrontendBrowserProofTests(unittest.TestCase):
 
             with patch("capture_frontend_browser_proof.shutil.which", return_value="/usr/bin/npm"):
                 with patch("capture_frontend_browser_proof.subprocess.run", side_effect=fake_run):
-                    ok, detail = run_script_capture(frontend_root, screenshots_dir, manifest_path)
+                    ok, detail, status = run_script_capture(frontend_root, screenshots_dir, manifest_path)
 
             self.assertFalse(ok)
             self.assertIn("capture_status=environment-blocked", detail)
+            self.assertEqual(status, "environment-blocked")
+
+    def test_run_script_capture_defaults_runtime_failed_when_script_exits_nonzero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            frontend_root = Path(tmp) / "frontend"
+            screenshots_dir = Path(tmp) / "evidence" / "ui-previews"
+            manifest_path = screenshots_dir / "manifest.md"
+            frontend_root.mkdir(parents=True, exist_ok=True)
+            write_file(
+                frontend_root / "package.json",
+                '{\n  "scripts": {\n    "capture:ui-previews": "playwright test ui-previews.e2e.spec.ts"\n  }\n}\n',
+            )
+
+            def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+                class Result:
+                    returncode = 1
+                    stdout = ""
+                    stderr = "Chromium exited before first render"
+
+                return Result()
+
+            with patch("capture_frontend_browser_proof.shutil.which", return_value="/usr/bin/npm"):
+                with patch("capture_frontend_browser_proof.subprocess.run", side_effect=fake_run):
+                    ok, detail, status = run_script_capture(frontend_root, screenshots_dir, manifest_path)
+
+            self.assertFalse(ok)
+            self.assertIn("Chromium exited before first render", detail)
+            self.assertEqual(status, "runtime-failed")
 
     def test_reads_bulleted_manifest_capture_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

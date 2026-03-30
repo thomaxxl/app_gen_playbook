@@ -85,9 +85,15 @@ readiness note in:
 - write `runs/current/evidence/frontend-browser-proof.md` as the canonical
   browser-level proof record for the live launcher path
 - maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
-  absence is explicitly classified as `captured`, `not-required`, or
-  `environment-blocked`, and so captured previews include content-validation
-  status, role signoff, and a review conclusion
+  absence is explicitly classified as `captured`, `not-required`,
+  `environment-blocked`, or `runtime-failed`
+- use `runtime-failed` when preview prerequisites and browser execution were
+  proven, but the canonical capture lane still crashed or failed before any
+  reviewable render or screenshot could be produced
+- keep `runtime-failed` gate-blocking; it records a real browser/app delivery
+  defect, not an acceptable environment exemption
+- ensure captured previews include content-validation status, role signoff,
+  and a review conclusion
 - record the reviewed user-facing surfaces and usability conclusion in
   `runs/current/evidence/frontend-usability.md`
 - verify rules across create/update/delete/reparent flows
@@ -146,10 +152,13 @@ readiness note in:
 - `environment-blocked` is not an acceptable preview result when the
   execution-environment prerequisites already proved Playwright screenshot
   capture is available and the generated app exposes `capture:ui-previews`
+- `runtime-failed` is an allowed preview-manifest state only for
+  post-preflight capture-lane failures, and it remains a blocking result until
+  the canonical preview lane produces reviewable output
 - `runs/current/evidence/frontend-browser-proof.md` records the browser-level
   launcher proof for the generated app's actual reviewable surfaces,
   preferably through the app-provided preview-capture script, or records the
-  exact environment-blocked fallback
+  exact `environment-blocked` or `runtime-failed` result
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
@@ -210,6 +219,9 @@ Integration review fails when:
 - the quality evidence pack is missing or contradictory
 - captured preview evidence is missing content analysis or required
   Frontend/Architect signoff
+- the preview manifest records `runtime-failed`, because that state means the
+  canonical preview lane was available but still failed before reviewable
+  output
 - a required dynamic surface is implemented with hardcoded frontend data
   instead of the approved API-backed contract
 - delivery page code bypasses the approved React-admin dataProvider boundary

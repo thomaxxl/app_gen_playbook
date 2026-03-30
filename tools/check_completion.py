@@ -77,7 +77,7 @@ FRONTEND_EVIDENCE_OUTPUTS = {
     "runs/current/evidence/ui-previews/manifest.md",
 }
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
-UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked"}
+UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked", "runtime-failed"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
     r"(?im)^(?:-\s*)?capture_status:\s*([a-z0-9_-]+)\s*$"
@@ -628,7 +628,7 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         "path": relative_path,
                         "owner": owner,
                         "phase": phase,
-                        "reason": "ui preview manifest must declare capture_status as captured, not-required, or environment-blocked",
+                        "reason": "ui preview manifest must declare capture_status as captured, not-required, environment-blocked, or runtime-failed",
                     }
                 )
                 continue
@@ -644,6 +644,17 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         "owner": owner,
                         "phase": phase,
                         "reason": "ui preview manifest claims environment-blocked even though execution prereqs prove Playwright capture is available and the app exposes capture:ui-previews",
+                    }
+                )
+                continue
+            if capture_state == "runtime-failed":
+                blockers.append(
+                    {
+                        "kind": "ui-preview-runtime-failed",
+                        "path": relative_path,
+                        "owner": owner,
+                        "phase": phase,
+                        "reason": "ui preview manifest records runtime-failed; the canonical preview lane reached execution but still failed before producing reviewable output",
                     }
                 )
                 continue

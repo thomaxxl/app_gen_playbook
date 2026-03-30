@@ -11,6 +11,8 @@ import time
 from typing import Iterable
 
 from execution_scope import active_scope_roles
+from orchestrator_common import parse_message_headers, parse_message_sections
+from routing_resolver import resolve_read_packet, resolve_writable_paths
 
 from .codex_runner import CodexRunner
 from .config import RunnerConfig
@@ -41,16 +43,6 @@ ROLE_FILES = {
     "ceo": "playbook/roles/ceo.md",
 }
 
-ROLE_ADD_DIRS = {
-    "product_manager": ["runs/current/artifacts/product", "runs/current/changes", "runs/current/role-state", "app"],
-    "architect": ["runs/current/artifacts/architecture", "runs/current/changes", "runs/current/role-state", "app"],
-    "frontend": ["runs/current/artifacts/ux", "runs/current/changes", "runs/current/role-state", "app/frontend"],
-    "backend": ["runs/current/artifacts/backend-design", "runs/current/changes", "runs/current/role-state", "app/backend", "app/rules", "app/reference"],
-    "qa": ["runs/current/artifacts", "runs/current/evidence", "runs/current/role-state", "app"],
-    "deployment": ["runs/current/artifacts/devops", "runs/current/changes", "runs/current/role-state", "app"],
-    "ceo": ["runs/current/artifacts", "runs/current/changes", "runs/current/role-state", "runs/current", "app", "playbook", "scripts", "tools"],
-}
-
 ROLE_DISPLAY = {
     "product_manager": "product-manager",
     "architect": "architect",
@@ -79,6 +71,8 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
     "too many requests",
 )
 
+WILDCARD_CHARS = set("*?[")
+
 
 @dataclass
 class RunRequest:
@@ -99,6 +93,35 @@ def is_retryable_codex_failure(detail: str) -> bool:
     if not normalized:
         return False
     return any(marker in normalized for marker in RETRYABLE_CODEX_FAILURE_MARKERS)
+
+
+def add_dir_from_rule(repo_root: Path, rule: str) -> Path | None:
+    normalized = rule.strip().strip("`")
+    if not normalized:
+        return None
+
+    target = Path(normalized) if normalized.startswith("/") else repo_root / normalized
+    concrete_parts: list[str] = []
+    for part in target.parts:
+        if any(char in part for char in WILDCARD_CHARS):
+            break
+        concrete_parts.append(part)
+    if not concrete_parts:
+        return None
+
+    base = Path(*concrete_parts)
+    has_wildcard = len(concrete_parts) < len(target.parts)
+    if has_wildcard:
+        return base
+
+    if base.exists():
+        return base if base.is_dir() else base.parent
+
+    if normalized.endswith("/"):
+        return base
+    if base.suffix or base.name.startswith("."):
+        return base.parent
+    return base
 
 
 class Orchestrator:
@@ -417,6 +440,43 @@ class Orchestrator:
         if not valid:
             raise RunnerError(f"role diff validation failed for {runtime_role}")
 
+    def resolve_turn_add_dirs(self, runtime_role: str, message_path: Path) -> list[Path]:
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+
+        packet = resolve_read_packet(
+            self.config.repo_root,
+            runtime_role,
+            message_required_reads=required_reads,
+            explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+            explicit_phase=headers.get("phase"),
+            include_message_path=message_path,
+        )
+        writable = resolve_writable_paths(
+            self.config.repo_root,
+            runtime_role,
+            message_required_reads=required_reads,
+            explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+            explicit_phase=headers.get("phase"),
+        )
+
+        add_dirs: list[Path] = []
+        seen: set[str] = set()
+        for rule in list(packet.get("read_paths", [])) + list(writable):
+            if not isinstance(rule, str):
+                continue
+            candidate = add_dir_from_rule(self.config.repo_root, rule)
+            if candidate is None:
+                continue
+            key = str(candidate.resolve()) if candidate.exists() else str(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            add_dirs.append(candidate)
+        return add_dirs
+
     def run_role_once(self, runtime_role: str) -> bool:
         claim = self.queue.claim_next(runtime_role, block_new_claims=self.steering_blocks_new_claims())
         if not claim:
@@ -449,18 +509,17 @@ class Orchestrator:
         role_file = ROLE_FILES[runtime_role]
         role_dir = self.paths.role_dir(runtime_role)
         model = self.role_model(runtime_role)
-        resume_id = self.tools.session_get(self.paths.sessions_json, runtime_role)
-        self.log_line(f"agent-start role={runtime_role} model={model or '<default>'} message={message_path.name} session={resume_id or 'new'}")
+        add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)
+        self.log_line(f"agent-start role={runtime_role} model={model or '<default>'} message={message_path.name} session=new")
         self.tools.start_worker(
             role=runtime_role,
             claimed_message=message_path.name,
             change_id=self.active_change_id,
-            session_id=resume_id,
+            session_id="",
             prompt_file=str(prompt_file),
         )
         self.tools.validate_role_diff_snapshot(snapshot_file)
         self.tools.build_prompt(runtime_role, display_role, role_file, message_path, prompt_file)
-        add_dirs = [self.config.repo_root / rel for rel in ROLE_ADD_DIRS[runtime_role]]
         codex_result = self.codex.run(
             cwd=role_dir,
             prompt_file=prompt_file,
@@ -468,7 +527,7 @@ class Orchestrator:
             jsonl_file=jsonl_file,
             model=model,
             add_dirs=add_dirs,
-            resume_id=resume_id or None,
+            resume_id=None,
         )
         ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
         if codex_result.returncode != 0:
