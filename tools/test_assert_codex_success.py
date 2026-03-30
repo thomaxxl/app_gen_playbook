@@ -98,6 +98,26 @@ class AssertCodexSuccessTests(unittest.TestCase):
         self.assertIn("Quiet Current did not persist status=ready.", result.stdout)
         self.assertNotIn("missing final result file", result.stdout)
 
+    def test_completed_turn_with_result_ignores_late_failed_command(self) -> None:
+        result = self.run_script(
+            [
+                {"type": "turn.completed"},
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "status": "failed",
+                        "command": "ps -p 201854 -o pid=,stat=,cmd=",
+                        "aggregated_output": "",
+                        "exit_code": 1,
+                    },
+                },
+            ],
+            "Summary: processed the frontend inflight item successfully\n",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

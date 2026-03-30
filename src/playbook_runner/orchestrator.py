@@ -624,33 +624,6 @@ class Orchestrator:
             resume_id=resume_id or None,
         )
         ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
-        if codex_result.returncode != 0:
-            self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
-            if is_retryable_codex_failure(detail):
-                body = (
-                    f"Role:\n- {runtime_role}\n\n"
-                    f"Message:\n- {message_path.name}\n\n"
-                    "Codex reported a temporary usage or rate limit before the role could complete.\n\n"
-                    f"Detail:\n- {detail}\n\n"
-                    "The claimed message was left in `inflight/` so a later `--resume` can retry it."
-                )
-                self.append_remark("Codex usage limit interrupted role execution", body)
-                self.set_run_status("interrupted")
-                raise RunnerError(f"Codex temporarily unavailable for role {runtime_role}: {detail}")
-            body = (
-                f"Role:\n- {runtime_role}\n\n"
-                f"Message:\n- {message_path.name}\n\n"
-                f"Return code:\n- {codex_result.returncode}"
-                + (f"\n\nDetail:\n```\n{detail}\n```" if detail else "")
-                + "\n\nThe claimed message was left in `inflight/` so a later `--resume` can retry or continue from this turn."
-            )
-            self.append_remark(
-                "Role execution failed",
-                body,
-            )
-            self.set_run_status("interrupted")
-            raise RunnerError(f"Codex interrupted for role {runtime_role}: {detail or f'exit code {codex_result.returncode}'}")
-
         if not ok:
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
             if is_retryable_codex_failure(detail):
@@ -667,6 +640,7 @@ class Orchestrator:
             body = (
                 f"Role:\n- {runtime_role}\n\n"
                 f"Message:\n- {message_path.name}\n\n"
+                f"Return code:\n- {codex_result.returncode}\n\n"
                 f"Error:\n```\n{detail or 'unknown codex error'}\n```\n\n"
                 "The claimed message was left in `inflight/` so a later `--resume` can retry or continue from this turn."
             )

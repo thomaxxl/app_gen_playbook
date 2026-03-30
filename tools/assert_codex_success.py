@@ -63,14 +63,19 @@ def codex_failure_message(jsonl_path: Path, result_path: Path) -> str | None:
     if turn_failed_errors:
         return turn_failed_errors[-1]
 
+    result_exists = result_path.exists()
+    result_content = result_path.read_text(encoding="utf-8").strip() if result_exists else ""
+
+    if turn_completed and result_content:
+        return None
+
     if command_failures:
         return command_failures[-1]
 
-    if not result_path.exists():
+    if not result_exists:
         return f"missing final result file: {result_path}"
 
-    content = result_path.read_text(encoding="utf-8").strip()
-    if not content:
+    if not result_content:
         return "codex run completed without a final agent message"
 
     if not turn_completed and stream_errors:
