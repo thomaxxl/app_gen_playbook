@@ -6,7 +6,13 @@ from pathlib import Path
 
 import yaml
 
-from recover_run_queue import ArtifactNeed, select_recovery_targets, write_recovery_notes, write_source_scope_notes
+from recover_run_queue import (
+    ArtifactNeed,
+    select_recovery_targets,
+    write_recovery_notes,
+    write_runtime_environment_notes,
+    write_source_scope_notes,
+)
 
 
 def write_template(path: Path, owner: str, phase: str) -> None:
@@ -230,6 +236,50 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("edit `playbook/process/phases/phase-6-integration-review.md`", note_text)
             self.assertNotIn("edit `specs/architecture/integration-review.md`", note_text)
             self.assertNotIn("edit `playbook/spec`", note_text)
+
+    def test_runtime_environment_escalation_creates_ceo_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("orchestrator", "ceo"):
+                ensure_role_dirs(repo_root, role)
+
+            escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260330-142032-from-architect-to-orchestrator-phase6-recovery-still-blocked.md"
+            write_file(
+                escalation,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: orchestrator",
+                        "topic: phase6-recovery-still-blocked",
+                        "purpose: report that the canonical architect integration-review artifact was refreshed from the current evidence pack, but Phase 6 remains blocked on browser-runtime proof",
+                        "",
+                        "## Remaining Blockers",
+                        "- `runs/current/evidence/ui-previews/manifest.md` remains `capture_status: runtime-failed`",
+                        "- browser-reviewed story-first proof is still missing",
+                        "- the browser lane is unstable and later same-day reruns fail during Chromium launch before first render",
+                        "",
+                        "## Next Routing Need",
+                        "- route the next action as a runtime/environment recovery decision rather than another architect contract repair",
+                        "",
+                    ]
+                ),
+            )
+
+            created = write_runtime_environment_notes(repo_root, "")
+            self.assertEqual(len(created), 1)
+
+            ceo_note = created[0]
+            self.assertIn("/role-state/ceo/inbox/", ceo_note.as_posix())
+            note_text = ceo_note.read_text(encoding="utf-8")
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("runtime or environment blocker", note_text)
+            self.assertIn("runs/current/orchestrator/operator-action-required.md", note_text)
+
+            archived = repo_root / "runs/current/role-state/orchestrator/processed/20260330-142032-from-architect-to-orchestrator-phase6-recovery-still-blocked.escalated.md"
+            self.assertTrue(archived.exists())
+            self.assertFalse(escalation.exists())
+            self.assertIn(archived.relative_to(repo_root).as_posix(), note_text)
 
     def test_recovery_note_syncs_change_role_load_for_recovered_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

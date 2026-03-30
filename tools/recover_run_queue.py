@@ -333,6 +333,12 @@ SOURCE_SCOPE_HINT_PATTERN = re.compile(
     r"(source[- ]scope|source[- ]repair|source-maintenance|write[- ]scope|playbook-maintenance|normative source)",
     re.IGNORECASE,
 )
+RUNTIME_ENVIRONMENT_HINT_PATTERN = re.compile(
+    r"(browser[- ]runtime|runtime[- ]failed|runtime/environment|environment blocker|environment recovery|"
+    r"operator/environment|browser launch|chromium launch|playwright|preview[- ]capture|"
+    r"runtime proof|phase6-recovery-still-blocked|phase-6.*runtime)",
+    re.IGNORECASE,
+)
 
 PHASE_REQUIRED_READS = {
     "phase-1-product-definition": (
@@ -382,6 +388,14 @@ class SourceScopeEscalation:
     topic_slug: str
     required_reads: tuple[str, ...]
     requested_paths: tuple[str, ...]
+    blocking_issues: tuple[str, ...]
+    message_paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True)
+class RuntimeEnvironmentEscalation:
+    topic_slug: str
+    required_reads: tuple[str, ...]
     blocking_issues: tuple[str, ...]
     message_paths: tuple[Path, ...]
 
@@ -717,6 +731,81 @@ def collect_source_scope_escalations(repo_root: Path) -> list[SourceScopeEscalat
     return escalations
 
 
+def collect_runtime_environment_escalations(repo_root: Path) -> list[RuntimeEnvironmentEscalation]:
+    inbox_dir = repo_root / "runs" / "current" / "role-state" / "orchestrator" / "inbox"
+    if not inbox_dir.exists():
+        return []
+
+    matched_paths: list[Path] = []
+    required_reads: list[str] = []
+    blocking_issues: list[str] = []
+    topic_slug = "runtime-environment-recovery"
+
+    for message_path in sorted(inbox_dir.glob("*.md")):
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        if headers.get("to", "").strip().lower() != "orchestrator":
+            continue
+
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads_section = [
+            item for item in sections.get("required reads", []) if isinstance(item, str)
+        ]
+        requested_outputs = [
+            item for item in sections.get("requested outputs", []) if isinstance(item, str)
+        ]
+        runtime_context = [
+            *requested_outputs,
+            *required_reads_section,
+            *[item for item in sections.get("notes", []) if isinstance(item, str)],
+            *[item for item in sections.get("blocking issues", []) if isinstance(item, str)],
+            *[item for item in sections.get("remaining blockers", []) if isinstance(item, str)],
+            *[item for item in sections.get("recovery outcome", []) if isinstance(item, str)],
+            *[item for item in sections.get("next routing need", []) if isinstance(item, str)],
+            *[item for item in sections.get("current blocker", []) if isinstance(item, str)],
+            *[item for item in sections.get("current state", []) if isinstance(item, str)],
+            *[item for item in sections.get("status", []) if isinstance(item, str)],
+            headers.get("topic", ""),
+            headers.get("purpose", ""),
+        ]
+        if _source_scope_paths(requested_outputs):
+            continue
+        if any(SOURCE_SCOPE_HINT_PATTERN.search(line) for line in runtime_context if line):
+            continue
+        if not any(RUNTIME_ENVIRONMENT_HINT_PATTERN.search(line) for line in runtime_context if line):
+            continue
+
+        matched_paths.append(message_path)
+        required_reads.extend(required_reads_section)
+        required_reads.append(message_path.relative_to(repo_root).as_posix())
+        blocking_issues.extend(
+            item for item in sections.get("blocking issues", []) if isinstance(item, str)
+        )
+        blocking_issues.extend(
+            item for item in sections.get("remaining blockers", []) if isinstance(item, str)
+        )
+
+    if not matched_paths:
+        return []
+
+    return [
+        RuntimeEnvironmentEscalation(
+            topic_slug=topic_slug,
+            required_reads=tuple(
+                _ordered_unique(
+                    [
+                        "runs/current/orchestrator/run-status.json",
+                        "runs/current/evidence/orchestrator/logs/orchestrator.log",
+                        *required_reads,
+                    ]
+                )
+            ),
+            blocking_issues=tuple(_ordered_unique(blocking_issues)),
+            message_paths=tuple(matched_paths),
+        )
+    ]
+
+
 def format_source_scope_note(repo_root: Path, escalation: SourceScopeEscalation, change_id: str) -> str:
     required_reads = _ordered_unique(["runs/current/remarks.md", *escalation.required_reads, *escalation.requested_paths])
 
@@ -840,6 +929,123 @@ def write_source_scope_notes(repo_root: Path, change_id: str) -> list[Path]:
 
         suffix = "" if index == 1 else f"-{index}"
         note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{escalation.topic_slug}{suffix}.md"
+        note_path.write_text(note_text, encoding="utf-8")
+        created.append(note_path)
+
+    return created
+
+
+def format_runtime_environment_note(
+    repo_root: Path,
+    escalation: RuntimeEnvironmentEscalation,
+    change_id: str,
+) -> str:
+    required_reads = _ordered_unique(["runs/current/remarks.md", *escalation.required_reads])
+    lines: list[str] = [
+        "from: orchestrator",
+        "to: ceo",
+        f"topic: {escalation.topic_slug}",
+        "purpose: restore progress by deciding whether the remaining runtime or environment blocker is locally repairable or requires operator action",
+        f"change_id: {change_id}",
+        "",
+        "## Required Reads",
+    ]
+    for item in required_reads:
+        lines.append(f"- {item}")
+    lines.extend(
+        [
+            "",
+            "## Requested Outputs",
+            "- determine whether the remaining blocked runtime or environment lane can be repaired locally by CEO or delegated back to a normal role with a concrete new action",
+            "- if the blocker is not locally repairable, write `runs/current/orchestrator/operator-action-required.md` with the exact operator action instead of leaving the run blocked with an empty worker queue",
+            "- do not requeue the same runtime or environment blocker back to Architect unchanged",
+            "",
+            "## Dependencies",
+            "- CEO stall-intervention authority",
+            "",
+            "## Gate Status",
+            "- blocked",
+            "",
+            "## Blocking Issues",
+        ]
+    )
+    if escalation.blocking_issues:
+        for item in escalation.blocking_issues:
+            lines.append(f"- {item}")
+    else:
+        lines.append("- orchestrator received runtime or environment escalation(s) that no active runtime role can currently clear")
+    lines.extend(
+        [
+            "",
+            "## Notes",
+            "- generated from orchestrator inbox escalations requesting runtime or environment recovery routing",
+            "- archive the triggering orchestrator escalation(s) only after this CEO turn is queued",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def write_runtime_environment_notes(repo_root: Path, change_id: str) -> list[Path]:
+    if role_pending(repo_root, "ceo"):
+        return []
+
+    created: list[Path] = []
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%d-%H%M%S")
+    ceo_root = preferred_role_state_dir(repo_root, "ceo")
+    inbox_dir = ceo_root / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+
+    for escalation in collect_runtime_environment_escalations(repo_root):
+        archived_paths: list[Path] = []
+        for message_path in escalation.message_paths:
+            if message_path.exists():
+                archived_paths.append(_archive_orchestrator_escalation(repo_root, message_path))
+            else:
+                archived_paths.append(
+                    repo_root
+                    / "runs"
+                    / "current"
+                    / "role-state"
+                    / "orchestrator"
+                    / "processed"
+                    / f"{message_path.stem}.escalated.md"
+                )
+
+        archived_reads = [path.relative_to(repo_root).as_posix() for path in archived_paths]
+        original_reads = {path.relative_to(repo_root).as_posix() for path in escalation.message_paths}
+        escalation_for_note = RuntimeEnvironmentEscalation(
+            topic_slug=escalation.topic_slug,
+            required_reads=tuple(
+                _ordered_unique(
+                    archived_reads
+                    + [read for read in escalation.required_reads if read not in original_reads]
+                )
+            ),
+            blocking_issues=escalation.blocking_issues,
+            message_paths=tuple(archived_paths),
+        )
+        note_text = format_runtime_environment_note(repo_root, escalation_for_note, change_id)
+
+        duplicate_recent_note = False
+        for lane in ("inbox", "inflight", "processed"):
+            lane_root = ceo_root / lane
+            if not lane_root.exists():
+                continue
+            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{escalation.topic_slug}.md"):
+                existing_timestamp = note_timestamp(existing_path)
+                if existing_timestamp is None or existing_timestamp < cutoff:
+                    continue
+                if existing_path.read_text(encoding="utf-8") == note_text:
+                    duplicate_recent_note = True
+                    break
+            if duplicate_recent_note:
+                break
+        if duplicate_recent_note:
+            continue
+
+        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{escalation.topic_slug}.md"
         note_path.write_text(note_text, encoding="utf-8")
         created.append(note_path)
 
@@ -1034,6 +1240,7 @@ def main() -> int:
     targets = select_recovery_targets(repo_root)
     created = write_recovery_notes(repo_root, targets, args.change_id)
     created.extend(write_source_scope_notes(repo_root, args.change_id))
+    created.extend(write_runtime_environment_notes(repo_root, args.change_id))
     for path in created:
         print(path)
     return 0
