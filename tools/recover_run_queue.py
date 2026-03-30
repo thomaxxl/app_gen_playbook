@@ -596,6 +596,7 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
 
     needs = collect_artifact_needs(repo_root)
     needs.extend(collect_completion_blocker_needs(repo_root))
+    runtime_environment_recovery_needed = bool(collect_runtime_environment_escalations(repo_root))
     targets: dict[str, list[ArtifactNeed]] = {}
 
     for role in ROLE_LABELS:
@@ -609,6 +610,16 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
         eligible = [need for need in role_needs if should_recover_phase(repo_root, need.phase, needs, role)]
         if role == "architect" and role_pending(repo_root, "deployment"):
             eligible = [need for need in eligible if need.path.name != "runtime-bom.md"]
+        if role == "architect" and runtime_environment_recovery_needed:
+            eligible = [
+                need
+                for need in eligible
+                if not (
+                    need.phase == "phase-6-integration-review"
+                    and need.path.name == "integration-review.md"
+                    and need.reason.startswith("status=blocked")
+                )
+            ]
         if not eligible:
             continue
 
@@ -769,8 +780,6 @@ def collect_runtime_environment_escalations(repo_root: Path) -> list[RuntimeEnvi
             headers.get("purpose", ""),
         ]
         if _source_scope_paths(requested_outputs):
-            continue
-        if any(SOURCE_SCOPE_HINT_PATTERN.search(line) for line in runtime_context if line):
             continue
         if not any(RUNTIME_ENVIRONMENT_HINT_PATTERN.search(line) for line in runtime_context if line):
             continue

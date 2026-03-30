@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 import yaml
 
 from recover_run_queue import (
     ArtifactNeed,
+    RuntimeEnvironmentEscalation,
     select_recovery_targets,
     write_recovery_notes,
     write_runtime_environment_notes,
@@ -280,6 +282,70 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertTrue(archived.exists())
             self.assertFalse(escalation.exists())
             self.assertIn(archived.relative_to(repo_root).as_posix(), note_text)
+
+    def test_runtime_environment_escalation_can_include_source_scope_language(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for role in ("orchestrator", "ceo"):
+                ensure_role_dirs(repo_root, role)
+
+            escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260330-151949-from-architect-to-orchestrator-phase-6-browser-blocker.md"
+            write_file(
+                escalation,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: orchestrator",
+                        "topic: phase-6-browser-blocker",
+                        "purpose: keep the recovery queue explicit because integration review is still blocked by a non-architect runtime blocker",
+                        "",
+                        "## Blocking Issues",
+                        "- preview capture still crashes before first screenshot during Chromium launch",
+                        "- preview-status source-scope wording is still unresolved",
+                        "",
+                        "## Next Routing Need",
+                        "- route the next action as a runtime/environment recovery decision rather than another architect contract repair",
+                        "",
+                    ]
+                ),
+            )
+
+            created = write_runtime_environment_notes(repo_root, "")
+            self.assertEqual(len(created), 1)
+            note_text = created[0].read_text(encoding="utf-8")
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("runtime or environment blocker", note_text)
+
+    def test_select_recovery_targets_skips_architect_phase6_block_when_runtime_escalation_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            blocked_need = ArtifactNeed(
+                role="architect",
+                phase="phase-6-integration-review",
+                path=repo_root / "runs/current/artifacts/architecture/integration-review.md",
+                reason="status=blocked",
+            )
+
+            with unittest.mock.patch("recover_run_queue.collect_artifact_needs", return_value=[blocked_need]):
+                with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                    with unittest.mock.patch(
+                        "recover_run_queue.collect_runtime_environment_escalations",
+                        return_value=[
+                            RuntimeEnvironmentEscalation(
+                                topic_slug="runtime-environment-recovery",
+                                required_reads=(),
+                                blocking_issues=(),
+                                message_paths=(),
+                            )
+                        ],
+                    ):
+                        with unittest.mock.patch("recover_run_queue.role_pending", return_value=False):
+                            with unittest.mock.patch("recover_run_queue.should_recover_phase", return_value=True):
+                                targets = select_recovery_targets(repo_root)
+
+            self.assertNotIn("architect", targets)
 
     def test_recovery_note_syncs_change_role_load_for_recovered_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
