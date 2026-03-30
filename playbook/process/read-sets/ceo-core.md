@@ -2,7 +2,8 @@
 
 Use this as the Tier 1 startup read set for the CEO role.
 
-This read set is exception-only. Do not load it during normal phase execution.
+This read set covers CEO phase-exit review plus stall intervention. Do not use
+it for normal implementation turns.
 
 Required startup reads:
 
@@ -19,6 +20,7 @@ Required startup reads:
 - `../../../runs/current/artifacts/architecture/load-plan.md`
 - `../../../runs/current/orchestrator/run-status.json`
 
-After these reads, load only the specific stalled artifacts, active role
-contexts, orchestrator evidence, and role-owned technical contracts needed to
-restore forward progress.
+After these reads, load only the specific phase outputs, stalled artifacts,
+active role contexts, orchestrator evidence, and role-owned technical
+contracts needed to complete the current CEO review or restore forward
+progress.

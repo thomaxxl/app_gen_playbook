@@ -10,6 +10,14 @@ validators:
     location_field: location
     summary_pass: artifact metadata guidance is internally consistent
     summary_fail_template: "{count} artifact metadata consistency issue(s)"
+  tools/validators/policy/validate_ceo_phase_review_contracts.py:
+    adapter: issue_list
+    module: validators.policy.validate_ceo_phase_review_contracts
+    callable: collect_issues
+    path_field: path
+    message_field: reason
+    summary_pass: CEO phase review approvals passed
+    summary_fail_template: "{count} CEO phase review issue(s)"
   tools/check_completion.py:
     adapter: issue_list
     module: check_completion

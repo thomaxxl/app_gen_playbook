@@ -16,6 +16,7 @@ required_outputs:
   - runs/current/artifacts/product/traceability-matrix.md
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/sample-data.md
+  - runs/current/evidence/ceo-phase-reviews/phase-1-product-definition.approved.md
 steps:
   - id: P1-PRODUCT-PACKAGE
     title: Product package complete
@@ -33,4 +34,15 @@ steps:
         - runs/current/artifacts/product/traceability-matrix.md
         - runs/current/artifacts/product/acceptance-criteria.md
         - runs/current/artifacts/product/sample-data.md
+    waivable: false
+  - id: P1-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 1 product definition
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-1-product-definition.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

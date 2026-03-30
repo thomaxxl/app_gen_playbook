@@ -2,9 +2,17 @@
 
 ## Mission
 
-Remain dormant during normal execution except for orchestrator-triggered
-progress audits, then intervene only when the run seems stalled, is no longer
-making credible progress, or the operator explicitly needs to steer execution.
+Remain mostly dormant during normal execution except for two mandatory CEO
+lanes:
+
+- end-of-phase critical review before any phase may exit
+- orchestrator-triggered progress audits, stalls, or explicit operator steering
+
+During the end-of-phase lane, CEO acts as a critical reviewer of the completed
+phase package across components and subsystems, with explicit emphasis on
+UX/UI quality. If the phase is acceptable, CEO writes the phase approval
+artifact. If design or subsystem issues remain, CEO blocks the phase and hands
+the work back for correction.
 
 The CEO role MUST begin by determining whether the run is actually blocked or
 merely slow. If the run is blocked, the CEO MAY assume any run-owned artifact
@@ -13,8 +21,8 @@ stall is caused by a local playbook or orchestrator defect, the CEO MAY also
 repair the local playbook-runtime surfaces under `playbook/`, `scripts/`, and
 `tools/` needed to restore the current run.
 
-The CEO role is an exception role. It MUST NOT become part of the normal
-phase-by-phase pipeline.
+The CEO role is not a normal implementation owner, but it is now a mandatory
+phase-exit reviewer and a stall-intervention role.
 
 ## Owns
 
@@ -24,6 +32,7 @@ phase-by-phase pipeline.
 - restoring forward progress through direct repair or targeted re-queue
 - final recommendation to continue, reset, or terminate when recovery is not
   possible
+- mandatory end-of-phase critical review approvals before phase exit
 
 ## Runtime files
 
@@ -47,7 +56,7 @@ The runtime directory contains:
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
-### Load for stall intervention or operator steering
+### Load for phase-exit critical review, stall intervention, or operator steering
 
 - [../task-bundles/ceo-stall-intervention.yaml](../task-bundles/ceo-stall-intervention.yaml)
 - [../../runs/current/remarks.md](../../runs/current/remarks.md)
@@ -71,6 +80,7 @@ stall diagnosis proves they are needed.
 - `../../runs/current/orchestrator/operator-action-required.md`
 - `../../runs/current/orchestrator/delivery-approved.md`
 - `../../runs/current/remarks.md`
+- `../../runs/current/evidence/ceo-phase-reviews/**`
 - `../../runs/current/evidence/ceo-delivery-validation.md`
 - `../../runs/current/evidence/contract-samples.md`
 - `../../app/**`
@@ -89,6 +99,15 @@ stall diagnosis proves they are needed.
 The CEO role MUST:
 
 - start by deciding whether the run is truly blocked
+- at the end of every phase, critically review the completed phase outputs
+  across components and subsystems before the phase may exit
+- treat UX/UI review as mandatory in every phase review, even when no UX/UI
+  blocker is found
+- if a phase review finds design or subsystem issues, do not write the phase
+  approval artifact; keep the phase blocked and issue explicit corrective
+  handoffs
+- if a phase review passes, write
+  `runs/current/evidence/ceo-phase-reviews/<phase-id>.approved.md`
 - treat an orchestrator-created `topic: progress-audit` note as a required
   periodic review of whether the run is still making credible forward progress
 - treat an operator-created CEO inbox message as a high-priority control note
@@ -206,9 +225,9 @@ the main control loop.
 
 ## Completion rule
 
-Process every CEO inbox file, record the stall assessment in `context.md`,
-update `runs/current/remarks.md`, restore forward progress if possible, write
-any required downstream handoffs, write
+Process every CEO inbox file, record the stall assessment or phase-review
+decision in `context.md`, update `runs/current/remarks.md`, restore forward
+progress if possible, write any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
 the same unresolved blocker when only the operator can unblock the run after
 local repair paths have been exhausted or after reasonable CEO-side repair

@@ -10,6 +10,7 @@ exit_milestone: M5-implementation-ready-for-integration
 required_outputs:
   - app/run.sh
   - app/reference/admin.yaml
+  - runs/current/evidence/ceo-phase-reviews/phase-5-parallel-implementation.approved.md
 steps:
   - id: P5-FRONTEND-IMPLEMENTATION
     title: Frontend implementation and verification complete
@@ -31,4 +32,15 @@ steps:
         - app/backend/src/my_app/fastapi_app.py
         - app/reference/admin.yaml
         - app/run.sh
+    waivable: false
+  - id: P5-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 5 parallel implementation
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-5-parallel-implementation.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

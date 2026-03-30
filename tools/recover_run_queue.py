@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,6 +10,7 @@ import re
 import yaml
 
 from check_completion import collect_blockers
+from contracts.evaluate_sdlc import compute_sdlc_state
 from orchestrator_common import (
     DISPLAY_TO_RUNTIME,
     CORE_DISPLAY_ROLES,
@@ -398,6 +400,13 @@ class RuntimeEnvironmentEscalation:
     required_reads: tuple[str, ...]
     blocking_issues: tuple[str, ...]
     message_paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True)
+class PendingPhaseCeoReview:
+    phase_id: str
+    approval_path: str
+    required_reads: tuple[str, ...]
 
 
 def utc_stamp() -> str:
@@ -1061,6 +1070,162 @@ def write_runtime_environment_notes(repo_root: Path, change_id: str) -> list[Pat
     return created
 
 
+def load_run_mode_and_phase(repo_root: Path) -> tuple[str, str]:
+    run_status_path = repo_root / "runs" / "current" / "orchestrator" / "run-status.json"
+    if not run_status_path.exists():
+        return "", ""
+    try:
+        payload = json.loads(run_status_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return "", ""
+    if not isinstance(payload, dict):
+        return "", ""
+    run_mode = str(payload.get("mode", "")).strip()
+    current_phase = str(payload.get("current_phase", "")).strip()
+    return run_mode, current_phase
+
+
+def phase_doc_read(repo_root: Path, phase_id: str) -> str | None:
+    candidate = repo_root / "playbook" / "process" / "phases" / f"{phase_id}.md"
+    if candidate.exists():
+        return candidate.relative_to(repo_root).as_posix()
+    return None
+
+
+def collect_pending_phase_ceo_reviews(repo_root: Path) -> list[PendingPhaseCeoReview]:
+    run_mode, current_phase = load_run_mode_and_phase(repo_root)
+    if not run_mode or not current_phase:
+        return []
+    try:
+        plan, state = compute_sdlc_state(repo_root, run_mode=run_mode, current_phase=current_phase)
+    except Exception:
+        return []
+
+    phase_payload = next((phase for phase in plan["phases"] if str(phase["id"]) == current_phase), None)
+    if phase_payload is None:
+        return []
+
+    pending_reviews: list[PendingPhaseCeoReview] = []
+    non_ceo_step_ids = [
+        str(step["id"])
+        for step in phase_payload.get("steps", [])
+        if "ceo" not in (step.get("owners") or []) and step.get("requiredness") != "advisory"
+    ]
+    if non_ceo_step_ids and not all(state["steps"].get(step_id, {}).get("status") == "pass" for step_id in non_ceo_step_ids):
+        return []
+
+    for step in phase_payload.get("steps", []):
+        if "ceo" not in (step.get("owners") or []):
+            continue
+        step_id = str(step["id"])
+        step_status = str(state["steps"].get(step_id, {}).get("status", "")).strip()
+        if step_status == "pass":
+            continue
+
+        approval_candidates = list((step.get("outputs") or {}).get("artifacts") or [])
+        approval_candidates.extend(list((step.get("evidence") or {}).get("required_files") or []))
+        if not approval_candidates:
+            continue
+        approval_path = str(approval_candidates[0])
+        required_reads = [
+            "runs/current/orchestrator/run-status.json",
+            "playbook/process/quality-gates.md",
+        ]
+        phase_doc = phase_doc_read(repo_root, current_phase)
+        if phase_doc:
+            required_reads.append(phase_doc)
+        required_reads.extend(
+            item for item in phase_payload.get("required_outputs", []) if isinstance(item, str) and item != approval_path
+        )
+        pending_reviews.append(
+            PendingPhaseCeoReview(
+                phase_id=current_phase,
+                approval_path=approval_path,
+                required_reads=tuple(_ordered_unique(required_reads)),
+            )
+        )
+
+    return pending_reviews
+
+
+def format_phase_ceo_review_note(review: PendingPhaseCeoReview, change_id: str) -> str:
+    lines: list[str] = [
+        "from: orchestrator",
+        "to: ceo",
+        f"topic: phase-review-{review.phase_id}",
+        "purpose: critically review the completed phase outputs across components and subsystems before phase exit",
+        f"change_id: {change_id}",
+        f"phase: {review.phase_id}",
+        "",
+        "## Required Reads",
+    ]
+    for item in review.required_reads:
+        lines.append(f"- {item}")
+    lines.extend(
+        [
+            "",
+            "## Requested Outputs",
+            f"- critically review the completed phase package for `{review.phase_id}` across the affected components and subsystems",
+            "- explicitly review UX/UI quality, even when the phase is not primarily design-owned",
+            f"- if the phase is acceptable, write `{review.approval_path}`",
+            "- if design, UX/UI, integration, or subsystem issues remain, do not write the approval artifact; keep the phase blocked and issue explicit corrective handoffs",
+            "",
+            "## Dependencies",
+            "- CEO critical phase review gate",
+            "",
+            "## Gate Status",
+            "- blocked until CEO review approves this phase",
+            "",
+            "## Blocking Issues",
+            "- the normal phase-owned outputs appear complete, but the phase cannot exit without CEO critical review approval",
+            "",
+            "## Notes",
+            "- the approval artifact must include Review Summary, Component and Subsystem Review, UX/UI Review, and Decision sections",
+            "- UX/UI review is mandatory even for backend- or QA-heavy phases",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def write_phase_ceo_review_notes(repo_root: Path, change_id: str) -> list[Path]:
+    if role_pending(repo_root, "ceo"):
+        return []
+
+    created: list[Path] = []
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%d-%H%M%S")
+    ceo_root = preferred_role_state_dir(repo_root, "ceo")
+    inbox_dir = ceo_root / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+
+    for review in collect_pending_phase_ceo_reviews(repo_root):
+        note_text = format_phase_ceo_review_note(review, change_id)
+        topic_slug = f"phase-review-{review.phase_id}"
+        duplicate_recent_note = False
+        for lane in ("inbox", "inflight", "processed"):
+            lane_root = ceo_root / lane
+            if not lane_root.exists():
+                continue
+            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{topic_slug}.md"):
+                existing_timestamp = note_timestamp(existing_path)
+                if existing_timestamp is None or existing_timestamp < cutoff:
+                    continue
+                if existing_path.read_text(encoding="utf-8") == note_text:
+                    duplicate_recent_note = True
+                    break
+            if duplicate_recent_note:
+                break
+        if duplicate_recent_note:
+            continue
+
+        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{topic_slug}.md"
+        note_path.write_text(note_text, encoding="utf-8")
+        created.append(note_path)
+
+    return created
+
+
 def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], change_id: str) -> str:
     phase_labels = sorted({need.phase for need in needs}, key=lambda phase: PHASE_ORDER.get(phase, 99))
     required_reads: list[str] = ["runs/current/remarks.md"]
@@ -1250,6 +1415,7 @@ def main() -> int:
     created = write_recovery_notes(repo_root, targets, args.change_id)
     created.extend(write_source_scope_notes(repo_root, args.change_id))
     created.extend(write_runtime_environment_notes(repo_root, args.change_id))
+    created.extend(write_phase_ceo_review_notes(repo_root, args.change_id))
     for path in created:
         print(path)
     return 0

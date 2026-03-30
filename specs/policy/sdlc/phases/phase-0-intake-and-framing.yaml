@@ -10,6 +10,7 @@ required_outputs:
   - runs/current/artifacts/product/input-interpretation.md
   - runs/current/artifacts/product/research-notes.md
   - runs/current/artifacts/product/brief.md
+  - runs/current/evidence/ceo-phase-reviews/phase-0-intake-and-framing.approved.md
 steps:
   - id: P0-FRAMING-PACKAGE
     title: Framing package authored
@@ -21,4 +22,15 @@ steps:
         - runs/current/artifacts/product/brief.md
         - runs/current/artifacts/product/research-notes.md
         - runs/current/artifacts/product/input-interpretation.md
+    waivable: false
+  - id: P0-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 0 framing
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-0-intake-and-framing.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: H2-hotfix-regression-verified
 required_outputs:
   - runs/current/evidence/qa-delivery-review.md
+  - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h2-regression-verification.approved.md
 steps:
   - id: H2-HOTFIX-REGRESSION
     title: Hotfix regression verification complete
@@ -17,4 +18,15 @@ steps:
     outputs:
       artifacts:
         - runs/current/evidence/qa-delivery-review.md
+    waivable: false
+  - id: H2-CEO-PHASE-REVIEW
+    title: CEO critical review approves hotfix regression verification
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h2-regression-verification.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

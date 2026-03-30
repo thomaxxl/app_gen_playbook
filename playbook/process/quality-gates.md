@@ -5,6 +5,11 @@ This file defines the canonical release blockers for the playbook.
 These blockers apply before integration review can pass, before product
 acceptance can pass, and before the orchestrator can treat the run as complete.
 
+Every phase also fails closed without a CEO critical review approval under
+`runs/current/evidence/ceo-phase-reviews/`. That review is not ceremonial:
+CEO must challenge component and subsystem quality, with explicit UX/UI review
+every time, and must block the phase when design or integration issues remain.
+
 The prose here explains gate intent. The executable enforcement source lives in
 the sidecar policy registry under `specs/policy/`, especially:
 
@@ -106,6 +111,8 @@ The run is blocked if any of these are true:
   surface, a required custom page, or the primary CTA target is missing from
   delivered or reviewed coverage
 - the independent QA delivery review is missing, still placeholder, or failed
+- the current phase is trying to exit without a matching CEO critical review
+  approval artifact
 - final QA, CEO delivery approval, or boot-only validation is being used to
   override blocked quality evidence or an interrupted run state
 - the required quality evidence pack is missing, still placeholder, blocked
@@ -144,6 +151,7 @@ Final delivery also depends on:
 - Architect owns the Phase 6 quality evidence pack and the integration gate
 - Product Manager consumes that evidence and owns the final acceptance gate
 - QA owns the independent pre-delivery validation artifact
+- CEO owns the mandatory critical-review approval at the end of every phase
 
 ## Gate rule
 

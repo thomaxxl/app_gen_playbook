@@ -2,3 +2,4 @@ id: process-core
 title: Process core policy
 requirement_ids:
   - PROC-ARTMETA-001
+  - PROC-CEO-PHASE-001

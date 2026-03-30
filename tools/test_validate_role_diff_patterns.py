@@ -53,6 +53,14 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "ceo",
+                "runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md",
+                [],
+            )
+        )
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "ceo",
                 "runs/current/evidence/ceo-delivery-validation.md",
                 [],
             )

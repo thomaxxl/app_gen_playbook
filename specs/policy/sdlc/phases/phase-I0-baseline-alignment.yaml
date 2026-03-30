@@ -6,6 +6,7 @@ purpose: Restore trust in the accepted baseline when current app state or accept
 exit_milestone: MI0-baseline-trust-restored
 required_outputs:
   - runs/current/changes
+  - runs/current/evidence/ceo-phase-reviews/phase-I0-baseline-alignment.approved.md
 steps:
   - id: PI0-BASELINE-ALIGNMENT
     title: Baseline trust restored
@@ -15,4 +16,15 @@ steps:
     outputs:
       artifacts:
         - runs/current/changes
+    waivable: false
+  - id: PI0-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase I0 baseline alignment
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-I0-baseline-alignment.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

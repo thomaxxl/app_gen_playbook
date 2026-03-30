@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: M8-qa-gate-passed
 required_outputs:
   - runs/current/evidence/qa-delivery-review.md
+  - runs/current/evidence/ceo-phase-reviews/phase-8-qa-pre-delivery-validation.approved.md
 steps:
   - id: P8-QA-DELIVERY-REVIEW
     title: QA delivery review complete
@@ -23,4 +24,15 @@ steps:
       - DEP-PROVISIONING-001
     manual_attestation:
       required: true
+    waivable: false
+  - id: P8-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 8 QA pre-delivery validation
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-8-qa-pre-delivery-validation.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

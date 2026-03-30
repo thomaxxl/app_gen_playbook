@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: MI3-architecture-delta-ready
 required_outputs:
   - runs/current/artifacts/architecture/overview.md
+  - runs/current/evidence/ceo-phase-reviews/phase-I3-architecture-and-contract-delta.approved.md
 steps:
   - id: PI3-ARCHITECTURE-DELTA
     title: Architecture delta package complete
@@ -17,4 +18,15 @@ steps:
     outputs:
       artifacts:
         - runs/current/artifacts/architecture/overview.md
+    waivable: false
+  - id: PI3-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase I3 architecture and contract delta
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-I3-architecture-and-contract-delta.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

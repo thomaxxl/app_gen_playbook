@@ -12,6 +12,7 @@ required_outputs:
   - runs/current/artifacts/backend-design/resource-exposure-policy.md
   - runs/current/artifacts/backend-design/query-behavior.md
   - runs/current/artifacts/backend-design/test-plan.md
+  - runs/current/evidence/ceo-phase-reviews/phase-4-backend-design-and-rules-mapping.approved.md
 steps:
   - id: P4-BACKEND-DESIGN
     title: Backend design package complete
@@ -25,4 +26,15 @@ steps:
         - runs/current/artifacts/backend-design/resource-exposure-policy.md
         - runs/current/artifacts/backend-design/query-behavior.md
         - runs/current/artifacts/backend-design/test-plan.md
+    waivable: false
+  - id: P4-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 4 backend design and rules mapping
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-4-backend-design-and-rules-mapping.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

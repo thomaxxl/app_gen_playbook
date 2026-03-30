@@ -1,13 +1,18 @@
 # CEO Role Summary
 
-Use this role only for stalled-run inspection, operator-requested steering,
-and emergency intervention.
+Use this role for mandatory end-of-phase critical review, stalled-run
+inspection, operator-requested steering, and emergency intervention.
 
-Its first responsibility is to gauge progress and decide whether the run is
-truly blocked. If the run is blocked, the CEO MAY temporarily assume any
-run-owned artifact, local `app/` responsibility, or local playbook-runtime
-surface under `playbook/`, `scripts/`, or `tools/` needed to restore
-progress.
+At every phase exit, CEO must critically review the completed phase package,
+including a mandatory UX/UI assessment, before the phase may pass. If issues
+remain, CEO blocks the phase and hands the work back for correction. If the
+phase is acceptable, CEO writes the approval artifact under
+`runs/current/evidence/ceo-phase-reviews/`.
+Outside that lane, its first responsibility is to gauge progress and decide
+whether the run is truly blocked. If the run is blocked, the CEO MAY
+temporarily assume any run-owned artifact, local `app/` responsibility, or
+local playbook-runtime surface under `playbook/`, `scripts/`, or `tools/`
+needed to restore progress.
 If the blocker is a local playbook or orchestrator defect, CEO MUST attempt
 that repair before escalating externally.
 CEO should spend only reasonable time and effort on that unblock attempt;
@@ -37,11 +42,11 @@ Always load:
 - `process-core.md`
 - `../../process/read-sets/ceo-core.md`
 
-This role is dormant by default outside explicit stall, progress-audit, and
-operator-steering intervention. The orchestrator may also trigger a periodic
-CEO progress audit after roughly every 25 non-CEO turn JSONL files, and if
-CEO had to unblock the run it may request forced follow-up for the next 5
-control loops by writing
+Outside mandatory phase-exit review, this role is dormant by default except
+for explicit stall, progress-audit, and operator-steering intervention. The
+orchestrator may also trigger a periodic CEO progress audit after roughly
+every 25 non-CEO turn JSONL files, and if CEO had to unblock the run it may
+request forced follow-up for the next 5 control loops by writing
 `runs/current/orchestrator/ceo-progress-followup-requested.md`.
 
 Full docs:

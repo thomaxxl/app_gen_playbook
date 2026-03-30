@@ -28,6 +28,18 @@ class SdlcFrameworkTests(unittest.TestCase):
         self.assertIn("M9-delivery-approved", registry.milestones)
         self.assertIn("security", registry.overlays)
 
+    def test_phase_registry_includes_ceo_review_gate_step(self) -> None:
+        registry = compile_sdlc_registry(self.repo_root, generated_at="2026-03-20T00:00:00Z")
+        phase = registry.phases["phase-3-ux-and-interaction-design"]
+        step_ids = [str(step["id"]) for step in phase.get("steps", [])]
+        self.assertIn("P3-CEO-PHASE-REVIEW", step_ids)
+        ceo_step = next(step for step in phase["steps"] if step["id"] == "P3-CEO-PHASE-REVIEW")
+        self.assertEqual(ceo_step["owners"], ["ceo"])
+        self.assertIn(
+            "runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md",
+            ceo_step["outputs"]["artifacts"],
+        )
+
     def test_resolve_sdlc_plan_for_new_run(self) -> None:
         plan = resolve_plan(self.repo_root, run_mode="new-full-run", overlays=[])
         self.assertEqual(plan["lifecycle_id"], "new-full-run")

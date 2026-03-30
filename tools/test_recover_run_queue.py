@@ -11,6 +11,7 @@ from recover_run_queue import (
     ArtifactNeed,
     RuntimeEnvironmentEscalation,
     select_recovery_targets,
+    write_phase_ceo_review_notes,
     write_recovery_notes,
     write_runtime_environment_notes,
     write_source_scope_notes,
@@ -316,6 +317,62 @@ class RecoverRunQueueTests(unittest.TestCase):
             note_text = created[0].read_text(encoding="utf-8")
             self.assertIn("to: ceo", note_text)
             self.assertIn("runtime or environment blocker", note_text)
+
+    def test_phase_ceo_review_note_is_created_when_phase_outputs_are_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            ensure_role_dirs(repo_root, "ceo")
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{\n  "mode": "new-full-run",\n  "current_phase": "phase-3-ux-and-interaction-design"\n}\n',
+            )
+            write_file(
+                repo_root / "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+                "# Phase 3\n",
+            )
+
+            mocked_plan = {
+                "phases": [
+                    {
+                        "id": "phase-3-ux-and-interaction-design",
+                        "required_outputs": [
+                            "runs/current/artifacts/ux/navigation.md",
+                            "runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md",
+                        ],
+                        "steps": [
+                            {"id": "P3-UX-PACKAGE", "owners": ["frontend"], "requiredness": "required"},
+                            {
+                                "id": "P3-CEO-PHASE-REVIEW",
+                                "owners": ["ceo"],
+                                "requiredness": "required",
+                                "outputs": {
+                                    "artifacts": [
+                                        "runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md"
+                                    ]
+                                },
+                            },
+                        ],
+                    }
+                ]
+            }
+            mocked_state = {
+                "steps": {
+                    "P3-UX-PACKAGE": {"status": "pass"},
+                    "P3-CEO-PHASE-REVIEW": {"status": "pending"},
+                }
+            }
+
+            with unittest.mock.patch("recover_run_queue.compute_sdlc_state", return_value=(mocked_plan, mocked_state)):
+                created = write_phase_ceo_review_notes(repo_root, "")
+
+            self.assertEqual(len(created), 1)
+            note_text = created[0].read_text(encoding="utf-8")
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("phase-3-ux-and-interaction-design", note_text)
+            self.assertIn("## Requested Outputs", note_text)
+            self.assertIn("UX/UI quality", note_text)
+            self.assertIn("runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md", note_text)
 
     def test_select_recovery_targets_skips_architect_phase6_block_when_runtime_escalation_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

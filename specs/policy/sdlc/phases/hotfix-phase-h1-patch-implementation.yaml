@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: H1-hotfix-patch-applied
 required_outputs:
   - app/run.sh
+  - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h1-patch-implementation.approved.md
 steps:
   - id: H1-HOTFIX-PATCH
     title: Hotfix patch applied
@@ -17,4 +18,15 @@ steps:
     outputs:
       artifacts:
         - app/run.sh
+    waivable: false
+  - id: H1-CEO-PHASE-REVIEW
+    title: CEO critical review approves hotfix patch implementation
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h1-patch-implementation.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

@@ -14,6 +14,7 @@ required_outputs:
   - runs/current/artifacts/architecture/dependency-provisioning.md
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
+  - runs/current/evidence/ceo-phase-reviews/phase-2-architecture-contract.approved.md
 steps:
   - id: P2-ARCHITECTURE-PACKAGE
     title: Architecture package complete
@@ -29,4 +30,15 @@ steps:
         - runs/current/artifacts/architecture/dependency-provisioning.md
         - runs/current/artifacts/architecture/capability-profile.md
         - runs/current/artifacts/architecture/load-plan.md
+    waivable: false
+  - id: P2-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 2 architecture contract
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-2-architecture-contract.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

@@ -13,6 +13,7 @@ required_outputs:
   - runs/current/evidence/ui-previews/manifest.md
   - runs/current/evidence/frontend-usability.md
   - runs/current/evidence/quality/coverage-report.md
+  - runs/current/evidence/ceo-phase-reviews/phase-6-integration-review.approved.md
 steps:
   - id: P6-INTEGRATION-REVIEW
     title: Integration review and quality evidence complete
@@ -33,4 +34,15 @@ steps:
       - UX-COV-001
       - GATE-COV-001
       - BE-SAFRS-ORM-001
+    waivable: false
+  - id: P6-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 6 integration review
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-6-integration-review.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

@@ -37,3 +37,62 @@ requirements:
     remediation: >
       Align the metadata guidance and template to the same unfenced header
       format and remove contradictory front-matter delimiters.
+  - id: PROC-CEO-PHASE-001
+    title: CEO critical phase review approval exists before phase exit
+    class: evidence_presence
+    normative: MUST
+    severity: error
+    family: process-core
+    owner_roles:
+      - ceo
+    applies_when:
+      roles:
+        - product_manager
+        - architect
+        - frontend
+        - backend
+        - qa
+      phases:
+        - hotfix-eligibility-control
+        - hotfix-phase-h1-patch-implementation
+        - hotfix-phase-h2-regression-verification
+        - hotfix-phase-h3-close-or-escalate
+        - phase-0-intake-and-framing
+        - phase-1-product-definition
+        - phase-2-architecture-contract
+        - phase-3-ux-and-interaction-design
+        - phase-4-backend-design-and-rules-mapping
+        - phase-5-parallel-implementation
+        - phase-6-integration-review
+        - phase-7-product-acceptance
+        - phase-8-qa-pre-delivery-validation
+        - phase-I1-change-intake-and-triage
+        - phase-I2-product-and-scope-delta
+        - phase-I3-architecture-and-contract-delta
+        - phase-I4-design-delta
+        - phase-I5-implementation-delta
+        - phase-I6-integration-and-regression-review
+        - phase-I7-change-acceptance
+    source_docs:
+      - playbook/roles/ceo.md
+      - playbook/process/quality-gates.md
+      - runs/template/evidence/ceo-phase-reviews/README.md
+    description: >
+      A phase may not exit until CEO has critically reviewed the completed
+      phase package, explicitly challenged cross-component quality, and
+      approved the phase. UX/UI review is mandatory in every CEO phase
+      approval, even when no UX blocker is found.
+    validator:
+      kind: python_function
+      entrypoint: tools/validators/policy/validate_ceo_phase_review_contracts.py
+    evidence:
+      required_files:
+        - runs/current/evidence/ceo-phase-reviews
+    exceptions:
+      allowed: false
+    manual_attestation:
+      required: false
+    remediation: >
+      Have CEO complete the critical phase review, approve it only if the
+      phase is acceptable, and otherwise block the phase with corrective
+      handoffs instead of forcing a phase exit.

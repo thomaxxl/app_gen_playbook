@@ -17,6 +17,7 @@ required_outputs:
   - runs/current/artifacts/ux/custom-view-specs.md
   - runs/current/artifacts/ux/state-handling.md
   - runs/current/evidence/quality/review-plan.json
+  - runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md
 steps:
   - id: P3-UX-PACKAGE
     title: UX package and review plan complete
@@ -35,4 +36,15 @@ steps:
         - runs/current/artifacts/ux/custom-view-specs.md
         - runs/current/artifacts/ux/state-handling.md
         - runs/current/evidence/quality/review-plan.json
+    waivable: false
+  - id: P3-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 3 UX and interaction design
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-3-ux-and-interaction-design.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

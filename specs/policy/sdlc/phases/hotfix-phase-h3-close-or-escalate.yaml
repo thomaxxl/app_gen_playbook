@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: H3-hotfix-closed-or-escalated
 required_outputs:
   - runs/current/orchestrator/run-status.json
+  - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h3-close-or-escalate.approved.md
 steps:
   - id: H3-HOTFIX-CLOSE
     title: Hotfix closed or escalated
@@ -17,4 +18,15 @@ steps:
     outputs:
       artifacts:
         - runs/current/orchestrator/run-status.json
+    waivable: false
+  - id: H3-CEO-PHASE-REVIEW
+    title: CEO critical review approves hotfix close or escalation
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/hotfix-phase-h3-close-or-escalate.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

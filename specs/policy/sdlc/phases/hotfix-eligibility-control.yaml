@@ -6,6 +6,7 @@ purpose: Prove a requested hotfix does not change authoritative design state and
 exit_milestone: H0-hotfix-eligibility-proven
 required_outputs:
   - runs/current/orchestrator/run-status.json
+  - runs/current/evidence/ceo-phase-reviews/hotfix-eligibility-control.approved.md
 steps:
   - id: H0-HOTFIX-ELIGIBILITY
     title: Hotfix eligibility proven
@@ -15,4 +16,15 @@ steps:
     outputs:
       artifacts:
         - runs/current/orchestrator/run-status.json
+    waivable: false
+  - id: H0-CEO-PHASE-REVIEW
+    title: CEO critical review approves hotfix eligibility
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/hotfix-eligibility-control.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false

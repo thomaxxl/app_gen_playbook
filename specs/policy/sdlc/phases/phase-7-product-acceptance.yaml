@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: M7-acceptance-gate-passed
 required_outputs:
   - runs/current/artifacts/product/acceptance-review.md
+  - runs/current/evidence/ceo-phase-reviews/phase-7-product-acceptance.approved.md
 steps:
   - id: P7-PRODUCT-ACCEPTANCE
     title: Product acceptance review complete
@@ -24,4 +25,15 @@ steps:
       - UX-COV-001
     manual_attestation:
       required: true
+    waivable: false
+  - id: P7-CEO-PHASE-REVIEW
+    title: CEO critical review approves phase 7 product acceptance
+    kind: review
+    owners: [ceo]
+    requiredness: required
+    outputs:
+      artifacts:
+        - runs/current/evidence/ceo-phase-reviews/phase-7-product-acceptance.approved.md
+    requirements:
+      - PROC-CEO-PHASE-001
     waivable: false
