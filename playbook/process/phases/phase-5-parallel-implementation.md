@@ -91,6 +91,9 @@ business-rule behavior, or route meaning.
 - implement the baseline relationship runtime, including relationship metadata
   synthesis, related-record dialogs, and show-page relationship tabs
 - implement custom pages
+- compile the approved UX artifact package into
+  `app/frontend/src/generated/uxModel.ts` so runtime layout decisions are
+  executable instead of prose-only
 - implement dynamic user-visible data retrieval according to
   `runs/current/artifacts/architecture/data-sourcing-contract.md`
 - implement shared page-shell and header consistency
@@ -169,6 +172,9 @@ business-rule behavior, or route meaning.
 - custom pages work
 - `Home` and any custom pages follow the approved page-shell defaults or an
   explicitly documented replacement
+- `app/frontend/src/generated/uxModel.ts` exists and captures the approved
+  entry-surface mode, per-resource list/show defaults, relationship-surface
+  choices, and grouped-form decisions from the run-owned UX artifacts
 - visible loading, empty, error, success, and recovery states exist and are
   testable for the critical flows
 - domain rules fire correctly

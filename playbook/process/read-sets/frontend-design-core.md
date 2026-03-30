@@ -14,9 +14,12 @@ Required startup reads:
 - `../../../specs/contracts/frontend/home-and-entry.md`
 - `../../../specs/contracts/frontend/relationship-ui.md`
 - `../../../specs/contracts/frontend/ui-principles.md`
+- `../../../specs/contracts/frontend/admin-yaml-contract.md`
+- `../../../specs/contracts/frontend/record-shape.md`
 - `../../../specs/contracts/frontend/theme-and-layout.md`
 - `../../../specs/contracts/frontend/custom-views.md`
 - `../../../specs/contracts/frontend/errors.md`
+- `../../../specs/contracts/frontend/validation.md`
 - `../../../specs/contracts/frontend/accessibility.md`
 - `../../../skills/mui-db-admin-ux/SKILL.md`
 - `../../../skills/safrs-jsonapi-client-frontend/SKILL.md`

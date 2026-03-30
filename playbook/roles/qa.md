@@ -64,6 +64,8 @@ The QA agent MUST:
 - fail the review if required CRUD or search support only works through
   manually typed deep links instead of the delivered UI's normal navigation
   and actions
+- fail the review if default list pages are overloaded, generic metadata
+  tables instead of usable task-oriented product surfaces
 - fail the review if a supported collection surface only shows a teaser subset
   of rows with no pagination, filter/search affordance, or onward
   show/create/edit path
@@ -91,6 +93,13 @@ The QA agent MUST:
 - fail the review if user-facing pages still expose metadata, route inventory,
   contract recovery copy, provisional warnings, or other internal/debug
   language
+- fail the review if forms that should be grouped still ship as a flat field
+  wall
+- fail the review if `Home` or another primary entry surface ignores the
+  approved landing strategy and still reads like a generic CRUD hub
+- fail the review if relationship-rich resources technically work but still
+  present bare counts or generic shells where the approved UX package called
+  for labels, previews, or tabs
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the

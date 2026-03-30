@@ -33,6 +33,7 @@ frontend/
     main.tsx
     vite-env.d.ts
     generated/
+      uxModel.ts
       resourcePages.ts
       resources/
         <one wrapper file per resource named in ../../architecture/resource-naming.md>
@@ -77,6 +78,7 @@ These files are shipped under `templates/app/frontend/`:
 - `theme.ts.md`
 - `vite-env.d.ts.md`
 - `config.ts.md`
+- `generated/uxModel.ts.md`
 - `App.tsx.md`
 - `Home.tsx.md`
 - `PageHero.tsx.md`
@@ -134,6 +136,8 @@ The starter frontend must support:
 - The frontend scaffold must be complete enough to run without first generating
   a hidden Vite starter app elsewhere.
 - `Home.tsx` is required even when `Landing.tsx` is omitted or replaced.
+- `generated/uxModel.ts` is required because the shared runtime must consume
+  executable UX decisions rather than only prose artifacts.
 - `theme.ts`, `PageHero.tsx`, `PageHeader.tsx`, `EmptyState.tsx`,
   `ErrorState.tsx`, `FormSection.tsx`, `SectionBlock.tsx`,
   `QuickActionCard.tsx`, and `SummaryCard.tsx` are part of the starter UI

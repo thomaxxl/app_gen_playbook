@@ -49,6 +49,16 @@ Allowed `Action` values SHOULD be selected from:
 The real artifact MUST record any files or directories that are replaced
 because the starter lane no longer fits.
 
+It MUST also record when starter files such as:
+
+- `app/frontend/src/Home.tsx`
+- `app/frontend/src/CustomDashboard.tsx`
+- starter generated resource pages
+- `app/frontend/src/generated/uxModel.ts`
+
+must be replaced or recompiled because the delivered UX surface is no longer
+starter-compatible.
+
 ## Post-generation edit policy
 
 The real artifact MUST define which files:

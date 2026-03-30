@@ -47,6 +47,8 @@ Use it together with:
 6. Every page defines loading, empty, error, retry, and focus-return behavior.
 7. Related reads follow `include -> parent relationship route -> id fallback`.
 8. Use advanced MUI surfaces only when they reduce navigation cost or improve comprehension.
+9. Default generated list pages stay within a deliberate column budget; do not render every visible field into the grid.
+10. Compile the run-owned UX artifacts into `app/frontend/src/generated/uxModel.ts` so runtime heuristics are executable.
 
 ## Resource-class defaults
 
@@ -76,6 +78,7 @@ page hop, reduce uncertainty, or improve comprehension.
 - `runs/current/artifacts/ux/relationship-surface-plan.md`
 - `runs/current/artifacts/ux/dashboard-data-plan.md`
 - `runs/current/artifacts/ux/form-grouping-plan.md`
+- `app/frontend/src/generated/uxModel.ts`
 
 ## Required review questions
 
@@ -96,4 +99,3 @@ Before approving a frontend UX slice, answer all of these:
 - joined dashboard data is replaced with hardcoded literals or empty scaffolds
 - forms become long ungrouped walls despite enough field count or complexity to justify structure
 - the run-owned UX artifacts do not explain why the chosen MUI surfaces help
-

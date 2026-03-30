@@ -79,6 +79,9 @@ frontend package template before treating the playbook baseline as current.
 - `runs/current/artifacts/ux/resource-view-strategy.md`,
   `relationship-surface-plan.md`, `dashboard-data-plan.md`, and
   `form-grouping-plan.md` exist and are not left as placeholder text
+- `app/frontend/src/generated/uxModel.ts` exists and is not left as a starter
+  placeholder; it reflects the approved entry-surface mode plus the
+  per-resource list/show/form decisions from the run-owned UX artifacts
 - the app declares exactly one primary entry route across
   `landing-strategy.md` and `navigation.md`
 - explicit `resourcePages` are wired into the app
@@ -153,11 +156,24 @@ frontend package template before treating the playbook baseline as current.
 - generated lists, show pages, dialogs, and tabs match the resource-class and
   relationship presentation strategy defined in
   `resource-view-strategy.md` and `relationship-surface-plan.md`
+- default generated list pages stay within the approved list-column budget and
+  do not silently expand into “all visible fields” tables
+- long text fields stay out of default generated tables unless the UX model
+  explicitly promotes them
+- raw foreign-key ids stay out of default generated list/show surfaces when
+  relationship metadata exists
+- default list surfaces prefer readable labels, chips, or relationship
+  previews over bare counts when the relationship plan says related data must
+  be visible
 - dashboard and landing surfaces fetch the joined API-backed data required by
   `dashboard-data-plan.md` instead of substituting static placeholders for
   dynamic operational information
 - forms that `form-grouping-plan.md` marks as grouped do not degrade into one
   long unsectioned field wall
+- forms above the complexity threshold are sectioned by default unless the UX
+  model explicitly documents a lightweight exception
+- relationship-rich show pages render a meaningful overview plus tabs instead
+  of a bare metadata grid with tabs bolted on later
 - required custom pages match `custom-view-specs.md` and `screen-inventory.md`
   instead of collapsing into generic metadata/status panels
 - at least one generated list, one generated show page, and one generated form
@@ -243,8 +259,9 @@ The generated app SHOULD also pass:
 - `python3 tools/check_frontend_usability.py --repo-root .`
 
 This guard is intentionally narrow. It catches obvious contract/debug-shell
-copy drift and missing CTA/title wiring, but it does not replace browser review
-or the required usability evidence.
+copy drift, missing UX planning artifacts, absent `uxModel.ts` wiring, and
+some generic-CRUD regressions, but it does not replace browser review or the
+required usability evidence.
 
 ## Automated smoke validation
 

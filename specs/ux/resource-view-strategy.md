@@ -22,9 +22,9 @@ the frontend does not collapse everything into one generic CRUD layout.
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource | Resource class | Primary surface family | Default entry surface | List density | Show-page structure | Form strategy | Related-record preview mode | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | reference / transactional / aggregate / join / singleton / other | list-first / show-first / dashboard-first / settings-first | replace | compact / standard / rich | tabs / summary + sections / minimal | inline / grouped / dialog-assisted | dialog / tab / inline / none | replace |
+| Resource | UI class | Primary list goal | Default list columns | Show-page structure | Primary CTA | Quick actions | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| replace | lookup/reference / transactional / parent-aggregate / join/history / settings/singleton | replace | replace | minimal / overview+tabs / dashboard-first | replace | replace | replace |
 
 ## Required decisions
 
@@ -35,5 +35,6 @@ The real artifact MUST define:
 - which resources are dialog-preview-friendly from list or summary surfaces
 - which resources should stay lightweight because they are reference or join tables
 - which resources require grouped forms instead of flat CRUD forms
+- which resources need strict list-column budgets and which fields are allowed
+  in the default table
 - any resource that intentionally deviates from its default class strategy and why
-

@@ -18,6 +18,7 @@ FORBIDDEN_USER_FACING_PHRASES = (
     "queue endpoint remains provisional",
     "using committed admin.yaml snapshot",
 )
+RAW_ID_SOURCE_RE = re.compile(r'source\s*=\s*"[^"]*(_id|Id)"')
 
 
 def extract_single_backtick_value(text: str, label: str) -> str | None:
@@ -79,6 +80,12 @@ def find_phrase_matches(src_root: Path, phrase: str) -> list[str]:
     return matches
 
 
+def read_text_if_exists(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
 def collect_issues(repo_root: Path) -> list[str]:
     issues: list[str] = []
     landing_strategy = repo_root / "runs" / "current" / "artifacts" / "ux" / "landing-strategy.md"
@@ -90,6 +97,8 @@ def collect_issues(repo_root: Path) -> list[str]:
         repo_root / "runs" / "current" / "artifacts" / "ux" / "form-grouping-plan.md",
     )
     src_root = repo_root / "app" / "frontend" / "src"
+    ux_model = src_root / "generated" / "uxModel.ts"
+    resource_registry = src_root / "shared-runtime" / "resourceRegistry.tsx"
 
     if not src_root.exists():
         return ["missing app/frontend/src/ for frontend usability review"]
@@ -101,8 +110,42 @@ def collect_issues(repo_root: Path) -> list[str]:
 
     source_text, _ = collect_source_text(src_root)
     landing_text = landing_strategy.read_text(encoding="utf-8")
+    form_grouping_plan_text = read_text_if_exists(required_ux_artifacts[-1]).lower()
     title = extract_single_backtick_value(landing_text, "Entry-page title")
     primary_cta = extract_single_backtick_value(landing_text, "Primary CTA label")
+
+    if not ux_model.exists():
+        issues.append("missing app/frontend/src/generated/uxModel.ts for frontend usability review")
+    else:
+        ux_model_text = ux_model.read_text(encoding="utf-8")
+        normalized_ux_model = ux_model_text.replace(" ", "").replace("\n", "")
+        if "entrySurface" not in ux_model_text or "resources" not in ux_model_text:
+            issues.append("generated uxModel.ts does not expose entrySurface/resources decisions")
+        if "resources:{}" in normalized_ux_model:
+            issues.append("generated uxModel.ts still has an empty resources map placeholder")
+
+    if not resource_registry.exists():
+        issues.append("missing app/frontend/src/shared-runtime/resourceRegistry.tsx for frontend usability review")
+    else:
+        resource_registry_text = resource_registry.read_text(encoding="utf-8")
+        normalized_registry = resource_registry_text.replace(" ", "")
+        required_runtime_tokens = (
+            "getResourceUxConfig",
+            "selectListDisplayItems",
+            "DEFAULT_LIST_COLUMN_BUDGET",
+        )
+        for token in required_runtime_tokens:
+            if token not in resource_registry_text:
+                issues.append(f"resourceRegistry runtime is missing UX runtime token: {token}")
+        if "FormSection" not in resource_registry_text or "buildResolvedFormSections" not in resource_registry_text:
+            issues.append("resourceRegistry runtime does not expose grouped-form section support")
+        if 'displayItems = visibleDisplayItems(resourceMeta, "list")' in resource_registry_text:
+            issues.append("resourceRegistry still renders every visible list item instead of applying a list budget")
+        if RAW_ID_SOURCE_RE.search(resource_registry_text):
+            issues.append("resourceRegistry still contains a literal raw _id list/show field source")
+
+    if "yes" in form_grouping_plan_text and "FormSection" not in source_text:
+        issues.append("form-grouping plan requires sections but FormSection usage was not found in frontend source")
 
     if title and title.lower() not in source_text:
         issues.append(f"entry-page title not found in frontend source: {title!r}")

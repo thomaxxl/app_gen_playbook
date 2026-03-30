@@ -21,9 +21,9 @@ sections, guidance, or progressive disclosure.
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource or form | Form class | Sections required | Guidance required | Default field width strategy | Dialog or drawer assist | Notes |
+| Resource | Section | Fields | Layout | Guidance | Required? | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| replace | lightweight / standard / complex / settings | yes / no | replace | compact / mixed / wide | none / dialog / drawer | replace |
+| replace | replace | replace | compact / mixed / wide | replace | yes / no | replace |
 
 ## Required decisions
 
@@ -35,4 +35,3 @@ The real artifact MUST define:
 - which fields or groups should stay compact vs full width
 - whether any relationship-heavy flow needs dialog/drawer-assisted editing
 - whether any complex form needs stepwise or accordion-style grouping
-

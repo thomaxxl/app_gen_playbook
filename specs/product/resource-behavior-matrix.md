@@ -17,9 +17,9 @@ version at `../../runs/current/artifacts/product/resource-behavior-matrix.md`.
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource | List | Show | Create | Edit | Delete | Search | Appears in menu | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ExampleResource | yes | yes | yes | yes | maybe | yes | yes | Replace this row |
+| Resource | List | Show | Create | Edit | Delete | Search | Appears in menu | UI posture | Relationship context required? | Modal child editing? | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ExampleResource | yes | yes | yes | yes | maybe | yes | yes | overview-heavy / table-heavy / balanced | yes / no | yes / no | Replace this row |
 
 The matrix MUST capture product intent, not implementation guesses.
 
@@ -32,3 +32,9 @@ The real artifact MUST also explain:
 - which resources MAY be omitted from the default menu
 - which resources are likely to require custom-page context beyond generated
   CRUD pages
+- which resources are overview-heavy, table-heavy, or balanced from the UI
+  standpoint
+- which default surfaces require relationship context instead of bare ids,
+  counts, or isolated fields
+- which child entities need modal or inline editing instead of only full-page
+  navigation

@@ -22,9 +22,9 @@ resolved into readable labels, and when dialogs or tabs are required.
 
 The real artifact MUST include a table with at least these columns:
 
-| Parent resource | Relationship | Direction | Primary user-facing label | List behavior | Summary/show behavior | Dialog required | Show-page tab required | Canonical fetch lane | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | toone / tomany | replace | inline label / chip / hidden | summary row / tab / inline card | yes / no | yes / no | include / relationship-route / fallback | replace |
+| Resource | Relationship | Cardinality | Surface | Summary behavior | Default action | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | toone / tomany | chip list / dialog preview / show tab / inline summary panel / dedicated page only | replace | replace | replace |
 
 ## Required decisions
 
@@ -37,4 +37,3 @@ The real artifact MUST define:
 - which label or user-key style is shown instead of raw FK ids
 - when tomany collections need datagrid tabs, cards, or another documented pattern
 - which relationships need canonical parent relationship routes proven in validation
-

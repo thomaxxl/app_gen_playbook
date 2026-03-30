@@ -19,9 +19,9 @@ version at `../../runs/current/artifacts/architecture/resource-classification.md
 
 The real artifact MUST include a table with at least these columns:
 
-| Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Canonical SAFRS lane | Relationship-native? | Exception required | Replacement contract | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | resource / view-backed resource / relationship / include / jsonapi_attr / jsonapi_rpc | yes/no | yes/no | replace or none | Replace this row |
+| Resource | Class | CRUD expectation | Reference-only | Appears in menu | Requires custom-page logic | Singleton or first-class | Canonical SAFRS lane | Relationship-native? | Default list variant | Default show variant | Relationship prominence | Needs grouped forms? | Dashboard relevance | Exception required | Replacement contract | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ExampleResource | core CRUD | full CRUD | no | yes | no | first-class | resource / view-backed resource / relationship / include / jsonapi_attr / jsonapi_rpc | yes/no | compact / standard / rich | minimal / overview+tabs / dashboard-first | low / normal / high | yes / no | none / supporting / primary | yes/no | replace or none | Replace this row |
 
 Allowed `Class` values SHOULD be selected from:
 
@@ -58,3 +58,5 @@ The real artifact MUST explicitly record:
 - any concept that splits into multiple resources and why
 - any resource that merges multiple concepts and why
 - any concept that is intentionally not represented as a first-class resource
+- which default UI surface family each resource should map to in the frontend
+  runtime

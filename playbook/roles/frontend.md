@@ -80,6 +80,10 @@ The Frontend agent MUST treat
 authoritative boundary for what data may stay static in the bundle versus what
 must be fetched from the backend.
 
+The Frontend agent MUST also treat
+`../../app/frontend/src/generated/uxModel.ts` as the executable frontend
+view model compiled from the run-owned UX artifact package.
+
 The Frontend agent MUST use the React-admin dataProvider as the canonical
 frontend API access layer. If a page, dashboard, landing surface, or custom
 view needs backend data, it MUST retrieve that data through the approved
@@ -161,7 +165,9 @@ Typical task-driven reads:
 - UX implementation:
   `ux/navigation.md`, `ux/landing-strategy.md`, `ux/screen-inventory.md`,
   `ux/iconography.md`, `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
-  `ux/state-handling.md`
+  `ux/state-handling.md`, `ux/resource-view-strategy.md`,
+  `ux/relationship-surface-plan.md`, `ux/dashboard-data-plan.md`,
+  `ux/form-grouping-plan.md`
 
 The Frontend agent MUST NOT load the entire run-owned artifact tree by
 default.
@@ -238,6 +244,16 @@ landing/hero page. It MUST NOT drop users directly into a generated
 React-admin resource grid or generic list shell as the first meaningful screen.
 If resource data appears on the entry page, it comes after the hero or behind a
 clear CTA.
+
+The Frontend agent MUST keep default generated list and form surfaces within
+the approved UX model:
+
+- default generated list pages MUST NOT degrade into “every visible field”
+  tables
+- long text, raw FK ids, and secondary timestamps stay out of default tables
+  unless the run-owned UX artifacts explicitly promote them
+- forms above the complexity threshold MUST use grouped sections instead of a
+  flat field wall
 
 When the UI needs to render large formatted text blocks, the Frontend agent
 SHOULD use `react-markdown` as the default rendering path instead of injected

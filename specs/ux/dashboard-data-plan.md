@@ -23,9 +23,9 @@ configuration.
 
 The real artifact MUST include a table with at least these columns:
 
-| Surface ID | Route or component | User question answered | Summary blocks | Joined API data required | Static UI config allowed | Proof/reassurance cues | Primary CTA support | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| replace | replace | replace | replace | replace | replace | replace | replace | replace |
+| Surface | Summary block | API data required | Static allowed? | Empty state | CTA | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| replace | replace | replace | yes / no | replace | replace | replace |
 
 ## Required decisions
 
@@ -37,4 +37,3 @@ The real artifact MUST define:
 - which surfaces join multiple resources or relationships
 - which surfaces degrade gracefully when summary data is delayed, empty, or stale
 - which proof cues must appear above the fold
-

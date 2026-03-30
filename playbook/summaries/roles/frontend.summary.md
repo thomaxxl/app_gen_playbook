@@ -17,6 +17,9 @@ Always load:
 This role controls UX artifacts and frontend code. It does not invent product
 rules, backend semantics, or packaging policy.
 
+It is also responsible for compiling the run-owned UX artifacts into the
+executable frontend view model at `app/frontend/src/generated/uxModel.ts`.
+
 For database-driven MUI layout and related-data decisions, load:
 
 - `../../../skills/mui-db-admin-ux/SKILL.md`

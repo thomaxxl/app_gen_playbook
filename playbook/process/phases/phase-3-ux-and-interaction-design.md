@@ -47,6 +47,10 @@ Design the user journey and page behavior before implementation diverges.
 - `runs/current/artifacts/ux/state-handling.md`
 - `runs/current/evidence/quality/review-plan.json`
 
+Those run-owned UX artifacts become the source material for the executable
+frontend UX model later compiled into `app/frontend/src/generated/uxModel.ts`
+during Phase 5.
+
 ## Exit criteria
 
 - the UX package is traceable to the product artifacts it implements

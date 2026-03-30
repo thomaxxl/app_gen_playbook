@@ -41,6 +41,12 @@ import {
 } from "react-admin";
 import type { SafrsDataProvider, Schema } from "safrs-jsonapi-client";
 
+import FormSection from "../FormSection";
+import {
+  getResourceUxConfig,
+  type FormLayout,
+  type ResourceUxConfig,
+} from "../generated/uxModel";
 import { useAdminSchema, useRawAdminYaml } from "./admin/schemaContext";
 import {
   buildResourceMeta,
@@ -63,6 +69,8 @@ import {
 } from "./relationshipUi";
 
 const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_LIST_COLUMN_BUDGET = 6;
+const DEFAULT_SHOW_OVERVIEW_BUDGET = 8;
 
 type DisplayMode = "create" | "edit" | "list" | "show";
 
@@ -78,6 +86,13 @@ export interface ResourcePages {
   show: () => ReactElement;
   recordRepresentation?: string;
 }
+
+type ResolvedFormSection = {
+  title: string;
+  description?: string;
+  attributes: ResourceAttributeMeta[];
+  layout?: FormLayout;
+};
 
 export function makeSchemaDrivenPages(resourceName: string): ResourcePages {
   const ListPage = () => <SchemaDrivenList resource={resourceName} />;
@@ -217,6 +232,164 @@ function visibleDisplayItems(
   return items;
 }
 
+function isIdentityAttribute(
+  attribute: ResourceAttributeMeta,
+  resourceMeta: ResourceMeta,
+): boolean {
+  return (
+    attribute.isPrimaryKey
+    || attribute.name === resourceMeta.userKey
+    || ["name", "title", "label", "code"].includes(attribute.name.toLowerCase())
+  );
+}
+
+function isStateAttribute(attribute: ResourceAttributeMeta): boolean {
+  const lowered = attribute.name.toLowerCase();
+  return lowered.includes("status") || lowered.includes("state") || lowered.includes("phase");
+}
+
+function isMetricAttribute(attribute: ResourceAttributeMeta): boolean {
+  const lowered = attribute.name.toLowerCase();
+  return (
+    attribute.kind === "number"
+    || lowered.includes("count")
+    || lowered.includes("total")
+    || lowered.includes("score")
+    || lowered.includes("amount")
+    || lowered.includes("progress")
+  );
+}
+
+function isTimestampAttribute(attribute: ResourceAttributeMeta): boolean {
+  const lowered = attribute.name.toLowerCase();
+  return (
+    attribute.kind === "date"
+    || lowered.endsWith("_at")
+    || lowered.includes("created")
+    || lowered.includes("updated")
+    || lowered.includes("timestamp")
+  );
+}
+
+function isLongTextAttribute(attribute: ResourceAttributeMeta): boolean {
+  const lowered = attribute.name.toLowerCase();
+  return (
+    attribute.widget === "textarea"
+    || (attribute.rows ?? 0) > 3
+    || lowered.includes("description")
+    || lowered.includes("details")
+    || lowered.includes("notes")
+    || lowered.includes("summary")
+    || lowered.includes("comment")
+    || lowered.includes("body")
+  );
+}
+
+function itemMatchesName(item: DisplayItem, name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  return item.kind === "relationship"
+    ? item.relationship.name.toLowerCase() === normalized
+    : item.attribute.name.toLowerCase() === normalized;
+}
+
+function prioritizeDisplayItems(
+  resourceMeta: ResourceMeta,
+  items: DisplayItem[],
+): DisplayItem[] {
+  return items
+    .map((item, index) => {
+      if (item.kind === "relationship") {
+        return { index, item, score: 70 };
+      }
+
+      const attribute = item.attribute;
+      let score = 40;
+
+      if (isIdentityAttribute(attribute, resourceMeta)) {
+        score = 100;
+      } else if (isStateAttribute(attribute)) {
+        score = 90;
+      } else if (isMetricAttribute(attribute)) {
+        score = 60;
+      } else if (attribute.kind === "boolean") {
+        score = 50;
+      }
+
+      if (isTimestampAttribute(attribute)) {
+        score -= 35;
+      }
+
+      if (isLongTextAttribute(attribute)) {
+        score -= 50;
+      }
+
+      return { index, item, score };
+    })
+    .sort((left, right) => {
+      if (left.score !== right.score) {
+        return right.score - left.score;
+      }
+      return left.index - right.index;
+    })
+    .map(({ item }) => item);
+}
+
+function selectDisplayItemsByNames(items: DisplayItem[], names: string[]): DisplayItem[] {
+  const selected: DisplayItem[] = [];
+  const seen = new Set<string>();
+
+  for (const name of names) {
+    const match = items.find((item) => itemMatchesName(item, name));
+    if (!match || seen.has(match.key)) {
+      continue;
+    }
+    seen.add(match.key);
+    selected.push(match);
+  }
+
+  return selected;
+}
+
+function clampColumnBudget(value: number | undefined): number {
+  if (!value || Number.isNaN(value)) {
+    return DEFAULT_LIST_COLUMN_BUDGET;
+  }
+  return Math.max(3, Math.min(value, 8));
+}
+
+function selectListDisplayItems(
+  resourceMeta: ResourceMeta,
+  uxConfig: ResourceUxConfig,
+): DisplayItem[] {
+  const items = visibleDisplayItems(resourceMeta, "list");
+  const explicit = selectDisplayItemsByNames(items, uxConfig.listFields ?? []);
+  if (explicit.length > 0) {
+    return explicit.slice(0, clampColumnBudget(uxConfig.listColumnBudget));
+  }
+
+  return prioritizeDisplayItems(resourceMeta, items).slice(
+    0,
+    clampColumnBudget(uxConfig.listColumnBudget),
+  );
+}
+
+function selectShowOverviewItems(
+  resourceMeta: ResourceMeta,
+  uxConfig: ResourceUxConfig,
+): DisplayItem[] {
+  const items = visibleDisplayItems(resourceMeta, "show");
+  const explicit = selectDisplayItemsByNames(items, uxConfig.showOverviewFields ?? []);
+  if (explicit.length > 0) {
+    return explicit.slice(0, DEFAULT_SHOW_OVERVIEW_BUDGET);
+  }
+
+  return prioritizeDisplayItems(resourceMeta, items).slice(0, DEFAULT_SHOW_OVERVIEW_BUDGET);
+}
+
 function buildSearchPlaceholder(resourceMeta: ResourceMeta): string {
   const labels = resourceMeta.searchColumns.map((column) => column.label);
   if (labels.length === 0) {
@@ -264,6 +437,78 @@ function getFormColumnSpan(attribute: ResourceAttributeMeta): number {
   }
 
   return 4;
+}
+
+function defaultFormSectionTitle(resourceMeta: ResourceMeta, sectionIndex: number): string {
+  if (sectionIndex === 0) {
+    return `${resourceMeta.label} details`;
+  }
+  return "Additional details";
+}
+
+function shouldUseGroupedForm(
+  attributes: ResourceAttributeMeta[],
+  uxConfig: ResourceUxConfig,
+): boolean {
+  if (uxConfig.groupedForms != null) {
+    return uxConfig.groupedForms || Boolean(uxConfig.formSections?.length);
+  }
+
+  if (uxConfig.formSections?.length) {
+    return true;
+  }
+
+  const relationshipCount = attributes.filter(
+    (attribute) => Boolean(attribute.relationship) || Boolean(attribute.reference),
+  ).length;
+  return attributes.length > 6 || relationshipCount > 1 || attributes.some(isLongTextAttribute);
+}
+
+function buildResolvedFormSections(
+  resourceMeta: ResourceMeta,
+  attributes: ResourceAttributeMeta[],
+  uxConfig: ResourceUxConfig,
+): ResolvedFormSection[] {
+  const byName = new Map(attributes.map((attribute) => [attribute.name, attribute]));
+  const claimed = new Set<string>();
+  const sections: ResolvedFormSection[] = [];
+
+  for (const section of uxConfig.formSections ?? []) {
+    const sectionAttributes = section.fields
+      .map((field) => byName.get(field))
+      .filter((attribute): attribute is ResourceAttributeMeta => Boolean(attribute));
+    if (sectionAttributes.length === 0) {
+      continue;
+    }
+    for (const attribute of sectionAttributes) {
+      claimed.add(attribute.name);
+    }
+    sections.push({
+      title: section.title,
+      description: section.description,
+      attributes: sectionAttributes,
+      layout: section.layout,
+    });
+  }
+
+  const remaining = attributes.filter((attribute) => !claimed.has(attribute.name));
+  if (remaining.length > 0) {
+    sections.push({
+      title: defaultFormSectionTitle(resourceMeta, sections.length),
+      attributes: remaining,
+      layout: "mixed",
+    });
+  }
+
+  if (sections.length === 0) {
+    sections.push({
+      title: `${resourceMeta.label} details`,
+      attributes,
+      layout: "mixed",
+    });
+  }
+
+  return sections;
 }
 
 function getTextareaRows(attribute: ResourceAttributeMeta): number {
@@ -554,12 +799,15 @@ export function ManyRelationshipTab({
     () => buildResourceMeta(schema, rawYaml, relationship.targetResource),
     [rawYaml, relationship.targetResource, schema],
   );
+  const targetUx = useMemo(
+    () => getResourceUxConfig(relationship.targetResource),
+    [relationship.targetResource],
+  );
   const items = useMemo(
     () =>
-      visibleDisplayItems(targetMeta, "list")
-        .filter((item) => !isBackReferenceItem(item, relationship, parentResource))
-        .slice(0, 8),
-    [parentResource, relationship, targetMeta],
+      selectListDisplayItems(targetMeta, targetUx)
+        .filter((item) => !isBackReferenceItem(item, relationship, parentResource)),
+    [parentResource, relationship, targetMeta, targetUx],
   );
   const sortField = targetMeta.userKey ?? targetMeta.attributes[0]?.name ?? "id";
   const parentId = record?.id;
@@ -739,9 +987,10 @@ function ShowContent({
   resource: string;
 }) {
   const resourceMeta = useResourceMeta(resource);
+  const uxConfig = useMemo(() => getResourceUxConfig(resource), [resource]);
   const overviewItems = useMemo(
-    () => visibleDisplayItems(resourceMeta, "show"),
-    [resourceMeta],
+    () => selectShowOverviewItems(resourceMeta, uxConfig),
+    [resourceMeta, uxConfig],
   );
   const relationships = useMemo(
     () =>
@@ -798,7 +1047,11 @@ function ShowContent({
 function SchemaDrivenList({ resource }: { resource: string }) {
   const schema = useAdminSchema();
   const resourceMeta = useResourceMeta(resource);
-  const displayItems = visibleDisplayItems(resourceMeta, "list");
+  const uxConfig = useMemo(() => getResourceUxConfig(resource), [resource]);
+  const displayItems = useMemo(
+    () => selectListDisplayItems(resourceMeta, uxConfig),
+    [resourceMeta, uxConfig],
+  );
   const filters = resourceMeta.searchColumns.length > 0
     ? [
         <SearchInput
@@ -831,25 +1084,56 @@ function SchemaDrivenEdit({ resource }: { resource: string }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
   const resourceMeta = useResourceMeta(resource);
+  const uxConfig = useMemo(() => getResourceUxConfig(resource), [resource]);
   const attributes = visibleAttributes(resourceMeta, "edit").filter(
     (attribute) => !attribute.isPrimaryKey,
+  );
+  const grouped = shouldUseGroupedForm(attributes, uxConfig);
+  const sections = useMemo(
+    () => buildResolvedFormSections(resourceMeta, attributes, uxConfig),
+    [attributes, resourceMeta, uxConfig],
   );
 
   return (
     <Edit>
       <SimpleForm>
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: {
-              xs: "minmax(0, 1fr)",
-              md: "repeat(12, minmax(0, 1fr))",
-            },
-          }}
-        >
-          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
-        </Box>
+        {grouped ? (
+          <Box sx={{ display: "grid", gap: 3 }}>
+            {sections.map((section) => (
+              <FormSection
+                description={section.description}
+                key={section.title}
+                title={section.title}
+              >
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 2,
+                    gridTemplateColumns: {
+                      xs: "minmax(0, 1fr)",
+                      md: "repeat(12, minmax(0, 1fr))",
+                    },
+                  }}
+                >
+                  {section.attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+                </Box>
+              </FormSection>
+            ))}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                md: "repeat(12, minmax(0, 1fr))",
+              },
+            }}
+          >
+            {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+          </Box>
+        )}
       </SimpleForm>
     </Edit>
   );
@@ -859,25 +1143,56 @@ function SchemaDrivenCreate({ resource }: { resource: string }) {
   const schema = useAdminSchema();
   const rawYaml = useRawAdminYaml();
   const resourceMeta = useResourceMeta(resource);
+  const uxConfig = useMemo(() => getResourceUxConfig(resource), [resource]);
   const attributes = visibleAttributes(resourceMeta, "create").filter(
     (attribute) => !attribute.isPrimaryKey,
+  );
+  const grouped = shouldUseGroupedForm(attributes, uxConfig);
+  const sections = useMemo(
+    () => buildResolvedFormSections(resourceMeta, attributes, uxConfig),
+    [attributes, resourceMeta, uxConfig],
   );
 
   return (
     <Create>
       <SimpleForm>
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: {
-              xs: "minmax(0, 1fr)",
-              md: "repeat(12, minmax(0, 1fr))",
-            },
-          }}
-        >
-          {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
-        </Box>
+        {grouped ? (
+          <Box sx={{ display: "grid", gap: 3 }}>
+            {sections.map((section) => (
+              <FormSection
+                description={section.description}
+                key={section.title}
+                title={section.title}
+              >
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 2,
+                    gridTemplateColumns: {
+                      xs: "minmax(0, 1fr)",
+                      md: "repeat(12, minmax(0, 1fr))",
+                    },
+                  }}
+                >
+                  {section.attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+                </Box>
+              </FormSection>
+            ))}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                md: "repeat(12, minmax(0, 1fr))",
+              },
+            }}
+          >
+            {attributes.map((attribute) => renderFormItem(attribute, schema, rawYaml))}
+          </Box>
+        )}
       </SimpleForm>
     </Create>
   );

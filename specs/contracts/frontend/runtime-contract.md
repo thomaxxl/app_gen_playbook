@@ -24,6 +24,7 @@ The starter archive MUST ship these runtime snippets:
 - `templates/app/frontend/SectionBlock.tsx.md`
 - `templates/app/frontend/QuickActionCard.tsx.md`
 - `templates/app/frontend/SummaryCard.tsx.md`
+- `templates/app/frontend/generated/uxModel.ts.md`
 - `templates/app/frontend/SchemaDrivenAdminApp.tsx.md`
 - `templates/app/frontend/shared-runtime/resourceRegistry.tsx.md`
 - `templates/app/frontend/shared-runtime/relationshipUi.tsx.md`
@@ -115,6 +116,9 @@ type SchemaDrivenAdminAppProps = {
 18. expose consistent page-shell primitives for title, purpose text, empty
     states, and error states
 19. preserve a shared theme baseline across Home and custom pages
+20. consume `src/generated/uxModel.ts` for entry-surface mode, list budgets,
+    show overview defaults, grouped-form decisions, and relationship-surface
+    choices instead of translating those decisions from prose on every page
 
 The shared runtime is also the canonical API access boundary for the frontend.
 Delivery components MUST obtain backend/API data through the React-admin
@@ -207,6 +211,10 @@ The `Home` page MUST implement the run-owned
 `../../runs/current/artifacts/ux/landing-strategy.md` artifact. The runtime
 MUST NOT treat the thin starter `Home.tsx` as sufficient when the run-owned UX
 artifacts require richer entry behavior.
+
+The generated frontend MUST also compile those run-owned UX artifacts into
+`src/generated/uxModel.ts` so the runtime has a machine-readable surface
+policy.
 
 ## Required starter UI primitives
 

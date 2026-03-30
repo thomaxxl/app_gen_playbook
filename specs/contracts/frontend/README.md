@@ -35,6 +35,17 @@ The agent MUST also consult:
 - `../../runs/current/artifacts/architecture/capability-profile.md`
 - `../../runs/current/artifacts/architecture/load-plan.md`
 
+For relationship-heavy, multi-resource, dashboard-style, or custom-page apps,
+the agent MUST also treat these as practical core inputs before frontend
+design or implementation starts:
+
+- [theme-and-layout.md](theme-and-layout.md)
+- [admin-yaml-contract.md](admin-yaml-contract.md)
+- [record-shape.md](record-shape.md)
+- [custom-views.md](custom-views.md)
+- [errors.md](errors.md)
+- [validation.md](validation.md)
+
 The agent MAY load these files on demand:
 
 - [advanced-optional-packages.md](advanced-optional-packages.md)
@@ -92,13 +103,9 @@ Disabled or irrelevant UX/UI packs MUST NOT be:
 - treated as default UX guidance
 
 For database-driven admin apps with multiple resources, foreign keys,
-dashboard-style entry surfaces, or custom views, the agent SHOULD promote
-these on-demand files into its practical core read set before frontend design
-or implementation starts:
-
-- [theme-and-layout.md](theme-and-layout.md)
-- [custom-views.md](custom-views.md)
-- [errors.md](errors.md)
+dashboard-style entry surfaces, or custom views, the agent MUST also treat the
+run-owned UX artifact pack plus `app/frontend/src/generated/uxModel.ts` as a
+first-class implementation contract rather than optional design prose.
 
 The spec in this directory is the contract. The agent MUST NOT treat any
 repo-local app as the source of truth unless the required files are also
