@@ -15,7 +15,17 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "product_manager",
-                "runs/current/changes/CR-20260316-000000/candidate/artifacts/product/business-rules.md",
+                "runs/current/changes/CR-20260330-201519/candidate/artifacts/product/acceptance-criteria.md",
+                [],
+            )
+        )
+
+    def test_allows_product_manager_change_impact_manifest(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "product_manager",
+                "runs/current/changes/CR-20260316-000000/impact-manifest.yaml",
                 [],
             )
         )
@@ -91,7 +101,7 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "frontend",
-                "app/frontend/vite.config.ts",
+                "app/frontend/src/Home.tsx",
                 [],
             )
         )
