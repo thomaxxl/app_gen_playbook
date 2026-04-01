@@ -69,6 +69,9 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
     "try again at",
     "rate limit",
     "too many requests",
+    "stream disconnected before completion",
+    "error sending request",
+    "failed to lookup address information",
 )
 
 WILDCARD_CHARS = set("*?[")

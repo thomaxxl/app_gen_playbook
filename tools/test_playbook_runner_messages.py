@@ -466,6 +466,10 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
         detail = "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Mar 25th, 2026 5:59 PM."
         self.assertTrue(is_retryable_codex_failure(detail))
 
+    def test_retryable_codex_failure_detects_transport_disconnect(self) -> None:
+        detail = "stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/responses)"
+        self.assertTrue(is_retryable_codex_failure(detail))
+
     def test_retryable_codex_failure_rejects_generic_role_error(self) -> None:
         self.assertFalse(is_retryable_codex_failure("role diff validation failed for backend"))
 
