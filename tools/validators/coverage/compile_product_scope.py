@@ -249,10 +249,30 @@ def _active_change_id(repo_root: Path) -> str:
     return str(payload.get("change_id", "")).strip()
 
 
+def _change_promotion_accepted(repo_root: Path, change_id: str) -> bool:
+    if not change_id:
+        return False
+    promotion_path = (
+        repo_root
+        / "runs"
+        / "current"
+        / "changes"
+        / change_id
+        / "promotion.yaml"
+    )
+    if not promotion_path.exists():
+        return False
+    text = promotion_path.read_text(encoding="utf-8")
+    match = re.search(r"^accepted_at:\s*['\"]?([^'\"]*)['\"]?\s*$", text, flags=re.MULTILINE)
+    return bool(match and match.group(1).strip())
+
+
 def _preferred_scope_artifact_path(repo_root: Path, artifact_area: str, filename: str) -> Path:
     baseline_path = repo_root / "runs" / "current" / "artifacts" / artifact_area / filename
     change_id = _active_change_id(repo_root)
     if not change_id:
+        return baseline_path
+    if _change_promotion_accepted(repo_root, change_id):
         return baseline_path
     candidate_path = (
         repo_root

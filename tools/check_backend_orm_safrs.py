@@ -10,6 +10,9 @@ from orchestrator_common import resolve_repo_root
 
 
 SAFRS_ROW_PATTERN = re.compile(r"(?m)^\|\s*`?([^`|]+?)`?\s*\|\s*yes\s*\|")
+SAFRS_FASTAPI_IMPORT_PATTERN = re.compile(
+    r"from\s+safrs\.fastapi(?:\.api)?\s+import\s+([^\n]+)"
+)
 
 
 def read_text(path: Path) -> str:
@@ -64,13 +67,12 @@ def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
 
     issues: list[str] = []
 
-    has_safrs_api = (
-        (
-            "from safrs.fastapi.api import SafrsFastAPI" in combined
-            or "from safrs.fastapi import SafrsFastAPI" in combined
-        )
-        and "SafrsFastAPI(" in combined
+    has_safrs_fastapi_import = any(
+        "SafrsFastAPI" in match.group(1).split(",")
+        or any(part.strip() == "SafrsFastAPI" for part in match.group(1).split(","))
+        for match in SAFRS_FASTAPI_IMPORT_PATTERN.finditer(combined)
     )
+    has_safrs_api = has_safrs_fastapi_import and "SafrsFastAPI(" in combined
     has_exposed_models = "EXPOSED_MODELS" in combined and ".expose_object(" in combined
     has_safrs_models = "SAFRSBase" in combined
     has_orm_base = (

@@ -9,6 +9,7 @@ Required reads:
 - `../change-packet-discipline.md`
 - `../phases/phase-I6-integration-and-regression-review.md`
 - `../phases/phase-I7-change-acceptance.md`
+- `../../../specs/product/acceptance-review.md`
 - `../../../runs/current/remarks.md`
 
 After these reads, load only the current change-workspace files, the active

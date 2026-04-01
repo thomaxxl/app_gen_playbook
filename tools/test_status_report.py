@@ -160,6 +160,25 @@ class StatusReportTests(unittest.TestCase):
             self.assertEqual(payload["current_phase_code"], "phase-I4-frontend-design-delta")
             self.assertEqual(payload["current_phase"]["label"], "Phase I4 - Frontend design delta")
 
+    def test_promoted_change_run_does_not_report_stale_phase_i1(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"blocked","mode":"iterative-change-run","current_phase":"phase-I1-change-intake-and-triage","change_id":"CR-999"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-999/promotion.yaml",
+                "change_id: CR-999\naccepted_at: '2026-04-01T15:40:14Z'\n",
+            )
+
+            payload = report_payload(repo_root)
+
+            self.assertEqual(payload["current_phase_code"], "phase-I7-change-acceptance")
+            self.assertEqual(payload["current_phase"]["label"], "Phase I7 - Change acceptance")
+
 
 if __name__ == "__main__":
     unittest.main()

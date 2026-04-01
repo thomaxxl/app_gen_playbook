@@ -249,6 +249,58 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertNotIn("acceptance-review-coverage", kinds)
             self.assertNotIn("qa-review-coverage", kinds)
 
+    def test_accepted_change_run_suppresses_stale_coverage_policy_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"blocked","mode":"iterative-change-run","current_phase":"phase-I1-change-intake-and-triage","change_id":"CR-1"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/promotion.yaml",
+                "change_id: CR-1\naccepted_at: '2026-04-01T15:40:14Z'\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/integration-review.md",
+                "owner: architect\nphase: phase-6-integration-review\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+
+            with (
+                patch(
+                    "check_completion.collect_frontend_route_coverage_issues",
+                    return_value=[{"path": "app/frontend/src/App.tsx", "reason": "route drift"}],
+                ),
+                patch(
+                    "check_completion.collect_preview_coverage_issues",
+                    return_value=[{"path": "runs/current/evidence/ui-previews/manifest.md", "reason": "preview drift"}],
+                ),
+                patch(
+                    "check_completion.collect_integration_review_coverage_issues",
+                    return_value=[{"path": "runs/current/artifacts/architecture/integration-review.md", "reason": "integration drift"}],
+                ),
+                patch(
+                    "check_completion.collect_acceptance_review_coverage_issues",
+                    return_value=[{"path": "runs/current/artifacts/product/acceptance-review.md", "reason": "acceptance drift"}],
+                ),
+                patch(
+                    "check_completion.collect_qa_review_coverage_issues",
+                    return_value=[{"path": "runs/current/evidence/qa-delivery-review.md", "reason": "qa drift"}],
+                ),
+            ):
+                blockers = collect_blockers(repo_root)
+
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("frontend-route-coverage", kinds)
+            self.assertNotIn("preview-coverage", kinds)
+            self.assertNotIn("integration-review-coverage", kinds)
+            self.assertNotIn("acceptance-review-coverage", kinds)
+            self.assertNotIn("qa-review-coverage", kinds)
+
     def test_legacy_terminal_delivery_artifacts_still_suppress_stale_coverage_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

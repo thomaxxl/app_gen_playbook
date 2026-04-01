@@ -10,6 +10,8 @@ changed artifacts to the new current state.
 ## Outputs
 
 - accepted change result
+- approved `runs/current/artifacts/product/acceptance-review.md`
+- approved `runs/current/evidence/ceo-phase-reviews/phase-I7-change-acceptance.approved.md`
 - promotion record under `runs/current/changes/<change_id>/promotion.yaml`
 - refreshed portable baseline under `app/docs/playbook-baseline/current/`
 - updated change history under `app/docs/change-history/`

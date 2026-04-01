@@ -116,6 +116,58 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
 
             self.assertEqual(audit_backend_orm_safrs(repo_root), [])
 
+    def test_accepts_safrs_fastapi_imported_alongside_other_symbols(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/sample_app/db.py",
+                "\n".join(
+                    [
+                        "from sqlalchemy.orm import declarative_base",
+                        "Base = declarative_base()",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/sample_app/models.py",
+                "\n".join(
+                    [
+                        "from safrs import SAFRSBase",
+                        "from sqlalchemy.orm import Mapped, mapped_column",
+                        "from .db import Base",
+                        "class Project(SAFRSBase, Base):",
+                        "    id: Mapped[int] = mapped_column(primary_key=True)",
+                        "EXPOSED_MODELS = (Project,)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/sample_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "from safrs.fastapi.api import JSONAPIHTTPError, SafrsFastAPI, WRITE_HTTP_METHODS",
+                        "from .models import EXPOSED_MODELS",
+                        "def create_app():",
+                        '    app = FastAPI(openapi_url="/jsonapi.json")',
+                        '    api = SafrsFastAPI(app, prefix="/api")',
+                        "    for model in EXPOSED_MODELS:",
+                        "        api.expose_object(model)",
+                        "    return app",
+                    ]
+                )
+                + "\n",
+            )
+
+            self.assertEqual(audit_backend_orm_safrs(repo_root), [])
+
     def test_rejects_fastapi_openapi_masquerading_as_jsonapi(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

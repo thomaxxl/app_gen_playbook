@@ -180,6 +180,39 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertEqual(payload["required_actor_coverage"], ["Approver", "Requester"])
             self.assertIn("approval", payload["story_type_catalog"])
 
+    def test_compile_product_scope_ignores_stale_candidate_scope_after_change_promotion(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            write(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"blocked","mode":"iterative-change-run","current_phase":"phase-I1-change-intake-and-triage","change_id":"CR-TEST-002"}\n',
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-002/promotion.yaml",
+                "change_id: CR-TEST-002\naccepted_at: '2026-04-01T15:40:14Z'\n",
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-002/candidate/artifacts/product/traceability-matrix.md",
+                "| Story ID | Acceptance delta IDs | Reopened page IDs | Route / mode focus | UX proof required | Notes |\n"
+                "| --- | --- | --- | --- | --- | --- |\n"
+                "| US-001 | AC-001 | PAGE-001 | N001 | yes | stale candidate shape |\n",
+            )
+            write(
+                repo_root / "runs/current/changes/CR-TEST-002/candidate/artifacts/ux/navigation.md",
+                "",
+            )
+
+            payload, issues = compile_product_scope_payload(repo_root)
+
+            self.assertEqual(issues, [])
+            self.assertIn("runs/current/artifacts/product/traceability-matrix.md", payload["source_paths"])
+            self.assertIn("runs/current/artifacts/ux/navigation.md", payload["source_paths"])
+            self.assertNotIn(
+                "runs/current/changes/CR-TEST-002/candidate/artifacts/product/traceability-matrix.md",
+                payload["source_paths"],
+            )
+
     def test_compile_product_scope_requires_concept_mapping_for_current_release_stories(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

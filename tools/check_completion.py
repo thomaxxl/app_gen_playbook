@@ -170,6 +170,22 @@ def collect_run_status_issues(repo_root: Path) -> list[dict[str, str]]:
     ]
 
 
+def change_promotion_terminal(repo_root: Path) -> bool:
+    scope_context = active_scope_context(repo_root)
+    run_mode = str(scope_context.get("run_mode", "")).strip()
+    if run_mode not in {"iterative-change-run", "app-only-hotfix"}:
+        return False
+    change_root = scope_context.get("change_root")
+    if not isinstance(change_root, Path):
+        return False
+    promotion_path = change_root / "promotion.yaml"
+    if not promotion_path.exists():
+        return False
+    text = promotion_path.read_text(encoding="utf-8")
+    match = re.search(r"^accepted_at:\s*['\"]?([^'\"]*)['\"]?\s*$", text, flags=re.MULTILINE)
+    return bool(match and match.group(1).strip())
+
+
 def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
     browser_proof = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
     if not browser_proof.exists():
@@ -302,6 +318,7 @@ def ui_preview_validation_value(text: str, role: str) -> str:
 def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     delivery_terminal = delivery_approval_terminal(repo_root)
+    change_terminal = change_promotion_terminal(repo_root)
     scope_context = active_scope_context(repo_root)
     active_roles = {
         str(role)
@@ -360,7 +377,7 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                     "reason": issue["reason"],
                 }
             )
-    else:
+    elif not change_terminal:
         if frontend_active:
             for issue in collect_frontend_route_coverage_issues(repo_root):
                 blockers.append(

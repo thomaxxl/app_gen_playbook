@@ -416,12 +416,16 @@ def compute_current_phase(
     completion_complete: bool,
 ) -> str:
     explicit = str(run_status.get("current_phase", "")).strip()
-    if change_run_pending(repo_root, run_status):
+    change_mode = str(run_status.get("mode", "")).strip() in CHANGE_RUN_MODES
+    pending_change = change_run_pending(repo_root, run_status)
+    if pending_change:
         if explicit:
             return explicit
         return compute_change_run_phase(repo_root, run_status, roles)
     if completion_complete or str(run_status.get("status", "")).strip() == "complete":
         return "complete"
+    if change_mode and explicit.startswith("phase-I"):
+        return "phase-I7-change-acceptance"
     if explicit:
         return explicit
     ordered = [
