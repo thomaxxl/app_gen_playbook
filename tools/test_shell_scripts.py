@@ -53,8 +53,9 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         script = (repo_root / "scripts" / "monitor.sh").read_text(encoding="utf-8")
 
         self.assertIn('MONITOR_TAIL_LINES="${MONITOR_TAIL_LINES:-100}"', script)
-        self.assertIn('tail -n "$MONITOR_TAIL_LINES" -F "$file"', script)
-        self.assertIn('showing last $MONITOR_TAIL_LINES lines per stream', script)
+        self.assertIn('tail -n "$initial_lines" -F "$file"', script)
+        self.assertIn('python3 - "$MONITOR_TAIL_LINES" "${files[@]}"', script)
+        self.assertIn('showing last $MONITOR_TAIL_LINES lines across existing streams, then following new output', script)
 
     def test_clean_script_saves_snapshot_without_local_dependency_trees(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
