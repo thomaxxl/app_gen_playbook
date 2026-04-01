@@ -4,7 +4,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from routing_resolver import resolve_forbidden_paths, resolve_read_packet, resolve_writable_paths
+from routing_resolver import (
+    parse_yaml_subset,
+    resolve_forbidden_paths,
+    resolve_read_packet,
+    resolve_writable_paths,
+)
 from validate_role_diff import is_allowed_change
 
 
@@ -274,6 +279,39 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("app/frontend/src/App.tsx", read_paths)
         self.assertNotIn("runs/current/artifacts/backend-design/model-design.md", read_paths)
         self.assertNotIn("app/backend/src/service.py", read_paths)
+
+    def test_parse_yaml_subset_accepts_same_indent_list_style(self) -> None:
+        repo_root = self.build_repo()
+        manifest = repo_root / "runs/current/changes/CR-1/role-loads/backend.yaml"
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/backend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "- runs/current/changes/CR-1/request.md",
+                    "- runs/current/changes/CR-1/classification.yaml",
+                    "read_app_paths:",
+                    "- app/backend/src",
+                    "write_app_paths:",
+                    "- app/backend/src",
+                ]
+            )
+            + "\n",
+        )
+
+        payload = parse_yaml_subset(manifest)
+
+        self.assertEqual(
+            payload["read_artifacts"],
+            [
+                "runs/current/changes/CR-1/request.md",
+                "runs/current/changes/CR-1/classification.yaml",
+            ],
+        )
+        self.assertEqual(payload["read_app_paths"], ["app/backend/src"])
+        self.assertEqual(payload["write_app_paths"], ["app/backend/src"])
 
     def test_change_run_writable_scope_is_narrowed_by_populated_role_load_manifest(self) -> None:
         repo_root = self.build_repo()

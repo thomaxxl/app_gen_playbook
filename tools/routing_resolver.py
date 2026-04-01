@@ -82,13 +82,19 @@ def parse_yaml_subset(path: Path) -> Any:
 
         indent = len(raw_line) - len(raw_line.lstrip(" "))
         text = raw_line.strip()
+        line_is_list_item = text.startswith("- ")
 
-        while len(stack) > 1 and indent <= stack[-1][0]:
+        while len(stack) > 1:
+            top_indent, top_container = stack[-1]
+            if indent > top_indent:
+                break
+            if indent == top_indent and line_is_list_item and isinstance(top_container, list):
+                break
             stack.pop()
 
         parent = stack[-1][1]
 
-        if text.startswith("- "):
+        if line_is_list_item:
             if not isinstance(parent, list):
                 raise ValueError(f"Invalid list item in {path}: {raw_line}")
             parent.append(text[2:].strip())
