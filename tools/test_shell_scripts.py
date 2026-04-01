@@ -48,6 +48,14 @@ class ShellScriptSyntaxTests(unittest.TestCase):
                 msg=f"{script} failed bash -n:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
             )
 
+    def test_monitor_script_defaults_to_compact_tail_window(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = (repo_root / "scripts" / "monitor.sh").read_text(encoding="utf-8")
+
+        self.assertIn('MONITOR_TAIL_LINES="${MONITOR_TAIL_LINES:-100}"', script)
+        self.assertIn('tail -n "$MONITOR_TAIL_LINES" -F "$file"', script)
+        self.assertIn('showing last $MONITOR_TAIL_LINES lines per stream', script)
+
     def test_clean_script_saves_snapshot_without_local_dependency_trees(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
 

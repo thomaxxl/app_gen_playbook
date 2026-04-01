@@ -11,9 +11,15 @@ fi
 
 JSONL_DIR="${1:-$ROOT/runs/current/evidence/orchestrator/jsonl}"
 POLL_SECONDS="${POLL_SECONDS:-1}"
+MONITOR_TAIL_LINES="${MONITOR_TAIL_LINES:-100}"
 
 if [[ ! -d "$JSONL_DIR" ]]; then
   echo "error: jsonl directory not found: $JSONL_DIR" >&2
+  exit 2
+fi
+
+if ! [[ "$MONITOR_TAIL_LINES" =~ ^[0-9]+$ ]] || [[ "$MONITOR_TAIL_LINES" -le 0 ]]; then
+  echo "error: MONITOR_TAIL_LINES must be a positive integer: $MONITOR_TAIL_LINES" >&2
   exit 2
 fi
 
@@ -33,7 +39,7 @@ start_tail() {
   label="$(basename "$file")"
 
   (
-    tail -n 120 -F "$file" 2>/dev/null | while IFS= read -r line; do
+    tail -n "$MONITOR_TAIL_LINES" -F "$file" 2>/dev/null | while IFS= read -r line; do
       printf '[%s] %s\n' "$label" "$line"
     done
   ) &
@@ -52,6 +58,7 @@ discover_new_files() {
 }
 
 echo "monitoring Codex event streams in: $JSONL_DIR" >&2
+echo "showing last $MONITOR_TAIL_LINES lines per stream" >&2
 echo "press Ctrl-C to stop" >&2
 
 while true; do

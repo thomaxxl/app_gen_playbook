@@ -104,7 +104,11 @@ Recovery actions SHOULD be recorded in:
 - `runs/current/evidence/orchestrator/recovery-log.md`
 
 The repository SHOULD provide a simple operator monitor that can tail all
-current and newly-created per-turn JSONL files concurrently.
+current and newly-created per-turn JSONL files concurrently. The default
+startup view SHOULD stay compact, showing only a rolling tail window per
+stream rather than dumping whole files. `scripts/monitor.sh` defaults to the
+last `100` lines per stream and SHOULD honor `MONITOR_TAIL_LINES` as an
+override.
 
 Repository snapshotting and diff validation MUST treat repo-local symlink
 entries by their lexical path inside the repository. The validator MUST NOT
