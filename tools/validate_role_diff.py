@@ -51,6 +51,34 @@ def ignored_prefixes(ignore_runtime_roles: list[str]) -> list[str]:
     return prefixes
 
 
+def _path_variants(path: Path) -> list[Path]:
+    variants = [path]
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    if resolved != path:
+        variants.append(resolved)
+    return variants
+
+
+def change_within_turn_roots(repo_root: Path, relative_path: str, turn_roots: list[Path]) -> bool:
+    if not turn_roots:
+        return True
+
+    target = repo_root / relative_path
+    target_variants = _path_variants(target)
+    normalized_roots: list[Path] = []
+    for root in turn_roots:
+        normalized_roots.extend(_path_variants(root))
+
+    for candidate in target_variants:
+        for root in normalized_roots:
+            if candidate == root or candidate.is_relative_to(root):
+                return True
+    return False
+
+
 def is_allowed_change(
     repo_root: Path,
     runtime_role: str,
@@ -58,7 +86,11 @@ def is_allowed_change(
     ignore_runtime_roles: list[str],
     *,
     message_path: Path | None = None,
+    turn_roots: list[Path] | None = None,
 ) -> bool:
+    if turn_roots is not None and not change_within_turn_roots(repo_root, relative_path, turn_roots):
+        return True
+
     if relative_path.startswith("runs/current/role-state/") and relative_path.endswith(".md"):
         if "/inbox/" in relative_path:
             return True
@@ -85,6 +117,7 @@ def validate_command(
     evidence_out: Path | None,
     ignore_runtime_roles: list[str],
     message_path: Path | None,
+    turn_roots: list[Path],
 ) -> int:
     before = read_json(snapshot_path)
     if not isinstance(before, dict):
@@ -108,7 +141,13 @@ def validate_command(
             path,
             ignore_runtime_roles,
             message_path=message_path,
+            turn_roots=turn_roots,
         )
+    ]
+    external_changes = [
+        path
+        for path in changed
+        if turn_roots and not change_within_turn_roots(repo_root, path, turn_roots)
     ]
     if evidence_out is not None:
         evidence_out.parent.mkdir(parents=True, exist_ok=True)
@@ -120,6 +159,8 @@ def validate_command(
             "## Changed files",
         ]
         evidence_lines.extend(f"- {path}" for path in changed)
+        evidence_lines.extend(["", "## External concurrent changes"])
+        evidence_lines.extend(f"- {path}" for path in external_changes)
         evidence_lines.extend(["", "## Forbidden files"])
         evidence_lines.extend(f"- {path}" for path in violations)
         evidence_out.write_text("\n".join(evidence_lines) + "\n", encoding="utf-8")
@@ -154,6 +195,7 @@ def main() -> int:
     validate_parser.add_argument("--evidence-out")
     validate_parser.add_argument("--ignore-runtime-role", action="append", default=[])
     validate_parser.add_argument("--message")
+    validate_parser.add_argument("--turn-root", action="append", default=[])
 
     args = parser.parse_args()
 
@@ -169,6 +211,7 @@ def main() -> int:
         Path(args.evidence_out).resolve() if args.evidence_out else None,
         list(args.ignore_runtime_role),
         Path(args.message).resolve() if args.message else None,
+        [Path(item).resolve() for item in args.turn_root],
     )
 
 

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
-from validate_role_diff import is_allowed_change
+from validate_role_diff import change_within_turn_roots, is_allowed_change
 
 
 class ValidateRoleDiffPatternTests(unittest.TestCase):
@@ -115,6 +116,42 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
                 [],
             )
         )
+
+    def test_treats_change_outside_turn_roots_as_external(self) -> None:
+        turn_roots = [self.repo_root / "runs" / "current" / "role-state" / "product_manager"]
+        self.assertFalse(
+            change_within_turn_roots(
+                self.repo_root,
+                "scripts/monitor.sh",
+                turn_roots,
+            )
+        )
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "product_manager",
+                "scripts/monitor.sh",
+                [],
+                turn_roots=turn_roots,
+            )
+        )
+
+    def test_counts_symlinked_app_change_inside_turn_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            workspace = repo_root.parent / "workspace"
+            app_root = workspace / "app"
+            (app_root / "frontend" / "src").mkdir(parents=True)
+            (repo_root / "app").symlink_to(app_root)
+            turn_roots = [repo_root / "app" / "frontend"]
+            self.assertTrue(
+                change_within_turn_roots(
+                    repo_root,
+                    "app/frontend/src/Home.tsx",
+                    turn_roots,
+                )
+            )
 
 
 if __name__ == "__main__":

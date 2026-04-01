@@ -292,6 +292,7 @@ class LegacyTools:
         snapshot: Path,
         output: Path,
         message: Path,
+        turn_roots: list[Path] | None = None,
         ignore_roles: list[str] | None = None,
     ) -> bool:
         args = [
@@ -307,6 +308,8 @@ class LegacyTools:
             "--message",
             str(message),
         ]
+        for turn_root in turn_roots or []:
+            args.extend(["--turn-root", str(turn_root)])
         for ignore_role in ignore_roles or []:
             args.extend(["--ignore-runtime-role", ignore_role])
         result = self.run("validate_role_diff.py", *args, check=False)

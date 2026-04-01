@@ -487,12 +487,21 @@ class Orchestrator:
         body = self.paths.operator_action_required_md.read_text(encoding="utf-8").strip()
         self.blocked_exit("run requires operator action", body)
 
-    def validate_role_outputs(self, runtime_role: str, snapshot_file: Path, validation_file: Path, message_path: Path) -> None:
+    def validate_role_outputs(
+        self,
+        runtime_role: str,
+        snapshot_file: Path,
+        validation_file: Path,
+        message_path: Path,
+        *,
+        turn_roots: list[Path],
+    ) -> None:
         valid = self.tools.validate_role_diff(
             runtime_role=runtime_role,
             snapshot=snapshot_file,
             output=validation_file,
             message=message_path,
+            turn_roots=turn_roots,
         )
         if not valid:
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
@@ -664,7 +673,13 @@ class Orchestrator:
             sandbox_mode=self.codex.sandbox_mode(),
         )
         self.tools.sync_session(role=runtime_role, registry=self.paths.sessions_json)
-        self.validate_role_outputs(runtime_role, snapshot_file, validation_file, message_path)
+        self.validate_role_outputs(
+            runtime_role,
+            snapshot_file,
+            validation_file,
+            message_path,
+            turn_roots=[role_dir, *add_dirs],
+        )
 
         if message_path.exists():
             if claim.message.is_parked_dependency_reminder():
