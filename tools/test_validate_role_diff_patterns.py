@@ -16,7 +16,7 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "product_manager",
-                "runs/current/changes/CR-20260330-201519/candidate/artifacts/product/acceptance-criteria.md",
+                "runs/current/changes/CR-20260402-050851/candidate/artifacts/product/acceptance-criteria.md",
                 [],
             )
         )
@@ -27,6 +27,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
                 self.repo_root,
                 "product_manager",
                 "runs/current/changes/CR-20260316-000000/impact-manifest.yaml",
+                [],
+            )
+        )
+
+    def test_allows_product_manager_own_role_load_manifest(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "product_manager",
+                "runs/current/changes/CR-20260402-050851/role-loads/product_manager.yaml",
                 [],
             )
         )
@@ -140,9 +150,9 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
-            workspace = repo_root.parent / "workspace"
+            workspace = repo_root / "workspace"
             app_root = workspace / "app"
-            (app_root / "frontend" / "src").mkdir(parents=True)
+            (app_root / "frontend" / "src").mkdir(parents=True, exist_ok=True)
             (repo_root / "app").symlink_to(app_root)
             turn_roots = [repo_root / "app" / "frontend"]
             self.assertTrue(

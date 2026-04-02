@@ -92,6 +92,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/changes/*/affected-candidate-artifacts.md",
         "runs/current/changes/*/affected-app-paths.md",
         "runs/current/changes/*/reopened-gates.md",
+        "runs/current/changes/*/role-loads/product_manager.yaml",
         "runs/current/changes/*/candidate/artifacts/product/**",
         "runs/current/changes/*/promotion.yaml",
         "app/BUSINESS_RULES.md",
