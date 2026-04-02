@@ -34,7 +34,7 @@ def validate_delivery(paths: PlaybookPaths) -> tuple[int, str]:
     frontend_port = _port("FRONTEND_PORT", "5173")
     backend_host = _host("BACKEND_HOST", "127.0.0.1")
     backend_port = _port("BACKEND_PORT", "5656")
-    frontend_url = f"http://{frontend_host}:{frontend_port}/admin-app/"
+    frontend_url = f"http://{frontend_host}:{frontend_port}/app/"
     backend_url = f"http://{backend_host}:{backend_port}/docs"
 
     paths.ceo_delivery_runtime_log.parent.mkdir(parents=True, exist_ok=True)

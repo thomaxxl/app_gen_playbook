@@ -259,6 +259,14 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             validation_text = validation_md.read_text(encoding="utf-8")
             self.assertIn("status: ready-for-handoff", validation_text)
             self.assertIn("app/run.sh booted successfully", validation_text)
+            self.assertIn("- frontend_url: http://127.0.0.1:5173/app/", validation_text)
+
+            runtime_log = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "logs" / "ceo-delivery-app-run.log"
+            self.assertTrue(runtime_log.is_file())
+            self.assertIn(
+                "validated frontend=http://127.0.0.1:5173/app/ backend=http://127.0.0.1:5656/docs",
+                runtime_log.read_text(encoding="utf-8"),
+            )
 
     def test_run_qa_review_script_captures_then_invokes_single_qa_review(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
