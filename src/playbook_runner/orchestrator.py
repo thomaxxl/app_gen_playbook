@@ -552,6 +552,35 @@ class Orchestrator:
             add_dirs.append(candidate)
         return add_dirs
 
+    def resolve_turn_write_dirs(self, runtime_role: str, message_path: Path) -> list[Path]:
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+
+        writable = resolve_writable_paths(
+            self.config.repo_root,
+            runtime_role,
+            message_required_reads=required_reads,
+            explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+            explicit_phase=headers.get("phase"),
+        )
+
+        write_dirs: list[Path] = []
+        seen: set[str] = set()
+        for rule in writable:
+            if not isinstance(rule, str):
+                continue
+            candidate = add_dir_from_rule(self.config.repo_root, rule)
+            if candidate is None:
+                continue
+            key = str(candidate.resolve()) if candidate.exists() else str(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            write_dirs.append(candidate)
+        return write_dirs
+
     def resolve_resume_id(self, runtime_role: str, role_dir: Path, add_dirs: list[Path]) -> tuple[str, list[str]]:
         entry = self.tools.session_entry(self.paths.sessions_json, runtime_role)
         resume_id = str(entry.get("resume_id", "")).strip()
@@ -610,6 +639,7 @@ class Orchestrator:
         role_dir = self.paths.role_dir(runtime_role)
         model = self.role_model(runtime_role)
         add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)
+        write_dirs = self.resolve_turn_write_dirs(runtime_role, message_path)
         session_roots = canonical_add_dir_keys(add_dirs)
         resume_id, stored_session_roots = self.resolve_resume_id(runtime_role, role_dir, add_dirs)
         if resume_id and stored_session_roots:
@@ -678,7 +708,7 @@ class Orchestrator:
             snapshot_file,
             validation_file,
             message_path,
-            turn_roots=[role_dir, *add_dirs],
+            turn_roots=write_dirs,
         )
 
         if message_path.exists():

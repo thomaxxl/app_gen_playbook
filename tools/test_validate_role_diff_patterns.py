@@ -16,8 +16,12 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "product_manager",
-                "runs/current/changes/CR-20260402-050851/candidate/artifacts/product/acceptance-criteria.md",
+                "runs/current/changes/CR-20260402-062002/candidate/artifacts/product/acceptance-criteria.md",
                 [],
+                message_path=(
+                    self.repo_root
+                    / "runs/current/role-state/product_manager/processed/20260402-062002-from-operator-to-product_manager-change-request.md"
+                ),
             )
         )
 

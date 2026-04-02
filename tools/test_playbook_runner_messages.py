@@ -520,6 +520,71 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 turn_roots=turn_roots,
             )
 
+    def test_run_role_once_uses_writable_dirs_for_role_diff_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "product_manager" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: operator\nto: product_manager\ntopic: change-request\n", encoding="utf-8")
+            context_path = repo_root / "runs" / "current" / "role-state" / "product_manager" / "context.md"
+            context_path.parent.mkdir(parents=True, exist_ok=True)
+            context_path.write_text("# Product Manager Context\n", encoding="utf-8")
+            processed_dir = repo_root / "runs" / "current" / "role-state" / "product_manager" / "processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="product_manager", path=message_path, message=Message.parse(message_path))
+            add_dirs = [repo_root / "runs" / "current" / "changes" / "CR-1" / "candidate" / "artifacts" / "architecture"]
+            write_dirs = [repo_root / "runs" / "current" / "role-state" / "product_manager"]
+
+            def complete_turn(**_: object) -> SimpleNamespace:
+                message_path.replace(processed_dir / message_path.name)
+                return SimpleNamespace(returncode=0, timed_out=False)
+
+            with patch.object(orchestrator.queue, "claim_next", return_value=claim), \
+                patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})), \
+                patch.object(orchestrator.tools, "start_worker"), \
+                patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
+                patch.object(orchestrator.tools, "build_prompt"), \
+                patch.object(orchestrator, "resolve_turn_add_dirs", return_value=add_dirs), \
+                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=write_dirs), \
+                patch.object(orchestrator.codex, "run", side_effect=complete_turn), \
+                patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")), \
+                patch.object(orchestrator.tools, "session_record_from_jsonl"), \
+                patch.object(orchestrator.tools, "sync_session"), \
+                patch.object(orchestrator, "validate_role_outputs") as validate_role_outputs, \
+                patch.object(orchestrator.tools, "finish_worker"), \
+                patch.object(orchestrator, "log_line"):
+                self.assertTrue(orchestrator.run_role_once("product_manager"))
+
+            validate_role_outputs.assert_called_once()
+            self.assertEqual(validate_role_outputs.call_args.kwargs["turn_roots"], write_dirs)
+
     def test_run_role_once_surfaces_failed_command_detail_and_marks_run_interrupted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -561,6 +626,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
                 patch.object(orchestrator.tools, "build_prompt"), \
                 patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]), \
+                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]), \
                 patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=1, timed_out=False)), \
                 patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "Quiet Current did not persist status=ready.")), \
                 patch.object(orchestrator.tools, "finish_worker") as finish_worker, \
@@ -623,6 +689,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
                 patch.object(orchestrator.tools, "build_prompt"), \
                 patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]), \
+                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]), \
                 patch.object(orchestrator.codex, "run", side_effect=complete_turn), \
                 patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")), \
                 patch.object(orchestrator.tools, "session_record_from_jsonl"), \
