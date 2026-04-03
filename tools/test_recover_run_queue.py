@@ -10,6 +10,7 @@ import yaml
 from recover_run_queue import (
     ArtifactNeed,
     RuntimeEnvironmentEscalation,
+    collect_completion_blocker_needs,
     select_recovery_targets,
     write_phase_ceo_review_notes,
     write_recovery_notes,
@@ -91,6 +92,8 @@ def write_app_baseline(repo_root: Path) -> None:
         "app/backend/run.py",
         "app/rules/rules.py",
         "app/reference/admin.yaml",
+        "app/frontend/src/App.tsx",
+        "app/frontend/src/Home.tsx",
     ):
         write_file(repo_root / relative, "generated\n")
 
@@ -144,6 +147,55 @@ def write_required_phase6_evidence(repo_root: Path) -> None:
 
 
 class RecoverRunQueueTests(unittest.TestCase):
+    def test_collect_completion_blocker_needs_includes_story_review_and_frontend_route_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+
+            blockers = [
+                {
+                    "kind": "frontend-route-coverage",
+                    "owner": "frontend",
+                    "phase": "phase-5-parallel-implementation",
+                    "path": "app/frontend/src/App.tsx",
+                    "reason": "missing required story-supporting route ROUTE-PLAYLIST-LIST at /app/#/Playlist",
+                },
+                {
+                    "kind": "preview-coverage",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/ui-previews/manifest.md",
+                    "reason": "preview manifest is missing structured preview coverage for required story US-007",
+                },
+                {
+                    "kind": "integration-review-coverage",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/artifacts/architecture/integration-review.md",
+                    "reason": "integration review is missing Story Coverage row for US-007",
+                },
+                {
+                    "kind": "acceptance-review-coverage",
+                    "owner": "product_manager",
+                    "phase": "phase-7-product-acceptance",
+                    "path": "runs/current/artifacts/product/acceptance-review.md",
+                    "reason": "acceptance review is missing Story Coverage row for US-007",
+                },
+            ]
+
+            with unittest.mock.patch("recover_run_queue.collect_blockers", return_value=blockers):
+                needs = collect_completion_blocker_needs(repo_root)
+
+            self.assertEqual(
+                [(need.role, need.phase, need.path.relative_to(repo_root).as_posix()) for need in needs],
+                [
+                    ("frontend", "phase-5-parallel-implementation", "app/frontend/src/App.tsx"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
+                    ("architect", "phase-6-integration-review", "runs/current/artifacts/architecture/integration-review.md"),
+                    ("product_manager", "phase-7-product-acceptance", "runs/current/artifacts/product/acceptance-review.md"),
+                ],
+            )
+
     def test_orchestrator_source_scope_escalation_creates_ceo_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -460,7 +512,8 @@ class RecoverRunQueueTests(unittest.TestCase):
             (repo_root / "app" / "Dockerfile").unlink()
             (repo_root / "app" / "docker-compose.yml").unlink()
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
             self.assertEqual(targets, {})
 
     def test_does_not_recover_while_initial_input_is_pending(self) -> None:
@@ -488,7 +541,8 @@ class RecoverRunQueueTests(unittest.TestCase):
             for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
 
             self.assertIn("product_manager", targets)
             self.assertNotIn("frontend", targets)
@@ -512,7 +566,8 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_app_baseline(repo_root)
             write_required_phase6_evidence(repo_root)
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
 
             self.assertEqual(set(targets), {"architect"})
             architect_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["architect"]}
@@ -551,7 +606,18 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_required_phase6_evidence(repo_root)
             (repo_root / "app" / "BUSINESS_RULES.md").unlink()
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch(
+                "recover_run_queue.collect_completion_blocker_needs",
+                return_value=[
+                    ArtifactNeed(
+                        role="product_manager",
+                        phase="phase-5-parallel-implementation",
+                        path=repo_root / "app/BUSINESS_RULES.md",
+                        reason="missing",
+                    )
+                ],
+            ):
+                targets = select_recovery_targets(repo_root)
 
             self.assertEqual(set(targets), {"product_manager"})
             product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
@@ -584,7 +650,18 @@ class RecoverRunQueueTests(unittest.TestCase):
             )
             write_file(repo_root / "runs/current/evidence/ui-previews/admin-entry.png", "fake image")
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch(
+                "recover_run_queue.collect_completion_blocker_needs",
+                return_value=[
+                    ArtifactNeed(
+                        role="architect",
+                        phase="phase-6-integration-review",
+                        path=repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                        reason="content_validation_status=pending-review",
+                    )
+                ],
+            ):
+                targets = select_recovery_targets(repo_root)
 
             self.assertEqual(set(targets), {"architect"})
             architect_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["architect"]}
@@ -616,7 +693,23 @@ class RecoverRunQueueTests(unittest.TestCase):
             )
             write_file(repo_root / "app/backend/src/my_app/db.py", "from sqlalchemy import text\n")
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch(
+                "recover_run_queue.collect_completion_blocker_needs",
+                return_value=[
+                    ArtifactNeed(
+                        role="backend",
+                        phase="phase-5-parallel-implementation",
+                        path=repo_root / "app/backend/src",
+                        reason="backend-orm-safrs-audit-failed",
+                        extra_reads=(
+                            "playbook/task-bundles/backend-implementation.yaml",
+                            "playbook/process/phases/phase-5-parallel-implementation.md",
+                            "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                        ),
+                    )
+                ],
+            ):
+                targets = select_recovery_targets(repo_root)
 
             self.assertEqual(set(targets), {"backend"})
             backend_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["backend"]}
@@ -646,11 +739,13 @@ class RecoverRunQueueTests(unittest.TestCase):
             write_required_phase6_evidence(repo_root)
             (repo_root / "runs/current/role-state/backend/inflight/todo.md").write_text("busy\n", encoding="utf-8")
 
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
             self.assertNotIn("product_manager", targets)
 
             (repo_root / "runs/current/role-state/backend/inflight/todo.md").unlink()
-            targets = select_recovery_targets(repo_root)
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
             self.assertIn("product_manager", targets)
             product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
             self.assertEqual(product_paths, {"runs/current/artifacts/product/acceptance-review.md"})

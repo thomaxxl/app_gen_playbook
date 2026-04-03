@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from delivery_gate_common import delivery_approval_terminal, qa_delivery_review_terminal
-from execution_scope import active_scope_context
+from execution_scope import active_scope_context, active_scope_phases
 from orchestrator_common import (
     CORE_DISPLAY_ROLES,
     DISPLAY_TO_RUNTIME,
@@ -320,6 +320,7 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     delivery_terminal = delivery_approval_terminal(repo_root)
     change_terminal = change_promotion_terminal(repo_root)
     scope_context = active_scope_context(repo_root)
+    active_phases = set(active_scope_phases(repo_root))
     active_roles = {
         str(role)
         for role in (
@@ -332,6 +333,9 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
     frontend_active = "frontend" in active_roles or not active_roles
     backend_active = "backend" in active_roles or not active_roles
     devops_active = "devops" in active_roles or "deployment" in active_roles
+    qa_phase_active = "phase-8-qa-pre-delivery-validation" in active_phases or "phase-8-qa-pre-delivery-validation" in str(
+        scope_context.get("run_status", {}).get("current_phase", "")
+    )
 
     blockers.extend(collect_run_status_issues(repo_root))
 
@@ -423,7 +427,7 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                 }
             )
 
-        if frontend_active:
+        if frontend_active and qa_phase_active:
             for issue in collect_qa_review_coverage_issues(repo_root):
                 blockers.append(
                     {

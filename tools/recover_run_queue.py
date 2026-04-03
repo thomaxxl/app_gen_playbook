@@ -213,6 +213,10 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "ui-preview-review-conclusion-missing",
     "ui-preview-fallback-invalid",
     "backend-orm-safrs-audit-failed",
+    "frontend-route-coverage",
+    "preview-coverage",
+    "integration-review-coverage",
+    "acceptance-review-coverage",
 }
 REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
     (
