@@ -744,7 +744,7 @@ class Orchestrator:
             self.handle_pause_or_kill()
             complete, detail = self.tools.check_completion()
             if complete:
-                self.set_run_status("complete")
+                self.set_run_status("complete", "complete")
                 self.append_remark("Run complete", detail or "Completion checker passed.")
                 return 0
 
