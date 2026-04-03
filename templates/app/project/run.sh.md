@@ -130,15 +130,27 @@ export VITE_BACKEND_ORIGIN="${VITE_BACKEND_ORIGIN:-http://${PROXY_BACKEND_HOST}:
 backend_pid=""
 frontend_pid=""
 
-frontend_dependencies_ready() {
-  if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]] && [[ ! -L "$FRONTEND_DIR/node_modules" ]]; then
-    return 1
+frontend_node_modules_root() {
+  if [[ -L "$FRONTEND_DIR/node_modules" ]]; then
+    normalize_path "$(readlink "$FRONTEND_DIR/node_modules")" "$FRONTEND_DIR"
+    return 0
   fi
 
-  [[ -d "$FRONTEND_DIR/node_modules" ]] &&
-  [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]] &&
-  [[ -d "$FRONTEND_DIR/node_modules/vite" ]] &&
-  [[ -f "$FRONTEND_DIR/node_modules/safrs-jsonapi-client/package.json" ]]
+  printf '%s\n' "$FRONTEND_DIR/node_modules"
+}
+
+frontend_local_checkout_ready() {
+  [[ -f "$SAFRS_JSONAPI_CLIENT_LOCAL_REPO/package.json" ]]
+}
+
+frontend_dependencies_ready() {
+  local node_modules_root
+  node_modules_root="$(frontend_node_modules_root)"
+
+  [[ -d "$node_modules_root" ]] &&
+  frontend_local_checkout_ready &&
+  [[ -d "$node_modules_root/vite" ]] &&
+  [[ -f "$node_modules_root/safrs-jsonapi-client/package.json" ]]
 }
 
 backend_dependencies_ready() {
@@ -163,6 +175,8 @@ backend_source_ready() {
 
 require_installed_dependencies() {
   local missing=()
+  local node_modules_root=""
+  local frontend_target_note=""
 
   if ! backend_source_ready; then
     missing+=("backend source package in backend/src/my_app")
@@ -172,12 +186,26 @@ require_installed_dependencies() {
     missing+=("backend Python dependencies in ${BACKEND_VENV_DIR}")
   fi
 
+  node_modules_root="$(frontend_node_modules_root)"
+  if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
+    if [[ -L "$FRONTEND_DIR/node_modules" ]]; then
+      frontend_target_note=" (via frontend/node_modules symlink)"
+    elif [[ -d "$FRONTEND_DIR/node_modules" ]]; then
+      frontend_target_note=" (using local frontend/node_modules directory)"
+    else
+      frontend_target_note=" (configured external path)"
+    fi
+  fi
+
   if ! frontend_dependencies_ready; then
     if [[ -n "$FRONTEND_NODE_MODULES_DIR" ]]; then
-      missing+=("frontend npm dependencies in FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR (via frontend/node_modules symlink)")
+      missing+=("frontend npm dependencies in ${node_modules_root}${frontend_target_note}")
     else
-      missing+=("frontend npm dependencies in frontend/node_modules")
+      missing+=("frontend npm dependencies in ${node_modules_root}")
     fi
+  fi
+
+  if ! frontend_local_checkout_ready; then
     missing+=("local safrs-jsonapi-client checkout in tmp/safrs-jsonapi-client")
   fi
 
@@ -340,9 +368,12 @@ Notes:
   when explicit dev-server behavior is needed.
 - If `REMOTE` is set, `run.sh` MUST bind both backend and frontend to
   `0.0.0.0` so the app can be reviewed from another machine on the network.
-- When `FRONTEND_NODE_MODULES_DIR` is used, the generated app MUST keep the
-  local `frontend/node_modules` path present because frontend scripts often
-  resolve package binaries through a literal `./node_modules` path.
+- When `FRONTEND_NODE_MODULES_DIR` is used, the generated app MUST still keep
+  the local `frontend/node_modules` path present because frontend scripts
+  often resolve package binaries through a literal `./node_modules` path.
+- If a populated local `frontend/node_modules` directory already exists,
+  `run.sh` MAY use it directly even when `FRONTEND_NODE_MODULES_DIR` is set.
+  That mismatch should not be reported as “missing dependencies.”
 - The launcher MUST remain compatible with the stock macOS Bash `3.2`
   environment. Do not use `wait -n` or other Bash-5-only supervision
   features unless the playbook first raises the shell baseline explicitly.

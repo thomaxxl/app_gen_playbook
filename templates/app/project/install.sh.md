@@ -123,8 +123,13 @@ ensure_frontend_node_modules_path() {
   fi
 
   if [[ -e "$link_path" ]]; then
-    echo "frontend/node_modules already exists as a normal directory." >&2
-    echo "Remove or move that directory before using FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR." >&2
+    if [[ -d "$link_path" ]]; then
+      echo "frontend/node_modules already exists as a normal directory; keeping it as the active frontend dependency root." >&2
+      echo "FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR will be ignored until that directory is replaced by a symlink." >&2
+      return 0
+    fi
+    echo "frontend/node_modules already exists and is not a directory." >&2
+    echo "Remove or move that path before using FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR." >&2
     exit 1
   fi
 
@@ -289,6 +294,9 @@ Notes:
   directory, the generated app MAY read `FRONTEND_NODE_MODULES_DIR` from
   `app/.runtime.local.env` and manage `frontend/node_modules` as a symlink to
   that external directory.
+- If a populated local `frontend/node_modules` directory already exists,
+  `install.sh` MAY keep using that directory instead of forcing an immediate
+  switch to the configured external root.
 - In `reuse-preferred` mode, the generated app MAY create the external
   `FRONTEND_NODE_MODULES_DIR` target directory when it is the approved
   dependency root for the run.

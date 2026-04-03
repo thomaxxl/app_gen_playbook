@@ -57,6 +57,22 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         self.assertIn('python3 - "$MONITOR_TAIL_LINES" "${files[@]}"', script)
         self.assertIn('showing last $MONITOR_TAIL_LINES lines across existing streams, then following new output', script)
 
+    def test_app_run_template_allows_local_node_modules_with_external_override(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        template = (repo_root / "templates" / "app" / "project" / "run.sh.md").read_text(encoding="utf-8")
+
+        self.assertIn("frontend_node_modules_root()", template)
+        self.assertIn("frontend_local_checkout_ready()", template)
+        self.assertIn('frontend_target_note=" (using local frontend/node_modules directory)"', template)
+        self.assertIn('missing+=("local safrs-jsonapi-client checkout in tmp/safrs-jsonapi-client")', template)
+
+    def test_app_install_template_keeps_valid_local_node_modules_directory(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        template = (repo_root / "templates" / "app" / "project" / "install.sh.md").read_text(encoding="utf-8")
+
+        self.assertIn("frontend/node_modules already exists as a normal directory; keeping it as the active frontend dependency root.", template)
+        self.assertIn('FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR will be ignored until that directory is replaced by a symlink.', template)
+
     def test_clean_script_saves_snapshot_without_local_dependency_trees(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]
 
