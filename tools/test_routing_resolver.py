@@ -313,6 +313,32 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertEqual(payload["read_app_paths"], ["app/backend/src"])
         self.assertEqual(payload["write_app_paths"], ["app/backend/src"])
 
+    def test_parse_yaml_subset_accepts_indented_empty_list_style(self) -> None:
+        repo_root = self.build_repo()
+        manifest = repo_root / "runs/current/changes/CR-1/role-loads/frontend.yaml"
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/frontend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "write_artifacts:",
+                    "  []",
+                    "required_feature_packs:",
+                    "  []",
+                    "write_app_paths:",
+                    "  - app/frontend/**",
+                ]
+            )
+            + "\n",
+        )
+
+        payload = parse_yaml_subset(manifest)
+
+        self.assertEqual(payload["write_artifacts"], [])
+        self.assertEqual(payload["required_feature_packs"], [])
+        self.assertEqual(payload["write_app_paths"], ["app/frontend/**"])
+
     def test_change_run_writable_scope_is_narrowed_by_populated_role_load_manifest(self) -> None:
         repo_root = self.build_repo()
 

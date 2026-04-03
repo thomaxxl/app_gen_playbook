@@ -100,6 +100,16 @@ def parse_yaml_subset(path: Path) -> Any:
             parent.append(text[2:].strip())
             continue
 
+        if text == "[]":
+            if isinstance(parent, list):
+                continue
+            raise ValueError(f"Invalid empty-list entry in {path}: {raw_line}")
+
+        if text == "{}":
+            if isinstance(parent, dict):
+                continue
+            raise ValueError(f"Invalid empty-mapping entry in {path}: {raw_line}")
+
         if ":" not in text:
             raise ValueError(f"Invalid mapping entry in {path}: {raw_line}")
 
@@ -123,7 +133,12 @@ def parse_yaml_subset(path: Path) -> Any:
             candidate_text = candidate.strip()
             if candidate_indent <= indent:
                 break
-            next_container = [] if candidate_text.startswith("- ") else {}
+            if candidate_text == "[]":
+                next_container = []
+            elif candidate_text == "{}":
+                next_container = {}
+            else:
+                next_container = [] if candidate_text.startswith("- ") else {}
             break
 
         if not isinstance(parent, dict):
