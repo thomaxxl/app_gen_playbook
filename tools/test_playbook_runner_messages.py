@@ -16,6 +16,21 @@ from playbook_runner.queue_store import ClaimedMessage
 
 
 class PlaybookRunnerMessageTests(unittest.TestCase):
+    def test_compact_console_message_hides_model_and_session_for_agent_start(self) -> None:
+        message = "agent-start role=frontend model=gpt-5.4 message=turn.md session=019d5ee2-25ae-70f3-b575-fa7417f12435"
+        self.assertEqual(
+            Orchestrator.compact_console_message(message),
+            "agent-start role=frontend message=turn.md",
+        )
+
+    def test_console_timestamp_omits_year_and_iso_markers(self) -> None:
+        from datetime import datetime, timezone
+
+        self.assertEqual(
+            Orchestrator.console_timestamp(datetime(2026, 4, 5, 18, 42, 48, tzinfo=timezone.utc)),
+            "04-05 18:42:48",
+        )
+
     def test_parse_headers_and_gate_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "message.md"

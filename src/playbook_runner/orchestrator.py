@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import time
@@ -96,6 +97,7 @@ class RunRequest:
     target_role: str | None
     input_file: Path | None
     yolo: bool = False
+    verbose: bool = False
 
 
 class RunnerError(RuntimeError):
@@ -192,6 +194,18 @@ class Orchestrator:
     def utc_now(self) -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+    @staticmethod
+    def compact_console_message(message: str) -> str:
+        if message.startswith("agent-start "):
+            message = message.replace(" model=<default>", "")
+            message = re.sub(r"\smodel=\S+", "", message)
+            message = re.sub(r"\ssession=\S+", "", message)
+        return message
+
+    @staticmethod
+    def console_timestamp(now: datetime) -> str:
+        return now.strftime("%m-%d %H:%M:%S")
+
     def append_remark(self, title: str, body: str) -> None:
         high_signal = title not in LOW_SIGNAL_REMARK_TITLES
         self.append_remark_event(title, body, high_signal=high_signal)
@@ -213,12 +227,19 @@ class Orchestrator:
             handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
     def log_line(self, message: str) -> None:
+        now = datetime.now(timezone.utc)
+        full_timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        console_timestamp = self.console_timestamp(now)
+        console_message = message if self.request.verbose else self.compact_console_message(message)
         self.paths.logs_dir.mkdir(parents=True, exist_ok=True)
         log_path = self.paths.logs_dir / "orchestrator.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("a", encoding="utf-8") as handle:
-            handle.write(f"[{self.utc_now()}] {message}\n")
-        print(f"[{self.utc_now()}] {message}", file=os.sys.stderr)
+            handle.write(f"[{full_timestamp}] {message}\n")
+        if self.request.verbose:
+            print(f"[{full_timestamp}] {message}", file=os.sys.stderr)
+        else:
+            print(f"[{console_timestamp}] {console_message}", file=os.sys.stderr)
 
     def set_run_status(self, status: str, current_phase: str | None = None) -> None:
         self.tools.set_run_status(

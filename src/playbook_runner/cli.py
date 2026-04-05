@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--role", choices=sorted(VALID_ROLES))
     parser.add_argument("--yolo", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--ceo-delivery-validate", action="store_true")
     return parser
 
@@ -59,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         target_role=args.role,
         input_file=args.input_file.resolve() if args.input_file else None,
         yolo=args.yolo,
+        verbose=args.verbose,
     )
     python_bin = sys.executable or "python3"
     runner = Orchestrator(config, request, python_bin=python_bin)
