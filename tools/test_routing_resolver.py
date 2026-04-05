@@ -369,6 +369,39 @@ class RoutingResolverTests(unittest.TestCase):
         )
         self.assertEqual(payload["read_artifacts"], ["runs/current/changes/CR-1/request.md"])
 
+    def test_parse_yaml_subset_accepts_multiline_quoted_scalar_and_wrapped_list_item(self) -> None:
+        repo_root = self.build_repo()
+        manifest = repo_root / "runs/current/changes/CR-1/role-loads/frontend.yaml"
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/frontend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "baseline_id: 'accepted baseline still sourced from",
+                    "  runs/current/changes/CR-0/candidate/artifacts/product/**",
+                    "  and runs/current/changes/CR-00/candidate/artifacts/product/**.'",
+                    "required_feature_packs:",
+                    "  - dnd-kit (accepted baseline scope only for playlist lineup drag-and-drop; not reopened",
+                    "    by this change)",
+                ]
+            )
+            + "\n",
+        )
+
+        payload = parse_yaml_subset(manifest)
+
+        self.assertEqual(
+            payload["baseline_id"],
+            "accepted baseline still sourced from "
+            "runs/current/changes/CR-0/candidate/artifacts/product/** "
+            "and runs/current/changes/CR-00/candidate/artifacts/product/**.",
+        )
+        self.assertEqual(
+            payload["required_feature_packs"],
+            ["dnd-kit (accepted baseline scope only for playlist lineup drag-and-drop; not reopened by this change)"],
+        )
+
     def test_change_run_writable_scope_is_narrowed_by_populated_role_load_manifest(self) -> None:
         repo_root = self.build_repo()
 

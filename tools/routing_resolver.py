@@ -100,7 +100,41 @@ def parse_yaml_subset(path: Path) -> Any:
         if line_is_list_item:
             if not isinstance(parent, list):
                 raise ValueError(f"Invalid list item in {path}: {raw_line}")
-            parent.append(text[2:].strip())
+            item_text = text[2:].strip()
+            quote_char = item_text[:1] if item_text[:1] in {"'", '"'} else ""
+            if quote_char and not item_text.endswith(quote_char):
+                scalar_parts = [item_text]
+                for candidate_index, candidate in enumerate(lines[index + 1 :], start=index + 1):
+                    if not candidate.strip():
+                        scalar_parts.append("")
+                        consumed_indexes.add(candidate_index)
+                        continue
+                    candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+                    if candidate_indent <= indent:
+                        break
+                    consumed_indexes.add(candidate_index)
+                    scalar_parts.append(candidate.strip())
+                    if candidate.strip().endswith(quote_char):
+                        break
+                parent.append(" ".join(part.strip() for part in scalar_parts if part.strip()).strip(quote_char))
+                continue
+
+            continuation_parts: list[str] = []
+            for candidate_index, candidate in enumerate(lines[index + 1 :], start=index + 1):
+                if not candidate.strip():
+                    if continuation_parts:
+                        continuation_parts.append("")
+                        consumed_indexes.add(candidate_index)
+                    continue
+                candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+                candidate_text = candidate.strip()
+                if candidate_indent <= indent or candidate_text.startswith("- "):
+                    break
+                consumed_indexes.add(candidate_index)
+                continuation_parts.append(candidate_text)
+            if continuation_parts:
+                item_text = " ".join([item_text, *[part for part in continuation_parts if part]])
+            parent.append(item_text)
             continue
 
         if text == "[]":
@@ -141,6 +175,23 @@ def parse_yaml_subset(path: Path) -> Any:
                     parent[key] = " ".join(folded_parts)
                 else:
                     parent[key] = "\n".join(block_lines)
+                continue
+            quote_char = remainder[:1] if remainder[:1] in {"'", '"'} else ""
+            if quote_char and not remainder.endswith(quote_char):
+                scalar_parts = [remainder]
+                for candidate_index, candidate in enumerate(lines[index + 1 :], start=index + 1):
+                    if not candidate.strip():
+                        scalar_parts.append("")
+                        consumed_indexes.add(candidate_index)
+                        continue
+                    candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+                    if candidate_indent <= indent:
+                        break
+                    consumed_indexes.add(candidate_index)
+                    scalar_parts.append(candidate.strip())
+                    if candidate.strip().endswith(quote_char):
+                        break
+                parent[key] = " ".join(part.strip() for part in scalar_parts if part.strip()).strip(quote_char)
                 continue
             parent[key] = remainder
             continue
