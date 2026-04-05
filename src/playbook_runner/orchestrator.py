@@ -12,7 +12,12 @@ from typing import Iterable
 
 from execution_scope import active_scope_roles
 from orchestrator_common import parse_message_headers, parse_message_sections
-from routing_resolver import resolve_read_packet, resolve_writable_paths
+from routing_resolver import (
+    collect_packet_health_issues,
+    resolve_forbidden_paths,
+    resolve_read_packet,
+    resolve_writable_paths,
+)
 
 from .codex_runner import CodexRunner, expand_add_dirs
 from .config import RunnerConfig
@@ -73,6 +78,12 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
     "error sending request",
     "failed to lookup address information",
 )
+
+LOW_SIGNAL_REMARK_TITLES = {
+    "Recovery notes queued",
+    "Invalid Handoff Rejected",
+    "Run complete",
+}
 
 WILDCARD_CHARS = set("*?[")
 
@@ -172,10 +183,24 @@ class Orchestrator:
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def append_remark(self, title: str, body: str) -> None:
-        append_markdown_log(self.paths.remarks_md, "# Run Remarks", title, body)
+        high_signal = title not in LOW_SIGNAL_REMARK_TITLES
+        self.append_remark_event(title, body, high_signal=high_signal)
+        if high_signal:
+            append_markdown_log(self.paths.remarks_md, "# Run Remarks", title, body)
 
     def append_note(self, title: str, body: str) -> None:
         append_markdown_log(self.paths.notes_md, "# Run Notes", title, body)
+
+    def append_remark_event(self, title: str, body: str, *, high_signal: bool) -> None:
+        payload = {
+            "ts": self.utc_now(),
+            "title": title,
+            "body": body,
+            "high_signal": high_signal,
+        }
+        self.paths.remarks_events_jsonl.parent.mkdir(parents=True, exist_ok=True)
+        with self.paths.remarks_events_jsonl.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
     def log_line(self, message: str) -> None:
         self.paths.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -197,6 +222,8 @@ class Orchestrator:
     def ensure_run_notes(self) -> None:
         if not self.paths.remarks_md.exists():
             self.paths.remarks_md.write_text("# Run Remarks\n\n", encoding="utf-8")
+        if not self.paths.remarks_events_jsonl.exists():
+            self.paths.remarks_events_jsonl.write_text("", encoding="utf-8")
         if not self.paths.notes_md.exists():
             self.paths.notes_md.write_text("# Run Notes\n\n", encoding="utf-8")
 
@@ -449,6 +476,7 @@ class Orchestrator:
         return ""
 
     def run_recovery_pass(self) -> bool:
+        self.tools.compile_run_facts()
         created = self.tools.recover_run_queue(change_id=self.active_change_id)
         if created:
             self.append_remark(
@@ -495,6 +523,9 @@ class Orchestrator:
         message_path: Path,
         *,
         turn_roots: list[Path],
+        scope_artifact: Path | None = None,
+        allowed_write_rules: list[str] | None = None,
+        forbidden_write_rules: list[str] | None = None,
     ) -> None:
         valid = self.tools.validate_role_diff(
             runtime_role=runtime_role,
@@ -502,6 +533,9 @@ class Orchestrator:
             output=validation_file,
             message=message_path,
             turn_roots=turn_roots,
+            scope_artifact=scope_artifact,
+            allowed_write_rules=allowed_write_rules,
+            forbidden_write_rules=forbidden_write_rules,
         )
         if not valid:
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
@@ -606,6 +640,117 @@ class Orchestrator:
             return resume_id, list(stored_roots)
         return "", []
 
+    def write_turn_scope_artifact(
+        self,
+        output_path: Path,
+        *,
+        runtime_role: str,
+        message_path: Path,
+        packet: dict[str, object],
+        add_dirs: list[Path],
+        write_dirs: list[Path],
+        write_rules: list[str],
+        forbidden_rules: list[str],
+        packet_health_issues: list[str],
+    ) -> None:
+        payload = {
+            "runtime_role": runtime_role,
+            "message": str(message_path.relative_to(self.config.repo_root)),
+            "read_paths": list(packet.get("read_paths", [])),
+            "write_rules": write_rules,
+            "forbidden_rules": forbidden_rules,
+            "add_dirs": [str(path) for path in add_dirs],
+            "write_roots": [str(path) for path in write_dirs],
+            "change_context": packet.get("change_context", {}),
+            "role_load_manifest": packet.get("role_load_manifest", ""),
+            "packet_health_issues": packet_health_issues,
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    def queue_packet_health_recovery(
+        self,
+        runtime_role: str,
+        *,
+        packet: dict[str, object],
+        scope_artifact: Path,
+        issues: list[str],
+    ) -> Path | None:
+        change_context = packet.get("change_context", {})
+        if not isinstance(change_context, dict):
+            return None
+
+        owner_role = "product_manager" if runtime_role == "product_manager" else "architect"
+        role_root = self.paths.role_dir(owner_role)
+        inbox_dir = role_root / "inbox"
+        processed_dir = role_root / "processed"
+        inbox_dir.mkdir(parents=True, exist_ok=True)
+        processed_dir.mkdir(parents=True, exist_ok=True)
+
+        change_root = Path(change_context.get("change_root", "")) if change_context.get("change_root") else None
+        change_id = str(change_context.get("change_id", "")).strip() or self.active_change_id
+        role_load_manifest = str(packet.get("role_load_manifest", "")).strip()
+        topic_slug = f"packet-health-{runtime_role}"
+        issue_fingerprint = json.dumps(sorted(issues), sort_keys=True)
+        note_text_lines = [
+            "from: orchestrator",
+            f"to: {owner_role}",
+            f"topic: {topic_slug}",
+            "purpose: repair the active change packet so late change-run dispatch uses a valid populated routing manifest",
+            f"change_id: {change_id}",
+            f"blocker_key: packet-health:{runtime_role}",
+            f"blocker_fingerprint: {issue_fingerprint}",
+            "",
+            "## Required Reads",
+            "- runs/current/remarks.md",
+            f"- {scope_artifact.relative_to(self.config.repo_root).as_posix()}",
+        ]
+        if role_load_manifest:
+            note_text_lines.append(f"- {role_load_manifest}")
+        if change_root is not None:
+            for name in ("request.md", "classification.yaml", "impact-manifest.yaml", "affected-artifacts.md", "affected-candidate-artifacts.md", "affected-app-paths.md"):
+                candidate = change_root / name
+                if candidate.exists():
+                    note_text_lines.append(f"- {candidate.relative_to(self.config.repo_root).as_posix()}")
+        note_text_lines.extend(
+            [
+                "",
+                "## Requested Outputs",
+                "- repair the active change packet so the affected runtime role can be dispatched with a concrete, non-placeholder read/write boundary",
+                "- update the role-load manifest and any stale packet metadata that points at the wrong change or placeholder paths",
+                "- reissue the downstream handoff only after the packet health issues below are resolved",
+                "",
+                "## Dependencies",
+                "- active change packet integrity",
+                "",
+                "## Gate Status",
+                "- blocked",
+                "",
+                "## Blocking Issues",
+            ]
+        )
+        note_text_lines.extend(f"- {issue}" for issue in issues)
+        note_text_lines.extend(
+            [
+                "",
+                "## Notes",
+                f"- affected runtime role: {runtime_role}",
+                "- this note was generated before dispatch because the resolved packet was not safe enough to run",
+            ]
+        )
+        note_text = "\n".join(note_text_lines) + "\n"
+
+        for lane_root in (inbox_dir, role_root / "inflight", processed_dir):
+            if not lane_root.exists():
+                continue
+            for existing in lane_root.glob(f"*-from-orchestrator-to-{owner_role}-{topic_slug}.md"):
+                if existing.read_text(encoding="utf-8") == note_text:
+                    return None
+
+        note_path = inbox_dir / f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-from-orchestrator-to-{owner_role}-{topic_slug}.md"
+        note_path.write_text(note_text, encoding="utf-8")
+        return note_path
+
     def run_role_once(self, runtime_role: str) -> bool:
         claim = self.queue.claim_next(runtime_role, block_new_claims=self.steering_blocks_new_claims())
         if not claim:
@@ -638,8 +783,67 @@ class Orchestrator:
         role_file = ROLE_FILES[runtime_role]
         role_dir = self.paths.role_dir(runtime_role)
         model = self.role_model(runtime_role)
+        message_text = message_path.read_text(encoding="utf-8")
+        headers = parse_message_headers(message_text)
+        sections = parse_message_sections(message_text, headers=headers)
+        required_reads = [item for item in sections.get("required reads", []) if isinstance(item, str)]
+        explicit_task_bundle = headers.get("taskbundle") or headers.get("task_bundle")
+        explicit_phase = headers.get("phase")
+        packet = resolve_read_packet(
+            self.config.repo_root,
+            runtime_role,
+            message_required_reads=required_reads,
+            explicit_task_bundle=explicit_task_bundle,
+            explicit_phase=explicit_phase,
+            include_message_path=message_path,
+        )
+        write_rules = resolve_writable_paths(
+            self.config.repo_root,
+            runtime_role,
+            message_required_reads=required_reads,
+            explicit_task_bundle=explicit_task_bundle,
+            explicit_phase=explicit_phase,
+        )
+        forbidden_rules = resolve_forbidden_paths(self.config.repo_root, runtime_role)
         add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)
         write_dirs = self.resolve_turn_write_dirs(runtime_role, message_path)
+        routing_file = self.paths.evidence_root / f"{turn_key}.routing.json"
+        packet_health_issues = collect_packet_health_issues(
+            self.config.repo_root,
+            runtime_role,
+            packet,
+            explicit_phase=explicit_phase,
+        )
+        self.write_turn_scope_artifact(
+            routing_file,
+            runtime_role=runtime_role,
+            message_path=message_path,
+            packet=packet,
+            add_dirs=add_dirs,
+            write_dirs=write_dirs,
+            write_rules=write_rules,
+            forbidden_rules=forbidden_rules,
+            packet_health_issues=packet_health_issues,
+        )
+        if packet_health_issues:
+            archived = self.queue.archive(runtime_role, message_path, suffix=".invalid-packet")
+            queued_note = self.queue_packet_health_recovery(
+                runtime_role,
+                packet=packet,
+                scope_artifact=routing_file,
+                issues=packet_health_issues,
+            )
+            body = (
+                f"Role:\n- {runtime_role}\n\n"
+                f"Claimed message:\n- {archived.name}\n\n"
+                f"Routing evidence:\n- {routing_file.relative_to(self.config.repo_root)}\n\n"
+                "Blocking issues:\n"
+                + "\n".join(f"- {issue}" for issue in packet_health_issues)
+            )
+            if queued_note is not None:
+                body += f"\n\nQueued repair note:\n- {queued_note.relative_to(self.config.repo_root)}"
+            self.append_remark("Invalid change packet routing", body)
+            return True
         session_roots = canonical_add_dir_keys(add_dirs)
         resume_id, stored_session_roots = self.resolve_resume_id(runtime_role, role_dir, add_dirs)
         if resume_id and stored_session_roots:
@@ -709,6 +913,9 @@ class Orchestrator:
             validation_file,
             message_path,
             turn_roots=write_dirs,
+            scope_artifact=routing_file,
+            allowed_write_rules=write_rules,
+            forbidden_write_rules=forbidden_rules,
         )
 
         if message_path.exists():

@@ -87,6 +87,8 @@ def is_allowed_change(
     *,
     message_path: Path | None = None,
     turn_roots: list[Path] | None = None,
+    allowed_write_rules: list[str] | None = None,
+    forbidden_write_rules: list[str] | None = None,
 ) -> bool:
     if turn_roots is not None and not change_within_turn_roots(repo_root, relative_path, turn_roots):
         return True
@@ -95,11 +97,19 @@ def is_allowed_change(
         if "/inbox/" in relative_path:
             return True
 
-    forbidden_prefixes = resolve_forbidden_paths(repo_root, runtime_role)
+    forbidden_prefixes = (
+        list(forbidden_write_rules)
+        if forbidden_write_rules is not None
+        else resolve_forbidden_paths(repo_root, runtime_role)
+    )
     if any(path_matches_rule(relative_path, prefix) for prefix in forbidden_prefixes):
         return False
 
-    valid_prefixes = allowed_prefixes(repo_root, runtime_role, message_path=message_path) + ignored_prefixes(ignore_runtime_roles)
+    valid_prefixes = (
+        list(allowed_write_rules)
+        if allowed_write_rules is not None
+        else allowed_prefixes(repo_root, runtime_role, message_path=message_path)
+    ) + ignored_prefixes(ignore_runtime_roles)
     return any(path_matches_rule(relative_path, prefix) for prefix in valid_prefixes)
 
 
@@ -118,10 +128,31 @@ def validate_command(
     ignore_runtime_roles: list[str],
     message_path: Path | None,
     turn_roots: list[Path],
+    scope_artifact: Path | None,
+    allowed_write_rules: list[str],
+    forbidden_write_rules: list[str],
 ) -> int:
     before = read_json(snapshot_path)
     if not isinstance(before, dict):
         raise SystemExit(f"error: invalid snapshot payload in {snapshot_path}")
+
+    resolved_scope_payload: dict[str, object] = {}
+    if scope_artifact is not None:
+        payload = read_json(scope_artifact)
+        if isinstance(payload, dict):
+            resolved_scope_payload = payload
+            if not allowed_write_rules:
+                value = payload.get("write_rules", [])
+                if isinstance(value, list):
+                    allowed_write_rules = [item for item in value if isinstance(item, str)]
+            if not forbidden_write_rules:
+                value = payload.get("forbidden_rules", [])
+                if isinstance(value, list):
+                    forbidden_write_rules = [item for item in value if isinstance(item, str)]
+            if not turn_roots:
+                value = payload.get("write_roots", [])
+                if isinstance(value, list):
+                    turn_roots = [Path(item).resolve() for item in value if isinstance(item, str)]
 
     after = snapshot_repo_files(repo_root)
     before_paths = set(before)
@@ -142,6 +173,8 @@ def validate_command(
             ignore_runtime_roles,
             message_path=message_path,
             turn_roots=turn_roots,
+            allowed_write_rules=allowed_write_rules or None,
+            forbidden_write_rules=forbidden_write_rules or None,
         )
     ]
     external_changes = [
@@ -155,14 +188,27 @@ def validate_command(
             f"runtime_role: {runtime_role}",
             f"changed_files: {len(changed)}",
             f"ignored_runtime_roles: {', '.join(ignore_runtime_roles) if ignore_runtime_roles else '(none)'}",
+            f"scope_artifact: {scope_artifact if scope_artifact else '(none)'}",
+            "",
+            "## Resolved write rules",
+        ]
+        evidence_lines.extend(f"- {path}" for path in (allowed_write_rules or ["(resolved at validation time)"]))
+        evidence_lines.extend(["", "## Forbidden write rules"])
+        evidence_lines.extend(f"- {path}" for path in (forbidden_write_rules or ["(resolved at validation time)"]))
+        evidence_lines.extend(["", "## Write roots"])
+        evidence_lines.extend(f"- {path}" for path in ([str(item) for item in turn_roots] or ["(none)"]))
+        evidence_lines.extend([
             "",
             "## Changed files",
-        ]
+        ])
         evidence_lines.extend(f"- {path}" for path in changed)
         evidence_lines.extend(["", "## External concurrent changes"])
         evidence_lines.extend(f"- {path}" for path in external_changes)
         evidence_lines.extend(["", "## Forbidden files"])
         evidence_lines.extend(f"- {path}" for path in violations)
+        if resolved_scope_payload:
+            evidence_lines.extend(["", "## Resolved scope payload"])
+            evidence_lines.extend(f"- {key}: {value}" for key, value in sorted(resolved_scope_payload.items()))
         evidence_out.write_text("\n".join(evidence_lines) + "\n", encoding="utf-8")
 
     if violations:
@@ -196,6 +242,9 @@ def main() -> int:
     validate_parser.add_argument("--ignore-runtime-role", action="append", default=[])
     validate_parser.add_argument("--message")
     validate_parser.add_argument("--turn-root", action="append", default=[])
+    validate_parser.add_argument("--scope-artifact")
+    validate_parser.add_argument("--allowed-write-rule", action="append", default=[])
+    validate_parser.add_argument("--forbidden-write-rule", action="append", default=[])
 
     args = parser.parse_args()
 
@@ -212,6 +261,9 @@ def main() -> int:
         list(args.ignore_runtime_role),
         Path(args.message).resolve() if args.message else None,
         [Path(item).resolve() for item in args.turn_root],
+        Path(args.scope_artifact).resolve() if args.scope_artifact else None,
+        list(args.allowed_write_rule),
+        list(args.forbidden_write_rule),
     )
 
 

@@ -23,6 +23,8 @@ def dedupe_paths(paths: list[str]) -> list[str]:
     ordered: list[str] = []
     for path in paths:
         normalized = path.strip()
+        if normalized in {"", "[]"}:
+            continue
         if not normalized or normalized in seen:
             continue
         seen.add(normalized)

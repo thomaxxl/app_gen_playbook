@@ -294,6 +294,9 @@ class LegacyTools:
         message: Path,
         turn_roots: list[Path] | None = None,
         ignore_roles: list[str] | None = None,
+        scope_artifact: Path | None = None,
+        allowed_write_rules: list[str] | None = None,
+        forbidden_write_rules: list[str] | None = None,
     ) -> bool:
         args = [
             "validate",
@@ -308,12 +311,29 @@ class LegacyTools:
             "--message",
             str(message),
         ]
+        if scope_artifact is not None:
+            args.extend(["--scope-artifact", str(scope_artifact)])
         for turn_root in turn_roots or []:
             args.extend(["--turn-root", str(turn_root)])
+        for rule in allowed_write_rules or []:
+            args.extend(["--allowed-write-rule", rule])
+        for rule in forbidden_write_rules or []:
+            args.extend(["--forbidden-write-rule", rule])
         for ignore_role in ignore_roles or []:
             args.extend(["--ignore-runtime-role", ignore_role])
         result = self.run("validate_role_diff.py", *args, check=False)
         return result.returncode == 0
+
+    def compile_run_facts(self) -> tuple[bool, str]:
+        result = self.run(
+            "contracts/compile_run_facts.py",
+            "--repo-root",
+            str(self.repo_root),
+            "--json",
+            check=False,
+        )
+        detail = (result.stdout + result.stderr).strip()
+        return result.returncode == 0, detail
 
     def assert_codex_success(self, jsonl_file: Path, result_file: Path) -> tuple[bool, str]:
         result = self.run("assert_codex_success.py", str(jsonl_file), str(result_file), check=False)

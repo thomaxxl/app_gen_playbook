@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from routing_resolver import (
+    collect_packet_health_issues,
     parse_yaml_subset,
     resolve_forbidden_paths,
     resolve_read_packet,
@@ -279,6 +280,68 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("app/frontend/src/App.tsx", read_paths)
         self.assertNotIn("runs/current/artifacts/backend-design/model-design.md", read_paths)
         self.assertNotIn("app/backend/src/service.py", read_paths)
+
+    def test_packet_health_requires_populated_role_load_for_late_change_phase(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/frontend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "  - Fill with exact baseline or candidate artifacts for this role.",
+                    "candidate_artifacts:",
+                    "  - Fill with exact candidate artifacts this role may edit.",
+                    "read_app_paths:",
+                    "  - Fill with exact app paths this role may read.",
+                ]
+            )
+            + "\n",
+        )
+
+        packet = resolve_read_packet(
+            repo_root,
+            "frontend",
+            explicit_task_bundle="playbook/task-bundles/frontend-implementation.yaml",
+        )
+        issues = collect_packet_health_issues(
+            repo_root,
+            "frontend",
+            packet,
+            explicit_phase="phase-I5-frontend-implementation-delta",
+        )
+
+        self.assertTrue(any("template placeholder" in issue for issue in issues))
+
+    def test_packet_health_ignores_early_change_phase_placeholder_role_load(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/frontend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "  - Fill with exact baseline or candidate artifacts for this role.",
+                ]
+            )
+            + "\n",
+        )
+
+        packet = resolve_read_packet(
+            repo_root,
+            "frontend",
+            explicit_task_bundle="playbook/task-bundles/frontend-implementation.yaml",
+        )
+        issues = collect_packet_health_issues(
+            repo_root,
+            "frontend",
+            packet,
+            explicit_phase="phase-I3-architecture-and-contract-delta",
+        )
+
+        self.assertEqual(issues, [])
 
     def test_parse_yaml_subset_accepts_same_indent_list_style(self) -> None:
         repo_root = self.build_repo()

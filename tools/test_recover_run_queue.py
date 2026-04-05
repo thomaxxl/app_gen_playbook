@@ -98,6 +98,54 @@ def write_app_baseline(repo_root: Path) -> None:
         write_file(repo_root / relative, "generated\n")
 
 
+def write_recovery_validation_baseline(repo_root: Path) -> None:
+    write_file(repo_root / "runs/current/remarks.md", "# Run Remarks\n")
+    write_file(repo_root / "runs/current/notes.md", "# Run Notes\n")
+    write_file(
+        repo_root / "runs/current/orchestrator/run-status.json",
+        '{\n  "mode": "iterative-change-run",\n  "current_phase": "phase-6-integration-review"\n}\n',
+    )
+    write_file(repo_root / "runs/current/evidence/orchestrator/logs/orchestrator.log", "orchestrator log\n")
+    write_file(repo_root / "playbook/process/quality-gates.md", "# Quality Gates\n")
+    write_file(repo_root / "tools/compile_final_review_pack.py", "print('stub')\n")
+    write_file(
+        repo_root / "runs/current/evidence/ui-previews/manifest.md",
+        "# UI Preview Manifest\n\ncapture_status: not-required\n",
+    )
+    write_run_artifact(repo_root / "runs/current/artifacts/architecture/integration-review.md")
+
+    for relative in (
+        "playbook/task-bundles/phase-1-product-definition.yaml",
+        "playbook/task-bundles/phase-2-architecture-contract.yaml",
+        "playbook/task-bundles/ux-design.yaml",
+        "playbook/task-bundles/backend-design.yaml",
+        "playbook/task-bundles/backend-implementation.yaml",
+        "playbook/task-bundles/integration-review.yaml",
+        "playbook/task-bundles/acceptance-review.yaml",
+    ):
+        write_file(
+            repo_root / relative,
+            "name: stub\n",
+        )
+
+    for relative in (
+        "playbook/process/phases/phase-1-product-definition.md",
+        "playbook/process/phases/phase-2-architecture-contract.md",
+        "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+        "playbook/process/phases/phase-4-backend-design-and-rules-mapping.md",
+        "playbook/process/phases/phase-5-parallel-implementation.md",
+        "playbook/process/phases/phase-6-integration-review.md",
+        "playbook/process/phases/phase-7-product-acceptance.md",
+        "specs/product/README.md",
+        "specs/architecture/README.md",
+        "specs/ux/README.md",
+        "specs/backend-design/README.md",
+        "specs/architecture/integration-review.md",
+        "specs/product/acceptance-review.md",
+    ):
+        write_file(repo_root / relative, "# support\n")
+
+
 def write_required_phase6_evidence(repo_root: Path) -> None:
     write_file(
         repo_root / "runs/current/evidence/contract-samples.md",
@@ -208,8 +256,11 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("orchestrator", "ceo"):
                 ensure_role_dirs(repo_root, role)
+            write_file(repo_root / "specs/contracts/frontend/validation.md", "# frontend validation\n")
+            write_file(repo_root / "playbook/process/phases/phase-6-integration-review.md", "# phase 6\n")
 
             escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260329-212400-from-architect-to-orchestrator-preview-status-gate-vs-enum-write-scope.md"
             write_file(
@@ -260,10 +311,12 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("orchestrator", "ceo"):
                 ensure_role_dirs(repo_root, role)
             write_file(repo_root / "playbook/process/phases/phase-6-integration-review.md", "# phase 6\n")
             write_file(repo_root / "specs/architecture/integration-review.md", "# integration review\n")
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/integration-review.md")
 
             escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260330-074500-from-architect-to-orchestrator-preview-status-source-repair.md"
             write_file(
@@ -304,6 +357,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("orchestrator", "ceo"):
                 ensure_role_dirs(repo_root, role)
 
@@ -348,6 +402,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("orchestrator", "ceo"):
                 ensure_role_dirs(repo_root, role)
 
@@ -382,6 +437,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             ensure_role_dirs(repo_root, "ceo")
             write_file(
                 repo_root / "runs/current/orchestrator/run-status.json",
@@ -391,6 +447,7 @@ class RecoverRunQueueTests(unittest.TestCase):
                 repo_root / "playbook/process/phases/phase-3-ux-and-interaction-design.md",
                 "# Phase 3\n",
             )
+            write_file(repo_root / "runs/current/artifacts/ux/navigation.md", "# Navigation\n")
 
             mocked_plan = {
                 "phases": [
@@ -468,6 +525,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             ensure_role_dirs(repo_root, "product_manager")
 
             change_id = "CR-test"
@@ -679,6 +737,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 
@@ -762,6 +821,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
             for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
@@ -781,6 +841,7 @@ class RecoverRunQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
             for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
                 ensure_role_dirs(repo_root, role)
 

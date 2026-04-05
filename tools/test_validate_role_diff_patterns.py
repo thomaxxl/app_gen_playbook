@@ -18,6 +18,8 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
                 "product_manager",
                 "runs/current/changes/CR-20260403-135951/candidate/artifacts/product/acceptance-criteria.md",
                 [],
+                allowed_write_rules=["runs/current/changes/*/candidate/artifacts/product/**"],
+                forbidden_write_rules=[],
             )
         )
 

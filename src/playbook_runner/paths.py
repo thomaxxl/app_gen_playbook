@@ -81,6 +81,10 @@ class PlaybookPaths:
         return self.run_root / "remarks.md"
 
     @property
+    def remarks_events_jsonl(self) -> Path:
+        return self.run_root / "remarks-events.jsonl"
+
+    @property
     def notes_md(self) -> Path:
         return self.run_root / "notes.md"
 

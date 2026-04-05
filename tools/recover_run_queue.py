@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import yaml
@@ -23,6 +24,7 @@ from orchestrator_common import (
     preferred_role_state_dir,
     resolve_repo_root,
 )
+from validate_handoff_inputs import validate_message
 
 
 PHASE_ORDER = {
@@ -339,7 +341,6 @@ REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
 )
-RECOVERY_REQUEUE_COOLDOWN = timedelta(minutes=30)
 SOURCE_SCOPE_PATH_PATTERN = re.compile(r"`((?:specs|playbook|tools|scripts|skills)/[^`]+)`")
 SOURCE_SCOPE_INLINE_PATH_PATTERN = re.compile(r"((?:specs|playbook|tools|scripts|skills)/[A-Za-z0-9_./-]+)")
 SOURCE_SCOPE_NEGATED_PATH_PATTERN = re.compile(
@@ -428,12 +429,30 @@ def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
-def note_timestamp(path: Path) -> datetime | None:
-    stem, _, _ = path.name.partition("-from-")
-    try:
-        return datetime.strptime(stem, "%Y%m%d-%H%M%S").replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
+def compute_facts_fingerprint(repo_root: Path) -> str:
+    facts_root = repo_root / "runs" / "current" / "facts"
+    digest = hashlib.sha256()
+    if not facts_root.exists():
+        digest.update(b"no-facts")
+        return digest.hexdigest()[:16]
+    any_files = False
+    for path in sorted(facts_root.glob("*.json")):
+        any_files = True
+        digest.update(path.relative_to(repo_root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    if not any_files:
+        digest.update(b"empty-facts")
+    return digest.hexdigest()[:16]
+
+
+def blocker_fingerprint(*parts: str) -> str:
+    digest = hashlib.sha256()
+    for part in parts:
+        digest.update(part.encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()[:16]
 
 
 def active_core_roles() -> tuple[str, ...]:
@@ -839,7 +858,15 @@ def collect_runtime_environment_escalations(repo_root: Path) -> list[RuntimeEnvi
     ]
 
 
-def format_source_scope_note(repo_root: Path, escalation: SourceScopeEscalation, change_id: str) -> str:
+def format_source_scope_note(
+    repo_root: Path,
+    escalation: SourceScopeEscalation,
+    change_id: str,
+    *,
+    facts_fingerprint: str,
+    blocker_key: str,
+    fingerprint: str,
+) -> str:
     required_reads = _ordered_unique(["runs/current/remarks.md", *escalation.required_reads, *escalation.requested_paths])
 
     lines: list[str] = [
@@ -848,6 +875,9 @@ def format_source_scope_note(repo_root: Path, escalation: SourceScopeEscalation,
         f"topic: {escalation.topic_slug}",
         "purpose: restore progress by resolving source-contract or playbook write-scope escalations that runtime roles cannot satisfy",
         f"change_id: {change_id}",
+        f"blocker_key: {blocker_key}",
+        f"blocker_fingerprint: {fingerprint}",
+        f"facts_fingerprint: {facts_fingerprint}",
         "",
         "## Required Reads",
     ]
@@ -901,17 +931,76 @@ def _archive_orchestrator_escalation(repo_root: Path, message_path: Path) -> Pat
     return target
 
 
+def _message_headers(path: Path) -> dict[str, str]:
+    return parse_message_headers(path.read_text(encoding="utf-8"))
+
+
+def _same_generated_note_exists(role_root: Path, topic_slug: str, fingerprint: str) -> bool:
+    for lane in ("inbox", "inflight", "processed"):
+        lane_root = role_root / lane
+        if not lane_root.exists():
+            continue
+        for existing_path in lane_root.glob(f"*-from-orchestrator-to-*-{topic_slug}*.md"):
+            headers = _message_headers(existing_path)
+            if headers.get("blockerfingerprint", "").strip() == fingerprint:
+                return True
+    return False
+
+
+def _supersede_stale_generated_notes(role_root: Path, topic_slug: str, fingerprint: str) -> None:
+    processed_dir = role_root / "processed"
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    for lane in ("inbox",):
+        lane_root = role_root / lane
+        if not lane_root.exists():
+            continue
+        for existing_path in lane_root.glob(f"*-from-orchestrator-to-*-{topic_slug}*.md"):
+            headers = _message_headers(existing_path)
+            if headers.get("blockerfingerprint", "").strip() == fingerprint:
+                continue
+            target = processed_dir / f"{existing_path.stem}.superseded.md"
+            existing_path.replace(target)
+
+
+def _write_generated_note_with_prevalidation(
+    repo_root: Path,
+    runtime_role: str,
+    note_path: Path,
+    note_text: str,
+) -> tuple[Path | None, Path | None]:
+    note_path.write_text(note_text, encoding="utf-8")
+    report = validate_message(repo_root, runtime_role, note_path)
+    if report["valid"]:
+        return note_path, None
+
+    processed_dir = preferred_role_state_dir(repo_root, runtime_role) / "processed"
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    parked_path = processed_dir / f"{note_path.stem}.blocked-until-changed.md"
+    blockers = [
+        blocker.get("message", "")
+        for blocker in report.get("blockers", [])
+        if isinstance(blocker, dict)
+    ]
+    parked_text = (
+        note_text.rstrip()
+        + "\n\n## Validation Blockers\n"
+        + ("\n".join(f"- {item}" for item in blockers) if blockers else "- generated recovery note is still invalid")
+        + "\n"
+    )
+    note_path.unlink(missing_ok=True)
+    parked_path.write_text(parked_text, encoding="utf-8")
+    return None, parked_path
+
+
 def write_source_scope_notes(repo_root: Path, change_id: str) -> list[Path]:
     if role_pending(repo_root, "ceo"):
         return []
 
     created: list[Path] = []
-    now = datetime.now(timezone.utc)
-    stamp = now.strftime("%Y%m%d-%H%M%S")
     ceo_root = preferred_role_state_dir(repo_root, "ceo")
     inbox_dir = ceo_root / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
-    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+    facts_fingerprint = compute_facts_fingerprint(repo_root)
 
     for index, escalation in enumerate(collect_source_scope_escalations(repo_root), start=1):
         archived_paths: list[Path] = []
@@ -942,28 +1031,30 @@ def write_source_scope_notes(repo_root: Path, change_id: str) -> list[Path]:
             blocking_issues=escalation.blocking_issues,
             message_paths=tuple(archived_paths),
         )
-        note_text = format_source_scope_note(repo_root, escalation_for_note, change_id)
-        duplicate_recent_note = False
-        for lane in ("inbox", "inflight", "processed"):
-            lane_root = ceo_root / lane
-            if not lane_root.exists():
-                continue
-            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{escalation.topic_slug}.md"):
-                existing_timestamp = note_timestamp(existing_path)
-                if existing_timestamp is None or existing_timestamp < cutoff:
-                    continue
-                if existing_path.read_text(encoding="utf-8") == note_text:
-                    duplicate_recent_note = True
-                    break
-            if duplicate_recent_note:
-                break
-        if duplicate_recent_note:
+        blocker_key = f"source-scope:{escalation.topic_slug}"
+        fingerprint = blocker_fingerprint(
+            blocker_key,
+            facts_fingerprint,
+            *escalation_for_note.requested_paths,
+            *escalation_for_note.blocking_issues,
+        )
+        if _same_generated_note_exists(ceo_root, escalation.topic_slug, fingerprint):
             continue
+        _supersede_stale_generated_notes(ceo_root, escalation.topic_slug, fingerprint)
 
+        note_text = format_source_scope_note(
+            repo_root,
+            escalation_for_note,
+            change_id,
+            facts_fingerprint=facts_fingerprint,
+            blocker_key=blocker_key,
+            fingerprint=fingerprint,
+        )
         suffix = "" if index == 1 else f"-{index}"
-        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{escalation.topic_slug}{suffix}.md"
-        note_path.write_text(note_text, encoding="utf-8")
-        created.append(note_path)
+        note_path = inbox_dir / f"{utc_stamp()}-from-orchestrator-to-ceo-{escalation.topic_slug}{suffix}.md"
+        written_path, _parked = _write_generated_note_with_prevalidation(repo_root, "ceo", note_path, note_text)
+        if written_path is not None:
+            created.append(written_path)
 
     return created
 
@@ -972,6 +1063,10 @@ def format_runtime_environment_note(
     repo_root: Path,
     escalation: RuntimeEnvironmentEscalation,
     change_id: str,
+    *,
+    facts_fingerprint: str,
+    blocker_key: str,
+    fingerprint: str,
 ) -> str:
     required_reads = _ordered_unique(["runs/current/remarks.md", *escalation.required_reads])
     lines: list[str] = [
@@ -980,6 +1075,9 @@ def format_runtime_environment_note(
         f"topic: {escalation.topic_slug}",
         "purpose: restore progress by deciding whether the remaining runtime or environment blocker is locally repairable or requires operator action",
         f"change_id: {change_id}",
+        f"blocker_key: {blocker_key}",
+        f"blocker_fingerprint: {fingerprint}",
+        f"facts_fingerprint: {facts_fingerprint}",
         "",
         "## Required Reads",
     ]
@@ -1023,12 +1121,10 @@ def write_runtime_environment_notes(repo_root: Path, change_id: str) -> list[Pat
         return []
 
     created: list[Path] = []
-    now = datetime.now(timezone.utc)
-    stamp = now.strftime("%Y%m%d-%H%M%S")
     ceo_root = preferred_role_state_dir(repo_root, "ceo")
     inbox_dir = ceo_root / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
-    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+    facts_fingerprint = compute_facts_fingerprint(repo_root)
 
     for escalation in collect_runtime_environment_escalations(repo_root):
         archived_paths: list[Path] = []
@@ -1059,28 +1155,28 @@ def write_runtime_environment_notes(repo_root: Path, change_id: str) -> list[Pat
             blocking_issues=escalation.blocking_issues,
             message_paths=tuple(archived_paths),
         )
-        note_text = format_runtime_environment_note(repo_root, escalation_for_note, change_id)
-
-        duplicate_recent_note = False
-        for lane in ("inbox", "inflight", "processed"):
-            lane_root = ceo_root / lane
-            if not lane_root.exists():
-                continue
-            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{escalation.topic_slug}.md"):
-                existing_timestamp = note_timestamp(existing_path)
-                if existing_timestamp is None or existing_timestamp < cutoff:
-                    continue
-                if existing_path.read_text(encoding="utf-8") == note_text:
-                    duplicate_recent_note = True
-                    break
-            if duplicate_recent_note:
-                break
-        if duplicate_recent_note:
+        blocker_key = f"runtime-environment:{escalation.topic_slug}"
+        fingerprint = blocker_fingerprint(
+            blocker_key,
+            facts_fingerprint,
+            *escalation_for_note.blocking_issues,
+        )
+        if _same_generated_note_exists(ceo_root, escalation.topic_slug, fingerprint):
             continue
+        _supersede_stale_generated_notes(ceo_root, escalation.topic_slug, fingerprint)
 
-        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{escalation.topic_slug}.md"
-        note_path.write_text(note_text, encoding="utf-8")
-        created.append(note_path)
+        note_text = format_runtime_environment_note(
+            repo_root,
+            escalation_for_note,
+            change_id,
+            facts_fingerprint=facts_fingerprint,
+            blocker_key=blocker_key,
+            fingerprint=fingerprint,
+        )
+        note_path = inbox_dir / f"{utc_stamp()}-from-orchestrator-to-ceo-{escalation.topic_slug}.md"
+        written_path, _parked = _write_generated_note_with_prevalidation(repo_root, "ceo", note_path, note_text)
+        if written_path is not None:
+            created.append(written_path)
 
     return created
 
@@ -1163,7 +1259,14 @@ def collect_pending_phase_ceo_reviews(repo_root: Path) -> list[PendingPhaseCeoRe
     return pending_reviews
 
 
-def format_phase_ceo_review_note(review: PendingPhaseCeoReview, change_id: str) -> str:
+def format_phase_ceo_review_note(
+    review: PendingPhaseCeoReview,
+    change_id: str,
+    *,
+    facts_fingerprint: str,
+    blocker_key: str,
+    fingerprint: str,
+) -> str:
     lines: list[str] = [
         "from: orchestrator",
         "to: ceo",
@@ -1171,6 +1274,9 @@ def format_phase_ceo_review_note(review: PendingPhaseCeoReview, change_id: str) 
         "purpose: critically review the completed phase outputs across components and subsystems before phase exit",
         f"change_id: {change_id}",
         f"phase: {review.phase_id}",
+        f"blocker_key: {blocker_key}",
+        f"blocker_fingerprint: {fingerprint}",
+        f"facts_fingerprint: {facts_fingerprint}",
         "",
         "## Required Reads",
     ]
@@ -1207,41 +1313,49 @@ def write_phase_ceo_review_notes(repo_root: Path, change_id: str) -> list[Path]:
         return []
 
     created: list[Path] = []
-    now = datetime.now(timezone.utc)
-    stamp = now.strftime("%Y%m%d-%H%M%S")
     ceo_root = preferred_role_state_dir(repo_root, "ceo")
     inbox_dir = ceo_root / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
-    cutoff = now - RECOVERY_REQUEUE_COOLDOWN
+    facts_fingerprint = compute_facts_fingerprint(repo_root)
 
     for review in collect_pending_phase_ceo_reviews(repo_root):
-        note_text = format_phase_ceo_review_note(review, change_id)
         topic_slug = f"phase-review-{review.phase_id}"
-        duplicate_recent_note = False
-        for lane in ("inbox", "inflight", "processed"):
-            lane_root = ceo_root / lane
-            if not lane_root.exists():
-                continue
-            for existing_path in lane_root.glob(f"*-from-orchestrator-to-ceo-{topic_slug}.md"):
-                existing_timestamp = note_timestamp(existing_path)
-                if existing_timestamp is None or existing_timestamp < cutoff:
-                    continue
-                if existing_path.read_text(encoding="utf-8") == note_text:
-                    duplicate_recent_note = True
-                    break
-            if duplicate_recent_note:
-                break
-        if duplicate_recent_note:
+        blocker_key = f"phase-review:{review.phase_id}"
+        fingerprint = blocker_fingerprint(
+            blocker_key,
+            facts_fingerprint,
+            review.phase_id,
+            review.approval_path,
+        )
+        if _same_generated_note_exists(ceo_root, topic_slug, fingerprint):
             continue
+        _supersede_stale_generated_notes(ceo_root, topic_slug, fingerprint)
 
-        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-ceo-{topic_slug}.md"
-        note_path.write_text(note_text, encoding="utf-8")
-        created.append(note_path)
+        note_text = format_phase_ceo_review_note(
+            review,
+            change_id,
+            facts_fingerprint=facts_fingerprint,
+            blocker_key=blocker_key,
+            fingerprint=fingerprint,
+        )
+        note_path = inbox_dir / f"{utc_stamp()}-from-orchestrator-to-ceo-{topic_slug}.md"
+        written_path, _parked = _write_generated_note_with_prevalidation(repo_root, "ceo", note_path, note_text)
+        if written_path is not None:
+            created.append(written_path)
 
     return created
 
 
-def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], change_id: str) -> str:
+def format_recovery_note(
+    repo_root: Path,
+    role: str,
+    needs: list[ArtifactNeed],
+    change_id: str,
+    *,
+    facts_fingerprint: str,
+    blocker_key: str,
+    fingerprint: str,
+) -> str:
     phase_labels = sorted({need.phase for need in needs}, key=lambda phase: PHASE_ORDER.get(phase, 99))
     required_reads: list[str] = ["runs/current/remarks.md"]
 
@@ -1268,6 +1382,9 @@ def format_recovery_note(repo_root: Path, role: str, needs: list[ArtifactNeed], 
         "topic: recovery",
         f"purpose: {ROLE_PURPOSE[role]}",
         f"change_id: {change_id}",
+        f"blocker_key: {blocker_key}",
+        f"blocker_fingerprint: {fingerprint}",
+        f"facts_fingerprint: {facts_fingerprint}",
         "",
         "## Required Reads",
     ]
@@ -1387,35 +1504,35 @@ def sync_change_role_load_for_recovery(
 
 def write_recovery_notes(repo_root: Path, targets: dict[str, list[ArtifactNeed]], change_id: str) -> list[Path]:
     created: list[Path] = []
-    now = datetime.now(timezone.utc)
-    stamp = now.strftime("%Y%m%d-%H%M%S")
+    facts_fingerprint = compute_facts_fingerprint(repo_root)
     for role, needs in sorted(targets.items()):
         sync_change_role_load_for_recovery(repo_root, change_id, role, needs)
-        note_text = format_recovery_note(repo_root, role, needs, change_id)
         role_root = preferred_role_state_dir(repo_root, role)
-        cutoff = now - RECOVERY_REQUEUE_COOLDOWN
-        duplicate_recent_note = False
-        for lane in ("inbox", "inflight", "processed"):
-            lane_root = role_root / lane
-            if not lane_root.exists():
-                continue
-            for existing_path in lane_root.glob(f"*-from-orchestrator-to-{role}-recovery.md"):
-                existing_timestamp = note_timestamp(existing_path)
-                if existing_timestamp is None or existing_timestamp < cutoff:
-                    continue
-                if existing_path.read_text(encoding="utf-8") == note_text:
-                    duplicate_recent_note = True
-                    break
-            if duplicate_recent_note:
-                break
-        if duplicate_recent_note:
+        blocker_key = "recovery:" + "|".join(
+            f"{need.phase}:{need.path.relative_to(repo_root).as_posix()}:{need.reason}"
+            for need in sorted(needs, key=lambda item: (item.phase, item.path.as_posix(), item.reason))
+        )
+        fingerprint = blocker_fingerprint(blocker_key, facts_fingerprint)
+        if _same_generated_note_exists(role_root, "recovery", fingerprint):
             continue
+        _supersede_stale_generated_notes(role_root, "recovery", fingerprint)
+
+        note_text = format_recovery_note(
+            repo_root,
+            role,
+            needs,
+            change_id,
+            facts_fingerprint=facts_fingerprint,
+            blocker_key=blocker_key,
+            fingerprint=fingerprint,
+        )
 
         inbox_dir = preferred_role_state_dir(repo_root, role) / "inbox"
         inbox_dir.mkdir(parents=True, exist_ok=True)
-        note_path = inbox_dir / f"{stamp}-from-orchestrator-to-{role}-recovery.md"
-        note_path.write_text(note_text, encoding="utf-8")
-        created.append(note_path)
+        note_path = inbox_dir / f"{utc_stamp()}-from-orchestrator-to-{role}-recovery.md"
+        written_path, _parked = _write_generated_note_with_prevalidation(repo_root, role, note_path, note_text)
+        if written_path is not None:
+            created.append(written_path)
     return created
 
 

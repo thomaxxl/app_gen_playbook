@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import ExitStack
 import tempfile
 import unittest
 from pathlib import Path
@@ -518,6 +519,9 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 output=validation_file,
                 message=message_path,
                 turn_roots=turn_roots,
+                scope_artifact=None,
+                allowed_write_rules=None,
+                forbidden_write_rules=None,
             )
 
     def test_run_role_once_uses_writable_dirs_for_role_diff_roots(self) -> None:
@@ -566,20 +570,29 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 message_path.replace(processed_dir / message_path.name)
                 return SimpleNamespace(returncode=0, timed_out=False)
 
-            with patch.object(orchestrator.queue, "claim_next", return_value=claim), \
-                patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})), \
-                patch.object(orchestrator.tools, "start_worker"), \
-                patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
-                patch.object(orchestrator.tools, "build_prompt"), \
-                patch.object(orchestrator, "resolve_turn_add_dirs", return_value=add_dirs), \
-                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=write_dirs), \
-                patch.object(orchestrator.codex, "run", side_effect=complete_turn), \
-                patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")), \
-                patch.object(orchestrator.tools, "session_record_from_jsonl"), \
-                patch.object(orchestrator.tools, "sync_session"), \
-                patch.object(orchestrator, "validate_role_outputs") as validate_role_outputs, \
-                patch.object(orchestrator.tools, "finish_worker"), \
-                patch.object(orchestrator, "log_line"):
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=["runs/current/role-state/product_manager/**"])
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=add_dirs))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=write_dirs))
+                stack.enter_context(patch.object(orchestrator.codex, "run", side_effect=complete_turn))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
+                stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
+                validate_role_outputs = stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
+                stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
                 self.assertTrue(orchestrator.run_role_once("product_manager"))
 
             validate_role_outputs.assert_called_once()
@@ -620,19 +633,28 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
             claim = ClaimedMessage(runtime_role="frontend", path=message_path, message=Message.parse(message_path))
 
-            with patch.object(orchestrator.queue, "claim_next", return_value=claim), \
-                patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})), \
-                patch.object(orchestrator.tools, "start_worker"), \
-                patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
-                patch.object(orchestrator.tools, "build_prompt"), \
-                patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]), \
-                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]), \
-                patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=1, timed_out=False)), \
-                patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "Quiet Current did not persist status=ready.")), \
-                patch.object(orchestrator.tools, "finish_worker") as finish_worker, \
-                patch.object(orchestrator, "set_run_status") as set_run_status, \
-                patch.object(orchestrator, "append_remark"), \
-                patch.object(orchestrator, "log_line"):
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=1, timed_out=False)))
+                stack.enter_context(
+                    patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "Quiet Current did not persist status=ready."))
+                )
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
+                stack.enter_context(patch.object(orchestrator, "append_remark"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
                 with self.assertRaisesRegex(RuntimeError, "Codex interrupted for role frontend: Quiet Current did not persist status=ready\\."):
                     orchestrator.run_role_once("frontend")
 
@@ -683,22 +705,29 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 message_path.replace(processed_dir / message_path.name)
                 return SimpleNamespace(returncode=1, timed_out=False)
 
-            with patch.object(orchestrator.queue, "claim_next", return_value=claim), \
-                patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})), \
-                patch.object(orchestrator.tools, "start_worker"), \
-                patch.object(orchestrator.tools, "validate_role_diff_snapshot"), \
-                patch.object(orchestrator.tools, "build_prompt"), \
-                patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]), \
-                patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]), \
-                patch.object(orchestrator.codex, "run", side_effect=complete_turn), \
-                patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")), \
-                patch.object(orchestrator.tools, "session_record_from_jsonl"), \
-                patch.object(orchestrator.tools, "sync_session"), \
-                patch.object(orchestrator, "validate_role_outputs"), \
-                patch.object(orchestrator.tools, "finish_worker") as finish_worker, \
-                patch.object(orchestrator, "set_run_status") as set_run_status, \
-                patch.object(orchestrator, "append_remark"), \
-                patch.object(orchestrator, "log_line"):
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator.codex, "run", side_effect=complete_turn))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
+                stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
+                stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
+                stack.enter_context(patch.object(orchestrator, "append_remark"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
                 self.assertTrue(orchestrator.run_role_once("frontend"))
 
             finish_worker.assert_called_once_with(role="frontend", status="complete", claimed_message="")

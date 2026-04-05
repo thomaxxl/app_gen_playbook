@@ -11,6 +11,12 @@ from orchestrator_common import path_matches_rule, relpath, role_state_dir_names
 
 CHANGE_RUN_MODES = {"iterative-change-run", "app-only-hotfix"}
 CHANGE_PHASE_PREFIX = "phase-I"
+STRICT_ROLE_LOAD_PHASE_PREFIXES = (
+    "phase-I4",
+    "phase-I5",
+    "phase-I6",
+    "phase-I7",
+)
 PLACEHOLDER_PREFIXES = (
     "fill with ",
     "fill only ",
@@ -359,6 +365,16 @@ def _is_placeholder_value(value: str) -> bool:
     return any(normalized.startswith(prefix) for prefix in PLACEHOLDER_PREFIXES)
 
 
+def _payload_contains_placeholder(value: Any) -> bool:
+    if isinstance(value, str):
+        return _is_placeholder_value(value) or value.strip() == "[]"
+    if isinstance(value, list):
+        return any(_payload_contains_placeholder(item) for item in value)
+    if isinstance(value, dict):
+        return any(_payload_contains_placeholder(item) for item in value.values())
+    return False
+
+
 def _clean_declared_paths(values: list[str]) -> list[str]:
     cleaned: list[str] = []
     for value in values:
@@ -414,6 +430,7 @@ def _active_change_context(repo_root: Path) -> dict[str, Any] | None:
     return {
         "change_id": change_id,
         "change_root": change_root,
+        "current_phase": current_phase,
         "classification": active_scope_context(repo_root).get("classification", {}),
         "affected_artifacts": _parse_markdown_path_list(change_root / "affected-artifacts.md"),
         "affected_candidate_artifacts": _parse_markdown_path_list(change_root / "affected-candidate-artifacts.md"),
@@ -543,6 +560,76 @@ def _narrow_change_writable_paths(
     narrowed.extend(write_app_paths)
     narrowed.extend(verification_inputs)
     return narrowed
+
+
+def _role_load_scope_is_populated(payload: Mapping[str, Any]) -> bool:
+    declared_paths = (
+        _clean_declared_paths(_string_list(payload, "read_artifacts"))
+        + _clean_declared_paths(_string_list(payload, "candidate_artifacts"))
+        + _clean_declared_paths(_string_list(payload, "write_artifacts"))
+        + _clean_declared_paths(_string_list(payload, "read_app_paths"))
+        + _clean_declared_paths(_string_list(payload, "write_app_paths"))
+        + _clean_declared_paths(_string_list(payload, "verification_inputs"))
+    )
+    return bool(declared_paths)
+
+
+def _path_is_invalid_placeholder(path: str) -> bool:
+    normalized = path.strip()
+    if not normalized:
+        return True
+    if normalized == "[]":
+        return True
+    if normalized.endswith("/[]") or "/[]/" in normalized:
+        return True
+    return _is_placeholder_value(normalized)
+
+
+def collect_packet_health_issues(
+    repo_root: Path,
+    runtime_role: str,
+    packet: Mapping[str, Any],
+    *,
+    explicit_phase: str | None = None,
+) -> list[str]:
+    change_context = packet.get("change_context")
+    if not isinstance(change_context, dict):
+        return []
+
+    current_phase = str(explicit_phase or change_context.get("current_phase", "")).strip()
+    if not any(current_phase.startswith(prefix) for prefix in STRICT_ROLE_LOAD_PHASE_PREFIXES):
+        return []
+
+    issues: list[str] = []
+    role_load_relpath = packet.get("role_load_manifest")
+    role_load_payload = packet.get("role_load_payload")
+    if not isinstance(role_load_payload, dict):
+        role_load_payload = {}
+
+    if not isinstance(role_load_relpath, str) or not role_load_relpath.strip():
+        issues.append(
+            f"missing populated role-load manifest for {runtime_role} in {current_phase}; "
+            "late change-run dispatch must not rely on fallback affected-scope routing"
+        )
+    else:
+        if _payload_contains_placeholder(role_load_payload):
+            issues.append(
+                f"role-load manifest still contains template placeholder text: {role_load_relpath}"
+            )
+        if not _role_load_scope_is_populated(role_load_payload):
+            issues.append(
+                f"role-load manifest does not declare any concrete read/write scope: {role_load_relpath}"
+            )
+
+    read_paths = packet.get("read_paths", [])
+    if isinstance(read_paths, list):
+        for read_path in read_paths:
+            if not isinstance(read_path, str):
+                continue
+            if _path_is_invalid_placeholder(read_path):
+                issues.append(f"resolved read path is still a placeholder or invalid token: {read_path}")
+
+    return issues
 
 
 def resolve_read_packet(
