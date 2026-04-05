@@ -31,6 +31,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
             repo_root / "scripts" / "steer.sh",
             repo_root / "scripts" / "clean.sh",
             repo_root / "scripts" / "save_run.sh",
+            repo_root / "scripts" / "restore_saved_run.sh",
             repo_root / "scripts" / "monitor.sh",
             repo_root / "scripts" / "status_report.sh",
         )
@@ -126,6 +127,98 @@ class ShellScriptSyntaxTests(unittest.TestCase):
 
             self.assertFalse((repo_root / "runs" / "current").exists())
             self.assertTrue((repo_root / "app").is_dir())
+
+    def test_restore_saved_run_restores_archive_to_configured_workspace(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            scripts_dir = repo_root / "scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            for script_name in ("save_run.sh", "restore_saved_run.sh"):
+                shutil.copy2(source_repo_root / "scripts" / script_name, scripts_dir / script_name)
+                (scripts_dir / script_name).chmod(0o755)
+
+            (repo_root / ".env").write_text("APP_WORKSPACE_DIR=../workspace/app\n", encoding="utf-8")
+
+            workspace_app = repo_root.parent / "workspace" / "app"
+            workspace_app.mkdir(parents=True, exist_ok=True)
+            (workspace_app / "stale.txt").write_text("stale\n", encoding="utf-8")
+            (repo_root / "app").symlink_to("../workspace/app")
+
+            (repo_root / "runs" / "current").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("current\n", encoding="utf-8")
+
+            archive_dir = repo_root / "saved" / "20260324-074745Z-pre-clean"
+            (archive_dir / "runs-current" / "artifacts").mkdir(parents=True, exist_ok=True)
+            (archive_dir / "app" / "frontend").mkdir(parents=True, exist_ok=True)
+            (archive_dir / "runs-current" / "remarks.md").write_text("restored\n", encoding="utf-8")
+            (archive_dir / "app" / "frontend" / "App.tsx").write_text("export const ok = true;\n", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(scripts_dir / "restore_saved_run.sh"), "20260324-074745Z-pre-clean"],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"restore_saved_run.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+            )
+            self.assertEqual(
+                (repo_root / "runs" / "current" / "remarks.md").read_text(encoding="utf-8"),
+                "restored\n",
+            )
+            self.assertEqual(
+                (workspace_app / "frontend" / "App.tsx").read_text(encoding="utf-8"),
+                "export const ok = true;\n",
+            )
+            self.assertFalse((workspace_app / "stale.txt").exists())
+            self.assertTrue((repo_root / "app").is_symlink())
+            self.assertEqual(os.readlink(repo_root / "app"), "../workspace/app")
+
+            archives = sorted((repo_root / "saved").iterdir())
+            self.assertEqual(len(archives), 2)
+            self.assertTrue(any("pre-restore-20260324-074745Z-pre-clean" in path.name for path in archives))
+
+    def test_restore_saved_run_refuses_active_run(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            scripts_dir = repo_root / "scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            for script_name in ("save_run.sh", "restore_saved_run.sh"):
+                shutil.copy2(source_repo_root / "scripts" / script_name, scripts_dir / script_name)
+                (scripts_dir / script_name).chmod(0o755)
+
+            archive_dir = repo_root / "saved" / "20260324-074745Z-pre-clean" / "runs-current"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            (archive_dir / "remarks.md").write_text("restored\n", encoding="utf-8")
+
+            run_root = repo_root / "runs" / "current" / "orchestrator"
+            run_root.mkdir(parents=True, exist_ok=True)
+            (run_root / "run-status.json").write_text('{"status":"active"}\n', encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(scripts_dir / "restore_saved_run.sh"), "20260324-074745Z-pre-clean"],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("current run is active", result.stderr)
+            self.assertFalse((repo_root / "runs" / "current" / "remarks.md").exists())
 
     def test_steer_script_pause_writes_direct_orchestrator_request(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]

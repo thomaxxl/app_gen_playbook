@@ -88,6 +88,10 @@ exception.
 - `scripts/save_run.sh`
   Archives local `runs/current/` and `app/` under `saved/`, with an optional
   `--clean` step to reset the workspace after the snapshot succeeds.
+- `scripts/restore_saved_run.sh`
+  Restores a prior `saved/<stamp>/` snapshot back into `runs/current/` and the
+  configured app workspace. It refuses while a run is still active and, by
+  default, archives the current workspace first.
 - `scripts/steer.sh`
   Writes an operator steering note into the CEO inbox so a live run can be
   rerouted, narrowed, restarted from an earlier phase, or paused cleanly.
@@ -165,8 +169,9 @@ active:
 ```
 
 That monitor prints all current and future `*.events.jsonl` streams with
-filename prefixes, including parallel role turns. Each stream starts from the
-last 120 lines instead of replaying the whole file.
+filename prefixes, including parallel role turns. Startup stays compact and
+defaults to the last 100 lines across existing streams instead of replaying
+whole files.
 
 If you want a high-level run status snapshot:
 
@@ -183,6 +188,18 @@ resetting the workspace:
 ```
 
 That stores a local snapshot under `saved/` and then runs the normal cleanup.
+
+If you want to restore a previously saved snapshot after the current run is no
+longer active:
+
+```bash
+./scripts/restore_saved_run.sh 20260324-074745Z-pre-clean
+```
+
+That restores `saved/<name>/runs-current/` into `runs/current/` and restores
+`saved/<name>/app/` into the configured app workspace target behind the local
+`app/` symlink. By default it archives the current local workspace first under
+`saved/`.
 
 If you want to steer a live run through the CEO control lane:
 
