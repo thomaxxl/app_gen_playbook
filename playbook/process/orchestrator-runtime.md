@@ -281,6 +281,12 @@ any required check fails. Recording a blocked prerequisite artifact is not
 enough; the run MUST NOT proceed into role dispatch until the current
 execution context validates.
 
+Auxiliary operator tooling such as `run_dashboard/` MUST NOT block role
+dispatch on a full startup snapshot. The dashboard sidecar MAY initialize its
+database first, but any heavy sync SHOULD run asynchronously in the watcher so
+`scripts/run_playbook.sh --resume` can reach the next actionable role without a
+long silent startup stall.
+
 When the backend venv is created or repaired during that prerequisite step, the
 orchestrator SHOULD switch subsequent Python tool execution onto that same
 backend venv instead of continuing on a divergent system interpreter.

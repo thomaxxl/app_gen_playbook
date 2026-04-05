@@ -345,7 +345,7 @@ class Orchestrator:
     def start_dashboard_sidecar(self) -> None:
         if os.getenv("RUN_DASHBOARD_ENABLED", "1") != "1":
             return
-        if not (self.paths.dashboard_init.exists() and self.paths.dashboard_sync.exists() and self.paths.dashboard_watch.exists()):
+        if not (self.paths.dashboard_init.exists() and self.paths.dashboard_watch.exists()):
             return
 
         dashboard_log = self.paths.logs_dir / "run_dashboard.log"
@@ -353,7 +353,6 @@ class Orchestrator:
         env = {**os.environ, "PLAYBOOK_ROOT": str(self.config.repo_root)}
         with dashboard_log.open("a", encoding="utf-8") as handle:
             subprocess.run(["bash", str(self.paths.dashboard_init)], cwd=self.config.repo_root, env=env, stdout=handle, stderr=subprocess.STDOUT, check=False)
-            subprocess.run(["bash", str(self.paths.dashboard_sync)], cwd=self.config.repo_root, env=env, stdout=handle, stderr=subprocess.STDOUT, check=False)
             self.dashboard_process = subprocess.Popen(
                 ["bash", str(self.paths.dashboard_watch)],
                 cwd=self.config.repo_root,
@@ -387,9 +386,17 @@ class Orchestrator:
         ordered_scoped = [role for role in ROLE_ORDER if role in scoped]
         if "ceo" not in ordered_scoped:
             ordered_scoped.insert(0, "ceo")
+
+        pending_roles: list[str] = []
+        for role in ROLE_ORDER:
+            if role == "ceo" or role in ordered_scoped:
+                continue
+            if self.queue.actionable_count(role) > 0:
+                pending_roles.append(role)
+
         if not ordered_scoped:
             return list(ROLE_ORDER)
-        return ordered_scoped
+        return ordered_scoped + pending_roles
 
     def seed_new_run(self) -> None:
         assert self.request.input_file is not None

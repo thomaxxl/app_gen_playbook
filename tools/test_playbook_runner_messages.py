@@ -147,6 +147,91 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             self.assertIn("deployment", active_roles)
             self.assertNotIn("devops", active_roles)
 
+    def test_active_roles_include_pending_worker_outside_stale_scope_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "playbook" / "routing").mkdir(parents=True, exist_ok=True)
+            (repo_root / "playbook" / "routing" / "execution-scopes.yaml").write_text(
+                "frontend-only:\n"
+                "  active_roles:\n"
+                "    - product_manager\n"
+                "    - architect\n"
+                "    - frontend\n"
+                "    - qa\n"
+                "  iterative-change-run:\n"
+                "    active_roles:\n"
+                "      - product_manager\n"
+                "      - architect\n"
+                "      - frontend\n"
+                "      - qa\n",
+                encoding="utf-8",
+            )
+            orchestrator_root = repo_root / "runs" / "current" / "orchestrator"
+            orchestrator_root.mkdir(parents=True, exist_ok=True)
+            (orchestrator_root / "run-status.json").write_text(
+                json.dumps(
+                    {
+                        "mode": "iterative-change-run",
+                        "scope_profile": "frontend-only",
+                        "change_id": "CR-1",
+                        "status": "active",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            change_root = repo_root / "runs" / "current" / "changes" / "CR-1"
+            change_root.mkdir(parents=True, exist_ok=True)
+            (change_root / "classification.yaml").write_text(
+                "change_id: CR-1\n"
+                "requested_mode: iterative-change-run\n"
+                "scope_profile: frontend-only\n"
+                "active_roles:\n"
+                "  - product_manager\n"
+                "  - frontend\n"
+                "  - qa\n",
+                encoding="utf-8",
+            )
+            architect_inbox = repo_root / "runs" / "current" / "role-state" / "architect" / "inbox"
+            architect_inbox.mkdir(parents=True, exist_ok=True)
+            (architect_inbox / "20260405-200000-from-qa-to-architect-followup.md").write_text(
+                "from: qa\n"
+                "to: architect\n"
+                "topic: followup\n\n"
+                "## Gate Status\n"
+                "- blocked\n",
+                encoding="utf-8",
+            )
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            request = RunRequest(mode="iterate", scope="fullstack", resume=True, target_role=None, input_file=None)
+            orchestrator = Orchestrator(config, request)
+
+            active_roles = orchestrator.active_roles()
+
+            self.assertEqual(active_roles[:4], ["ceo", "product_manager", "qa", "frontend"])
+            self.assertIn("architect", active_roles)
+
     def test_expand_add_dirs_includes_resolved_symlink_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -158,6 +243,50 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             expanded = expand_add_dirs([link])
             self.assertIn(link, expanded)
             self.assertIn(external.resolve(), expanded)
+
+    def test_dashboard_sidecar_skips_blocking_sync_once_on_startup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "run_dashboard" / "scripts").mkdir(parents=True, exist_ok=True)
+            for relpath in ("run_dashboard/scripts/init_db.sh", "run_dashboard/scripts/watch_current_run.sh"):
+                path = repo_root / relpath
+                path.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+                path.chmod(0o755)
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            request = RunRequest(mode="iterate", scope="fullstack", resume=True, target_role=None, input_file=None)
+            orchestrator = Orchestrator(config, request)
+
+            with patch("playbook_runner.orchestrator.subprocess.run", return_value=SimpleNamespace(returncode=0)) as mock_run, patch(
+                "playbook_runner.orchestrator.subprocess.Popen",
+                return_value=SimpleNamespace(poll=lambda: 0),
+            ) as mock_popen:
+                orchestrator.start_dashboard_sidecar()
+
+            self.assertEqual(mock_run.call_count, 1)
+            self.assertEqual(mock_run.call_args.args[0], ["bash", str(orchestrator.paths.dashboard_init)])
+            self.assertEqual(mock_popen.call_args.args[0], ["bash", str(orchestrator.paths.dashboard_watch)])
 
     def test_codex_runner_uses_bypass_flag_in_host_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
