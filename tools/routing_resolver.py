@@ -75,8 +75,11 @@ def parse_yaml_subset(path: Path) -> Any:
     lines = path.read_text(encoding="utf-8").splitlines()
     root: dict[str, Any] = {}
     stack: list[tuple[int, Any]] = [(-1, root)]
+    consumed_indexes: set[int] = set()
 
     for index, raw_line in enumerate(lines):
+        if index in consumed_indexes:
+            continue
         if not raw_line.strip() or raw_line.lstrip().startswith("#"):
             continue
 
@@ -120,6 +123,25 @@ def parse_yaml_subset(path: Path) -> Any:
         if remainder:
             if not isinstance(parent, dict):
                 raise ValueError(f"Invalid scalar parent in {path}: {raw_line}")
+            if remainder in {">", "|"}:
+                block_lines: list[str] = []
+                for candidate_index, candidate in enumerate(lines[index + 1 :], start=index + 1):
+                    if not candidate.strip():
+                        if block_lines:
+                            block_lines.append("")
+                            consumed_indexes.add(candidate_index)
+                        continue
+                    candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+                    if candidate_indent <= indent:
+                        break
+                    consumed_indexes.add(candidate_index)
+                    block_lines.append(candidate[candidate_indent:].rstrip())
+                if remainder == ">":
+                    folded_parts = [line.strip() for line in block_lines if line.strip()]
+                    parent[key] = " ".join(folded_parts)
+                else:
+                    parent[key] = "\n".join(block_lines)
+                continue
             parent[key] = remainder
             continue
 

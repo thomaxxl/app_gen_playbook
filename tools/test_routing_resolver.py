@@ -339,6 +339,36 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertEqual(payload["required_feature_packs"], [])
         self.assertEqual(payload["write_app_paths"], ["app/frontend/**"])
 
+    def test_parse_yaml_subset_accepts_folded_block_scalar(self) -> None:
+        repo_root = self.build_repo()
+        manifest = repo_root / "runs/current/changes/CR-1/role-loads/product_manager.yaml"
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/product_manager.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "baseline_id: >",
+                    "  Accepted playlist app baseline with product publication drift handled via",
+                    "  runs/current/changes/CR-0/candidate/artifacts/product/** and",
+                    "  runs/current/changes/CR-00/candidate/artifacts/product/**.",
+                    "read_artifacts:",
+                    "  - runs/current/changes/CR-1/request.md",
+                ]
+            )
+            + "\n",
+        )
+
+        payload = parse_yaml_subset(manifest)
+
+        self.assertEqual(
+            payload["baseline_id"],
+            "Accepted playlist app baseline with product publication drift handled via "
+            "runs/current/changes/CR-0/candidate/artifacts/product/** and "
+            "runs/current/changes/CR-00/candidate/artifacts/product/**.",
+        )
+        self.assertEqual(payload["read_artifacts"], ["runs/current/changes/CR-1/request.md"])
+
     def test_change_run_writable_scope_is_narrowed_by_populated_role_load_manifest(self) -> None:
         repo_root = self.build_repo()
 
