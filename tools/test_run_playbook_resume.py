@@ -76,10 +76,16 @@ def seed_minimal_tools(repo_root: Path, *, completion_rc: int = 0) -> None:
         textwrap.dedent(
             """\
             def resolve_read_packet(repo_root, runtime_role, **kwargs):
-                return {"read_paths": []}
+                return {"read_paths": [], "change_context": {}, "role_load_manifest": ""}
 
             def resolve_writable_paths(repo_root, runtime_role, **kwargs):
                 return [f"runs/current/role-state/{runtime_role}/**"]
+
+            def resolve_forbidden_paths(repo_root, runtime_role, **kwargs):
+                return []
+
+            def collect_packet_health_issues(repo_root, runtime_role, packet, explicit_phase=None):
+                return []
             """
         ),
     )

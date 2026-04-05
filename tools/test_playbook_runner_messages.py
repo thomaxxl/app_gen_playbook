@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import ExitStack
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -522,6 +523,65 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 scope_artifact=None,
                 allowed_write_rules=None,
                 forbidden_write_rules=None,
+            )
+
+    def test_write_turn_scope_artifact_serializes_nested_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            evidence_root = repo_root / "runs" / "current" / "evidence" / "orchestrator"
+            evidence_root.mkdir(parents=True, exist_ok=True)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="iterate", scope="fullstack", resume=False, target_role=None, input_file=None))
+            message_path = repo_root / "runs" / "current" / "role-state" / "frontend" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: architect\nto: frontend\ntopic: recovery\n", encoding="utf-8")
+            routing_path = evidence_root / "turn.routing.json"
+
+            orchestrator.write_turn_scope_artifact(
+                routing_path,
+                runtime_role="frontend",
+                message_path=message_path,
+                packet={
+                    "read_paths": ["runs/current/artifacts/ux/navigation.md"],
+                    "change_context": {
+                        "change_id": "CR-test",
+                        "change_root": repo_root / "runs" / "current" / "changes" / "CR-test",
+                        "classification": {"active_roles": ["frontend"]},
+                    },
+                    "role_load_manifest": "runs/current/changes/CR-test/role-loads/frontend.yaml",
+                },
+                add_dirs=[repo_root / "app" / "frontend"],
+                write_dirs=[repo_root / "app" / "frontend"],
+                write_rules=["app/frontend/**"],
+                forbidden_rules=["app/backend/**"],
+                packet_health_issues=[],
+            )
+
+            payload = json.loads(routing_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["change_context"]["change_root"],
+                str(repo_root / "runs" / "current" / "changes" / "CR-test"),
             )
 
     def test_run_role_once_uses_writable_dirs_for_role_diff_roots(self) -> None:

@@ -150,6 +150,16 @@ def canonical_add_dir_keys(add_dirs: Iterable[Path]) -> list[str]:
     return keys
 
 
+def json_compatible(value: object) -> object:
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): json_compatible(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [json_compatible(item) for item in value]
+    return value
+
+
 def root_set_covers(current_roots: Iterable[str], stored_roots: Iterable[str]) -> bool:
     stored_paths = [Path(root) for root in stored_roots]
     for current in current_roots:
@@ -666,7 +676,10 @@ class Orchestrator:
             "packet_health_issues": packet_health_issues,
         }
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(json_compatible(payload), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     def queue_packet_health_recovery(
         self,
