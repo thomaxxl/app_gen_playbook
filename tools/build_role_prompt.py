@@ -64,6 +64,48 @@ def build_read_paths(
     return dedupe_paths(list(packet["read_paths"]))
 
 
+def packet_skill_paths(packet: dict[str, object]) -> list[str]:
+    payload = packet.get("external_reference_payload", {})
+    if not isinstance(payload, dict):
+        return []
+    skills = payload.get("requested_skill_paths", [])
+    if not isinstance(skills, list):
+        return []
+    return dedupe_paths([str(item).strip() for item in skills if str(item).strip()])
+
+
+def packet_priority_order(packet: dict[str, object]) -> list[str]:
+    payload = packet.get("external_reference_payload", {})
+    if not isinstance(payload, dict):
+        return []
+    priority = payload.get("priority_order", [])
+    if not isinstance(priority, list):
+        return []
+    return dedupe_paths([str(item).strip() for item in priority if str(item).strip()])
+
+
+def packet_external_reference_lines(packet: dict[str, object]) -> list[str]:
+    payload = packet.get("external_reference_payload", {})
+    if not isinstance(payload, dict):
+        return []
+    references = payload.get("references", [])
+    if not isinstance(references, list):
+        return []
+    lines: list[str] = []
+    for entry in references:
+        if not isinstance(entry, dict):
+            continue
+        source_path = str(entry.get("source_path", "")).strip()
+        fidelity = str(entry.get("fidelity", "")).strip()
+        if not source_path:
+            continue
+        if fidelity:
+            lines.append(f"{source_path} ({fidelity})")
+        else:
+            lines.append(source_path)
+    return dedupe_paths(lines)
+
+
 def build_canonical_outputs(
     repo_root: Path,
     runtime_role: str,
@@ -128,6 +170,9 @@ def emit_full_prompt(
     read_only_required_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
+    skill_paths: list[str],
+    priority_order: list[str],
+    external_reference_lines: list[str],
 ) -> None:
     print(f"You are the {display_role} agent for app_gen_playbook.\n")
     print("Process exactly one inbox message:\n")
@@ -139,6 +184,21 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in write_paths:
         print(f"- {path}")
+
+    if priority_order:
+        print("\nPriority order for this turn:\n")
+        for value in priority_order:
+            print(f"- {value}")
+
+    if skill_paths:
+        print("\nRequired skill files:\n")
+        for path in skill_paths:
+            print(f"- {path}")
+
+    if external_reference_lines:
+        print("\nExternal references you MUST follow unless they conflict with the input prompt or business-model contracts:\n")
+        for line in external_reference_lines:
+            print(f"- {line}")
 
     if read_only_required_paths:
         print("\nRead-only required files:\n")
@@ -202,6 +262,9 @@ def emit_short_prompt(
     read_only_required_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
+    skill_paths: list[str],
+    priority_order: list[str],
+    external_reference_lines: list[str],
 ) -> None:
     print(f"You are the {display_role} runtime worker for app_gen_playbook.")
     print("Process exactly one inbox item in this turn.")
@@ -217,6 +280,21 @@ def emit_short_prompt(
     for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if priority_order:
+        print("Priority order:")
+        for value in priority_order:
+            print(f"- {value}")
+        print("")
+    if skill_paths:
+        print("Required skill files:")
+        for path in skill_paths:
+            print(f"- {absolutize(repo_root, path) if not path.startswith('.') else path}")
+        print("")
+    if external_reference_lines:
+        print("External references you MUST follow:")
+        for line in external_reference_lines:
+            print(f"- {line}")
+        print("")
     if read_only_required_paths:
         print("Read-only required files:")
         for path in read_only_required_paths:
@@ -270,7 +348,15 @@ def main() -> int:
     message_text = message_path.read_text(encoding="utf-8")
     headers = parse_message_headers(message_text)
     sections = parse_message_sections(message_text, headers=headers)
-    read_paths = build_read_paths(repo_root, args.runtime_role, message_path, headers, sections)
+    packet = resolve_read_packet(
+        repo_root,
+        args.runtime_role,
+        message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
+        explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+        explicit_phase=headers.get("phase"),
+        include_message_path=message_path,
+    )
+    read_paths = dedupe_paths(list(packet["read_paths"]))
     canonical_outputs = build_canonical_outputs(repo_root, args.runtime_role, read_paths, sections)
     write_paths = resolve_writable_paths(
         repo_root,
@@ -281,6 +367,9 @@ def main() -> int:
     )
     read_only_required_paths = build_read_only_required_paths(read_paths, write_paths)
     forbidden_paths = resolve_forbidden_paths(repo_root, args.runtime_role)
+    skill_paths = packet_skill_paths(packet)
+    priority_order = packet_priority_order(packet)
+    external_reference_lines = packet_external_reference_lines(packet)
 
     if args.mode == "short":
         emit_short_prompt(
@@ -294,6 +383,9 @@ def main() -> int:
             read_only_required_paths,
             forbidden_paths,
             canonical_outputs,
+            skill_paths,
+            priority_order,
+            external_reference_lines,
         )
     else:
         emit_full_prompt(
@@ -308,6 +400,9 @@ def main() -> int:
             read_only_required_paths,
             forbidden_paths,
             canonical_outputs,
+            skill_paths,
+            priority_order,
+            external_reference_lines,
         )
 
     return 0

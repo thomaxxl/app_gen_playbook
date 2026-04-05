@@ -187,6 +187,21 @@ def change_promotion_terminal(repo_root: Path) -> bool:
     return bool(match and match.group(1).strip())
 
 
+def active_change_external_reference_manifest(repo_root: Path) -> tuple[Path | None, dict[str, object]]:
+    scope_context = active_scope_context(repo_root)
+    change_root = scope_context.get("change_root")
+    if not isinstance(change_root, Path):
+        return None, {}
+    manifest_path = change_root / "external-references" / "manifest.json"
+    if not manifest_path.exists():
+        return None, {}
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return manifest_path, {}
+    return manifest_path, payload if isinstance(payload, dict) else {}
+
+
 def browser_proof_environment_fallback_ready(repo_root: Path) -> bool:
     browser_proof = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
     if not browser_proof.exists():
@@ -379,6 +394,65 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         phase="phase-7-product-acceptance",
                     )
                 )
+            reference_manifest_path, reference_manifest = active_change_external_reference_manifest(repo_root)
+            references = reference_manifest.get("references", []) if isinstance(reference_manifest, dict) else []
+            has_binding_visual_reference = any(
+                isinstance(entry, dict)
+                and str(entry.get("category", "")).strip() == "visual-ui"
+                and str(entry.get("fidelity", "")).strip() == "mimic-look-and-feel"
+                for entry in references if isinstance(references, list)
+            )
+            if has_binding_visual_reference and isinstance(scope_context.get("change_root"), Path):
+                change_root = scope_context["change_root"]
+                reference_alignment = change_root / "candidate" / "artifacts" / "ux" / "reference-alignment.md"
+                reference_fidelity_review = change_root / "verification" / "reference-fidelity-review.md"
+                if not reference_alignment.exists():
+                    blockers.append(
+                        artifact_blocker(
+                            "reference-alignment-missing",
+                            reference_alignment,
+                            repo_root,
+                            "binding external UI reference is missing a reference-alignment plan",
+                            owner="frontend",
+                            phase="phase-5-parallel-implementation",
+                        )
+                    )
+                if not reference_fidelity_review.exists():
+                    blockers.append(
+                        artifact_blocker(
+                            "reference-fidelity-review-incomplete",
+                            reference_fidelity_review,
+                            repo_root,
+                            "binding external UI reference is missing a QA reference-fidelity review",
+                            owner="qa",
+                            phase="phase-I6-integration-and-regression-review",
+                        )
+                    )
+                else:
+                    fidelity_status = str(parse_metadata_block(reference_fidelity_review).get("status", "")).strip().lower()
+                    if fidelity_status not in {"approved", "ready-for-handoff"}:
+                        blockers.append(
+                            artifact_blocker(
+                                "reference-fidelity-review-incomplete",
+                                reference_fidelity_review,
+                                repo_root,
+                                f"binding external UI reference fidelity review is not approved: status={fidelity_status or 'missing'}",
+                                owner="qa",
+                                phase="phase-6-integration-review",
+                            )
+                        )
+                acceptance_text = acceptance_review.read_text(encoding="utf-8").lower()
+                if "reference fidelity" not in acceptance_text:
+                    blockers.append(
+                        artifact_blocker(
+                            "acceptance-missing-reference-fidelity",
+                            acceptance_review,
+                            repo_root,
+                            "product acceptance review must explicitly record the reference-fidelity decision for binding external UI references",
+                            owner="product_manager",
+                            phase="phase-7-product-acceptance",
+                        )
+                    )
 
     # After terminal delivery approval, stale phase-5 through phase-8 coverage
     # policy debt must not reopen the completed run, but blocked quality-gate

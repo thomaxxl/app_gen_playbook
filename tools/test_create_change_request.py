@@ -3,7 +3,9 @@ from __future__ import annotations
 import subprocess
 import tempfile
 import unittest
+import json
 from pathlib import Path
+from zipfile import ZipFile
 
 
 class CreateChangeRequestTests(unittest.TestCase):
@@ -258,6 +260,78 @@ class CreateChangeRequestTests(unittest.TestCase):
             reopened_gates = (change_root / "reopened-gates.md").read_text(encoding="utf-8")
             self.assertIn("phase-I2-product-and-scope-delta", reopened_gates)
             self.assertIn("phase-I7-change-acceptance", reopened_gates)
+
+    def test_creates_external_reference_manifest_and_binding_starter_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            self.write_scope_manifest(repo_root)
+            reference_zip = repo_root / "the-sonic-immersive.zip"
+            with ZipFile(reference_zip, "w") as archive:
+                archive.writestr("src/App.tsx", "export default function App() { return null; }\n")
+                archive.writestr("src/components/Sidebar.tsx", "export default function Sidebar() { return null; }\n")
+                archive.writestr("src/index.css", "body { color: #cf96ff; }\n")
+            input_path = repo_root / "request.md"
+            input_path.write_text(
+                "\n".join(
+                    [
+                        "# UI Change",
+                        "",
+                        "Use the downloaded reference design at:",
+                        f"- `{reference_zip}`",
+                        "",
+                        "Required skills:",
+                        "- `skills/mui-db-admin-ux/SKILL.md`",
+                        "- `skills/playwright-skill/SKILL.md`",
+                        "",
+                        "Match the look and feel while preserving the current business logic.",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (repo_root / "skills/mui-db-admin-ux").mkdir(parents=True, exist_ok=True)
+            (repo_root / "skills/mui-db-admin-ux/SKILL.md").write_text("# skill\n", encoding="utf-8")
+            (repo_root / "skills/playwright-skill").mkdir(parents=True, exist_ok=True)
+            (repo_root / "skills/playwright-skill/SKILL.md").write_text("# skill\n", encoding="utf-8")
+            script_path = Path(__file__).resolve().parent / "create_change_request.py"
+
+            result = subprocess.run(
+                [
+                    "python3",
+                    str(script_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--input",
+                    str(input_path),
+                    "--mode",
+                    "iterative-change-run",
+                    "--scope-profile",
+                    "frontend-only",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            change_id = result.stdout.strip()
+            change_root = repo_root / "runs/current/changes" / change_id
+            manifest = json.loads((change_root / "external-references/manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                manifest["priority_order"],
+                [
+                    "input-prompt",
+                    "business-model-and-contracts",
+                    "external-references",
+                    "agent-interpretation",
+                ],
+            )
+            self.assertIn("skills/mui-db-admin-ux/SKILL.md", manifest["requested_skill_paths"])
+            self.assertTrue((change_root / "external-references/the-sonic-immersive/src/App.tsx").exists())
+            self.assertTrue((change_root / "candidate/artifacts/ux/reference-alignment.md").exists())
+            self.assertTrue((change_root / "verification/reference-fidelity-review.md").exists())
+            affected_candidate = (change_root / "affected-candidate-artifacts.md").read_text(encoding="utf-8")
+            self.assertIn("reference-alignment.md", affected_candidate)
 
     def test_explicit_scope_profile_seeds_matching_packet(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

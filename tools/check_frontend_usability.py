@@ -86,6 +86,27 @@ def read_text_if_exists(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def active_change_external_reference_manifest(repo_root: Path) -> dict[str, object]:
+    run_status = repo_root / "runs" / "current" / "orchestrator" / "run-status.json"
+    if not run_status.exists():
+        return {}
+    try:
+        payload = json.loads(run_status.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    change_id = str(payload.get("change_id", "")).strip()
+    if not change_id:
+        return {}
+    manifest_path = repo_root / "runs" / "current" / "changes" / change_id / "external-references" / "manifest.json"
+    if not manifest_path.exists():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return manifest if isinstance(manifest, dict) else {}
+
+
 def collect_issues(repo_root: Path) -> list[str]:
     issues: list[str] = []
     landing_strategy = repo_root / "runs" / "current" / "artifacts" / "ux" / "landing-strategy.md"
@@ -99,6 +120,19 @@ def collect_issues(repo_root: Path) -> list[str]:
     src_root = repo_root / "app" / "frontend" / "src"
     ux_model = src_root / "generated" / "uxModel.ts"
     resource_registry = src_root / "shared-runtime" / "resourceRegistry.tsx"
+    external_reference_manifest = active_change_external_reference_manifest(repo_root)
+    reference_alignment = None
+    references = external_reference_manifest.get("references", []) if isinstance(external_reference_manifest, dict) else []
+    has_binding_visual_reference = any(
+        isinstance(entry, dict)
+        and str(entry.get("category", "")).strip() == "visual-ui"
+        and str(entry.get("fidelity", "")).strip() == "mimic-look-and-feel"
+        for entry in references if isinstance(references, list)
+    )
+    if has_binding_visual_reference:
+        change_id = json.loads((repo_root / "runs" / "current" / "orchestrator" / "run-status.json").read_text(encoding="utf-8")).get("change_id", "")
+        if isinstance(change_id, str) and change_id.strip():
+            reference_alignment = repo_root / "runs" / "current" / "changes" / change_id / "candidate" / "artifacts" / "ux" / "reference-alignment.md"
 
     if not src_root.exists():
         return ["missing app/frontend/src/ for frontend usability review"]
@@ -107,6 +141,23 @@ def collect_issues(repo_root: Path) -> list[str]:
     for artifact_path in required_ux_artifacts:
         if not artifact_path.exists():
             issues.append(f"missing {artifact_path.relative_to(repo_root).as_posix()} for frontend usability review")
+    if has_binding_visual_reference:
+        if reference_alignment is None or not reference_alignment.exists():
+            issues.append("missing runs/current/changes/<change_id>/candidate/artifacts/ux/reference-alignment.md for binding external UI reference")
+        else:
+            reference_text = reference_alignment.read_text(encoding="utf-8").lower()
+            required_reference_markers = (
+                "input prompt",
+                "business model",
+                "external references",
+                "agent interpretation",
+                "palette",
+                "typography",
+                "shell",
+            )
+            for marker in required_reference_markers:
+                if marker not in reference_text:
+                    issues.append(f"reference-alignment.md is missing required reference-fidelity marker: {marker}")
 
     source_text, _ = collect_source_text(src_root)
     landing_text = landing_strategy.read_text(encoding="utf-8")

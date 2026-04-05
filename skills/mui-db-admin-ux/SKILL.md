@@ -39,6 +39,7 @@ Use it together with:
 
 ## Hard rules
 
+0. Priority order is: input prompt -> business model / database / API / rules contracts -> binding external references -> agent interpretation.
 1. Never render raw foreign-key ids when readable relationship metadata exists.
 2. In lists and summary grids, relationship labels open dialogs by default.
 3. Show pages with meaningful relationships use tabs by default.

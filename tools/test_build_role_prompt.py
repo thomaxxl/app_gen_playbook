@@ -158,6 +158,9 @@ class BuildRolePromptTests(unittest.TestCase):
     def test_prompt_source_mentions_read_only_required_files(self) -> None:
         source = (Path(__file__).resolve().parent / "build_role_prompt.py").read_text(encoding="utf-8")
         self.assertIn("Read-only required files:", source)
+        self.assertIn("External references you MUST follow", source)
+        self.assertIn("Required skill files:", source)
+        self.assertIn("Priority order:", source)
 
 
 if __name__ == "__main__":

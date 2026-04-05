@@ -13,6 +13,11 @@ meaning from implementation artifacts alone.
 ## Outputs
 
 - updated UX delta artifacts when the change affects UX behavior
+- when the input prompt or change packet includes binding external UI references,
+  update `runs/current/changes/<change_id>/candidate/artifacts/ux/reference-alignment.md`
+  so it records the priority order `input prompt > business model/contracts >
+  external reference > agent interpretation` and the exact shell/palette/
+  typography/layout cues that must be mimicked
 - updated backend-design delta artifacts when the change affects models, API,
   queries, bootstrap, or rules, including concept-to-model remapping when
   business concepts, states, relationships, or business events changed

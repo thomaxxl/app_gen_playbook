@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -41,6 +42,78 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertTrue(
                 any(blocker["kind"] == "final-review-pack-incomplete" for blocker in blockers)
             )
+
+    def test_binding_external_ui_reference_requires_fidelity_review_and_acceptance_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "playbook/routing/execution-scopes.yaml",
+                "\n".join(
+                    [
+                        "frontend-only:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - frontend",
+                        "    - qa",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I1-change-intake-and-triage",
+                        "      - phase-I6-integration-and-regression-review",
+                        "      - phase-I7-change-acceptance",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"active","mode":"iterative-change-run","current_phase":"phase-I7-change-acceptance","change_id":"CR-1"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/classification.yaml",
+                "scope_profile: frontend-only\nactive_roles:\n  - product_manager\n  - frontend\n  - qa\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/external-references/manifest.json",
+                json.dumps(
+                    {
+                        "references": [
+                            {
+                                "category": "visual-ui",
+                                "fidelity": "mimic-look-and-feel",
+                                "source_path": "/tmp/sonic.zip",
+                            }
+                        ]
+                    }
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+
+            with patch("check_completion.required_run_artifact_paths", return_value=[]), patch(
+                "check_completion.collect_integration_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_acceptance_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_frontend_route_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_preview_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_qa_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_orm_safrs", return_value=[]
+            ), patch(
+                "check_completion.collect_final_review_pack_issues", return_value=[]
+            ):
+                blockers = collect_blockers(repo_root)
+
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertIn("reference-alignment-missing", kinds)
+            self.assertIn("reference-fidelity-review-incomplete", kinds)
+            self.assertIn("acceptance-missing-reference-fidelity", kinds)
 
     def test_backend_only_scope_skips_frontend_specific_completion_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

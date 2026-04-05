@@ -19,3 +19,7 @@ After these reads, load only the current change-workspace files, the active
 role-load manifest when it exists, the exact UX and architecture artifacts
 explicitly affected by the change, and the `app/frontend/` paths named by the
 inbox item. Do not read artifact or implementation trees broadly.
+
+If the change packet includes external references, treat them as binding
+inputs after the input prompt and business-model contracts. Do not replace
+them with your own preferred interpretation.

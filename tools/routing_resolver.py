@@ -438,6 +438,59 @@ def _active_change_context(repo_root: Path) -> dict[str, Any] | None:
     }
 
 
+def _load_external_reference_manifest(change_root: Path) -> tuple[str | None, Mapping[str, Any]]:
+    manifest_path = change_root / "external-references" / "manifest.json"
+    if not manifest_path.exists():
+        return None, {}
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"External reference manifest must decode to a mapping: {manifest_path}")
+    return _repo_rel(change_root.parents[3], manifest_path), payload
+
+
+def _external_reference_read_paths(
+    repo_root: Path,
+    runtime_role: str,
+    change_root: Path,
+    payload: Mapping[str, Any],
+) -> list[str]:
+    read_paths: list[str] = []
+    readme_path = change_root / "external-references" / "README.md"
+    if readme_path.exists():
+        read_paths.append(_repo_rel(repo_root, readme_path))
+
+    requested_skills = payload.get("requested_skill_paths", [])
+    if isinstance(requested_skills, list):
+        for path_value in requested_skills:
+            if isinstance(path_value, str) and path_value.strip():
+                read_paths.append(path_value.strip())
+
+    references = payload.get("references", [])
+    if not isinstance(references, list):
+        return _clean_declared_paths(read_paths)
+
+    for entry in references:
+        if not isinstance(entry, dict):
+            continue
+        roles = entry.get("roles", [])
+        if isinstance(roles, list) and roles and runtime_role not in {str(item).strip() for item in roles}:
+            continue
+        materialized = entry.get("materialized_path")
+        if isinstance(materialized, str) and materialized.strip():
+            read_paths.append(f"runs/current/changes/{change_root.name}/{materialized.strip()}")
+        key_files = entry.get("key_files", [])
+        if isinstance(key_files, list):
+            for key_file in key_files:
+                if isinstance(key_file, str) and key_file.strip():
+                    if key_file.startswith("runs/current/changes/") or key_file.startswith("app/") or key_file.startswith("skills/") or key_file.startswith(".codex/skills/"):
+                        read_paths.append(key_file.strip())
+                    elif key_file.startswith("/"):
+                        read_paths.append(key_file.strip())
+                    else:
+                        read_paths.append(f"runs/current/changes/{change_root.name}/{key_file.strip()}")
+    return _clean_declared_paths(read_paths)
+
+
 def _load_role_load_manifest(change_root: Path, runtime_role: str) -> tuple[str | None, Mapping[str, Any]]:
     manifest_role = canonical_manifest_role(runtime_role)
     manifest_path = change_root / "role-loads" / f"{manifest_role}.yaml"
@@ -688,6 +741,8 @@ def resolve_read_packet(
 
     role_load_relpath: str | None = None
     role_load_payload: Mapping[str, Any] = {}
+    external_reference_relpath: str | None = None
+    external_reference_payload: Mapping[str, Any] = {}
     if change_context is not None:
         change_root = Path(change_context["change_root"])
         for name in (
@@ -706,6 +761,18 @@ def resolve_read_packet(
         role_load_relpath, role_load_payload = _load_role_load_manifest(change_root, runtime_role)
         if role_load_relpath:
             read_paths.append(role_load_relpath)
+
+        external_reference_relpath, external_reference_payload = _load_external_reference_manifest(change_root)
+        if external_reference_relpath:
+            read_paths.append(external_reference_relpath)
+            read_paths.extend(
+                _external_reference_read_paths(
+                    repo_root,
+                    runtime_role,
+                    change_root,
+                    external_reference_payload,
+                )
+            )
 
         read_paths.extend(
             _change_scoped_read_paths(
@@ -744,6 +811,8 @@ def resolve_read_packet(
         "change_context": change_context,
         "role_load_manifest": role_load_relpath,
         "role_load_payload": role_load_payload,
+        "external_reference_manifest": external_reference_relpath,
+        "external_reference_payload": external_reference_payload,
         "read_paths": deduped_reads,
     }
 

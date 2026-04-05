@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -244,6 +245,64 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("app/frontend/src/App.tsx", read_paths)
         self.assertNotIn("runs/current/artifacts/backend-design/model-design.md", read_paths)
         self.assertNotIn("app/backend/src/service.py", read_paths)
+
+    def test_change_run_reads_binding_external_references_and_requested_skills(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "skills/mui-db-admin-ux/SKILL.md",
+            "# skill\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/external-references/README.md",
+            "# External References\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/external-references/sonic/src/App.tsx",
+            "export default function App() { return null; }\n",
+        )
+        manifest = {
+            "priority_order": [
+                "input-prompt",
+                "business-model-and-contracts",
+                "external-references",
+                "agent-interpretation",
+            ],
+            "requested_skill_paths": ["skills/mui-db-admin-ux/SKILL.md"],
+            "references": [
+                {
+                    "label": "sonic",
+                    "source_path": "/tmp/sonic.zip",
+                    "category": "visual-ui",
+                    "fidelity": "mimic-look-and-feel",
+                    "roles": ["frontend", "qa"],
+                    "materialized_path": "external-references/sonic",
+                    "key_files": [
+                        "external-references/sonic/src/App.tsx",
+                    ],
+                }
+            ],
+        }
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/external-references/manifest.json",
+            json.dumps(manifest, indent=2) + "\n",
+        )
+
+        packet = resolve_read_packet(
+            repo_root,
+            "frontend",
+            explicit_task_bundle="playbook/task-bundles/frontend-implementation.yaml",
+        )
+        read_paths = packet["read_paths"]
+
+        self.assertIn("runs/current/changes/CR-1/external-references/manifest.json", read_paths)
+        self.assertIn("runs/current/changes/CR-1/external-references/README.md", read_paths)
+        self.assertIn("skills/mui-db-admin-ux/SKILL.md", read_paths)
+        self.assertIn("runs/current/changes/CR-1/external-references/sonic", read_paths)
+        self.assertIn("runs/current/changes/CR-1/external-references/sonic/src/App.tsx", read_paths)
 
     def test_change_run_falls_back_to_affected_scope_when_role_load_is_placeholder(self) -> None:
         repo_root = self.build_repo()

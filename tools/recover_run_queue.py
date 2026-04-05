@@ -220,6 +220,9 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "integration-review-coverage",
     "acceptance-review-coverage",
     "final-review-pack-incomplete",
+    "reference-alignment-missing",
+    "reference-fidelity-review-incomplete",
+    "acceptance-missing-reference-fidelity",
 }
 REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
     (
@@ -550,6 +553,22 @@ def extra_reads_for_completion_blocker(path: str) -> tuple[str, ...]:
             "playbook/task-bundles/backend-implementation.yaml",
             "playbook/process/phases/phase-5-parallel-implementation.md",
             "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+        )
+    if path.endswith("/candidate/artifacts/ux/reference-alignment.md"):
+        return (
+            "playbook/task-bundles/change-frontend-design.yaml",
+            "playbook/process/phases/phase-I4-design-delta.md",
+            "skills/mui-db-admin-ux/SKILL.md",
+        )
+    if path.endswith("/verification/reference-fidelity-review.md"):
+        return (
+            "playbook/task-bundles/change-integration-review.yaml",
+            "playbook/process/phases/phase-I6-integration-and-regression-review.md",
+        )
+    if path.endswith("/artifacts/product/acceptance-review.md"):
+        return (
+            "playbook/task-bundles/change-acceptance.yaml",
+            "playbook/process/phases/phase-I7-change-acceptance.md",
         )
 
     return ()

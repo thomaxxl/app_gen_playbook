@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
 from check_frontend_usability import collect_issues
@@ -42,6 +43,33 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
                     "}",
                 ]
             ),
+        )
+
+    def seed_binding_reference(self, repo_root: Path, change_id: str = "CR-1") -> None:
+        write_file(
+            repo_root / "runs/current/orchestrator/run-status.json",
+            json.dumps({"change_id": change_id}) + "\n",
+        )
+        write_file(
+            repo_root / f"runs/current/changes/{change_id}/external-references/manifest.json",
+            json.dumps(
+                {
+                    "priority_order": [
+                        "input-prompt",
+                        "business-model-and-contracts",
+                        "external-references",
+                        "agent-interpretation",
+                    ],
+                    "references": [
+                        {
+                            "category": "visual-ui",
+                            "fidelity": "mimic-look-and-feel",
+                            "source_path": "/tmp/sonic.zip",
+                        }
+                    ],
+                }
+            )
+            + "\n",
         )
 
     def test_accepts_expected_entry_and_custom_cta_copy(self) -> None:
@@ -203,6 +231,71 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
 
             issues = collect_issues(repo_root)
             self.assertTrue(any("raw _id" in issue for issue in issues))
+
+    def test_requires_reference_alignment_for_binding_external_ui_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.jsx",
+                'export default function App() { return "Library Overview Add Song"; }',
+            )
+            self.seed_runtime_files(repo_root)
+            self.seed_binding_reference(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertTrue(any("reference-alignment" in issue for issue in issues))
+
+    def test_accepts_reference_alignment_when_binding_external_ui_reference_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.jsx",
+                'export default function App() { return "Library Overview Add Song"; }',
+            )
+            self.seed_runtime_files(repo_root)
+            self.seed_binding_reference(repo_root)
+            write_file(
+                repo_root / "runs/current/changes/CR-1/candidate/artifacts/ux/reference-alignment.md",
+                "\n".join(
+                    [
+                        "# External Reference Alignment",
+                        "",
+                        "- input prompt",
+                        "- business model",
+                        "- external references",
+                        "- agent interpretation",
+                        "- shell",
+                        "- palette",
+                        "- typography",
+                    ]
+                )
+                + "\n",
+            )
+
+            issues = collect_issues(repo_root)
+            self.assertFalse(any("reference-alignment" in issue for issue in issues))
 
 
 if __name__ == "__main__":

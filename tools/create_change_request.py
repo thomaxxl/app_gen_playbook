@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from zipfile import ZipFile
 
 from execution_scope import DEFAULT_SCOPE_PROFILE, resolve_scope_config
 from orchestrator_common import resolve_repo_root
@@ -47,6 +50,33 @@ UI_REVIEW_MARKERS = (
     "operator clarity",
 )
 
+REFERENCE_CONTEXT_MARKERS = (
+    "reference",
+    "downloaded",
+    "template",
+    "example ui",
+    "example app",
+    "look and feel",
+    "visual language",
+    "style source",
+    "mockup",
+    "mimic",
+    "match",
+)
+
+TEXT_REFERENCE_SUFFIXES = {
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".css",
+    ".scss",
+    ".html",
+    ".json",
+    ".md",
+    ".txt",
+}
+
 def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
@@ -81,6 +111,170 @@ def string_list(value: object) -> list[str]:
     if isinstance(value, list):
         return [str(item) for item in value if str(item).strip()]
     return []
+
+
+def slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
+    return slug or "reference"
+
+
+def detect_requested_skill_paths(request_text: str, repo_root: Path) -> list[str]:
+    matches = re.findall(r"(?m)(?:^|\s)[-`]*((?:skills|\.codex/skills)/[A-Za-z0-9_./-]+/SKILL\.md)\b", request_text)
+    resolved: list[str] = []
+    for match in matches:
+        normalized = match.strip().strip("`")
+        if (repo_root / normalized).exists():
+            resolved.append(normalized)
+    return ordered_unique(resolved)
+
+
+def request_contains_ui_reference_intent(request_text: str) -> bool:
+    lowered = request_text.lower()
+    return contains_any(lowered, UI_REVIEW_MARKERS) or any(
+        marker in lowered for marker in ("look and feel", "visual language", "mimic", "match")
+    )
+
+
+def detect_reference_source_paths(request_text: str) -> list[Path]:
+    lines = request_text.splitlines()
+    found: list[str] = []
+    for index, raw_line in enumerate(lines):
+        line = raw_line.strip()
+        path_matches = re.findall(r"(/[^\s`\"'<>]+)", line)
+        if not path_matches:
+            continue
+        context = " ".join(
+            item.strip().lower()
+            for item in lines[max(0, index - 2) : min(len(lines), index + 3)]
+        )
+        if not any(marker in context for marker in REFERENCE_CONTEXT_MARKERS):
+            continue
+        for value in path_matches:
+            candidate = Path(value)
+            if candidate.exists():
+                found.append(str(candidate.resolve()))
+    return [Path(value) for value in ordered_unique(found)]
+
+
+def materialize_reference_source(change_dir: Path, source_path: Path) -> tuple[str | None, list[str]]:
+    external_root = change_dir / "external-references"
+    external_root.mkdir(parents=True, exist_ok=True)
+    label = slugify(source_path.stem or source_path.name)
+
+    if source_path.is_file() and source_path.suffix.lower() == ".zip":
+        target_dir = external_root / label
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        with ZipFile(source_path) as archive:
+            archive.extractall(target_dir)
+        key_files = [
+            path.relative_to(change_dir).as_posix()
+            for path in sorted(target_dir.rglob("*"))
+            if path.is_file() and path.suffix.lower() in TEXT_REFERENCE_SUFFIXES
+        ]
+        return target_dir.relative_to(change_dir).as_posix(), key_files[:40]
+
+    if source_path.is_file():
+        target_path = external_root / f"{label}{source_path.suffix.lower()}"
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, target_path)
+        relative = target_path.relative_to(change_dir).as_posix()
+        return relative, [relative]
+
+    if source_path.is_dir():
+        key_files = [
+            path.resolve().as_posix()
+            for path in sorted(source_path.rglob("*"))
+            if path.is_file() and path.suffix.lower() in TEXT_REFERENCE_SUFFIXES
+        ]
+        return None, key_files[:40]
+
+    return None, []
+
+
+def build_external_reference_manifest(
+    repo_root: Path,
+    change_dir: Path,
+    request_text: str,
+    *,
+    active_roles: list[str],
+) -> dict[str, object] | None:
+    reference_paths = detect_reference_source_paths(request_text)
+    if not reference_paths:
+        return None
+
+    ui_reference = request_contains_ui_reference_intent(request_text)
+    requested_skills = detect_requested_skill_paths(request_text, repo_root)
+    manifest_roles = ["product_manager", "frontend", "qa", "architect", "ceo"] if ui_reference else list(active_roles)
+    references: list[dict[str, object]] = []
+
+    for source_path in reference_paths:
+        materialized_relpath, key_files = materialize_reference_source(change_dir, source_path)
+        references.append(
+            {
+                "label": slugify(source_path.stem or source_path.name),
+                "source_path": str(source_path),
+                "category": "visual-ui" if ui_reference else "external-reference",
+                "fidelity": "mimic-look-and-feel" if ui_reference else "follow-reference",
+                "roles": ordered_unique(manifest_roles),
+                "materialized_path": materialized_relpath,
+                "key_files": key_files,
+            }
+        )
+
+    manifest = {
+        "priority_order": [
+            "input-prompt",
+            "business-model-and-contracts",
+            "external-references",
+            "agent-interpretation",
+        ],
+        "requested_skill_paths": requested_skills,
+        "references": references,
+    }
+    manifest_dir = change_dir / "external-references"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    readme_lines = [
+        "# External References",
+        "",
+        "These references are binding inputs when they do not conflict with the input prompt or the approved business model / API / rules contract.",
+        "",
+        "## Priority Order",
+        "",
+        "- input prompt",
+        "- business model / database / API / rules contracts",
+        "- external references",
+        "- agent interpretation",
+        "",
+        "## References",
+        "",
+    ]
+    for entry in references:
+        readme_lines.extend(
+            [
+                f"- `{entry['source_path']}`",
+                f"  - fidelity: `{entry['fidelity']}`",
+                f"  - materialized: `{entry['materialized_path'] or '(source path only)'}`",
+            ]
+        )
+        for key_file in entry["key_files"][:12]:
+            readme_lines.append(f"  - key file: `{key_file}`")
+    if requested_skills:
+        readme_lines.extend(
+            [
+                "",
+                "## Required Skills",
+                "",
+                *[f"- `{path}`" for path in requested_skills],
+            ]
+        )
+    (manifest_dir / "README.md").write_text("\n".join(readme_lines) + "\n", encoding="utf-8")
+    return manifest
 
 
 def detect_review_delta_defaults(
@@ -203,6 +397,12 @@ def main() -> int:
         (active_scope_config.get("gate_profiles") or {}).get("quality")
     )
     baseline_source = str((review_defaults or {}).get("baseline_source") or active_scope_config.get("baseline_source", "accepted-artifacts"))
+    external_reference_manifest = build_external_reference_manifest(
+        repo_root,
+        change_dir,
+        request_text,
+        active_roles=active_roles,
+    )
     default_candidate_artifacts = string_list((review_defaults or {}).get("affected_candidate_artifacts")) or string_list(
         active_scope_config.get("default_candidate_artifacts")
     )
@@ -213,6 +413,11 @@ def main() -> int:
         active_scope_config.get("default_reopened_gates")
     )
     default_domains = string_list((review_defaults or {}).get("affected_domains"))
+    if external_reference_manifest:
+        default_domains = ordered_unique([*default_domains, "ux"])
+        reference_alignment_path = f"runs/current/changes/{change_id}/candidate/artifacts/ux/reference-alignment.md"
+        if reference_alignment_path not in default_candidate_artifacts:
+            default_candidate_artifacts.append(reference_alignment_path)
     classification_lines = [
         f"change_id: {change_id}",
         f"requested_mode: {args.mode}",
@@ -285,6 +490,17 @@ def main() -> int:
         impact_lines.extend(f"  - {artifact}" for artifact in review_defaults["affected_artifacts"])
         impact_lines.append("affected_candidate_artifacts:")
         impact_lines.extend(f"  - {artifact}" for artifact in default_candidate_artifacts)
+        if external_reference_manifest:
+            impact_lines.extend(
+                [
+                    "external_reference_policy: binding",
+                    "reference_priority_order:",
+                    "  - input-prompt",
+                    "  - business-model-and-contracts",
+                    "  - external-references",
+                    "  - agent-interpretation",
+                ]
+            )
         impact_lines.append("affected_app_paths:")
         if review_defaults["affected_app_paths"]:
             impact_lines.extend(f"  - {path}" for path in review_defaults["affected_app_paths"])
@@ -488,6 +704,95 @@ def main() -> int:
         "# Fill with exact touched app paths, one per line.\n",
         encoding="utf-8",
     )
+    if external_reference_manifest:
+        (candidate_artifacts_dir / "ux" / "reference-alignment.md").write_text(
+            "\n".join(
+                [
+                    "owner: frontend",
+                    "phase: phase-I4-design-delta",
+                    "status: draft",
+                    "",
+                    "# External Reference Alignment",
+                    "",
+                    "## Priority Order",
+                    "",
+                    "- input prompt",
+                    "- business model / database / API / rules contracts",
+                    "- external references",
+                    "- agent interpretation",
+                    "",
+                    "## Reference Sources",
+                    "",
+                    *[
+                        f"- `{entry['source_path']}`"
+                        for entry in external_reference_manifest.get("references", [])
+                        if isinstance(entry, dict)
+                    ],
+                    "",
+                    "## Mimic Requirements",
+                    "",
+                    "- shell composition to mimic",
+                    "- palette and accent strategy to mimic",
+                    "- typography hierarchy to mimic",
+                    "- panel / card / glass treatment to mimic",
+                    "- navigation rail / top bar / utility rail treatment to mimic when truthful to the domain",
+                    "",
+                    "## Functional Constraints To Preserve",
+                    "",
+                    "- existing routes and CRUD",
+                    "- canonical relationship rendering and dialogs",
+                    "- business-model truthfulness",
+                    "",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (verification_dir / "reference-fidelity-review.md").write_text(
+            "\n".join(
+                [
+                    "owner: qa",
+                    "phase: phase-I6-integration-and-regression-review",
+                    "status: draft",
+                    "",
+                    "# Reference Fidelity Review",
+                    "",
+                    "## Priority Order Applied",
+                    "",
+                    "- input prompt",
+                    "- business model / database / API / rules contracts",
+                    "- external references",
+                    "- agent interpretation",
+                    "",
+                    "## Reference Sources Reviewed",
+                    "",
+                    *[
+                        f"- `{entry['source_path']}`"
+                        for entry in external_reference_manifest.get("references", [])
+                        if isinstance(entry, dict)
+                    ],
+                    "",
+                    "## Fidelity Verdict",
+                    "",
+                    "- shell composition: pending",
+                    "- palette and accent fidelity: pending",
+                    "- typography fidelity: pending",
+                    "- panel / glass / surface fidelity: pending",
+                    "- functional behavior preserved: pending",
+                    "",
+                    "## Screenshots Reviewed",
+                    "",
+                    "- Fill with screenshot paths used for comparison.",
+                    "",
+                    "## Deviations",
+                    "",
+                    "- Fill with approved deviations only when the reference conflicts with the input prompt or business-model truthfulness.",
+                    "",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     (change_dir / "evidence").mkdir(parents=True, exist_ok=True)
     (change_dir / "promotion.yaml").write_text(
         "\n".join(
