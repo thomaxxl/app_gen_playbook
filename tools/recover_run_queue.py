@@ -217,8 +217,19 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "preview-coverage",
     "integration-review-coverage",
     "acceptance-review-coverage",
+    "final-review-pack-incomplete",
 }
 REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
+    (
+        "product_manager",
+        "runs/current/evidence/final/review-index.md",
+        "missing",
+        (
+            "playbook/task-bundles/acceptance-review.yaml",
+            "playbook/process/phases/phase-7-product-acceptance.md",
+            "tools/compile_final_review_pack.py",
+        ),
+    ),
     (
         "architect",
         "runs/current/evidence/contract-samples.md",

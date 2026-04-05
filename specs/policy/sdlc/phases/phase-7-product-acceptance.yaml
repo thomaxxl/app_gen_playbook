@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: M7-acceptance-gate-passed
 required_outputs:
   - runs/current/artifacts/product/acceptance-review.md
+  - runs/current/evidence/final/review-index.md
   - runs/current/evidence/ceo-phase-reviews/phase-7-product-acceptance.approved.md
 steps:
   - id: P7-PRODUCT-ACCEPTANCE
@@ -18,6 +19,7 @@ steps:
     outputs:
       artifacts:
         - runs/current/artifacts/product/acceptance-review.md
+        - runs/current/evidence/final/review-index.md
     requirements:
       - EVID-GATE-001
       - GATE-COV-002

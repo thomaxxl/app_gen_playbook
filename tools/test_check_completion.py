@@ -14,6 +14,34 @@ def write_file(path: Path, content: str) -> None:
 
 
 class CheckCompletionTests(unittest.TestCase):
+    def test_approved_acceptance_requires_final_review_pack(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+
+            with patch("check_completion.required_run_artifact_paths", return_value=[]), patch(
+                "check_completion.collect_integration_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_acceptance_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_frontend_route_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_preview_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_qa_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_orm_safrs", return_value=[]
+            ):
+                blockers = collect_blockers(repo_root)
+
+            self.assertTrue(
+                any(blocker["kind"] == "final-review-pack-incomplete" for blocker in blockers)
+            )
+
     def test_backend_only_scope_skips_frontend_specific_completion_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

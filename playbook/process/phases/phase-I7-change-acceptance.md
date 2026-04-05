@@ -11,6 +11,8 @@ changed artifacts to the new current state.
 
 - accepted change result
 - approved `runs/current/artifacts/product/acceptance-review.md`
+- refreshed `runs/current/evidence/final/` no-code audit pack with copied
+  review-facing artifacts and reference screenshots
 - approved `runs/current/evidence/ceo-phase-reviews/phase-I7-change-acceptance.approved.md`
 - promotion record under `runs/current/changes/<change_id>/promotion.yaml`
 - refreshed portable baseline under `app/docs/playbook-baseline/current/`

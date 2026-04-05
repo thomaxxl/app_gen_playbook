@@ -93,6 +93,7 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 - `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/artifacts/product/**`
+- `../../runs/current/evidence/final/**`
 - `../../runs/current/evidence/ui-previews/manifest.md`
 - `../../runs/current/changes/*/request.md`
 - `../../runs/current/changes/*/classification.yaml`
@@ -151,6 +152,15 @@ During Phase 7 acceptance, the Product Manager MUST judge the actual user-facing
 app, not only technical gate notes. Product acceptance MUST fail if the visible
 UI still reads like a contract, recovery, route-inventory, or other
 implementation/debug shell instead of the intended product.
+
+During acceptance closeout, the Product Manager MUST compile
+`../../runs/current/evidence/final/` as the reviewer-facing no-code audit pack.
+That pack MUST copy the accepted high-level product artifacts, reference
+screenshots, and related evidence needed to explain the delivered app without
+opening implementation files. `../../runs/current/evidence/final/review-index.md`
+MUST explain the copied contents and serve as the audit entrypoint. Use
+`python3 tools/compile_final_review_pack.py --repo-root .` or produce an
+equivalent refreshed pack manually.
 
 When UI previews were captured, the Product Manager MUST review the actual
 images and record `product_manager_validation: approved` in

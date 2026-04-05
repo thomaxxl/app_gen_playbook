@@ -84,6 +84,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/product/",
+        "runs/current/evidence/final/",
         "runs/current/evidence/ui-previews/manifest.md",
         "runs/current/role-state/product_manager/",
         "runs/current/changes/*/request.md",

@@ -53,6 +53,13 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - review business-rule outcomes
 - review field visibility and editability
 - review search/filter/report behavior
+- compile `runs/current/evidence/final/` as a reviewer-facing no-code audit
+  pack by copying the accepted high-level product artifacts, reference
+  screenshot manifests, and captured screenshots that should be reviewable
+  without opening source files
+- refresh `runs/current/evidence/final/review-index.md` so it explains the
+  copied review pack contents and why they are sufficient for high-level
+  product evaluation
 - fail acceptance if required CRUD or search flows depend on manual deep-link
   entry instead of the delivered navigation and page actions
 - fail acceptance if a collection page only presents a teaser subset of rows
@@ -73,6 +80,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 ## Outputs
 
 - `runs/current/artifacts/product/acceptance-review.md`
+- `runs/current/evidence/final/review-index.md` and the copied final review
+  pack under `runs/current/evidence/final/`
 - updated `runs/current/artifacts/product/assumptions-and-open-questions.md`
   if work is deferred
 - a QA handoff or reopen notes when acceptance passes but final delivery still
@@ -91,6 +100,9 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - the acceptance artifact includes explicit Story/Page/Route coverage sections
   plus Actor/Story Type/Scenario Depth coverage tables instead of only prose
   narrative
+- `runs/current/evidence/final/` exists as a reviewer-facing no-code audit pack
+  with copied high-level product artifacts and reference screenshots when
+  previews were captured
 - accepted delivery is handed to QA for an independent final validation pass
   before CEO approval
 - if UI previews were captured, acceptance cites the reviewed screenshot files
@@ -118,6 +130,7 @@ Acceptance fails when:
 - the first user-facing screen is a generic React-admin list/grid shell
 - user-facing pages still expose implementation or debug language
 - the evidence pack proves unresolved core behavior defects
+- the final review pack is missing, stale, or still placeholder content
 - captured screenshot evidence lacks content review or Product Manager signoff
 - required DB-backed resources or relationships are missing from the approved
   SAFRS JSON:API surface

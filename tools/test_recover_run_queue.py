@@ -181,6 +181,13 @@ class RecoverRunQueueTests(unittest.TestCase):
                     "path": "runs/current/artifacts/product/acceptance-review.md",
                     "reason": "acceptance review is missing Story Coverage row for US-007",
                 },
+                {
+                    "kind": "final-review-pack-incomplete",
+                    "owner": "product_manager",
+                    "phase": "phase-7-product-acceptance",
+                    "path": "runs/current/evidence/final/review-index.md",
+                    "reason": "final review pack index is missing",
+                },
             ]
 
             with unittest.mock.patch("recover_run_queue.collect_blockers", return_value=blockers):
@@ -193,6 +200,7 @@ class RecoverRunQueueTests(unittest.TestCase):
                     ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
                     ("architect", "phase-6-integration-review", "runs/current/artifacts/architecture/integration-review.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/artifacts/product/acceptance-review.md"),
+                    ("product_manager", "phase-7-product-acceptance", "runs/current/evidence/final/review-index.md"),
                 ],
             )
 

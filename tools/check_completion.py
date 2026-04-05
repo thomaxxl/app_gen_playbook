@@ -18,6 +18,7 @@ from orchestrator_common import (
     resolve_repo_root,
 )
 from check_backend_orm_safrs import audit_backend_orm_safrs
+from final_review_pack import FINAL_REVIEW_INDEX, collect_final_review_pack_issues
 from validators.coverage.common import collect_quality_gate_evidence_issues
 from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
@@ -366,6 +367,18 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                     phase="phase-7-product-acceptance",
                 )
             )
+        else:
+            for issue in collect_final_review_pack_issues(repo_root):
+                blockers.append(
+                    artifact_blocker(
+                        "final-review-pack-incomplete",
+                        repo_root / FINAL_REVIEW_INDEX,
+                        repo_root,
+                        issue,
+                        owner="product_manager",
+                        phase="phase-7-product-acceptance",
+                    )
+                )
 
     # After terminal delivery approval, stale phase-5 through phase-8 coverage
     # policy debt must not reopen the completed run, but blocked quality-gate

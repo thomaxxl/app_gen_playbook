@@ -153,7 +153,9 @@ The CEO role MUST:
 - before approving successful delivery, verify QA has already approved
   `runs/current/evidence/qa-delivery-review.md`, then run
   `scripts/run_playbook.sh --ceo-delivery-validate`, inspect
-  `runs/current/evidence/ceo-delivery-validation.md`, and write
+  `runs/current/evidence/ceo-delivery-validation.md`, review
+  `runs/current/evidence/final/review-index.md` plus the copied final review
+  pack under `runs/current/evidence/final/`, and write
   `runs/current/orchestrator/delivery-approved.md` with an explicit
   `status: approved` metadata line
 - before approving successful delivery, fail closed if

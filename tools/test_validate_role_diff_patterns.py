@@ -16,12 +16,8 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             is_allowed_change(
                 self.repo_root,
                 "product_manager",
-                "runs/current/changes/CR-20260402-062002/candidate/artifacts/product/acceptance-criteria.md",
+                "runs/current/changes/CR-20260403-135951/candidate/artifacts/product/acceptance-criteria.md",
                 [],
-                message_path=(
-                    self.repo_root
-                    / "runs/current/role-state/product_manager/processed/20260402-062002-from-operator-to-product_manager-change-request.md"
-                ),
             )
         )
 
@@ -41,6 +37,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
                 self.repo_root,
                 "product_manager",
                 "runs/current/changes/CR-20260402-050851/role-loads/product_manager.yaml",
+                [],
+            )
+        )
+
+    def test_allows_product_manager_final_review_pack_write(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "product_manager",
+                "runs/current/evidence/final/review-index.md",
                 [],
             )
         )

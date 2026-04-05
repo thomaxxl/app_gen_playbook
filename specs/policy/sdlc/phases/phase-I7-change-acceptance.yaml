@@ -8,6 +8,7 @@ entry_milestones:
 exit_milestone: MI7-change-accepted-and-promoted
 required_outputs:
   - runs/current/artifacts/product/acceptance-review.md
+  - runs/current/evidence/final/review-index.md
   - runs/current/evidence/ceo-phase-reviews/phase-I7-change-acceptance.approved.md
 steps:
   - id: PI7-CHANGE-ACCEPTANCE
@@ -18,6 +19,7 @@ steps:
     outputs:
       artifacts:
         - runs/current/artifacts/product/acceptance-review.md
+        - runs/current/evidence/final/review-index.md
     waivable: false
   - id: PI7-CEO-PHASE-REVIEW
     title: CEO critical review approves phase I7 change acceptance
