@@ -163,6 +163,12 @@ def parse_yaml_subset(path: Path) -> Any:
         if remainder:
             if not isinstance(parent, dict):
                 raise ValueError(f"Invalid scalar parent in {path}: {raw_line}")
+            if remainder == "[]":
+                parent[key] = []
+                continue
+            if remainder == "{}":
+                parent[key] = {}
+                continue
             if remainder in {">", "|"}:
                 block_lines: list[str] = []
                 for candidate_index, candidate in enumerate(lines[index + 1 :], start=index + 1):
@@ -367,7 +373,7 @@ def _is_placeholder_value(value: str) -> bool:
 
 def _payload_contains_placeholder(value: Any) -> bool:
     if isinstance(value, str):
-        return _is_placeholder_value(value) or value.strip() == "[]"
+        return _is_placeholder_value(value) or value.strip() in {"[]", "{}"}
     if isinstance(value, list):
         return any(_payload_contains_placeholder(item) for item in value)
     if isinstance(value, dict):
@@ -379,7 +385,7 @@ def _clean_declared_paths(values: list[str]) -> list[str]:
     cleaned: list[str] = []
     for value in values:
         normalized = value.strip().strip("`")
-        if not normalized or _is_placeholder_value(normalized):
+        if not normalized or normalized in {"[]", "{}"} or _is_placeholder_value(normalized):
             continue
         cleaned.append(normalized)
     return cleaned
@@ -631,7 +637,7 @@ def _path_is_invalid_placeholder(path: str) -> bool:
     normalized = path.strip()
     if not normalized:
         return True
-    if normalized == "[]":
+    if normalized in {"[]", "{}"}:
         return True
     if normalized.endswith("/[]") or "/[]/" in normalized:
         return True

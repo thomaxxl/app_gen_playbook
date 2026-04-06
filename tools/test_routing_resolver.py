@@ -83,6 +83,19 @@ class RoutingResolverTests(unittest.TestCase):
                     "  cannot_write:",
                     "    - app/backend/**",
                     "",
+                    "backend:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/remarks.md",
+                    "    - runs/current/role-state/backend/**",
+                    "    - runs/current/changes/*/candidate/artifacts/backend-design/**",
+                    "    - runs/current/changes/*/verification/**",
+                    "    - app/backend/**",
+                    "    - app/rules/**",
+                    "  cannot_write:",
+                    "    - app/frontend/**",
+                    "",
                     "architect:",
                     "  always_load:",
                     "    - playbook/summaries/global-core.md",
@@ -117,6 +130,25 @@ class RoutingResolverTests(unittest.TestCase):
                     "  - runs/current/artifacts/ux/**",
                     "  - runs/current/changes/*/candidate/artifacts/ux/**",
                     "  - runs/current/changes/*/verification/**",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "playbook/task-bundles/change-backend-implementation.yaml",
+            "\n".join(
+                [
+                    "name: change-backend-implementation",
+                    "role: backend",
+                    "always_load:",
+                    "  - playbook/summaries/global-core.md",
+                    "required_phase:",
+                    "  - playbook/process/phases/phase-I5-implementation-delta.md",
+                    "writable_targets:",
+                    "  - runs/current/changes/*/verification/**",
+                    "  - app/backend/**",
+                    "  - app/rules/**",
                 ]
             )
             + "\n",
@@ -218,6 +250,26 @@ class RoutingResolverTests(unittest.TestCase):
                     "  - app/frontend/src/App.tsx",
                     "verification_inputs:",
                     "  - runs/current/changes/CR-1/verification/regression-plan.md",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/backend.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "scope_profile: frontend-only",
+                    "read_artifacts:",
+                    "  - runs/current/changes/CR-1/request.md",
+                    "candidate_artifacts: []",
+                    "write_artifacts: []",
+                    "read_app_paths: []",
+                    "write_app_paths: []",
+                    "required_feature_packs: []",
+                    "verification_inputs:",
+                    "  - runs/current/changes/CR-1/verification/backend-check.md",
                 ]
             )
             + "\n",
@@ -461,6 +513,18 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertEqual(payload["required_feature_packs"], [])
         self.assertEqual(payload["write_app_paths"], ["app/frontend/**"])
 
+    def test_parse_yaml_subset_accepts_inline_empty_list_style(self) -> None:
+        repo_root = self.build_repo()
+        manifest = repo_root / "runs/current/changes/CR-1/role-loads/backend.yaml"
+
+        payload = parse_yaml_subset(manifest)
+
+        self.assertEqual(payload["candidate_artifacts"], [])
+        self.assertEqual(payload["write_artifacts"], [])
+        self.assertEqual(payload["read_app_paths"], [])
+        self.assertEqual(payload["write_app_paths"], [])
+        self.assertEqual(payload["required_feature_packs"], [])
+
     def test_parse_yaml_subset_accepts_folded_block_scalar(self) -> None:
         repo_root = self.build_repo()
         manifest = repo_root / "runs/current/changes/CR-1/role-loads/product_manager.yaml"
@@ -579,6 +643,20 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("runs/current/changes/CR-1/verification/regression-plan.md", writable)
         self.assertNotIn("runs/current/artifacts/ux/**", writable)
         self.assertNotIn("runs/current/changes/*/candidate/artifacts/ux/**", writable)
+
+    def test_backend_inline_empty_role_load_lists_do_not_drop_backend_write_scope(self) -> None:
+        repo_root = self.build_repo()
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "backend",
+            explicit_task_bundle="playbook/task-bundles/change-backend-implementation.yaml",
+        )
+
+        self.assertNotIn("[]", writable)
+        self.assertIn("app/backend/**", writable)
+        self.assertIn("app/rules/**", writable)
+        self.assertIn("runs/current/changes/CR-1/verification/backend-check.md", writable)
 
     def test_forbidden_paths_and_diff_validation_enforce_cannot_write(self) -> None:
         repo_root = self.build_repo()
