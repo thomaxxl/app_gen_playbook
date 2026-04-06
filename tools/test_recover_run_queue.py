@@ -837,6 +837,52 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("specs/ux/iconography.md", note)
             self.assertIn("runs/current/artifacts/ux/iconography.md", note)
 
+    def test_phase5_gated_frontend_self_handoff_does_not_block_phase3_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
+            write_template(repo_root / "specs/product/brief.md", "product_manager", "phase-1-product-definition")
+            write_template(repo_root / "specs/architecture/overview.md", "architect", "phase-2-architecture-contract")
+            write_template(repo_root / "specs/ux/iconography.md", "frontend", "phase-3-ux-and-interaction-design")
+            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_run_artifact(repo_root / "runs/current/artifacts/product/brief.md")
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/overview.md")
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/capability-profile.md")
+            write_run_artifact(repo_root / "runs/current/artifacts/architecture/load-plan.md")
+            write_file(
+                repo_root / "runs/current/role-state/frontend/inbox/20260406-123000-from-frontend-to-frontend-phase-4-implementation.md",
+                "\n".join(
+                    [
+                        "from: frontend",
+                        "to: frontend",
+                        "topic: phase-4-frontend-implementation",
+                        "gate_status: ready-for-handoff",
+                        "",
+                        "## Requested Outputs",
+                        "- implement the frontend shell",
+                    ]
+                ),
+            )
+
+            with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[]):
+                targets = select_recovery_targets(repo_root)
+
+            self.assertEqual(set(targets), {"frontend"})
+            frontend_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["frontend"]}
+            self.assertEqual(frontend_paths, {"runs/current/artifacts/ux/iconography.md"})
+
+            created = write_recovery_notes(repo_root, targets, "")
+            self.assertEqual(len(created), 1)
+            self.assertTrue(
+                (
+                    repo_root
+                    / "runs/current/role-state/frontend/processed/20260406-123000-from-frontend-to-frontend-phase-4-implementation.superseded-phase5-gated.md"
+                ).exists()
+            )
+
     def test_does_not_repeat_identical_recent_recovery_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

@@ -7,6 +7,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+from check_phase5_ready import collect_phase5_blockers
 from orchestrator_common import (
     preferred_role_state_dir,
     DISPLAY_TO_RUNTIME,
@@ -33,6 +34,16 @@ QUALITY_EVIDENCE_PATHS = {
     "runs/current/evidence/quality/test-results.md",
     "runs/current/evidence/quality/quality-summary.md",
 }
+
+PHASE5_REQUIRED_READ_MARKERS = (
+    "playbook/task-bundles/frontend-implementation.yaml",
+    "playbook/task-bundles/backend-implementation.yaml",
+    "playbook/task-bundles/change-frontend-implementation.yaml",
+    "playbook/task-bundles/change-backend-implementation.yaml",
+    "playbook/process/phases/phase-5-parallel-implementation.md",
+    "playbook/process/phases/phase-i5-frontend-implementation-delta.md",
+    "playbook/process/phases/phase-i5-backend-implementation-delta.md",
+)
 
 
 PROCEDURE_REQUIRED_ARTIFACTS: dict[str, tuple[str, ...]] = {
@@ -116,6 +127,24 @@ def collect_bundle_requirements(repo_root: Path, required_reads: list[str]) -> t
     for procedure_read in sorted(procedure_reads):
         required_artifacts.extend(PROCEDURE_REQUIRED_ARTIFACTS[procedure_read])
     return sorted(dict.fromkeys(required_artifacts)), sorted(dict.fromkeys(phases))
+
+
+def handoff_requires_phase5_ready(
+    receiver_runtime_role: str,
+    headers: dict[str, str],
+    required_reads: list[str],
+) -> bool:
+    if receiver_runtime_role == "deployment":
+        return True
+    if receiver_runtime_role not in {"frontend", "backend"}:
+        return False
+
+    topic = message_header_field(headers, "topic").strip().lower()
+    if "implementation" in topic:
+        return True
+
+    lowered_reads = [item.lower() for item in required_reads]
+    return any(marker in read for marker in PHASE5_REQUIRED_READ_MARKERS for read in lowered_reads)
 
 
 def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> dict[str, object]:
@@ -219,6 +248,24 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                     "path": artifact_path,
                     "owner": artifact_owner,
                     "message": f"task-bundle prerequisite is not ready: {artifact_path} (status={status!r})",
+                }
+            )
+
+    if gate_status in {"ready-for-handoff", "pass", "pass with assumptions"} and handoff_requires_phase5_ready(
+        runtime_role,
+        headers,
+        required_reads,
+    ):
+        for blocker in collect_phase5_blockers(repo_root):
+            blockers.append(
+                {
+                    "type": "phase5-prerequisite-blocker",
+                    "path": str(blocker.get("path", "")).strip(),
+                    "owner": str(blocker.get("owner", "")).strip(),
+                    "message": (
+                        "phase-5 implementation handoff is premature while a prerequisite remains unresolved: "
+                        f"{str(blocker.get('path', '')).strip()}"
+                    ),
                 }
             )
 

@@ -577,6 +577,51 @@ class ValidateHandoffInputsTests(unittest.TestCase):
                 )
             )
 
+    def test_implementation_handoff_rejects_missing_phase5_prerequisites(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/ux/iconography.md",
+                "---\nowner: frontend\nphase: phase-3-ux-and-interaction-design\nstatus: stub\n---\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/capability-profile.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/load-plan.md",
+                "owner: architect\nphase: phase-2-architecture-contract\nstatus: ready-for-handoff\n",
+            )
+            message_path = repo_root / "runs/current/role-state/frontend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: frontend",
+                        "to: frontend",
+                        "topic: phase-4-frontend-implementation",
+                        "gate_status: ready-for-handoff",
+                        "",
+                        "## Requested Outputs",
+                        "- implement the frontend shell",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "frontend", message_path)
+
+            self.assertFalse(report["valid"])
+            self.assertTrue(
+                any(
+                    blocker.get("type") == "phase5-prerequisite-blocker"
+                    and blocker.get("path") == "runs/current/artifacts/ux/iconography.md"
+                    for blocker in report["blockers"]
+                    if isinstance(blocker, dict)
+                ),
+                json.dumps(report, indent=2),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

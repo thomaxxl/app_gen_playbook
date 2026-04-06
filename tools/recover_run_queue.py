@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import yaml
 
+from check_phase5_ready import collect_phase5_blockers
 from check_completion import collect_blockers
 from contracts.evaluate_sdlc import compute_sdlc_state
 from orchestrator_common import (
@@ -224,6 +225,15 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "reference-fidelity-review-incomplete",
     "acceptance-missing-reference-fidelity",
 }
+PHASE5_REQUIRED_READ_MARKERS = (
+    "playbook/task-bundles/frontend-implementation.yaml",
+    "playbook/task-bundles/backend-implementation.yaml",
+    "playbook/task-bundles/change-frontend-implementation.yaml",
+    "playbook/task-bundles/change-backend-implementation.yaml",
+    "playbook/process/phases/phase-5-parallel-implementation.md",
+    "playbook/process/phases/phase-i5-frontend-implementation-delta.md",
+    "playbook/process/phases/phase-i5-backend-implementation-delta.md",
+)
 REQUIRED_EVIDENCE_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
     (
         "product_manager",
@@ -501,6 +511,47 @@ def other_core_roles_quiescent(repo_root: Path, excluded_role: str) -> bool:
     return True
 
 
+def pending_role_message_paths(repo_root: Path, role: str) -> list[Path]:
+    paths: list[Path] = []
+    for role_root in all_role_state_dirs(repo_root, role):
+        for subdir in ("inbox", "inflight"):
+            directory = role_root / subdir
+            if directory.exists():
+                paths.extend(sorted(directory.glob("*.md")))
+    return paths
+
+
+def message_requires_phase5_gate(role: str, message_path: Path) -> bool:
+    if role == "deployment":
+        return True
+    if role not in {"frontend", "backend"}:
+        return False
+
+    message_text = message_path.read_text(encoding="utf-8")
+    headers = parse_message_headers(message_text)
+    topic = headers.get("topic", "").strip().lower()
+    if "implementation" in topic:
+        return True
+
+    sections = parse_message_sections(message_text, headers=headers)
+    required_reads = [
+        item.lower()
+        for item in sections.get("required reads", [])
+        if isinstance(item, str)
+    ]
+    return any(marker in read for marker in PHASE5_REQUIRED_READ_MARKERS for read in required_reads)
+
+
+def phase5_gated_pending_paths(repo_root: Path, role: str) -> list[Path]:
+    pending_paths = pending_role_message_paths(repo_root, role)
+    if not pending_paths or not collect_phase5_blockers(repo_root):
+        return []
+    gated_paths = [path for path in pending_paths if message_requires_phase5_gate(role, path)]
+    if len(gated_paths) != len(pending_paths):
+        return []
+    return gated_paths
+
+
 def iter_required_template_metadata(repo_root: Path) -> list[tuple[Path, dict[str, object]]]:
     pairs: list[tuple[Path, dict[str, object]]] = []
     for artifact_dir, template_path in iter_required_artifact_templates(repo_root):
@@ -662,14 +713,15 @@ def select_recovery_targets(repo_root: Path) -> dict[str, list[ArtifactNeed]]:
     targets: dict[str, list[ArtifactNeed]] = {}
 
     for role in ROLE_LABELS:
-        if role_pending(repo_root, role):
-            continue
-
         role_needs = [need for need in needs if need.role == role]
         if not role_needs:
             continue
 
         eligible = [need for need in role_needs if should_recover_phase(repo_root, need.phase, needs, role)]
+        pending_phase5_paths = phase5_gated_pending_paths(repo_root, role)
+        if role_pending(repo_root, role):
+            if not pending_phase5_paths or not eligible or not all(need.phase in EARLY_PHASES for need in eligible):
+                continue
         if role == "architect" and role_pending(repo_root, "deployment"):
             eligible = [need for need in eligible if need.path.name != "runtime-bom.md"]
         if role == "architect" and runtime_environment_recovery_needed:
@@ -1527,6 +1579,12 @@ def write_recovery_notes(repo_root: Path, targets: dict[str, list[ArtifactNeed]]
     for role, needs in sorted(targets.items()):
         sync_change_role_load_for_recovery(repo_root, change_id, role, needs)
         role_root = preferred_role_state_dir(repo_root, role)
+        if any(need.phase in EARLY_PHASES for need in needs):
+            processed_dir = role_root / "processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            for pending_path in phase5_gated_pending_paths(repo_root, role):
+                target = processed_dir / f"{pending_path.stem}.superseded-phase5-gated.md"
+                pending_path.replace(target)
         blocker_key = "recovery:" + "|".join(
             f"{need.phase}:{need.path.relative_to(repo_root).as_posix()}:{need.reason}"
             for need in sorted(needs, key=lambda item: (item.phase, item.path.as_posix(), item.reason))
