@@ -206,6 +206,8 @@ When `capture_status: captured`, the manifest MUST also record screenshot
 content review rather than only file creation. At minimum it MUST state:
 
 - `content_validation_status: reviewed`
+- `scroll_state_validation: reviewed`
+- `shell_continuity_validation: approved`
 - `frontend_validation: approved`
 - `architect_validation: approved`
 - `product_manager_validation: approved`
@@ -233,6 +235,11 @@ That final QA screenshot pass MUST produce:
 The QA review MUST cite that manifest and the screenshot set. QA screenshot
 existence does not replace live testing, but final QA approval is incomplete
 without those screenshots for the required review-plan surfaces.
+
+When the run changes a sticky shell, app bar, left navigation, or page-header
+composition, both the preview manifest and the QA screenshot manifest MUST
+include explicit scrolled-state evidence and review. A first-paint screenshot
+alone is not enough for shell acceptance.
 
 Typical trigger cases:
 

@@ -688,6 +688,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
         for token in (
             "capture_status: captured",
             "content_validation_status: reviewed",
+            "scroll_state_validation: reviewed",
+            "shell_continuity_validation: approved",
             "frontend_validation: approved",
             "architect_validation: approved",
             "product_manager_validation: approved",
@@ -707,6 +709,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
         normalized = _normalized(_read(qa_manifest))
         for token in (
             "capture_status: captured",
+            "scroll_state_validation: reviewed",
+            "shell_continuity_validation: approved",
             "review_conclusion:",
         ):
             if _normalized(token) not in normalized:

@@ -914,6 +914,8 @@ class CheckCompletionTests(unittest.TestCase):
                         "",
                         "- capture_status: captured",
                         "- content_validation_status: reviewed",
+                        "- scroll_state_validation: reviewed",
+                        "- shell_continuity_validation: approved",
                         "- command: npm run capture:ui-previews",
                         "- frontend_validation: approved",
                         "- architect_validation: approved",
@@ -936,6 +938,8 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertFalse(any(blocker["kind"] == "ui-preview-manifest-unstructured" for blocker in matching))
             self.assertFalse(any(blocker["kind"] == "ui-preview-signoff-missing" for blocker in matching))
             self.assertFalse(any(blocker["kind"] == "ui-preview-content-validation-missing" for blocker in matching))
+            self.assertFalse(any(blocker["kind"] == "ui-preview-scroll-validation-missing" for blocker in matching))
+            self.assertFalse(any(blocker["kind"] == "ui-preview-shell-continuity-missing" for blocker in matching))
             self.assertFalse(any(blocker["kind"] == "ui-preview-review-conclusion-missing" for blocker in matching))
 
     def test_requires_ui_preview_signoff_and_review_conclusion_when_captured(self) -> None:
@@ -978,6 +982,8 @@ class CheckCompletionTests(unittest.TestCase):
                         "",
                         "capture_status: captured",
                         "content_validation_status: pending-human-review",
+                        "scroll_state_validation: pending-human-review",
+                        "shell_continuity_validation: pending-review",
                         "frontend_validation: approved",
                         "architect_validation: pending-review",
                         "product_manager_validation: pending-review",
@@ -997,6 +1003,8 @@ class CheckCompletionTests(unittest.TestCase):
             blockers = collect_blockers(repo_root)
             matching = [blocker for blocker in blockers if blocker["path"] == "runs/current/evidence/ui-previews/manifest.md"]
             self.assertTrue(any(blocker["kind"] == "ui-preview-content-validation-missing" for blocker in matching))
+            self.assertTrue(any(blocker["kind"] == "ui-preview-scroll-validation-missing" for blocker in matching))
+            self.assertTrue(any(blocker["kind"] == "ui-preview-shell-continuity-missing" for blocker in matching))
             self.assertTrue(any(blocker["kind"] == "ui-preview-signoff-missing" for blocker in matching))
             self.assertTrue(any(blocker["kind"] == "ui-preview-review-conclusion-missing" for blocker in matching))
 

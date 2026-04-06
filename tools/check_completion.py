@@ -801,6 +801,29 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         }
                     )
 
+                normalized_text = text.lower()
+                if "scroll_state_validation: reviewed" not in normalized_text:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-scroll-validation-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must declare scroll_state_validation: reviewed",
+                        }
+                    )
+
+                if "shell_continuity_validation: approved" not in normalized_text:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-shell-continuity-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must declare shell_continuity_validation: approved",
+                        }
+                    )
+
                 missing_validations = [
                     role.replace("_", "-")
                     for role in ("frontend", "architect", "product_manager")

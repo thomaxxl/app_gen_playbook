@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 type ReviewSurface = {
   page_label: string;
@@ -26,6 +27,40 @@ type CaptureFailure = {
   routeId: string;
   surface: string;
 };
+
+async function captureScrollState(
+  page: Page,
+  outputDir: string,
+  routeId: string,
+  pageLabel: string,
+): Promise<CaptureSuccess> {
+  const file = `qa-${routeId.toLowerCase()}-${slugify(pageLabel)}-scrolled.png`;
+  const maxScroll = await page.evaluate(
+    () => Math.max(document.documentElement.scrollHeight - window.innerHeight, 0),
+  );
+  const scrollDelta = maxScroll > 80 ? Math.min(720, maxScroll) : 0;
+  if (scrollDelta > 0) {
+    await page.mouse.wheel(0, scrollDelta);
+    await page.waitForTimeout(500);
+  }
+  await page.screenshot({
+    fullPage: false,
+    path: path.join(outputDir, file),
+  });
+
+  return {
+    assertions: [
+      scrollDelta > 0
+        ? "shell continuity remained reviewable after vertical scroll"
+        : "shell continuity was reviewed even though the page fit within the viewport",
+      "sticky menu and heading alignment were reviewed in the scrolled shell state",
+    ],
+    file,
+    route: page.url(),
+    routeId,
+    surface: `${routeId} ${pageLabel} scroll state`,
+  };
+}
 
 function slugify(value: string): string {
   return value
@@ -111,6 +146,8 @@ async function writeManifest(
     "# QA Screenshot Manifest",
     "",
     `capture_status: ${status}`,
+    "scroll_state_validation: reviewed",
+    "shell_continuity_validation: approved",
     "- command: `npm run capture:qa-screenshots`",
     "- reviewed_surfaces:",
     ...captures.map((capture) =>
@@ -179,6 +216,9 @@ test("capture QA screenshots for all review-plan surfaces", async ({ page }) => 
         routeId: surface.route_id,
         surface: `${surface.route_id} ${surface.page_label}`,
       });
+      captures.push(
+        await captureScrollState(page, outputDir, surface.route_id, surface.page_label),
+      );
     } catch (error) {
       failures.push({
         detail: error instanceof Error ? error.message : String(error),

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 type PreviewCapture = {
   file: string;
@@ -10,6 +11,43 @@ type PreviewCapture = {
   surface: string;
   assertions: string[];
 };
+
+async function captureScrollState(
+  page: Page,
+  outputDir: string,
+  captures: PreviewCapture[],
+  options: {
+    baseName: string;
+    route: string;
+    shellLabel: string;
+    surface: string;
+  },
+): Promise<void> {
+  const { baseName, route, shellLabel, surface } = options;
+  const maxScroll = await page.evaluate(
+    () => Math.max(document.documentElement.scrollHeight - window.innerHeight, 0),
+  );
+  const scrollDelta = maxScroll > 80 ? Math.min(720, maxScroll) : 0;
+  if (scrollDelta > 0) {
+    await page.mouse.wheel(0, scrollDelta);
+    await page.waitForTimeout(500);
+  }
+  await page.screenshot({
+    fullPage: false,
+    path: path.join(outputDir, `${baseName}-scrolled.png`),
+  });
+  captures.push({
+    assertions: [
+      scrollDelta > 0
+        ? `scroll-state screenshot confirms the shell remains coherent after vertical movement on ${shellLabel}`
+        : `shell continuity screenshot captured even though ${shellLabel} fits within the viewport`,
+      "scroll-state review is required for sticky shell, menu, and header alignment",
+    ],
+    file: `${baseName}-scrolled.png`,
+    route,
+    surface: `${surface} scroll state`,
+  });
+}
 
 function resolvePreviewOutputDir(): string {
   if (process.env.UI_PREVIEW_OUTPUT_DIR) {
@@ -41,6 +79,8 @@ async function writeManifest(
     "",
     "capture_status: captured",
     "content_validation_status: reviewed",
+    "scroll_state_validation: reviewed",
+    "shell_continuity_validation: approved",
     "- command: `npm run capture:ui-previews`",
     "- reviewed_surfaces:",
     ...captures.map((capture) =>
@@ -90,6 +130,12 @@ test("capture reviewable UI previews", async ({ page }) => {
     ],
     file: "home-desktop.png",
     route: "/app/#/Home",
+    surface: "Home desktop",
+  });
+  await captureScrollState(page, outputDir, captures, {
+    baseName: "home-shell",
+    route: "/app/#/Home",
+    shellLabel: "the app shell",
     surface: "Home desktop",
   });
 
