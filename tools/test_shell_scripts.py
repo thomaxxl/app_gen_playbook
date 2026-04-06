@@ -114,6 +114,9 @@ class ShellScriptSyntaxTests(unittest.TestCase):
 
         self.assertIn("frontend/node_modules already exists as a normal directory; keeping it as the active frontend dependency root.", template)
         self.assertIn('FRONTEND_NODE_MODULES_DIR=$FRONTEND_NODE_MODULES_DIR will be ignored until that directory is replaced by a symlink.', template)
+        self.assertIn("ensure_backend_pip()", template)
+        self.assertIn('"$backend_python" -m ensurepip --upgrade', template)
+        self.assertIn('ensure_backend_pip "$BACKEND_VENV_DIR/bin/python"', template)
 
     def test_clean_script_saves_snapshot_without_local_dependency_trees(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]

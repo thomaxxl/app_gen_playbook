@@ -14,6 +14,7 @@ The key behavior is:
 - in `clean-install` mode, install backend and frontend dependencies locally
 - in `reuse-preferred` mode, reuse prepared dependency roots first but repair
   or install them in place when they are missing or incomplete
+- repair a half-created backend virtualenv before assuming `pip` exists
 - optionally realize `FRONTEND_NODE_MODULES_DIR` as a managed
   `frontend/node_modules` symlink
 - never symlink whole `backend/` or `frontend/` trees
@@ -147,6 +148,38 @@ import uvicorn
 PY
 }
 
+backend_pip_ready() {
+  local backend_python="$1"
+  "$backend_python" -m pip --version >/dev/null 2>&1
+}
+
+ensure_backend_pip() {
+  local backend_python="$1"
+
+  if backend_pip_ready "$backend_python"; then
+    return 0
+  fi
+
+  echo "Bootstrapping pip in virtualenv $BACKEND_VENV_DIR"
+  if "$backend_python" -m ensurepip --upgrade >/dev/null 2>&1; then
+    if backend_pip_ready "$backend_python"; then
+      return 0
+    fi
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    echo "Recreating virtualenv tooling in $BACKEND_VENV_DIR"
+    python3 -m venv "$BACKEND_VENV_DIR"
+    if backend_pip_ready "$backend_python"; then
+      return 0
+    fi
+  fi
+
+  echo "Unable to bootstrap pip in $BACKEND_VENV_DIR." >&2
+  echo "Install the system venv/ensurepip support or recreate the backend virtualenv, then rerun ./install.sh." >&2
+  exit 1
+}
+
 frontend_dependencies_ready() {
   local node_modules_dir="$1"
   [[ -d "$node_modules_dir" ]] &&
@@ -203,6 +236,8 @@ if [[ ! -x "$BACKEND_VENV_DIR/bin/python" ]]; then
   echo "Creating backend virtualenv at $BACKEND_VENV_DIR"
   python3 -m venv "$BACKEND_VENV_DIR"
 fi
+
+ensure_backend_pip "$BACKEND_VENV_DIR/bin/python"
 
 echo "Installing backend dependencies into virtualenv $BACKEND_VENV_DIR"
 (
