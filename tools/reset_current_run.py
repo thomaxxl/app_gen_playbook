@@ -132,6 +132,20 @@ def seed_generated_app_starter(repo_root: Path) -> None:
         materialize_template_file(repo_root, template_rel)
 
 
+def ensure_app_workspace_root(repo_root: Path) -> Path:
+    app_root = repo_root / "app"
+    if app_root.is_symlink():
+        target_root = app_root.resolve(strict=False)
+        target_root.mkdir(parents=True, exist_ok=True)
+        return target_root
+    if app_root.exists():
+        if not app_root.is_dir():
+            raise ValueError(f"app workspace path is not a directory: {app_root}")
+        return app_root
+    app_root.mkdir(parents=True, exist_ok=True)
+    return app_root
+
+
 def reset_current_run(repo_root: Path) -> Path:
     template_dir = repo_root / "runs" / "template"
     current_dir = repo_root / "runs" / "current"
@@ -211,8 +225,7 @@ def reset_current_run(repo_root: Path) -> Path:
     if app_done.exists():
         app_done.unlink()
 
-    app_root = repo_root / "app"
-    app_root.mkdir(exist_ok=True)
+    app_root = ensure_app_workspace_root(repo_root)
     for relative in (
         "frontend",
         "backend",

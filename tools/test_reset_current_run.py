@@ -55,6 +55,32 @@ class ResetCurrentRunTests(unittest.TestCase):
             self.assertTrue((repo_root / "app" / "install.sh").stat().st_mode & 0o111)
             self.assertTrue((repo_root / "app" / "run.sh").stat().st_mode & 0o111)
 
+    def test_seeds_symlinked_app_workspace_when_target_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir(parents=True)
+            (repo_root / ".git").mkdir()
+            target_root = Path(tmp) / "workspace" / "app"
+            (repo_root / "app").symlink_to(target_root)
+            template_dir = repo_root / "runs" / "template"
+            (template_dir / "artifacts" / "architecture").mkdir(parents=True)
+            (template_dir / "role-state").mkdir(parents=True)
+            (template_dir / "README.md").write_text("# template\n", encoding="utf-8")
+            write_template(repo_root / "templates" / "app" / "project" / ".gitignore.md", "app/.gitignore", "root-ignore\n")
+            write_template(repo_root / "templates" / "app" / "project" / "install.sh.md", "app/install.sh", "#!/usr/bin/env bash\necho install\n")
+            write_template(repo_root / "templates" / "app" / "project" / "run.sh.md", "app/run.sh", "#!/usr/bin/env bash\necho run\n")
+            write_template(repo_root / "templates" / "app" / "project" / "README.app.md", "app/README.md", "# App\n")
+            write_template(repo_root / "templates" / "app" / "frontend" / "package.json.md", "frontend/package.json", "{\n  \"name\": \"seeded\"\n}\n")
+
+            reset_current_run(repo_root)
+
+            self.assertTrue((repo_root / "app").is_symlink())
+            self.assertTrue(target_root.is_dir())
+            self.assertTrue((target_root / "frontend").is_dir())
+            self.assertTrue((target_root / "backend").is_dir())
+            self.assertEqual((target_root / ".gitignore").read_text(encoding="utf-8"), "root-ignore")
+            self.assertIn('"name": "seeded"', (target_root / "frontend" / "package.json").read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()
