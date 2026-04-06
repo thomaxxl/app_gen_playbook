@@ -58,6 +58,47 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         self.assertIn('python3 - "$MONITOR_TAIL_LINES" "${files[@]}"', script)
         self.assertIn('showing last $MONITOR_TAIL_LINES lines across existing streams, then following new output', script)
 
+    def test_run_playbook_wrapper_exports_host_runtime_by_default(self) -> None:
+        source_repo_root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+
+            scripts_dir = repo_root / "scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_repo_root / "scripts" / "run_playbook.sh", scripts_dir / "run_playbook.sh")
+            (scripts_dir / "run_playbook.sh").chmod(0o755)
+
+            cli_path = repo_root / "src" / "playbook_runner" / "cli.py"
+            cli_path.parent.mkdir(parents=True, exist_ok=True)
+            cli_path.write_text(
+                "import os\n"
+                "import sys\n"
+                "print(os.getenv('PLAYBOOK_RUNTIME_ENV', ''))\n"
+                "raise SystemExit(0)\n",
+                encoding="utf-8",
+            )
+
+            env = dict(os.environ)
+            env.pop("PLAYBOOK_RUNTIME_ENV", None)
+            result = subprocess.run(
+                ["bash", str(scripts_dir / "run_playbook.sh"), "--resume"],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+
+            self.assertEqual(
+                result.returncode,
+                0,
+                msg=f"run_playbook.sh failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+            )
+            self.assertEqual(result.stdout.strip(), "host")
+
     def test_app_run_template_allows_local_node_modules_with_external_override(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         template = (repo_root / "templates" / "app" / "project" / "run.sh.md").read_text(encoding="utf-8")

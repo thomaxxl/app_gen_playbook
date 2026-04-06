@@ -177,7 +177,7 @@ The orchestrator SHOULD also honor:
 It MUST record that setting, its source, and the current runner epoch in
 `runs/current/orchestrator/runtime-environment.json`.
 
-If the operator does not set `PLAYBOOK_RUNTIME_ENV`, the orchestrator SHOULD
+If the operator does not set `PLAYBOOK_RUNTIME_ENV`, the orchestrator MUST
 default to `host`. `sandbox` remains an explicit opt-out for environments
 where host-side bind, app startup, or browser capture is intentionally
 unavailable.

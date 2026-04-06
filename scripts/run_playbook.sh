@@ -50,5 +50,8 @@ load_env_file "$ROOT/.env"
 load_env_file "$ROOT/app/.runtime.local.env"
 activate_backend_venv
 
+: "${PLAYBOOK_RUNTIME_ENV:=host}"
+export PLAYBOOK_RUNTIME_ENV
+
 export PYTHONPATH="$ROOT/src:$ROOT/tools${PYTHONPATH:+:$PYTHONPATH}"
 exec "$PLAYBOOK_PYTHON" -m playbook_runner.cli --repo-root "$ROOT" "$@"
