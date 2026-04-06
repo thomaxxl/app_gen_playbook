@@ -159,6 +159,10 @@ def backend_requirements_path(repo_root: Path) -> Path:
     return app_workspace_path(repo_root) / "backend" / "requirements.txt"
 
 
+def backend_venv_is_explicitly_configured(repo_root: Path) -> bool:
+    return bool(runtime_env_value(repo_root, "BACKEND_VENV"))
+
+
 def check_app_workspace(repo_root: Path, *, run_mode: str = "new-full-run") -> CheckResult:
     app_path = app_workspace_path(repo_root)
     configured_target = configured_app_workspace_target(repo_root)
@@ -273,10 +277,23 @@ def ensure_backend_venv_ready(repo_root: Path) -> tuple[bool, str]:
     requirements_path = backend_requirements_path(repo_root)
     venv_dir = backend_venv_dir(repo_root)
     python_path = backend_python_path(repo_root)
+    explicitly_configured = backend_venv_is_explicitly_configured(repo_root)
     created = False
     installed = False
 
     if not requirements_path.exists():
+        if explicitly_configured and python_path.exists():
+            probe = run_backend_import_probe(python_path)
+            if probe.returncode == 0:
+                return True, (
+                    f"verified imports via configured backend venv {venv_dir} "
+                    f"without local requirements manifest {requirements_path}"
+                )
+            return False, (
+                f"configured backend venv imports failed via {python_path}: "
+                f"{(probe.stderr or probe.stdout).strip()} "
+                f"(and no local requirements manifest exists at {requirements_path} to repair it)"
+            )
         return False, f"missing backend requirements manifest: {requirements_path}"
 
     if not python_path.exists():

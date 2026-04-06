@@ -394,6 +394,44 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
             python_path = check_execution_prereqs.backend_python_path(repo_root)
             self.assertEqual(python_path, repo_root / "app" / "shared" / "backend-venv" / "bin" / "python")
 
+    def test_check_backend_venv_accepts_configured_external_venv_without_local_requirements(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            python_path = repo_root / "shared-venv" / "bin" / "python"
+            python_path.parent.mkdir(parents=True, exist_ok=True)
+            python_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            python_path.chmod(0o755)
+
+            with unittest.mock.patch.dict("os.environ", {"BACKEND_VENV": str(python_path.parent.parent)}, clear=False):
+                with unittest.mock.patch(
+                    "check_execution_prereqs.run_backend_import_probe",
+                    return_value=subprocess.CompletedProcess([str(python_path), "-c", "probe"], 0, "", ""),
+                ):
+                    result = check_execution_prereqs.check_backend_venv(repo_root)
+
+        self.assertEqual(result.status, "ok")
+        self.assertIn("verified imports via configured backend venv", result.detail)
+        self.assertIn("without local requirements manifest", result.detail)
+
+    def test_check_backend_venv_blocks_when_configured_external_venv_fails_and_no_requirements_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            python_path = repo_root / "shared-venv" / "bin" / "python"
+            python_path.parent.mkdir(parents=True, exist_ok=True)
+            python_path.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            python_path.chmod(0o755)
+
+            with unittest.mock.patch.dict("os.environ", {"BACKEND_VENV": str(python_path.parent.parent)}, clear=False):
+                with unittest.mock.patch(
+                    "check_execution_prereqs.run_backend_import_probe",
+                    return_value=subprocess.CompletedProcess([str(python_path), "-c", "probe"], 1, "", "missing import"),
+                ):
+                    result = check_execution_prereqs.check_backend_venv(repo_root)
+
+        self.assertEqual(result.status, "blocked")
+        self.assertIn("configured backend venv imports failed", result.detail)
+        self.assertIn("no local requirements manifest exists", result.detail)
+
     def test_check_node_modules_uses_configured_node_modules_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
