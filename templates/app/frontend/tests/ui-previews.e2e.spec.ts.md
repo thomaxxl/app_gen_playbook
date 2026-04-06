@@ -12,6 +12,50 @@ type PreviewCapture = {
   assertions: string[];
 };
 
+type ShellAnchors = {
+  appBarLeft: number | null;
+  appBarTop: number | null;
+  sidebarRight: number | null;
+  sidebarTop: number | null;
+};
+
+async function readShellAnchors(page: Page): Promise<ShellAnchors> {
+  return page.evaluate(() => {
+    const sidebar =
+      document.querySelector(".RaSidebar-fixed") ??
+      document.querySelector(".RaSidebar-paper");
+    const appBar = document.querySelector(".MuiAppBar-root");
+    const sidebarRect = sidebar?.getBoundingClientRect();
+    const appBarRect = appBar?.getBoundingClientRect();
+
+    return {
+      appBarLeft: appBarRect ? Math.round(appBarRect.left) : null,
+      appBarTop: appBarRect ? Math.round(appBarRect.top) : null,
+      sidebarRight: sidebarRect ? Math.round(sidebarRect.right) : null,
+      sidebarTop: sidebarRect ? Math.round(sidebarRect.top) : null,
+    };
+  });
+}
+
+function assertAnchoredShell(before: ShellAnchors, after: ShellAnchors) {
+  if (before.sidebarTop !== null) {
+    expect(Math.abs(before.sidebarTop)).toBeLessThanOrEqual(4);
+    expect(Math.abs((after.sidebarTop ?? before.sidebarTop) - before.sidebarTop)).toBeLessThanOrEqual(4);
+  }
+
+  if (before.appBarTop !== null) {
+    expect(Math.abs(before.appBarTop)).toBeLessThanOrEqual(4);
+    expect(Math.abs((after.appBarTop ?? before.appBarTop) - before.appBarTop)).toBeLessThanOrEqual(4);
+  }
+
+  if (before.sidebarRight !== null && before.appBarLeft !== null) {
+    expect(Math.abs(before.appBarLeft - before.sidebarRight)).toBeLessThanOrEqual(8);
+    expect(
+      Math.abs((after.appBarLeft ?? before.appBarLeft) - (after.sidebarRight ?? before.sidebarRight)),
+    ).toBeLessThanOrEqual(8);
+  }
+}
+
 async function captureScrollState(
   page: Page,
   outputDir: string,
@@ -24,6 +68,7 @@ async function captureScrollState(
   },
 ): Promise<void> {
   const { baseName, route, shellLabel, surface } = options;
+  const beforeAnchors = await readShellAnchors(page);
   const maxScroll = await page.evaluate(
     () => Math.max(document.documentElement.scrollHeight - window.innerHeight, 0),
   );
@@ -36,12 +81,16 @@ async function captureScrollState(
     fullPage: false,
     path: path.join(outputDir, `${baseName}-scrolled.png`),
   });
+  const afterAnchors = await readShellAnchors(page);
+  assertAnchoredShell(beforeAnchors, afterAnchors);
   captures.push({
     assertions: [
       scrollDelta > 0
         ? `scroll-state screenshot confirms the shell remains coherent after vertical movement on ${shellLabel}`
         : `shell continuity screenshot captured even though ${shellLabel} fits within the viewport`,
       "scroll-state review is required for sticky shell, menu, and header alignment",
+      "desktop sidebar stayed anchored to the viewport during scroll",
+      "desktop app bar stayed aligned with the sidebar edge without a blank gutter",
     ],
     file: `${baseName}-scrolled.png`,
     route,

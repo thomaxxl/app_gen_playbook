@@ -241,6 +241,14 @@ composition, both the preview manifest and the QA screenshot manifest MUST
 include explicit scrolled-state evidence and review. A first-paint screenshot
 alone is not enough for shell acceptance.
 
+For desktop left-rail shells, that review MUST prove at least:
+
+- the rail remains anchored at the viewport edge after scroll
+- the app bar remains anchored at the viewport top after scroll
+- the app bar starts flush with the rail instead of leaving a detached blank
+  lane
+- shell hierarchy remains readable without duplicated or competing headings
+
 Typical trigger cases:
 
 - new or changed `Home`, `Landing`, or other entry surfaces

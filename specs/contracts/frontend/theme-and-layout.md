@@ -33,6 +33,16 @@ The page shell SHOULD provide:
 - optional primary actions
 - optional return path when the UX artifacts require one
 
+When a project uses a desktop left-rail shell, that shell MUST behave like one
+continuous navigation surface:
+
+- the left rail stays anchored to the viewport during vertical scroll
+- the top app bar starts flush with the rail edge instead of leaving a blank
+  gutter
+- shell materials and contrast stay readable across the top-left lane and the
+  first scrolled viewport
+- the app bar acts as shell context, not as a second full-strength page title
+
 ## Spacing and layout
 
 Generated custom pages SHOULD use consistent content spacing.
