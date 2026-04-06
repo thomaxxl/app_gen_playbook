@@ -93,6 +93,27 @@ class RelpathTests(unittest.TestCase):
             snapshot = snapshot_repo_files(repo_root)
             self.assertNotIn("run_dashboard/run_dashboard.sqlite3-journal", snapshot)
 
+    def test_snapshot_ignores_emitted_frontend_config_build_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_root = tmp_path / "repo"
+
+            repo_root.mkdir()
+            (repo_root / ".git").mkdir()
+
+            frontend_dir = repo_root / "app" / "frontend"
+            frontend_dir.mkdir(parents=True)
+            for name in ("vite.config.ts", "vitest.config.ts", "vite.config.js", "vite.config.d.ts", "vitest.config.js", "vitest.config.d.ts"):
+                (frontend_dir / name).write_text("generated\n", encoding="utf-8")
+
+            snapshot = snapshot_repo_files(repo_root)
+            self.assertIn("app/frontend/vite.config.ts", snapshot)
+            self.assertIn("app/frontend/vitest.config.ts", snapshot)
+            self.assertNotIn("app/frontend/vite.config.js", snapshot)
+            self.assertNotIn("app/frontend/vite.config.d.ts", snapshot)
+            self.assertNotIn("app/frontend/vitest.config.js", snapshot)
+            self.assertNotIn("app/frontend/vitest.config.d.ts", snapshot)
+
     def test_owner_for_run_artifact_falls_back_to_run_metadata_when_no_template_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

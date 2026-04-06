@@ -222,6 +222,13 @@ EXCLUDED_ROOT_DIRS = {
     "app.cmdb",
 }
 
+EXCLUDED_RELATIVE_PATHS = {
+    "app/frontend/vite.config.js",
+    "app/frontend/vite.config.d.ts",
+    "app/frontend/vitest.config.js",
+    "app/frontend/vitest.config.d.ts",
+}
+
 MESSAGE_SECTION_TITLES = (
     "required reads",
     "requested outputs",
@@ -404,6 +411,9 @@ def hash_file(path: Path) -> str:
 def should_ignore_path(path: Path, repo_root: Path) -> bool:
     relative = relpath(path, repo_root)
     parts = relative.split("/")
+
+    if relative in EXCLUDED_RELATIVE_PATHS:
+        return True
 
     if parts[0] in EXCLUDED_ROOT_DIRS:
         return True
