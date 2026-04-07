@@ -5,7 +5,6 @@ product_manager:
     - playbook/summaries/roles/product-manager.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/product/**
     - runs/current/evidence/final/**
@@ -40,7 +39,6 @@ architect:
     - playbook/summaries/roles/architect.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/architecture/**
     - runs/current/evidence/contract-samples.md
@@ -72,7 +70,6 @@ frontend:
     - playbook/summaries/roles/frontend.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/ux/**
     - runs/current/evidence/frontend-browser-proof.md
@@ -97,7 +94,6 @@ backend:
     - playbook/summaries/roles/backend.summary.md
     - playbook/roles/shared-responsibilities.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/backend-design/**
     - runs/current/role-state/backend/**
@@ -121,7 +117,6 @@ qa:
     - playbook/roles/shared-responsibilities.md
     - playbook/process/read-sets/qa-core.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/evidence/qa-delivery-review.md
     - runs/current/evidence/ui-previews/qa-manifest.md
@@ -168,7 +163,6 @@ devops:
     - playbook/roles/shared-responsibilities.md
     - playbook/process/read-sets/devops-core.md
   writable:
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/artifacts/devops/**
     - runs/current/role-state/devops/**

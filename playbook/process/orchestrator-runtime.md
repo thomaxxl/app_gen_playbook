@@ -88,6 +88,12 @@ The summary SHOULD be taken from a final response line starting with
 The orchestrator MUST persist its machine-readable evidence under
 `runs/current/evidence/orchestrator/`.
 
+`runs/current/remarks.md` is the compact high-signal human log owned by the
+orchestrator and CEO. It MUST stay concise. Repeated per-turn churn,
+large copied completion dumps, and routine role verification notes belong in
+`runs/current/notes.md`, role-owned artifacts, or
+`runs/current/remarks-events.jsonl`, not in the markdown log.
+
 The raw stdout and stderr stream from each `codex exec` invocation MUST be
 captured in the matching per-turn JSONL file under:
 

@@ -74,7 +74,6 @@ used as design input.
 
 ## Writable targets
 
-- `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/artifacts/architecture/**`
 - `../../runs/current/changes/*/impact-manifest.yaml`

@@ -172,6 +172,36 @@ def root_set_covers(current_roots: Iterable[str], stored_roots: Iterable[str]) -
     return True
 
 
+def compact_completion_detail(detail: str, *, limit: int = 8) -> str:
+    normalized = detail.strip()
+    if not normalized:
+        return "No completion detail available."
+
+    lines = [line.rstrip() for line in normalized.splitlines()]
+    intro: list[str] = []
+    blockers: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("- "):
+            blockers.append(stripped[2:].strip())
+            continue
+        if not blockers:
+            intro.append(stripped)
+
+    if not blockers:
+        return normalized
+
+    shown = blockers[:limit]
+    parts = ["\n".join(intro) if intro else "Completion gate still failed.", "", "Top blockers:"]
+    parts.extend(f"- {item}" for item in shown)
+    remaining = len(blockers) - len(shown)
+    if remaining > 0:
+        parts.append(f"- ... {remaining} more blockers omitted from remarks; inspect check_completion output for the full list")
+    return "\n".join(parts)
+
+
 class Orchestrator:
     def __init__(self, config: RunnerConfig, request: RunRequest, python_bin: str = "python3"):
         self.config = config
@@ -1023,7 +1053,7 @@ class Orchestrator:
             self.append_remark(
                 "Run stalled",
                 "No actionable inbox or inflight work remained and the completion gate still failed.\n\n"
-                + (detail or "No completion detail available."),
+                + compact_completion_detail(detail or "No completion detail available."),
             )
             return 1
 

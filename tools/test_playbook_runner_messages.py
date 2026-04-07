@@ -11,7 +11,13 @@ from unittest.mock import patch
 from playbook_runner.config import ModelConfig, RunnerConfig
 from playbook_runner.codex_runner import CodexRunner, expand_add_dirs
 from playbook_runner.messages import Message, message_indicates_progress, message_requires_phase5_ready
-from playbook_runner.orchestrator import Orchestrator, RunRequest, add_dir_from_rule, is_retryable_codex_failure
+from playbook_runner.orchestrator import (
+    Orchestrator,
+    RunRequest,
+    add_dir_from_rule,
+    compact_completion_detail,
+    is_retryable_codex_failure,
+)
 from playbook_runner.queue_store import ClaimedMessage
 
 
@@ -30,6 +36,31 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             Orchestrator.console_timestamp(datetime(2026, 4, 5, 18, 42, 48, tzinfo=timezone.utc)),
             "04-05 18:42:48",
         )
+
+    def test_compact_completion_detail_limits_blocker_dump(self) -> None:
+        detail = "\n".join(
+            [
+                "run is not complete:",
+                "- blocker 1",
+                "- blocker 2",
+                "- blocker 3",
+                "- blocker 4",
+                "- blocker 5",
+                "- blocker 6",
+                "- blocker 7",
+                "- blocker 8",
+                "- blocker 9",
+            ]
+        )
+
+        compact = compact_completion_detail(detail, limit=3)
+
+        self.assertIn("run is not complete:", compact)
+        self.assertIn("Top blockers:", compact)
+        self.assertIn("- blocker 1", compact)
+        self.assertIn("- blocker 3", compact)
+        self.assertNotIn("- blocker 4", compact)
+        self.assertIn("... 6 more blockers omitted from remarks", compact)
 
     def test_parse_headers_and_gate_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

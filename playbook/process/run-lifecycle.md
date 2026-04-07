@@ -158,13 +158,14 @@ When a run is complete:
   of `../../runs/current/artifacts/product/business-rules.md`
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
-- `../../runs/current/remarks.md` SHOULD preserve run-level findings that do
--  not belong in the app tree and that specifically concern playbook feedback,
-  especially playbook ambiguities, unclear instructions, or process gaps,
-  including orchestrator-detected stall diagnoses
+- `../../runs/current/remarks.md` SHOULD preserve only the compact high-signal
+  playbook log, especially orchestrator-detected stall diagnoses, invalid
+  handoff/recovery findings, CEO unblock interventions, and durable playbook
+  feedback promoted out of ad hoc role notes
 - `../../runs/current/notes.md` SHOULD preserve other run-level notes and
-  feedback that do not belong in the app tree but are not specifically about
-  playbook ambiguities
+  feedback that do not belong in the app tree, including repeated
+  verification output, stale-blocker churn notes, and provisional role
+  observations that have not been promoted into `remarks.md`
 - `../../runs/current/orchestrator/operator-action-required.md` MAY be created
   during blocked runs when only the operator can unblock the work; when it
   exists, the orchestrator is expected to stop and surface that file as the

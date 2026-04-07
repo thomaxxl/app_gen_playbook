@@ -90,7 +90,6 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 
 ## Writable targets
 
-- `../../runs/current/remarks.md`
 - `../../runs/current/notes.md`
 - `../../runs/current/artifacts/product/**`
 - `../../runs/current/evidence/final/**`

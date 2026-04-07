@@ -207,8 +207,10 @@ def reset_current_run(repo_root: Path) -> Path:
     remarks_path.write_text(
         "# Run Remarks\n\n"
         "Neutral at run start.\n\n"
-        "Use this file for playbook feedback, especially ambiguities,\n"
-        "instruction gaps, or process confusion discovered during the run.\n",
+        "Use this file for the compact high-signal playbook log only.\n"
+        "Orchestrator and CEO interventions belong here. Ordinary role notes,\n"
+        "verification churn, and repeated stale-blocker diagnostics belong in\n"
+        "runs/current/notes.md.\n",
         encoding="utf-8",
     )
 
@@ -216,8 +218,9 @@ def reset_current_run(repo_root: Path) -> Path:
     notes_path.write_text(
         "# Run Notes\n\n"
         "Neutral at run start.\n\n"
-        "Use this file for other run-specific notes and feedback that are not\n"
-        "specifically about playbook ambiguities.\n",
+        "Use this file for ordinary run-specific notes, repeated verification\n"
+        "results, and provisional feedback that should not bloat\n"
+        "runs/current/remarks.md.\n",
         encoding="utf-8",
     )
 

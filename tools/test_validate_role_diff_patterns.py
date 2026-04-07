@@ -139,6 +139,26 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_rejects_frontend_remarks_write(self) -> None:
+        self.assertFalse(
+            is_allowed_change(
+                self.repo_root,
+                "frontend",
+                "runs/current/remarks.md",
+                [],
+            )
+        )
+
+    def test_allows_frontend_notes_write(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "frontend",
+                "runs/current/notes.md",
+                [],
+            )
+        )
+
     def test_treats_change_outside_turn_roots_as_external(self) -> None:
         turn_roots = [self.repo_root / "runs" / "current" / "role-state" / "product_manager"]
         self.assertFalse(

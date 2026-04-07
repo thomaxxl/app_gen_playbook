@@ -178,8 +178,17 @@ complete:
 Roles SHOULD compact `context.md` regularly by rewriting it in place, removing
 resolved or stale detail instead of only appending new notes.
 
+`runs/current/remarks.md` is reserved for the compact high-signal playbook log.
+Normal runtime roles MUST NOT use it as a shared execution diary, repeated
+verification log, or stale-blocker scratchpad. They SHOULD record those details
+in `runs/current/notes.md`, role-owned artifacts, or evidence files instead.
+The normal direct writers for `runs/current/remarks.md` are the orchestrator
+and CEO. Other roles should surface durable playbook feedback through their
+owned notes/artifacts and explicit handoffs; if that feedback matters, the
+orchestrator or CEO can promote it into `remarks.md`.
+
 When recording verification results in `context.md`, evidence artifacts, or
-`runs/current/remarks.md`, agents MUST state explicitly whether the check
+`runs/current/notes.md`, agents MUST state explicitly whether the check
 confirmed a healthy state or exposed a defect. Do not use wording that makes
 success metrics read like an unresolved blocker.
 
