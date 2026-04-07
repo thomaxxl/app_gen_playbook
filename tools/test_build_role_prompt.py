@@ -7,9 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_role_prompt import (
+    build_visible_write_paths,
     build_canonical_outputs,
     build_read_only_required_paths,
     build_read_paths,
+    build_sqlite_input_paths,
+    filter_canonical_outputs,
     parse_message_headers,
     parse_message_sections,
 )
@@ -130,6 +133,52 @@ class BuildRolePromptTests(unittest.TestCase):
 
         self.assertEqual(read_only, [])
 
+    def test_build_sqlite_input_paths_normalizes_backticks_and_detects_sqlite_inputs(self) -> None:
+        read_paths = [
+            "`run_dashboard/run_dashboard.sqlite3`",
+            "app/backend/data/run_observer.sqlite3",
+            "runs/current/artifacts/backend-design/model-design.md",
+        ]
+
+        sqlite_inputs = build_sqlite_input_paths(read_paths)
+
+        self.assertEqual(
+            sqlite_inputs,
+            [
+                "run_dashboard/run_dashboard.sqlite3",
+                "app/backend/data/run_observer.sqlite3",
+            ],
+        )
+
+    def test_build_visible_write_paths_hides_sqlite_inputs_from_allowed_writes_display(self) -> None:
+        write_paths = [
+            "app/backend/src/my_app/models.py",
+            "run_dashboard/run_dashboard.sqlite3",
+            "app/backend/data/run_observer.sqlite3",
+        ]
+        sqlite_inputs = [
+            "run_dashboard/run_dashboard.sqlite3",
+            "app/backend/data/run_observer.sqlite3",
+        ]
+
+        visible = build_visible_write_paths(write_paths, sqlite_inputs)
+
+        self.assertEqual(visible, ["app/backend/src/my_app/models.py"])
+
+    def test_filter_canonical_outputs_excludes_sqlite_inputs(self) -> None:
+        canonical_outputs = [
+            "app/backend/data/run_observer.sqlite3",
+            "runs/current/changes/CR-1/verification/backend-real-data-review.md",
+        ]
+        sqlite_inputs = ["app/backend/data/run_observer.sqlite3"]
+
+        filtered = filter_canonical_outputs(canonical_outputs, sqlite_inputs)
+
+        self.assertEqual(
+            filtered,
+            ["runs/current/changes/CR-1/verification/backend-real-data-review.md"],
+        )
+
     def test_build_read_paths_prefers_manifest_bundle_resolution_over_full_role_file(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         message_text = "\n".join(
@@ -158,6 +207,8 @@ class BuildRolePromptTests(unittest.TestCase):
     def test_prompt_source_mentions_read_only_required_files(self) -> None:
         source = (Path(__file__).resolve().parent / "build_role_prompt.py").read_text(encoding="utf-8")
         self.assertIn("Read-only required files:", source)
+        self.assertIn("SQLite input files (read-only, schema-first):", source)
+        self.assertIn("PRAGMA table_info(...)", source)
         self.assertIn("External references you MUST follow", source)
         self.assertIn("Required skill files:", source)
         self.assertIn("Priority order:", source)

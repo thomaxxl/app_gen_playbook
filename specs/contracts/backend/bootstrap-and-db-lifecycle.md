@@ -31,6 +31,11 @@ For read-only mirrored observer apps:
   missing required tables; it should fail closed instead
 - startup must not delete, truncate, or recreate the mirrored observer DB
 - startup must not seed placeholder rows into the mirrored observer DB
+- any schema inspection or validation query against the mirrored DB must start
+  from the live schema (`.schema`, `PRAGMA table_info(...)`, reflection, or
+  equivalent) rather than assumed columns from prior mirrors or notes
+- destructive validation or rewrite experiments must use a scratch copy, not
+  the listed mirrored input file
 
 ## Foreign key behavior
 

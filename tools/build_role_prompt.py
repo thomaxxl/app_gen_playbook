@@ -18,11 +18,25 @@ from orchestrator_common import (
 from routing_resolver import resolve_forbidden_paths, resolve_read_packet, resolve_writable_paths
 
 
+SQLITE_SUFFIXES = (
+    ".sqlite",
+    ".sqlite3",
+    ".db",
+)
+
+
+def normalize_prompt_path(path: str) -> str:
+    normalized = path.strip()
+    if normalized.startswith("`") and normalized.endswith("`") and len(normalized) > 1:
+        normalized = normalized[1:-1].strip()
+    return normalized
+
+
 def dedupe_paths(paths: list[str]) -> list[str]:
     seen: set[str] = set()
     ordered: list[str] = []
     for path in paths:
-        normalized = path.strip()
+        normalized = normalize_prompt_path(path)
         if normalized in {"", "[]"}:
             continue
         if not normalized or normalized in seen:
@@ -158,6 +172,38 @@ def build_read_only_required_paths(read_paths: list[str], write_paths: list[str]
     return dedupe_paths(read_only)
 
 
+def is_sqlite_input_path(path: str) -> bool:
+    normalized = normalize_prompt_path(path)
+    lowered = normalized.lower()
+    return lowered.endswith(SQLITE_SUFFIXES)
+
+
+def build_sqlite_input_paths(read_paths: list[str]) -> list[str]:
+    return dedupe_paths([path for path in read_paths if is_sqlite_input_path(path)])
+
+
+def build_visible_write_paths(write_paths: list[str], sqlite_input_paths: list[str]) -> list[str]:
+    hidden = {normalize_prompt_path(path) for path in sqlite_input_paths}
+    visible: list[str] = []
+    for path in write_paths:
+        normalized = normalize_prompt_path(path)
+        if normalized in hidden:
+            continue
+        visible.append(normalized)
+    return dedupe_paths(visible)
+
+
+def filter_canonical_outputs(canonical_outputs: list[str], sqlite_input_paths: list[str]) -> list[str]:
+    hidden = {normalize_prompt_path(path) for path in sqlite_input_paths}
+    filtered: list[str] = []
+    for path in canonical_outputs:
+        normalized = normalize_prompt_path(path)
+        if normalized in hidden:
+            continue
+        filtered.append(normalized)
+    return dedupe_paths(filtered)
+
+
 def emit_full_prompt(
     repo_root: Path,
     display_role: str,
@@ -168,6 +214,7 @@ def emit_full_prompt(
     read_paths: list[str],
     write_paths: list[str],
     read_only_required_paths: list[str],
+    sqlite_input_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
     skill_paths: list[str],
@@ -184,6 +231,18 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in write_paths:
         print(f"- {path}")
+
+    if sqlite_input_paths:
+        print("\nSQLite input files (read-only, schema-first):\n")
+        for path in sqlite_input_paths:
+            print(f"- {path}")
+        print(
+            "\nSQLite input rules:\n"
+            "- inspect the live schema first with `.schema`, `PRAGMA table_info(...)`, or equivalent model metadata before writing SQL\n"
+            "- do not assume columns from older runs, prior mirrors, or design notes\n"
+            "- treat these SQLite files as read-only inputs for this turn\n"
+            "- if you need destructive inspection or transformation tests, copy the DB to scratch space first and leave the listed input unchanged\n"
+        )
 
     if priority_order:
         print("\nPriority order for this turn:\n")
@@ -260,6 +319,7 @@ def emit_short_prompt(
     read_paths: list[str],
     write_paths: list[str],
     read_only_required_paths: list[str],
+    sqlite_input_paths: list[str],
     forbidden_paths: list[str],
     canonical_outputs: list[str],
     skill_paths: list[str],
@@ -280,6 +340,14 @@ def emit_short_prompt(
     for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if sqlite_input_paths:
+        print("SQLite input files (read-only, schema-first):")
+        for path in sqlite_input_paths:
+            print(f"- {absolutize(repo_root, path)}")
+        print("- Inspect the live schema first with `.schema`, `PRAGMA table_info(...)`, or equivalent model metadata before writing SQL.")
+        print("- Do not assume columns from older runs, prior mirrors, or design notes.")
+        print("- Treat these SQLite files as read-only inputs; copy to scratch first if destructive testing is required.")
+        print("")
     if priority_order:
         print("Priority order:")
         for value in priority_order:
@@ -365,6 +433,9 @@ def main() -> int:
         explicit_phase=headers.get("phase"),
         message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
     )
+    sqlite_input_paths = build_sqlite_input_paths(read_paths)
+    write_paths = build_visible_write_paths(write_paths, sqlite_input_paths)
+    canonical_outputs = filter_canonical_outputs(canonical_outputs, sqlite_input_paths)
     read_only_required_paths = build_read_only_required_paths(read_paths, write_paths)
     forbidden_paths = resolve_forbidden_paths(repo_root, args.runtime_role)
     skill_paths = packet_skill_paths(packet)
@@ -381,6 +452,7 @@ def main() -> int:
             read_paths,
             write_paths,
             read_only_required_paths,
+            sqlite_input_paths,
             forbidden_paths,
             canonical_outputs,
             skill_paths,
@@ -398,6 +470,7 @@ def main() -> int:
             read_paths,
             write_paths,
             read_only_required_paths,
+            sqlite_input_paths,
             forbidden_paths,
             canonical_outputs,
             skill_paths,

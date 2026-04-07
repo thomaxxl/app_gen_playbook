@@ -172,6 +172,17 @@ load and apply `../../skills/safrs-api-design/SKILL.md` before approving any
 resource-versus-relationship-versus-include-versus-`jsonapi_attr`-versus-
 `jsonapi_rpc`-versus-view-model-versus-exception decision.
 
+When the task reads from a mirrored or externally prepared SQLite file, the
+Backend agent MUST inspect the live schema first through `.schema`,
+`PRAGMA table_info(...)`, SQLAlchemy reflection, or equivalent model metadata
+before issuing ad hoc SQL. Do not assume column names from older runs, prior
+mirrors, or design notes.
+
+Such mirrored SQLite files are read-only inputs unless the inbox item
+explicitly delegates migration or scratch-copy work. If destructive inspection
+or rewrite experiments are needed, copy the DB to scratch space first and keep
+the listed input unchanged.
+
 For persisted DB-backed business logic, derivations, aggregates, lifecycle
 checks, and rollback-worthy invariants, the Backend agent MUST default to the
 LogicBank lane. Endpoint handlers, service helpers, bootstrap code, and

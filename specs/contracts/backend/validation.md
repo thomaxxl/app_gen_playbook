@@ -110,6 +110,10 @@ If the app supports uploaded files:
 - observer-database validation is read-only: it may inspect the mirrored DB
   for required tables or rows, but it must not delete, recreate, reseed, or
   mutate the mirrored SQLite file on startup
+- observer-database review queries must start from the live schema or mapped
+  metadata; validation must not assume a column exists in the mirrored SQLite
+  file just because an older run, earlier collector version, or design note
+  used it
 
 ## Rule validation
 
