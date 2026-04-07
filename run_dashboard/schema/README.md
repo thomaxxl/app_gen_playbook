@@ -31,6 +31,9 @@ Domain projections then attach richer meaning to those file rows:
 
 - expected artifacts: `artifact_specs`, `run_artifact_expectations`
 - current-run artifacts: `artifacts`, `artifact_packages`
+- product scope: `user_stories`, `user_story_traceability`,
+  `business_rules`, `business_rule_examples`,
+  `business_rule_story_links`
 - handoffs and change packets: `handoff_messages`, `change_requests`,
   `change_request_items`, `change_request_role_loads`
 - runtime state and timeline: `orchestrator_worker_states`,

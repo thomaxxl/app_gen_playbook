@@ -135,6 +135,18 @@ def run_tool_json(playbook_root: Path, tool_relative_path: str, args: list[str])
     return json.loads(stdout)
 
 
+def load_fact_payload(playbook_root: Path, filename: str, key: str) -> dict[str, Any]:
+    path = playbook_root / "runs" / "current" / "facts" / filename
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    value = payload.get(key)
+    return value if isinstance(value, dict) else {}
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -1424,6 +1436,194 @@ def collect_change_requests(
     return requests, items, role_loads, baseline_snapshots, relationships
 
 
+def _preferred_source_path(source_paths: list[str], suffix: str) -> str | None:
+    for path in source_paths:
+        if path.endswith(suffix):
+            return path
+    return source_paths[0] if source_paths else None
+
+
+def collect_product_scope_entities(
+    playbook_root: Path,
+    run_db_id: str,
+    run_files: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    rows_by_path, ids_by_path = run_file_maps(run_files)
+    product_scope = load_fact_payload(playbook_root, "product-scope.json", "product_scope")
+    if not product_scope:
+        return [], []
+
+    source_paths = [str(item).strip() for item in product_scope.get("source_paths", []) if str(item).strip()]
+    story_source_path = _preferred_source_path(source_paths, "user-stories.md") or "runs/current/artifacts/product/user-stories.md"
+    traceability_source_path = _preferred_source_path(source_paths, "traceability-matrix.md") or "runs/current/artifacts/product/traceability-matrix.md"
+    story_source_file_id = ids_by_path.get(story_source_path)
+    traceability_source_file_id = ids_by_path.get(traceability_source_path)
+
+    detail_by_story = {
+        str(row.get("story_id", "")).strip(): row
+        for row in product_scope.get("story_detail_index", [])
+        if str(row.get("story_id", "")).strip()
+    }
+    traceability_by_story = {
+        str(row.get("story_id", "")).strip(): row
+        for row in product_scope.get("traceability_rows", [])
+        if str(row.get("story_id", "")).strip()
+    }
+
+    user_stories: list[dict[str, Any]] = []
+    traceability_rows: list[dict[str, Any]] = []
+    for story in product_scope.get("story_index", []):
+        story_id = str(story.get("story_id", "")).strip()
+        if not story_id:
+            continue
+        detail = detail_by_story.get(story_id, {})
+        traceability = traceability_by_story.get(story_id, {})
+        supporting_surfaces = list(dict.fromkeys(list(traceability.get("route_ids", []) or []) + list(traceability.get("page_ids", []) or [])))
+        user_story_id = stable_uuid(run_db_id, "user-story", story_id)
+        user_stories.append(
+            {
+                "id": user_story_id,
+                "run_id": run_db_id,
+                "story_id": story_id,
+                "title": story.get("title") or story_id,
+                "actor": story.get("actor"),
+                "priority": story.get("priority"),
+                "delivery_class": story.get("delivery_class"),
+                "release": story.get("release"),
+                "story_type": story.get("story_type"),
+                "story_statement": story.get("story_statement"),
+                "why_priority": story.get("why_priority"),
+                "independent_test": story.get("independent_test"),
+                "current_release": bool(story.get("current_release")),
+                "primary_evidence_mode": traceability.get("primary_evidence_mode"),
+                "linked_rule_count": len(traceability.get("rule_ids") or []),
+                "supporting_surface_count": len(supporting_surfaces),
+                "acceptance_scenario_count": int(story.get("acceptance_scenario_count") or 0),
+                "edge_case_count": int(story.get("edge_case_count") or 0),
+                "acceptance_scenarios_json": detail.get("acceptance_scenarios") or [],
+                "edge_cases_json": detail.get("edge_cases") or [],
+                "detail_sections_json": detail.get("detail_sections") or {},
+                "source_file_id": story_source_file_id,
+                "source_path": story_source_path,
+                "source_anchor": detail.get("source_anchor") or story_id,
+            }
+        )
+        if traceability:
+            traceability_rows.append(
+                {
+                    "id": stable_uuid(run_db_id, "user-story-traceability", story_id),
+                    "run_id": run_db_id,
+                    "story_id": story_id,
+                    "user_story_id": user_story_id,
+                    "workflow_ids_json": traceability.get("workflow_ids") or [],
+                    "rule_ids_json": traceability.get("rule_ids") or [],
+                    "resource_ids_json": traceability.get("resource_ids") or [],
+                    "page_ids_json": traceability.get("page_ids") or [],
+                    "route_ids_json": traceability.get("route_ids") or [],
+                    "supporting_surface_ids_json": supporting_surfaces,
+                    "sample_data_ids_json": traceability.get("sample_data_ids") or [],
+                    "acceptance_ids_json": traceability.get("acceptance_ids") or [],
+                    "permission_context": traceability.get("permission_context"),
+                    "preview_required": bool(traceability.get("preview_required")),
+                    "qa_live_required": bool(traceability.get("qa_live_required")),
+                    "acceptance_owner": traceability.get("acceptance_owner"),
+                    "source_file_id": traceability_source_file_id,
+                    "source_path": traceability_source_path,
+                    "source_anchor": story_id,
+                }
+            )
+    return user_stories, traceability_rows
+
+
+def collect_business_rule_entities(
+    playbook_root: Path,
+    run_db_id: str,
+    run_files: list[dict[str, Any]],
+    user_stories: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    _rows_by_path, ids_by_path = run_file_maps(run_files)
+    business_rules_payload = load_fact_payload(playbook_root, "business-rules.json", "business_rules")
+    if not business_rules_payload:
+        return [], [], []
+
+    story_by_id = {str(row.get("story_id", "")).strip(): row for row in user_stories if str(row.get("story_id", "")).strip()}
+    source_paths = [str(item).strip() for item in business_rules_payload.get("source_paths", []) if str(item).strip()]
+    rules_source_path = _preferred_source_path(source_paths, "business-rules.md") or "runs/current/artifacts/product/business-rules.md"
+    rules_source_file_id = ids_by_path.get(rules_source_path)
+
+    business_rules: list[dict[str, Any]] = []
+    business_rule_examples: list[dict[str, Any]] = []
+    business_rule_story_links: list[dict[str, Any]] = []
+    for rule in business_rules_payload.get("rules", []):
+        rule_id = str(rule.get("rule_id", "")).strip()
+        if not rule_id:
+            continue
+        linked_story_ids = [story_id for story_id in rule.get("traceability_story_ids", []) if str(story_id).strip()]
+        valid_examples = list((rule.get("examples") or {}).get("valid") or [])
+        invalid_examples = list((rule.get("examples") or {}).get("invalid") or [])
+        business_rule_id = stable_uuid(run_db_id, "business-rule", rule_id)
+        business_rules.append(
+            {
+                "id": business_rule_id,
+                "run_id": run_db_id,
+                "rule_id": rule_id,
+                "title": rule.get("title") or rule_id,
+                "rule_class": rule.get("rule_class"),
+                "status": rule.get("status"),
+                "plain_language_rule": rule.get("plain_language_rule"),
+                "rationale": rule.get("rationale"),
+                "source": rule.get("source"),
+                "trigger": rule.get("trigger"),
+                "preconditions": rule.get("preconditions"),
+                "applies_to_json": rule.get("applies_to") or [],
+                "valid_outcome": rule.get("valid_outcome"),
+                "invalid_outcome": rule.get("invalid_outcome"),
+                "user_visible_consequence": rule.get("user_visible_consequence"),
+                "backend_enforcement": rule.get("backend_enforcement"),
+                "frontend_mirror": rule.get("frontend_mirror"),
+                "frontend_mirror_reason": rule.get("frontend_mirror_reason"),
+                "authoritative_error_message": rule.get("authoritative_error_message"),
+                "backend_test_required": bool(rule.get("backend_test_required")),
+                "frontend_test_required": bool(rule.get("frontend_test_required")),
+                "linked_story_count": len(linked_story_ids),
+                "valid_example_count": len(valid_examples),
+                "invalid_example_count": len(invalid_examples),
+                "source_file_id": rules_source_file_id,
+                "source_path": rules_source_path,
+                "source_anchor": rule.get("source_anchor") or rule_id,
+            }
+        )
+        for example_kind, examples in (("valid", valid_examples), ("invalid", invalid_examples)):
+            for index, example_text in enumerate(examples, start=1):
+                business_rule_examples.append(
+                    {
+                        "id": stable_uuid(run_db_id, "business-rule-example", rule_id, example_kind, str(index)),
+                        "run_id": run_db_id,
+                        "rule_id": rule_id,
+                        "business_rule_id": business_rule_id,
+                        "example_kind": example_kind,
+                        "example_order": index,
+                        "example_text": example_text,
+                    }
+                )
+        for story_id in linked_story_ids:
+            story = story_by_id.get(story_id, {})
+            business_rule_story_links.append(
+                {
+                    "id": stable_uuid(run_db_id, "business-rule-story-link", rule_id, story_id),
+                    "run_id": run_db_id,
+                    "rule_id": rule_id,
+                    "business_rule_id": business_rule_id,
+                    "story_id": story_id,
+                    "user_story_id": story.get("id"),
+                    "story_title": story.get("title"),
+                    "story_actor": story.get("actor"),
+                    "story_priority": story.get("priority"),
+                }
+            )
+    return business_rules, business_rule_examples, business_rule_story_links
+
+
 def collect_orchestrator_events(playbook_root: Path, run_db_id: str, run_files: list[dict[str, Any]]) -> list[dict[str, Any]]:
     log_rel = "runs/current/evidence/orchestrator/logs/orchestrator.log"
     rows_by_path, ids_by_path = run_file_maps(run_files)
@@ -1947,6 +2147,8 @@ def collect_run_snapshot(playbook_root: Path, project_slug: str, project_name: s
     run_artifact_expectations = collect_run_artifact_expectations(run_db_id, artifact_specs, artifacts, run_files_by_path)
     handoffs, handoff_relationships = collect_handoffs(playbook_root, run_db_id, run_files)
     change_requests, change_request_items, change_role_loads, baseline_snapshots, change_relationships = collect_change_requests(playbook_root, run_db_id, run_files)
+    user_stories, user_story_traceability = collect_product_scope_entities(playbook_root, run_db_id, run_files)
+    business_rules, business_rule_examples, business_rule_story_links = collect_business_rule_entities(playbook_root, run_db_id, run_files, user_stories)
     worker_states, worker_relationships = collect_worker_states(playbook_root, run_db_id, run_files)
     session_states, session_relationships = collect_session_states(playbook_root, run_db_id, run_files)
     agent_turns, turn_relationships = collect_agent_turns(playbook_root, run_db_id, run_files, handoffs, worker_states, session_states)
@@ -2021,6 +2223,11 @@ def collect_run_snapshot(playbook_root: Path, project_slug: str, project_name: s
         "change_request_items": change_request_items,
         "change_request_role_loads": change_role_loads,
         "baseline_snapshots": baseline_snapshots,
+        "user_stories": user_stories,
+        "user_story_traceability": user_story_traceability,
+        "business_rules": business_rules,
+        "business_rule_examples": business_rule_examples,
+        "business_rule_story_links": business_rule_story_links,
         "blockers": blockers,
         "orchestrator_worker_states": worker_states,
         "orchestrator_session_states": session_states,

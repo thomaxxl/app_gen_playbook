@@ -125,6 +125,7 @@ class ContractPolicyTests(unittest.TestCase):
         summary, _issues = compile_run_facts(self.repo_root)
         output_paths = set(summary["output_paths"])
         self.assertIn("runs/current/facts/product-scope.json", output_paths)
+        self.assertIn("runs/current/facts/business-rules.json", output_paths)
         self.assertIn("runs/current/facts/frontend-surface.json", output_paths)
         self.assertIn("runs/current/facts/review-plan.json", output_paths)
         self.assertIn("runs/current/facts/evidence-index.json", output_paths)

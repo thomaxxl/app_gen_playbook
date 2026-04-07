@@ -168,6 +168,14 @@ frontend package template before treating the playbook baseline as current.
 - dashboard and landing surfaces fetch the joined API-backed data required by
   `dashboard-data-plan.md` instead of substituting static placeholders for
   dynamic operational information
+- when the product is a run-observer dashboard with authored user stories and
+  business rules, the UI includes:
+  - a Product Scope summary entry on the primary current-run experience
+  - a User Stories list/detail surface backed by structured DB resources
+  - a Business Rules list/detail surface backed by structured DB resources
+- those product-scope surfaces do not build their primary list/detail state by
+  parsing large markdown files in the browser; markdown rendering is on-demand
+  only
 - forms that `form-grouping-plan.md` marks as grouped do not degrade into one
   long unsectioned field wall
 - forms above the complexity threshold are sectioned by default unless the UX

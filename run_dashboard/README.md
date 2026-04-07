@@ -37,6 +37,16 @@ The dashboard DB is metadata-first:
 - the source filesystem remains authoritative
 - file bodies are still read from disk on demand when the UI needs them
 
+For product-management views, the intended split is:
+
+- authored markdown under `runs/current/artifacts/product/` remains canonical
+- facts under `runs/current/facts/` provide structured story and business-rule
+  read models
+- the collector mirrors those read models into SQLite for fast list/detail
+  queries
+- the browser renders source markdown only on demand instead of parsing large
+  product documents to build primary list/detail UI
+
 Handoff messages now also carry a normalized `importance` value for later
 filtering:
 
@@ -68,6 +78,8 @@ Key table families now include:
   `markdown_sections`
 - `artifact_specs`, `run_artifact_expectations`, `artifacts`,
   `artifact_packages`
+- `user_stories`, `user_story_traceability`, `business_rules`,
+  `business_rule_examples`, `business_rule_story_links`
 - `change_requests`, `change_request_items`,
   `change_request_role_loads`, `baseline_snapshots`
 - `orchestrator_worker_states`, `orchestrator_session_states`,

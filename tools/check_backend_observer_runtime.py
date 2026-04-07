@@ -28,6 +28,13 @@ def observer_backend_expected(repo_root: Path) -> bool:
     )
 
 
+def has_product_scope_artifacts(repo_root: Path) -> bool:
+    return (
+        (repo_root / "runs" / "current" / "artifacts" / "product" / "user-stories.md").exists()
+        and (repo_root / "runs" / "current" / "artifacts" / "product" / "business-rules.md").exists()
+    )
+
+
 def audit_backend_observer_runtime(repo_root: Path) -> list[str]:
     if not observer_backend_expected(repo_root):
         return []
@@ -38,6 +45,8 @@ def audit_backend_observer_runtime(repo_root: Path) -> list[str]:
 
     fastapi_text = read_text(backend_root / "my_app" / "fastapi_app.py")
     bootstrap_text = read_text(backend_root / "my_app" / "bootstrap.py")
+    models_text = read_text(backend_root / "my_app" / "models.py")
+    admin_yaml_text = read_text(repo_root / "app" / "reference" / "admin.yaml")
     issues: list[str] = []
 
     if "_runtime_resource_records(" in fastapi_text or "schema-driven-runtime-recovery" in fastapi_text:
@@ -65,6 +74,33 @@ def audit_backend_observer_runtime(repo_root: Path) -> list[str]:
         issues.append(
             "observer backend does not appear to initialize a live SQLAlchemy engine for the mirrored SQLite database"
         )
+
+    if has_product_scope_artifacts(repo_root):
+        required_model_markers = (
+            "__tablename__ = \"user_stories\"",
+            "__tablename__ = \"user_story_traceability\"",
+            "__tablename__ = \"business_rules\"",
+            "__tablename__ = \"business_rule_examples\"",
+            "__tablename__ = \"business_rule_story_links\"",
+        )
+        missing_model_markers = [marker for marker in required_model_markers if marker not in models_text]
+        if missing_model_markers:
+            issues.append(
+                "observer backend is missing structured product-scope models for user stories / business rules"
+            )
+
+        required_admin_endpoints = (
+            "/api/user_stories",
+            "/api/user_story_traceability",
+            "/api/business_rules",
+            "/api/business_rule_examples",
+            "/api/business_rule_story_links",
+        )
+        missing_admin_endpoints = [endpoint for endpoint in required_admin_endpoints if endpoint not in admin_yaml_text]
+        if missing_admin_endpoints:
+            issues.append(
+                "observer admin contract is missing product-scope resources for user stories / business rules"
+            )
 
     return issues
 

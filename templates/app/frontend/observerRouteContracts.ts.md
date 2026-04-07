@@ -30,4 +30,9 @@ export const OBSERVER_RESOURCE_PAGES = [
   "OrchestratorEvent",
   "RunFile",
   "ChangeRequest",
+  "UserStory",
+  "UserStoryTraceability",
+  "BusinessRule",
+  "BusinessRuleExample",
+  "BusinessRuleStoryLink",
 ] as const;

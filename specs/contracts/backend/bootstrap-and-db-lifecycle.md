@@ -31,6 +31,9 @@ For read-only mirrored observer apps:
   missing required tables; it should fail closed instead
 - startup must not delete, truncate, or recreate the mirrored observer DB
 - startup must not seed placeholder rows into the mirrored observer DB
+- tests MAY copy the mirrored observer DB into a scratch path before startup,
+  but bootstrap and validation must still treat that copied file as read-only
+  observer input rather than a seeded application-owned database
 
 ## Foreign key behavior
 

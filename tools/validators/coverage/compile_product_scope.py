@@ -272,6 +272,25 @@ SCENARIO_CHECKS = (
     "empty-state",
     "permission-context",
 )
+STORY_DETAIL_SECTION_LABELS = (
+    "**Actor**",
+    "**Story Type**",
+    "**Release**",
+    "**Why this priority**",
+    "**Independent Test**",
+    "**Acceptance Scenarios**",
+    "**Edge Cases**",
+    "Context / trigger",
+    "Preconditions",
+    "Happy path",
+    "Alternate paths",
+    "Negative / validation paths",
+    "Empty-state expectation",
+    "Permission constraints",
+    "Audit / notification expectation",
+    "Non-goals",
+    "Required evidence",
+)
 
 
 def _active_change_id(repo_root: Path) -> str:
@@ -1041,6 +1060,7 @@ def _parse_story_detail_section(
             if marker not in detail_text:
                 issues.append(f"{story_id}: higher-depth story block is missing '{marker}'")
 
+    parsed["detail_sections"] = _parse_story_detail_fields(detail_text)
     given_count = detail_text.count("**Given**")
     when_count = detail_text.count("**When**")
     then_count = detail_text.count("**Then**")
@@ -1048,17 +1068,64 @@ def _parse_story_detail_section(
     if parsed["acceptance_scenario_count"] <= 0:
         issues.append(f"{story_id}: current-release story block is missing a concrete Given / When / Then acceptance scenario")
 
-    edge_cases_section = detail_text.split("**Edge Cases**:", 1)
-    if len(edge_cases_section) == 2:
-        parsed["edge_case_count"] = len(re.findall(r"(?m)^\s*-\s+\S", edge_cases_section[1]))
+    acceptance_scenarios = _extract_bulleted_values(parsed["detail_sections"].get("Acceptance Scenarios", ""))
+    parsed["acceptance_scenarios"] = acceptance_scenarios
+    edge_cases = _extract_bulleted_values(parsed["detail_sections"].get("Edge Cases", ""))
+    parsed["edge_cases"] = edge_cases
+    parsed["edge_case_count"] = len(edge_cases)
     if parsed["edge_case_count"] <= 0:
         issues.append(f"{story_id}: current-release story block does not list any edge cases")
 
-    why_priority_match = re.search(r"\*\*Why this priority\*\*:\s*(.+)", detail_text)
-    parsed["why_priority"] = why_priority_match.group(1).strip() if why_priority_match else ""
-    independent_test_match = re.search(r"\*\*Independent Test\*\*:\s*(.+)", detail_text)
-    parsed["independent_test"] = independent_test_match.group(1).strip() if independent_test_match else ""
+    parsed["why_priority"] = parsed["detail_sections"].get("Why this priority", "")
+    parsed["independent_test"] = parsed["detail_sections"].get("Independent Test", "")
     return parsed, issues
+
+
+def _normalize_story_detail_label(label: str) -> str:
+    return label.strip().strip("*").strip()
+
+
+def _parse_story_detail_fields(detail_text: str) -> dict[str, str]:
+    if not detail_text:
+        return {}
+    labels = {_normalize_story_detail_label(label) for label in STORY_DETAIL_SECTION_LABELS}
+    pattern = re.compile(r"^\s*(\*\*[^*]+\*\*|[A-Za-z][A-Za-z /-]+):\s*(.*)$")
+    fields: dict[str, str] = {}
+    current_label: str | None = None
+    buffer: list[str] = []
+    for raw_line in detail_text.splitlines():
+        match = pattern.match(raw_line)
+        if match:
+            candidate = _normalize_story_detail_label(match.group(1))
+            if candidate in labels:
+                if current_label is not None:
+                    fields[current_label] = "\n".join(buffer).strip()
+                current_label = candidate
+                buffer = [match.group(2).rstrip()] if match.group(2).strip() else []
+                continue
+        if current_label is not None:
+            buffer.append(raw_line.rstrip())
+    if current_label is not None:
+        fields[current_label] = "\n".join(buffer).strip()
+    return fields
+
+
+def _extract_bulleted_values(text: str) -> list[str]:
+    values: list[str] = []
+    current: list[str] = []
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("- ") or re.match(r"^\d+\.\s+", stripped):
+            if current:
+                values.append(" ".join(current).strip())
+            cleaned = re.sub(r"^(?:-\s+|\d+\.\s+)", "", stripped)
+            current = [cleaned.strip()]
+            continue
+        if current and stripped:
+            current.append(stripped)
+    if current:
+        values.append(" ".join(current).strip())
+    return values
 
 
 def _parse_user_story_catalog(
@@ -1250,6 +1317,9 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             "detail_required": detail_required,
             "acceptance_scenario_count": detail_metrics.get("acceptance_scenario_count", 0),
             "edge_case_count": detail_metrics.get("edge_case_count", 0),
+            "acceptance_scenarios": list(detail_metrics.get("acceptance_scenarios") or []),
+            "edge_cases": list(detail_metrics.get("edge_cases") or []),
+            "detail_sections": dict(detail_metrics.get("detail_sections") or {}),
         }
         story_rows.append(story_payload)
         story_index_by_id[story_id] = story_payload
@@ -1349,6 +1419,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 issues.append(f"{actor}: capability coverage is missing normalized row for {band}")
 
     current_release_story_rows: list[dict[str, Any]] = []
+    story_detail_index: list[dict[str, Any]] = []
     required_story_reviews: list[dict[str, Any]] = []
     mapped_current_release_page_ids: set[str] = set()
     mapped_current_release_route_ids: set[str] = set()
@@ -1445,7 +1516,20 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "required_checks": list(SCENARIO_CHECKS) if story["detail_required"] else [],
                 "acceptance_scenario_count": story["acceptance_scenario_count"],
                 "edge_case_count": story["edge_case_count"],
+                "acceptance_scenarios": story.get("acceptance_scenarios", []),
+                "edge_cases": story.get("edge_cases", []),
+                "detail_sections": dict(story.get("detail_sections") or {}),
                 "current_release": True,
+            }
+        )
+        story_detail_index.append(
+            {
+                "story_id": story_id,
+                "source_anchor": story_id,
+                "section_keys": sorted((story.get("detail_sections") or {}).keys()),
+                "detail_sections": dict(story.get("detail_sections") or {}),
+                "acceptance_scenarios": list(story.get("acceptance_scenarios") or []),
+                "edge_cases": list(story.get("edge_cases") or []),
             }
         )
 
@@ -1485,6 +1569,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         "coverage_matrix": coverage_matrix_payload,
         "capability_coverage": normalized_capability_coverage,
         "story_index": story_rows,
+        "story_detail_index": story_detail_index,
         "required_story_reviews": required_story_reviews,
         "required_actor_coverage": sorted(required_actors),
         "story_type_catalog": sorted(story_type_catalog),

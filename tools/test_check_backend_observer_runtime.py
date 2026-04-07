@@ -51,6 +51,40 @@ class CheckBackendObserverRuntimeTests(unittest.TestCase):
                 )
                 + "\n",
             )
+            write_file(
+                repo_root / "app/backend/src/my_app/models.py",
+                "\n".join(
+                    [
+                        'class UserStory: __tablename__ = "user_stories"',
+                        'class UserStoryTraceability: __tablename__ = "user_story_traceability"',
+                        'class BusinessRule: __tablename__ = "business_rules"',
+                        'class BusinessRuleExample: __tablename__ = "business_rule_examples"',
+                        'class BusinessRuleStoryLink: __tablename__ = "business_rule_story_links"',
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/reference/admin.yaml",
+                "\n".join(
+                    [
+                        "resources:",
+                        "  UserStory:",
+                        "    endpoint: /api/user_stories",
+                        "  UserStoryTraceability:",
+                        "    endpoint: /api/user_story_traceability",
+                        "  BusinessRule:",
+                        "    endpoint: /api/business_rules",
+                        "  BusinessRuleExample:",
+                        "    endpoint: /api/business_rule_examples",
+                        "  BusinessRuleStoryLink:",
+                        "    endpoint: /api/business_rule_story_links",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "runs/current/artifacts/product/user-stories.md", "# User stories\n")
+            write_file(repo_root / "runs/current/artifacts/product/business-rules.md", "# Business rules\n")
 
             self.assertEqual(audit_backend_observer_runtime(repo_root), [])
 
@@ -92,10 +126,14 @@ class CheckBackendObserverRuntimeTests(unittest.TestCase):
                 )
                 + "\n",
             )
+            write_file(repo_root / "runs/current/artifacts/product/user-stories.md", "# User stories\n")
+            write_file(repo_root / "runs/current/artifacts/product/business-rules.md", "# Business rules\n")
 
             issues = audit_backend_observer_runtime(repo_root)
             self.assertTrue(any("seeded in-memory recovery records" in issue for issue in issues))
             self.assertTrue(any("rewrites the mirrored SQLite file" in issue for issue in issues))
+            self.assertTrue(any("structured product-scope models" in issue for issue in issues))
+            self.assertTrue(any("product-scope resources" in issue for issue in issues))
 
 
 if __name__ == "__main__":

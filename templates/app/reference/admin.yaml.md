@@ -570,3 +570,194 @@ resources:
       reason:
         type: text
         show: true
+
+  UserStory:
+    endpoint: /api/user_stories
+    label: User Stories
+    user_key: story_id
+    menu_order: 140
+    attributes:
+      id:
+        type: text
+        readonly: true
+        hidden: true
+      story_id:
+        type: text
+        list: true
+        show: true
+      title:
+        type: text
+        list: true
+        show: true
+      actor:
+        type: text
+        list: true
+        show: true
+      priority:
+        type: text
+        list: true
+        show: true
+      release:
+        type: text
+        list: true
+        show: true
+      story_type:
+        type: text
+        list: true
+        show: true
+      current_release:
+        type: boolean
+        list: true
+        show: true
+      story_statement:
+        type: text
+        show: true
+      why_priority:
+        type: text
+        show: true
+      independent_test:
+        type: text
+        show: true
+      linked_rule_count:
+        type: number
+        list: true
+        show: true
+      supporting_surface_count:
+        type: number
+        list: true
+        show: true
+
+  UserStoryTraceability:
+    endpoint: /api/user_story_traceability
+    label: User Story Traceability
+    user_key: story_id
+    menu_order: 145
+    attributes:
+      id:
+        type: text
+        readonly: true
+        hidden: true
+      story_id:
+        type: text
+        list: true
+        show: true
+      permission_context:
+        type: text
+        show: true
+      acceptance_owner:
+        type: text
+        list: true
+        show: true
+      preview_required:
+        type: boolean
+        list: true
+        show: true
+      qa_live_required:
+        type: boolean
+        list: true
+        show: true
+      source_path:
+        type: text
+        show: true
+
+  BusinessRule:
+    endpoint: /api/business_rules
+    label: Business Rules
+    user_key: rule_id
+    menu_order: 150
+    attributes:
+      id:
+        type: text
+        readonly: true
+        hidden: true
+      rule_id:
+        type: text
+        list: true
+        show: true
+      title:
+        type: text
+        list: true
+        show: true
+      rule_class:
+        type: text
+        list: true
+        show: true
+      status:
+        type: text
+        list: true
+        show: true
+      plain_language_rule:
+        type: text
+        list: true
+        show: true
+      frontend_mirror:
+        type: text
+        list: true
+        show: true
+      linked_story_count:
+        type: number
+        list: true
+        show: true
+      valid_example_count:
+        type: number
+        show: true
+      invalid_example_count:
+        type: number
+        show: true
+
+  BusinessRuleExample:
+    endpoint: /api/business_rule_examples
+    label: Business Rule Examples
+    user_key: id
+    menu_order: 155
+    attributes:
+      id:
+        type: text
+        readonly: true
+        hidden: true
+      rule_id:
+        type: text
+        list: true
+        show: true
+      example_kind:
+        type: text
+        list: true
+        show: true
+      example_order:
+        type: number
+        list: true
+        show: true
+      example_text:
+        type: text
+        show: true
+
+  BusinessRuleStoryLink:
+    endpoint: /api/business_rule_story_links
+    label: Business Rule Story Links
+    user_key: id
+    menu_order: 160
+    attributes:
+      id:
+        type: text
+        readonly: true
+        hidden: true
+      rule_id:
+        type: text
+        list: true
+        show: true
+      story_id:
+        type: text
+        list: true
+        show: true
+      story_title:
+        type: text
+        list: true
+        show: true
+      story_actor:
+        type: text
+        list: true
+        show: true
+      story_priority:
+        type: text
+        list: true
+        show: true

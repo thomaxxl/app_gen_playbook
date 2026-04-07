@@ -9,7 +9,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 
 metadata = MetaData()
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 schema_state = Table(
     "schema_state",
@@ -339,6 +339,117 @@ baseline_snapshots = Table(
     Column("summary_json", JSON),
 )
 
+user_stories = Table(
+    "user_stories",
+    metadata,
+    Column("id", String(36), primary_key=True),
+    Column("run_id", String(36), nullable=False),
+    Column("story_id", String, nullable=False),
+    Column("title", String, nullable=False),
+    Column("actor", String),
+    Column("priority", String),
+    Column("delivery_class", String),
+    Column("release", String),
+    Column("story_type", String),
+    Column("story_statement", Text),
+    Column("why_priority", Text),
+    Column("independent_test", Text),
+    Column("current_release", Boolean, nullable=False),
+    Column("primary_evidence_mode", String),
+    Column("linked_rule_count", Integer, nullable=False),
+    Column("supporting_surface_count", Integer, nullable=False),
+    Column("acceptance_scenario_count", Integer, nullable=False),
+    Column("edge_case_count", Integer, nullable=False),
+    Column("acceptance_scenarios_json", JSON),
+    Column("edge_cases_json", JSON),
+    Column("detail_sections_json", JSON),
+    Column("source_file_id", String(36)),
+    Column("source_path", String, nullable=False),
+    Column("source_anchor", String),
+)
+
+user_story_traceability = Table(
+    "user_story_traceability",
+    metadata,
+    Column("id", String(36), primary_key=True),
+    Column("run_id", String(36), nullable=False),
+    Column("story_id", String, nullable=False),
+    Column("user_story_id", String(36)),
+    Column("workflow_ids_json", JSON),
+    Column("rule_ids_json", JSON),
+    Column("resource_ids_json", JSON),
+    Column("page_ids_json", JSON),
+    Column("route_ids_json", JSON),
+    Column("supporting_surface_ids_json", JSON),
+    Column("sample_data_ids_json", JSON),
+    Column("acceptance_ids_json", JSON),
+    Column("permission_context", Text),
+    Column("preview_required", Boolean, nullable=False),
+    Column("qa_live_required", Boolean, nullable=False),
+    Column("acceptance_owner", String),
+    Column("source_file_id", String(36)),
+    Column("source_path", String, nullable=False),
+    Column("source_anchor", String),
+)
+
+business_rules = Table(
+    "business_rules",
+    metadata,
+    Column("id", String(36), primary_key=True),
+    Column("run_id", String(36), nullable=False),
+    Column("rule_id", String, nullable=False),
+    Column("title", String, nullable=False),
+    Column("rule_class", String),
+    Column("status", String),
+    Column("plain_language_rule", Text),
+    Column("rationale", Text),
+    Column("source", String),
+    Column("trigger", Text),
+    Column("preconditions", Text),
+    Column("applies_to_json", JSON),
+    Column("valid_outcome", Text),
+    Column("invalid_outcome", Text),
+    Column("user_visible_consequence", Text),
+    Column("backend_enforcement", String),
+    Column("frontend_mirror", String),
+    Column("frontend_mirror_reason", Text),
+    Column("authoritative_error_message", Text),
+    Column("backend_test_required", Boolean, nullable=False),
+    Column("frontend_test_required", Boolean, nullable=False),
+    Column("linked_story_count", Integer, nullable=False),
+    Column("valid_example_count", Integer, nullable=False),
+    Column("invalid_example_count", Integer, nullable=False),
+    Column("source_file_id", String(36)),
+    Column("source_path", String, nullable=False),
+    Column("source_anchor", String),
+)
+
+business_rule_examples = Table(
+    "business_rule_examples",
+    metadata,
+    Column("id", String(36), primary_key=True),
+    Column("run_id", String(36), nullable=False),
+    Column("rule_id", String, nullable=False),
+    Column("business_rule_id", String(36)),
+    Column("example_kind", String, nullable=False),
+    Column("example_order", Integer, nullable=False),
+    Column("example_text", Text, nullable=False),
+)
+
+business_rule_story_links = Table(
+    "business_rule_story_links",
+    metadata,
+    Column("id", String(36), primary_key=True),
+    Column("run_id", String(36), nullable=False),
+    Column("rule_id", String, nullable=False),
+    Column("business_rule_id", String(36)),
+    Column("story_id", String, nullable=False),
+    Column("user_story_id", String(36)),
+    Column("story_title", String),
+    Column("story_actor", String),
+    Column("story_priority", String),
+)
+
 blockers = Table(
     "blockers",
     metadata,
@@ -554,6 +665,11 @@ RUN_SCOPED_TABLES = (
     change_request_role_loads,
     change_request_items,
     baseline_snapshots,
+    user_stories,
+    user_story_traceability,
+    business_rules,
+    business_rule_examples,
+    business_rule_story_links,
     handoff_messages,
     artifacts,
     artifact_packages,
@@ -767,6 +883,11 @@ def write_snapshot(db_url: str, snapshot: dict[str, Any], ensure_schema: bool = 
             insert_rows(conn, change_request_items, snapshot.get("change_request_items", []))
             insert_rows(conn, change_request_role_loads, snapshot.get("change_request_role_loads", []))
             insert_rows(conn, baseline_snapshots, snapshot.get("baseline_snapshots", []))
+            insert_rows(conn, user_stories, snapshot.get("user_stories", []))
+            insert_rows(conn, user_story_traceability, snapshot.get("user_story_traceability", []))
+            insert_rows(conn, business_rules, snapshot.get("business_rules", []))
+            insert_rows(conn, business_rule_examples, snapshot.get("business_rule_examples", []))
+            insert_rows(conn, business_rule_story_links, snapshot.get("business_rule_story_links", []))
             insert_rows(conn, orchestrator_worker_states, snapshot.get("orchestrator_worker_states", []))
             insert_rows(conn, orchestrator_session_states, snapshot.get("orchestrator_session_states", []))
             insert_rows(conn, blockers, snapshot.get("blockers", []))

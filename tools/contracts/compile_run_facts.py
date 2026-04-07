@@ -12,6 +12,7 @@ if __package__ in {None, ""}:
 
 from contracts.load_context import normalized_repo_root
 from execution_scope import active_scope_context
+from validators.coverage.compile_business_rules import compile_business_rules_payload
 from validators.coverage.compile_product_scope import compile_product_scope_payload
 from validators.coverage.extract_frontend_surface_registry import extract_frontend_surface_registry_payload
 from validators.coverage.generate_review_plan import generate_review_plan_payload
@@ -83,6 +84,7 @@ def compile_run_facts(repo_root: Path) -> tuple[dict[str, Any], list[str]]:
     facts_root.mkdir(parents=True, exist_ok=True)
 
     product_scope, product_scope_issues = compile_product_scope_payload(repo_root)
+    business_rules, business_rules_issues = compile_business_rules_payload(repo_root)
     frontend_surface, frontend_surface_issues = extract_frontend_surface_registry_payload(repo_root)
     review_plan, review_plan_issues = generate_review_plan_payload(repo_root)
     evidence_index = _evidence_index_payload(repo_root)
@@ -90,6 +92,7 @@ def compile_run_facts(repo_root: Path) -> tuple[dict[str, Any], list[str]]:
 
     output_paths = [
         _write_fact(facts_root / "product-scope.json", "product_scope", product_scope, product_scope_issues),
+        _write_fact(facts_root / "business-rules.json", "business_rules", business_rules, business_rules_issues),
         _write_fact(facts_root / "frontend-surface.json", "frontend_surface", frontend_surface, frontend_surface_issues),
         _write_fact(facts_root / "review-plan.json", "review_plan", review_plan, review_plan_issues),
         _write_fact(facts_root / "evidence-index.json", "evidence_index", evidence_index, []),
@@ -97,18 +100,19 @@ def compile_run_facts(repo_root: Path) -> tuple[dict[str, Any], list[str]]:
     ]
 
     summary = {
-        "ok": not (product_scope_issues or frontend_surface_issues or review_plan_issues),
+        "ok": not (product_scope_issues or business_rules_issues or frontend_surface_issues or review_plan_issues),
         "output_paths": [str(Path(path).relative_to(repo_root)) for path in output_paths],
-        "issue_count": len(product_scope_issues) + len(frontend_surface_issues) + len(review_plan_issues),
+        "issue_count": len(product_scope_issues) + len(business_rules_issues) + len(frontend_surface_issues) + len(review_plan_issues),
         "facts": {
             "product_scope": product_scope,
+            "business_rules": business_rules,
             "frontend_surface": frontend_surface,
             "review_plan": review_plan,
             "evidence_index": evidence_index,
             "gate_state": gate_state,
         },
     }
-    return summary, product_scope_issues + frontend_surface_issues + review_plan_issues
+    return summary, product_scope_issues + business_rules_issues + frontend_surface_issues + review_plan_issues
 
 
 def main() -> int:

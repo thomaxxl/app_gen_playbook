@@ -7,6 +7,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from validators.coverage.compile_business_rules import compile_business_rules_payload
 from validators.coverage.compile_product_scope import compile_product_scope_payload
 from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
@@ -112,6 +113,124 @@ def seed_scope(repo_root: Path) -> None:
         + "\n",
     )
     write(
+        repo_root / "runs/current/artifacts/product/business-rules.md",
+        "\n".join(
+            [
+                "# Business Rules",
+                "",
+                "## Rule Index",
+                "",
+                "| Rule ID | Title | Class | Frontend Mirror | Status |",
+                "| --- | --- | --- | --- | --- |",
+                "| BR-001 | Requests show the latest approval state | workflow | async | approved |",
+                "| BR-004 | Approvals always capture a reviewer decision | workflow | async | approved |",
+                "| BR-005 | Empty approval queues stay truthful | validation | async | approved |",
+                "| BR-006 | Overview cards use authoritative aggregates | validation | none | approved |",
+                "",
+                "## BR-001 - Requests show the latest approval state",
+                "- Rule ID: BR-001",
+                "- Title: Requests show the latest approval state",
+                "- Status: approved",
+                "- Rule Class: workflow",
+                "- Plain-Language Rule: Request summary surfaces must show the latest approval state returned by the backend.",
+                "- Rationale: Operators and approvers need one truthful status at a glance.",
+                "- Source: product brief",
+                "- Trigger: request list or request detail loads",
+                "- Preconditions: a request exists with workflow state",
+                "- Applies To: Overview, Requests, Approval detail",
+                "- Valid Outcome: request rows show the latest approval state without stale placeholder copy",
+                "- Invalid Outcome: rows show a stale or fabricated approval status",
+                "- User-Visible Consequence: reviewers can trust the approval posture before opening detail",
+                "- Backend Enforcement: required",
+                "- Frontend Mirror: async",
+                "- Frontend Mirror Reason: the UI mirrors the authoritative backend state without inventing status",
+                "- Authoritative Error Message: Approval state is unavailable.",
+                "- Examples:",
+                "  - valid: request row shows pending approval from the backend",
+                "  - invalid: request row still says approved after a rejection",
+                "- Backend Test Required: yes",
+                "- Frontend Test Required: yes",
+                "- Traceability: US-001, US-004, AC-001",
+                "",
+                "## BR-004 - Approvals always capture a reviewer decision",
+                "- Rule ID: BR-004",
+                "- Title: Approvals always capture a reviewer decision",
+                "- Status: approved",
+                "- Rule Class: workflow",
+                "- Plain-Language Rule: Every approval interaction must end with a recorded reviewer decision.",
+                "- Rationale: The approval queue is meaningless without a durable decision.",
+                "- Source: approval contract",
+                "- Trigger: approver submits an approval action",
+                "- Preconditions: the approver has a pending approval",
+                "- Applies To: Approval queue, Approval detail",
+                "- Valid Outcome: the decision is stored and reflected in the queue",
+                "- Invalid Outcome: the queue changes without a persisted decision",
+                "- User-Visible Consequence: approvers can trust that their action changed the run state",
+                "- Backend Enforcement: required",
+                "- Frontend Mirror: async",
+                "- Frontend Mirror Reason: the UI shows the persisted decision outcome",
+                "- Authoritative Error Message: Approval decision could not be saved.",
+                "- Examples:",
+                "  - valid: approving a request moves it out of the pending queue",
+                "  - invalid: the queue clears without any recorded decision",
+                "- Backend Test Required: yes",
+                "- Frontend Test Required: yes",
+                "- Traceability: US-004, AC-004",
+                "",
+                "## BR-005 - Empty approval queues stay truthful",
+                "- Rule ID: BR-005",
+                "- Title: Empty approval queues stay truthful",
+                "- Status: approved",
+                "- Rule Class: validation",
+                "- Plain-Language Rule: Empty approval queues must say there is nothing to review instead of showing fake placeholder work.",
+                "- Rationale: Reviewers must trust empty-state messaging.",
+                "- Source: UX contract",
+                "- Trigger: approval queue has zero matching rows",
+                "- Preconditions: no approvals match the active filter",
+                "- Applies To: Approval queue",
+                "- Valid Outcome: the empty state explains that there are no approvals in scope",
+                "- Invalid Outcome: placeholder approval rows appear",
+                "- User-Visible Consequence: reviewers understand there is no work in scope",
+                "- Backend Enforcement: required",
+                "- Frontend Mirror: async",
+                "- Frontend Mirror Reason: the UI mirrors the authoritative empty result",
+                "- Authoritative Error Message: No approvals are available.",
+                "- Examples:",
+                "  - valid: empty-state copy explains there are no approvals to review",
+                "  - invalid: a fake pending approval row renders",
+                "- Backend Test Required: yes",
+                "- Frontend Test Required: yes",
+                "- Traceability: US-004, AC-005",
+                "",
+                "## BR-006 - Overview cards use authoritative aggregates",
+                "- Rule ID: BR-006",
+                "- Title: Overview cards use authoritative aggregates",
+                "- Status: approved",
+                "- Rule Class: validation",
+                "- Plain-Language Rule: Overview summary cards must come from authoritative aggregates instead of hand-entered placeholders.",
+                "- Rationale: Product overview is a trust surface.",
+                "- Source: product brief",
+                "- Trigger: overview page renders summary cards",
+                "- Preconditions: aggregate counts exist",
+                "- Applies To: Overview",
+                "- Valid Outcome: counts come from authoritative backend aggregates",
+                "- Invalid Outcome: hardcoded counts appear",
+                "- User-Visible Consequence: the overview remains trustworthy",
+                "- Backend Enforcement: required",
+                "- Frontend Mirror: none",
+                "- Frontend Mirror Reason: none",
+                "- Authoritative Error Message: Overview aggregates are unavailable.",
+                "- Examples:",
+                "  - valid: overview cards match live aggregate rows",
+                "  - invalid: overview cards show a stale mock count",
+                "- Backend Test Required: yes",
+                "- Frontend Test Required: no",
+                "- Traceability: US-001, AC-006",
+            ]
+        )
+        + "\n",
+    )
+    write(
         repo_root / "runs/current/artifacts/product/custom-pages.md",
         "\n".join(
             [
@@ -179,6 +298,10 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertEqual(len(payload["current_release_stories"]), 2)
             self.assertEqual(payload["required_actor_coverage"], ["Approver", "Requester"])
             self.assertIn("approval", payload["story_type_catalog"])
+            self.assertEqual(len(payload["story_detail_index"]), 2)
+            us_001 = next(item for item in payload["story_detail_index"] if item["story_id"] == "US-001")
+            self.assertIn("Acceptance Scenarios", us_001["section_keys"])
+            self.assertTrue(us_001["acceptance_scenarios"])
 
     def test_compile_product_scope_ignores_stale_candidate_scope_after_change_promotion(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -263,6 +386,21 @@ class CoverageValidatorTests(unittest.TestCase):
             )
             _, issues = compile_product_scope_payload(repo_root)
             self.assertTrue(any("US-004: higher-depth story block is missing 'Empty-state expectation:'" in issue for issue in issues))
+
+    def test_compile_business_rules_emits_structured_rule_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            payload, issues = compile_business_rules_payload(repo_root)
+            self.assertEqual(issues, [])
+            self.assertEqual(len(payload["rule_index"]), 4)
+            br_001 = next(rule for rule in payload["rules"] if rule["rule_id"] == "BR-001")
+            self.assertEqual(br_001["title"], "Requests show the latest approval state")
+            self.assertEqual(br_001["rule_class"], "workflow")
+            self.assertEqual(br_001["frontend_mirror"], "async")
+            self.assertIn("Overview", br_001["applies_to"])
+            self.assertIn("US-001", br_001["traceability_story_ids"])
+            self.assertTrue(br_001["examples"]["valid"])
 
     def test_compile_product_scope_requires_capability_coverage_table(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from run_dashboard.collector import collect_artifacts, collect_handoffs, collect_run_files, normalize_role
+from run_dashboard.collector import collect_artifacts, collect_handoffs, collect_run_files, collect_run_snapshot, normalize_role
 from run_dashboard.markdown import parse_frontmatter, parse_handoff_message
 
 
@@ -214,6 +214,180 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(normalize_role("deployment"), "devops")
         self.assertEqual(normalize_role("devops"), "devops")
         self.assertEqual(normalize_role("backend"), "backend")
+
+    def test_collect_run_snapshot_includes_product_scope_entities(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root / "runs/current/orchestrator/run-status.json",
+                json.dumps(
+                    {
+                        "run_id": "RUN-TEST",
+                        "mode": "iterative-change-run",
+                        "status": "active",
+                        "change_id": "CR-TEST",
+                        "started_at": "2026-04-07T09:00:00Z",
+                    }
+                )
+                + "\n",
+            )
+            (root / "runs/current/facts").mkdir(parents=True, exist_ok=True)
+            write_file(
+                root / "runs/current/facts/product-scope.json",
+                json.dumps(
+                    {
+                        "ok": True,
+                        "issues": [],
+                        "product_scope": {
+                            "source_paths": [
+                                "runs/current/artifacts/product/user-stories.md",
+                                "runs/current/artifacts/product/traceability-matrix.md",
+                            ],
+                            "story_index": [
+                                {
+                                    "story_id": "US-001",
+                                    "title": "Current run orientation",
+                                    "actor": "Operator",
+                                    "priority": "P1",
+                                    "delivery_class": "must",
+                                    "release": "R1",
+                                    "story_type": "reporting-search",
+                                    "story_statement": "As an operator, I understand the current run quickly.",
+                                    "why_priority": "It is the first view.",
+                                    "independent_test": "Open overview and confirm orientation.",
+                                    "current_release": True,
+                                    "acceptance_scenario_count": 1,
+                                    "edge_case_count": 1,
+                                }
+                            ],
+                            "story_detail_index": [
+                                {
+                                    "story_id": "US-001",
+                                    "source_anchor": "US-001",
+                                    "section_keys": ["Acceptance Scenarios", "Edge Cases"],
+                                    "acceptance_scenarios": ["Given the run is active When the user opens overview Then the current run is visible."],
+                                    "edge_cases": ["No current run exists."],
+                                    "detail_sections": {
+                                        "Acceptance Scenarios": "Given ...",
+                                        "Edge Cases": "- none",
+                                    },
+                                }
+                            ],
+                            "traceability_rows": [
+                                {
+                                    "story_id": "US-001",
+                                    "workflow_ids": ["WF-001"],
+                                    "rule_ids": ["BR-001"],
+                                    "resource_ids": ["Run"],
+                                    "page_ids": ["PAGE-001"],
+                                    "route_ids": ["N001"],
+                                    "sample_data_ids": ["SD-001"],
+                                    "acceptance_ids": ["AC-001"],
+                                    "permission_context": "operator read access",
+                                    "preview_required": True,
+                                    "qa_live_required": True,
+                                    "acceptance_owner": "product_manager",
+                                    "primary_evidence_mode": "ui",
+                                }
+                            ],
+                        },
+                    }
+                )
+                + "\n",
+            )
+            write_file(
+                root / "runs/current/facts/business-rules.json",
+                json.dumps(
+                    {
+                        "ok": True,
+                        "issues": [],
+                        "business_rules": {
+                            "source_paths": [
+                                "runs/current/artifacts/product/business-rules.md",
+                                "runs/current/artifacts/product/traceability-matrix.md",
+                            ],
+                            "rules": [
+                                {
+                                    "rule_id": "BR-001",
+                                    "title": "Current run pinned by default",
+                                    "rule_class": "presentation",
+                                    "status": "approved",
+                                    "plain_language_rule": "The dashboard opens on the current run.",
+                                    "rationale": "Current-run first orientation.",
+                                    "source": "brief",
+                                    "trigger": "overview render",
+                                    "preconditions": "current run exists",
+                                    "applies_to": ["Overview"],
+                                    "valid_outcome": "Current run is visible.",
+                                    "invalid_outcome": "History opens first.",
+                                    "user_visible_consequence": "Operator is oriented immediately.",
+                                    "backend_enforcement": "required",
+                                    "frontend_mirror": "async",
+                                    "frontend_mirror_reason": "UI mirrors the observer data.",
+                                    "authoritative_error_message": "Current run context is unavailable.",
+                                    "examples": {"valid": ["Current run card appears first."], "invalid": ["History is shown by default."]},
+                                    "backend_test_required": True,
+                                    "frontend_test_required": True,
+                                    "traceability_story_ids": ["US-001"],
+                                    "source_anchor": "BR-001",
+                                }
+                            ],
+                            "rule_index": [
+                                {
+                                    "rule_id": "BR-001",
+                                    "title": "Current run pinned by default",
+                                    "rule_class": "presentation",
+                                    "frontend_mirror": "async",
+                                    "status": "approved",
+                                    "source_anchor": "BR-001",
+                                }
+                            ],
+                        },
+                    }
+                )
+                + "\n",
+            )
+            for relpath in (
+                "runs/current/artifacts/product/user-stories.md",
+                "runs/current/artifacts/product/traceability-matrix.md",
+                "runs/current/artifacts/product/business-rules.md",
+                "runs/current/input.md",
+            ):
+                write_file(root / relpath, f"# {Path(relpath).name}\n")
+
+            def fake_run_tool_json(_root: Path, tool_relative_path: str, _args: list[str]) -> dict[str, object]:
+                if tool_relative_path == "tools/status_report.py":
+                    return {
+                        "generated_at": "2026-04-07T09:00:00Z",
+                        "current_phase": {"key": "phase-1-product-definition", "label": "Product Definition"},
+                        "current_phase_code": "phase-1-product-definition",
+                        "overall_progress": 12.5,
+                        "roles": {},
+                        "artifact_areas": {},
+                        "artifacts": {},
+                        "completion": {"complete": False, "blockers": []},
+                        "phases": {},
+                        "phase5_ready": False,
+                        "phase5_blockers": [],
+                        "evidence": {},
+                        "liveness": {},
+                    }
+                if tool_relative_path == "tools/check_completion.py":
+                    return {"complete": False, "blockers": []}
+                raise AssertionError(tool_relative_path)
+
+            from unittest.mock import patch
+
+            with patch("run_dashboard.collector.run_tool_json", side_effect=fake_run_tool_json):
+                snapshot = collect_run_snapshot(root, "app_gen_playbook", "App Gen Playbook")
+
+            self.assertEqual(len(snapshot["user_stories"]), 1)
+            self.assertEqual(snapshot["user_stories"][0]["story_id"], "US-001")
+            self.assertEqual(snapshot["user_story_traceability"][0]["rule_ids_json"], ["BR-001"])
+            self.assertEqual(len(snapshot["business_rules"]), 1)
+            self.assertEqual(snapshot["business_rules"][0]["rule_id"], "BR-001")
+            self.assertEqual(snapshot["business_rule_examples"][0]["example_kind"], "valid")
+            self.assertEqual(snapshot["business_rule_story_links"][0]["story_id"], "US-001")
 
 
 if __name__ == "__main__":
