@@ -226,7 +226,8 @@ For authoritative iteration on an existing app:
 
 That iteration lane now uses:
 
-- the portable accepted baseline under `app/docs/playbook-baseline/current/`
+- the portable accepted baseline under
+  `runs/current/exports/playbook-baseline/current/`
 - the live change workspace under `runs/current/changes/<change_id>/`
 - promotion into the accepted baseline only at change acceptance
 

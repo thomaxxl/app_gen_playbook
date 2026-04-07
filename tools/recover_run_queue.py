@@ -103,16 +103,6 @@ APP_IMPLEMENTATION_NEEDS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
         ),
     ),
     (
-        "product_manager",
-        "app/BUSINESS_RULES.md",
-        "missing",
-        (
-            "playbook/process/phases/phase-5-parallel-implementation.md",
-            "playbook/process/playbook-execution-outputs.md",
-            "templates/app/project/BUSINESS_RULES.app.md",
-        ),
-    ),
-    (
         "deployment",
         "app/.gitignore",
         "missing",
@@ -668,6 +658,13 @@ def collect_completion_blocker_needs(repo_root: Path) -> list[ArtifactNeed]:
         relative_path = str(blocker.get("path", "")).strip()
         reason = str(blocker.get("reason", "")).strip()
         if role not in ROLE_LABELS or not phase or not relative_path or not reason:
+            continue
+        if relative_path in {
+            "app/BUSINESS_RULES.md",
+            "app/docs/playbook-baseline/current/manifest.yaml",
+        }:
+            # App-local exports are optional delivery artifacts, not generic
+            # playbook recovery targets.
             continue
 
         needs.append(

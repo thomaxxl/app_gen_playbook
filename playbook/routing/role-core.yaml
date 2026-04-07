@@ -20,9 +20,6 @@ product_manager:
     - runs/current/changes/*/role-loads/product_manager.yaml
     - runs/current/changes/*/candidate/artifacts/product/**
     - runs/current/changes/*/promotion.yaml
-    - app/BUSINESS_RULES.md
-    - app/docs/playbook-baseline/current/**
-    - app/docs/change-history/**
   cannot_write:
     - runs/current/artifacts/architecture/**
     - runs/current/artifacts/ux/**

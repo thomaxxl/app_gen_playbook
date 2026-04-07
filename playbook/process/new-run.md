@@ -60,7 +60,6 @@ Required steps:
     - `vite.config.ts`
     - the TypeScript/Vite shell and shared-runtime baseline required for
       frontend bootstrap
-    - `BUSINESS_RULES.md` when available
     Docker/container delivery files may also be seeded from
     `../../templates/app/deployment/` when that lane is in scope:
     - `Dockerfile`
@@ -69,8 +68,9 @@ Required steps:
     run-owned `runtime-bom.md` before any install step
 19. treat local `../../app/` as implementation workspace, not as the
     canonical brief source
-20. when the Product business-rules catalog becomes available, seed local
-    `../../app/BUSINESS_RULES.md` from it and keep that copy synchronized
+20. if the product brief explicitly requires an app-local exported business
+    rules catalog or baseline bundle, create it through a dedicated export
+    step instead of treating it as default generated-app structure
 
 Rules:
 

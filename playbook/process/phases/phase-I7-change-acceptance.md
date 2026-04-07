@@ -15,6 +15,8 @@ changed artifacts to the new current state.
   review-facing artifacts and reference screenshots
 - approved `runs/current/evidence/ceo-phase-reviews/phase-I7-change-acceptance.approved.md`
 - promotion record under `runs/current/changes/<change_id>/promotion.yaml`
-- refreshed portable baseline under `app/docs/playbook-baseline/current/`
-- updated change history under `app/docs/change-history/`
+- refreshed portable baseline under
+  `runs/current/exports/playbook-baseline/current/`
+- optional generated-app export bundle refreshed only when the current brief
+  explicitly requests it
 - empty core inboxes

@@ -22,5 +22,5 @@ Run baseline alignment when:
 - baseline evidence under `runs/current/evidence/baseline/`
 - a short note in `runs/current/remarks.md`
 - restored `runs/current/artifacts/**` from
-  `app/docs/playbook-baseline/current/` when the portable baseline is the only
-  trustworthy accepted snapshot
+  `runs/current/exports/playbook-baseline/current/` when the portable baseline
+  export is the only trustworthy accepted snapshot

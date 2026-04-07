@@ -69,7 +69,6 @@ Rules:
 - implementation work for a generated app MUST stay inside local gitignored
   `app/`
 - `app/` subtree ownership is explicit:
-  - `app/BUSINESS_RULES.md` -> Product Manager
   - `app/README.md` -> Architect
   - `app/frontend/**` -> Frontend
   - `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml` -> Backend
@@ -79,10 +78,9 @@ Rules:
 - during parallel frontend/backend implementation, no role MAY treat a shared
   `app/` file as implicitly co-owned; ownership MUST remain single-role or be
   handed back to Architect for mediation
-- `app/BUSINESS_RULES.md` is a generated-app snapshot of the run-owned
-  Product artifact, not a second source of truth
-- `app/docs/playbook-baseline/current/` is the portable accepted baseline
-  export for future iteration, not a third editable design workspace
+- any app-local export of playbook-owned artifacts is optional and MUST be
+  requested explicitly by the current brief or delivery mode; it is not part
+  of the default role-core writable surface
 - implementation work MUST NOT patch the playbook contract files while
   creating the app unless the user explicitly requests a playbook update
 - when the task updates the playbook itself, those playbook changes MUST be

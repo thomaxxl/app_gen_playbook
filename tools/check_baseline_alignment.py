@@ -22,10 +22,23 @@ def main() -> int:
         blockers.append("runs/current/ does not exist")
 
     run_artifacts_product = repo_root / "runs" / "current" / "artifacts" / "product"
-    app_baseline_manifest = repo_root / "app" / "docs" / "playbook-baseline" / "current" / "manifest.yaml"
-    if not run_artifacts_product.exists() and not app_baseline_manifest.exists():
+    export_baseline_manifest = (
+        repo_root
+        / "runs"
+        / "current"
+        / "exports"
+        / "playbook-baseline"
+        / "current"
+        / "manifest.yaml"
+    )
+    legacy_app_baseline_manifest = repo_root / "app" / "docs" / "playbook-baseline" / "current" / "manifest.yaml"
+    if (
+        not run_artifacts_product.exists()
+        and not export_baseline_manifest.exists()
+        and not legacy_app_baseline_manifest.exists()
+    ):
         blockers.append(
-            "no accepted design baseline available under runs/current/artifacts/product/ or app/docs/playbook-baseline/current/"
+            "no accepted design baseline available under runs/current/artifacts/product/, runs/current/exports/playbook-baseline/current/, or legacy app/docs/playbook-baseline/current/"
         )
 
     if blockers:

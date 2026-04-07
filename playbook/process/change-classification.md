@@ -17,7 +17,9 @@ evolve safely, the Product Manager and Architect SHOULD escalate to
 
 If the current accepted baseline cannot be proven from `runs/current/artifacts/`
 alone, the change lane SHOULD restore or verify it from
-`app/docs/playbook-baseline/current/` before proceeding.
+`runs/current/exports/playbook-baseline/current/` before proceeding.
+Legacy generated-app exports MAY be imported as compatibility input when that
+repository-local export is missing.
 
 ## Required output
 

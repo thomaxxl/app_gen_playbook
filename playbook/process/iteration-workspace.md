@@ -13,12 +13,16 @@ Iteration works against three layers:
 - `app/`
   the implementation tree being modified
 
-The generated app MUST also carry a portable accepted baseline under:
+The canonical portable accepted-baseline export lives under:
 
-- `app/docs/playbook-baseline/current/`
+- `runs/current/exports/playbook-baseline/current/`
 
-That portable baseline is the recovery source when `runs/current/artifacts/**`
-is missing, stale, or intentionally historical.
+That repository-local export is the recovery source when
+`runs/current/artifacts/**` is missing, stale, or intentionally historical.
+
+Legacy generated-app exports under `app/docs/playbook-baseline/current/` MAY be
+imported as compatibility input, but they are not the canonical model for new
+playbook policy.
 
 ## Change workspace layout
 
@@ -82,6 +86,7 @@ Those manifests name:
 At successful Phase I7:
 
 - approved candidate artifacts are promoted into `runs/current/artifacts/**`
-- `app/docs/playbook-baseline/current/**` is refreshed
-- `app/docs/change-history/` gains a new accepted change note
+- `runs/current/exports/playbook-baseline/current/**` is refreshed
 - `runs/current/changes/<change_id>/promotion.yaml` records the promotion
+- any generated-app baseline/history export is refreshed only when the current
+  brief explicitly requests that export

@@ -13,19 +13,15 @@ reading the rest of the guide first.
 ````md
 # My App
 
-This project is a SAFRS + FastAPI + React-Admin run-observer application
-generated from the SAFRS app-development playbook.
-
-It is intended to read current-run status from the mirrored
-`run_dashboard.sqlite3` data set in read-only mode.
+This project is a SAFRS + FastAPI + React-Admin application generated from the
+SAFRS app-development playbook.
 
 ## Structure
 
 - `.gitignore`: standalone-repo ignore policy for the generated app
-- `backend/`: FastAPI + SQLAlchemy + SAFRS over the mirrored run-dashboard DB
+- `backend/`: FastAPI + SQLAlchemy + SAFRS application backend
 - `frontend/`: Vite + React-Admin + `safrs-jsonapi-client`
-- `reference/admin.yaml`: observer API contract
-- `BUSINESS_RULES.md`: generated-app copy of the approved business-rules catalog
+- `reference/admin.yaml`: admin/API contract
 - `install.sh`: dependency bootstrap helper
 - `run.sh`: local development launcher for backend and frontend together
 - `.runtime.local.env`: optional local-only runtime and dependency-path
@@ -187,7 +183,9 @@ Notes:
 - Prefer documenting the active `DEPENDENCY_PROVISIONING_MODE` explicitly.
 - Make it explicit that `reuse-preferred` is the preferred reuse lane and that
   `preprovisioned-reuse-only` is only a legacy compatibility alias.
-- Document `BUSINESS_RULES.md` as the app-local business-rules snapshot.
+- If the current product explicitly exports an app-local business-rules
+  catalog or other delivery docs, document those files as optional delivery
+  artifacts rather than as universal generated-app requirements.
 - Document the canonical `/app/`, `/docs`, and `/ui/admin/admin.yaml`
   URLs explicitly.
 - Document `/app/#/Home` as the required in-admin entry page. Treat

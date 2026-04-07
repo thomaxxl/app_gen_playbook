@@ -24,6 +24,10 @@ def utc_iso() -> str:
 
 
 def baseline_root(repo_root: Path) -> Path:
+    return repo_root / "runs" / "current" / "exports" / "playbook-baseline" / "current"
+
+
+def legacy_baseline_root(repo_root: Path) -> Path:
     return repo_root / "app" / "docs" / "playbook-baseline" / "current"
 
 
@@ -89,6 +93,17 @@ def export_baseline_from_current(repo_root: Path) -> bool:
     return True
 
 
+def import_legacy_baseline(repo_root: Path) -> bool:
+    legacy_root = legacy_baseline_root(repo_root)
+    legacy_manifest = legacy_root / "manifest.yaml"
+    if not legacy_manifest.exists():
+        return False
+
+    target_root = baseline_root(repo_root)
+    copy_tree(legacy_root, target_root)
+    return True
+
+
 def hydrate_current_from_baseline(repo_root: Path) -> bool:
     source_root = baseline_artifacts_root(repo_root)
     if not source_root.exists():
@@ -105,18 +120,17 @@ def hydrate_current_from_baseline(repo_root: Path) -> bool:
     return changed
 
 
-def ensure_change_history(repo_root: Path) -> None:
-    (repo_root / "app" / "docs" / "change-history").mkdir(parents=True, exist_ok=True)
-
-
 def prepare_iteration_workspace(repo_root: Path) -> dict[str, object]:
-    ensure_change_history(repo_root)
     manifest_exists = (baseline_root(repo_root) / "manifest.yaml").exists()
     exported = False
+    imported_legacy = False
     hydrated = False
 
     if not manifest_exists:
         exported = export_baseline_from_current(repo_root)
+        manifest_exists = (baseline_root(repo_root) / "manifest.yaml").exists()
+    if not manifest_exists:
+        imported_legacy = import_legacy_baseline(repo_root)
         manifest_exists = (baseline_root(repo_root) / "manifest.yaml").exists()
 
     if manifest_exists:
@@ -125,6 +139,7 @@ def prepare_iteration_workspace(repo_root: Path) -> dict[str, object]:
     return {
         "baseline_manifest": (baseline_root(repo_root) / "manifest.yaml").as_posix() if manifest_exists else "",
         "exported_baseline": exported,
+        "imported_legacy_baseline": imported_legacy,
         "hydrated_current_artifacts": hydrated,
     }
 

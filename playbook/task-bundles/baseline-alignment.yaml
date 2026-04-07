@@ -11,7 +11,7 @@ required_artifacts:
   - runs/current/artifacts/architecture/capability-profile.md
   - runs/current/artifacts/architecture/load-plan.md
 reference_only:
-  - app/docs/playbook-baseline/current/manifest.yaml
+  - runs/current/exports/playbook-baseline/current/manifest.yaml
 writable_targets:
   - runs/current/artifacts/architecture/**
   - runs/current/evidence/baseline/**

@@ -96,9 +96,6 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/changes/*/role-loads/product_manager.yaml",
         "runs/current/changes/*/candidate/artifacts/product/**",
         "runs/current/changes/*/promotion.yaml",
-        "app/BUSINESS_RULES.md",
-        "app/docs/playbook-baseline/current/**",
-        "app/docs/change-history/**",
     ),
     "architect": (
         "runs/current/remarks.md",

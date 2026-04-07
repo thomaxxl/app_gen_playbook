@@ -102,9 +102,6 @@ by the load plan. Disabled or undecided feature packs MUST NOT be loaded.
 - `../../runs/current/changes/*/candidate/artifacts/product/**`
 - `../../runs/current/changes/*/promotion.yaml`
 - `../../runs/current/role-state/product_manager/**`
-- `../../app/BUSINESS_RULES.md`
-- `../../app/docs/playbook-baseline/current/**`
-- `../../app/docs/change-history/**`
 
 ## Forbidden writes
 
@@ -241,8 +238,8 @@ The Product Manager MUST:
 - record every non-default business rule with a stable rule ID
 - define trigger, preconditions, valid outcome, invalid outcome, and examples
 - choose a `Frontend Mirror` mode for each rule
-- keep the generated-app copy at `../../app/BUSINESS_RULES.md` synchronized
-  before delivery when local `../../app/` exists
+- keep any explicitly requested exported business-rules copy synchronized
+  before delivery when the current brief or delivery flow asks for that export
 
 ## Handoff targets
 

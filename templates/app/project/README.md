@@ -16,12 +16,16 @@ These snippets target files under:
 Copy these together:
 
 - `.gitignore.md`
-- `BUSINESS_RULES.app.md`
 - `install.sh.md`
 - `run.sh.md`
 - `README.app.md`
 - `../deployment/Dockerfile.md`
 - `../deployment/docker-compose.yml.md`
+
+Optional export snippets:
+
+- `BUSINESS_RULES.app.md` only when the current product or delivery flow
+  explicitly requires an app-local exported business-rules catalog
 
 `Dockerfile.md` and `docker-compose.yml.md` are required generated-app root
 files. They are not optional packaging extras.

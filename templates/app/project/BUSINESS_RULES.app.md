@@ -5,20 +5,22 @@ See also:
 - [../../../specs/product/business-rules.md](../../../specs/product/business-rules.md)
 - [../../../runs/current/artifacts/product/business-rules.md](../../../runs/current/artifacts/product/business-rules.md)
 
-This file is the generated-app copy of the current run's business-rules
-catalog.
+This file is an optional generated-app export of the current run's
+business-rules catalog.
 
 The authoritative human-readable source during generation remains:
 
 - `runs/current/artifacts/product/business-rules.md`
 
-The generated app MUST also contain a synchronized copy at:
+If the current product brief or delivery flow explicitly requests an app-local
+business-rules export, the generated app MAY contain a synchronized copy at:
 
 - `app/BUSINESS_RULES.md`
 
-## Required content rule
+## Export content rule
 
-`app/BUSINESS_RULES.md` MUST be a near-verbatim copy of the approved
+When this export is requested, `app/BUSINESS_RULES.md` SHOULD be a near-verbatim
+copy of the approved
 run-owned business-rules catalog for the app snapshot.
 
 The generated-app copy MAY add a short header note such as:
@@ -35,8 +37,9 @@ IDs, mirror modes, examples, and decision tables from the run-owned source.
 
 ## Sync rule
 
-If `runs/current/artifacts/product/business-rules.md` changes during the run,
-`app/BUSINESS_RULES.md` MUST be refreshed before delivery.
+If this export is enabled and
+`runs/current/artifacts/product/business-rules.md` changes during the run,
+`app/BUSINESS_RULES.md` SHOULD be refreshed before delivery.
 
 `app/BUSINESS_RULES.md` is a generated-app snapshot, not a second source of
 truth.

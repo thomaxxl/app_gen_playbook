@@ -154,8 +154,6 @@ See:
 When a run is complete:
 
 - local `../../app/` MUST contain the generated app
-- local `../../app/BUSINESS_RULES.md` MUST contain the generated-app snapshot
-  of `../../runs/current/artifacts/product/business-rules.md`
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
 - `../../runs/current/remarks.md` SHOULD preserve only the compact high-signal
@@ -172,11 +170,15 @@ When a run is complete:
   final diagnosis instead of looping
 - `../../runs/current/artifacts/` SHOULD contain the accepted run-owned
   product, architecture, UX, backend-design, and optional DevOps artifacts
+- `../../runs/current/exports/playbook-baseline/current/` SHOULD preserve the
+  current portable accepted-baseline export for later iteration bootstrap when
+  the iteration lane is in use
 - `../../runs/current/artifacts/architecture/capability-profile.md` SHOULD
   show the final enabled/disabled capability decisions
 - `../../runs/current/artifacts/architecture/load-plan.md` SHOULD preserve the
   final role-scoped load set used during the run
-- local `../../app/docs/` MAY contain promoted accepted copies of those artifacts
+- local `../../app/` MAY contain product-specific exported documentation or
+  baseline bundles only when an explicit delivery/export step requested them
 - `../../runs/current/evidence/` SHOULD contain verification summaries
 - all core-agent inboxes under `../../runs/current/role-state/` MUST be empty
 - the dormant `ceo` lane SHOULD normally remain empty and MAY contain work

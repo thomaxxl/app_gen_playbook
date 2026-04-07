@@ -18,8 +18,9 @@ Rules:
 - `specs/product/`, `specs/architecture/`, `specs/ux/`, and
   `specs/backend-design/` are generic artifact templates.
 - Run-specific artifacts MUST be written under `../runs/current/artifacts/`.
-- `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
-  approved business-rules catalog.
-- Accepted artifacts MAY later be copied into local `../app/docs/`.
+- `../runs/current/exports/` is the repository-local home for optional
+  portable exports such as accepted-baseline bundles.
+- Any export into local `../app/` is optional and product-specific, not a
+  durable spec-layer rule.
 - `../examples/` is a preserved runnable example-app library, not a second
   spec source.

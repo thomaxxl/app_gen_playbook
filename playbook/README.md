@@ -26,11 +26,13 @@ Path rule:
   new full run and MUST NOT be treated as committed playbook source
 - optional DevOps run-owned artifacts live under
   `../runs/current/artifacts/devops/` only when packaging is in scope
-- `../app/BUSINESS_RULES.md` MUST contain the generated-app copy of the
-  approved business-rules catalog
-- accepted artifacts MAY later be copied into local `../app/docs/`
-- authoritative iteration baselines SHOULD be exported under
-  `../app/docs/playbook-baseline/current/`
+- approved business rules remain canonical under
+  `../runs/current/artifacts/product/business-rules.md`
+- accepted artifacts MAY later be copied into local `../app/` only when the
+  specific product brief or delivery flow explicitly requests an app-local
+  export
+- authoritative portable iteration baselines SHOULD be exported under
+  `../runs/current/exports/playbook-baseline/current/`
 - local generated-app implementation output lives under gitignored `../app/`
 - a dormant CEO recovery role MAY intervene only when the orchestrator detects
   a stalled run or when the operator explicitly steers execution through the

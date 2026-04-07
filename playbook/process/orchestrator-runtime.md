@@ -873,7 +873,6 @@ Parallel implementation is allowed only because ownership is narrowed.
 The orchestrator and validator MUST treat these `app/` ownership lanes as the
 baseline:
 
-- Product Manager -> `app/BUSINESS_RULES.md`
 - Architect -> `app/README.md`
 - Frontend -> `app/frontend/**`
 - Backend -> `app/backend/**`, `app/rules/**`, `app/reference/admin.yaml`

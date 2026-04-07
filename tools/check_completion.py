@@ -34,7 +34,6 @@ CORE_DEVOPS_ARTIFACTS = {"README.md", "execution-prereqs.md"}
 REQUIRED_APP_OUTPUTS = (
     ("app/.gitignore", "deployment"),
     ("app/README.md", "architect"),
-    ("app/BUSINESS_RULES.md", "product_manager"),
     ("app/install.sh", "deployment"),
     ("app/run.sh", "deployment"),
     ("app/reference/admin.yaml", "backend"),

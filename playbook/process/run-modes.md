@@ -60,16 +60,16 @@ Behavior:
 - iteration startup MUST clear stale completion markers such as
   `runs/current/APP_DONE` and prior delivery-approval artifacts so the run is
   visibly reopened
-- `app/docs/playbook-baseline/current/` is the portable accepted baseline for
-  later iteration bootstrap
+- `runs/current/exports/playbook-baseline/current/` is the portable accepted
+  baseline export for later iteration bootstrap
 - candidate design changes live under `runs/current/changes/<change_id>/candidate/artifacts/**`
 - the accepted baseline does not change until Phase I7 promotion
 - matching the current app to the accepted baseline does NOT make the change a
   no-op when the request is explicitly challenging that accepted baseline
-- Product Manager owns the first change-run decision. The status surface MUST
-  reopen at Phase I1/I2 and MUST NOT show the app as complete until Product
-  Manager has classified the iteration prompt and the active change packet is
-  accepted
+- Product Manager owns the first change-run decision. The run MUST re-enter
+  the change-run phase sequence at Phase I1/I2 and MUST NOT be treated as
+  complete until Product Manager has classified the iteration prompt and the
+  active change packet is accepted
 - the active packet MUST record `scope_profile`, `active_roles`,
   `active_phases`, and the active policy slice so partial frontend/backend/
   rules/devops execution is explicit
@@ -91,4 +91,5 @@ Behavior:
 - `runs/current/` MAY remain historical or neutral
 - this mode MUST NOT be used to pretend the authoritative design state was
   updated
-- `app/docs/playbook-baseline/current/` remains the last accepted baseline
+- any portable accepted baseline remains the last accepted repository-local
+  export unless an explicit export step refreshes it

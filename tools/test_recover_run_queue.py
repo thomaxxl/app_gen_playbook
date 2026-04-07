@@ -81,7 +81,6 @@ def ensure_role_dirs(repo_root: Path, role: str) -> None:
 def write_app_baseline(repo_root: Path) -> None:
     for relative in (
         "app/README.md",
-        "app/BUSINESS_RULES.md",
         "app/.gitignore",
         "app/install.sh",
         "app/run.sh",
@@ -670,33 +669,25 @@ class RecoverRunQueueTests(unittest.TestCase):
             targets = select_recovery_targets(repo_root)
             self.assertEqual(set(targets), {"frontend", "backend"})
 
-    def test_requeues_missing_business_rules_output_for_product_manager(self) -> None:
+    def test_collect_completion_blocker_needs_skips_optional_business_rules_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
-            for role in ("product_manager", "architect", "frontend", "backend", "ceo", "deployment"):
-                ensure_role_dirs(repo_root, role)
-
-            write_app_baseline(repo_root)
-            write_required_phase6_evidence(repo_root)
-            (repo_root / "app" / "BUSINESS_RULES.md").unlink()
-
             with unittest.mock.patch(
-                "recover_run_queue.collect_completion_blocker_needs",
+                "recover_run_queue.collect_blockers",
                 return_value=[
-                    ArtifactNeed(
-                        role="product_manager",
-                        phase="phase-5-parallel-implementation",
-                        path=repo_root / "app/BUSINESS_RULES.md",
-                        reason="missing",
-                    )
+                    {
+                        "kind": "missing-generated-app-output",
+                        "owner": "product_manager",
+                        "phase": "phase-5-parallel-implementation",
+                        "path": "app/BUSINESS_RULES.md",
+                        "reason": "optional export omitted",
+                    }
                 ],
             ):
-                targets = select_recovery_targets(repo_root)
+                needs = collect_completion_blocker_needs(repo_root)
 
-            self.assertEqual(set(targets), {"product_manager"})
-            product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
-            self.assertEqual(product_paths, {"app/BUSINESS_RULES.md"})
+            self.assertEqual(needs, [])
 
     def test_requeues_architect_for_ui_preview_review_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -37,13 +37,38 @@ class PrepareIterationWorkspaceTests(unittest.TestCase):
 
             self.assertTrue(payload["exported_baseline"])
             self.assertTrue(
-                (repo_root / "app/docs/playbook-baseline/current/manifest.yaml").exists()
+                (repo_root / "runs/current/exports/playbook-baseline/current/manifest.yaml").exists()
             )
             self.assertTrue(
-                (repo_root / "app/docs/playbook-baseline/current/artifacts/product/brief.md").exists()
+                (repo_root / "runs/current/exports/playbook-baseline/current/artifacts/product/brief.md").exists()
             )
 
     def test_hydrates_missing_current_artifacts_from_portable_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/exports/playbook-baseline/current/manifest.yaml",
+                "baseline_id: REL-0001\naccepted_at: 2026-03-16T00:00:00Z\nsource_run_mode: new-full-run\nartifacts_hash:\n",
+            )
+            write_file(
+                repo_root / "runs/current/exports/playbook-baseline/current/artifacts/product/brief.md",
+                "owner: product_manager\nstatus: approved\n",
+            )
+
+            script_path = Path(__file__).resolve().parent / "prepare_iteration_workspace.py"
+            result = subprocess.run(
+                ["python3", str(script_path), "--repo-root", str(repo_root)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            payload = json.loads(result.stdout)
+
+            self.assertTrue(payload["hydrated_current_artifacts"])
+            self.assertTrue((repo_root / "runs/current/artifacts/product/brief.md").exists())
+
+    def test_imports_legacy_app_export_into_repo_local_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
@@ -65,8 +90,11 @@ class PrepareIterationWorkspaceTests(unittest.TestCase):
             )
             payload = json.loads(result.stdout)
 
-            self.assertTrue(payload["hydrated_current_artifacts"])
+            self.assertTrue(payload["imported_legacy_baseline"])
             self.assertTrue((repo_root / "runs/current/artifacts/product/brief.md").exists())
+            self.assertTrue(
+                (repo_root / "runs/current/exports/playbook-baseline/current/manifest.yaml").exists()
+            )
 
 
 if __name__ == "__main__":

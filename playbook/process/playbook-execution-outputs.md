@@ -48,9 +48,9 @@ mode.
 In app-only maintenance mode:
 
 - local `../../app/` is the only implementation tree that MAY be modified
-- local `../../app/BUSINESS_RULES.md` MUST remain aligned with the current app
-  snapshot if business rules are changed
 - local `../../app/REMARKS.md` MAY be updated to record app-local findings
+- any app-local exported playbook artifacts MAY be updated only when the task
+  explicitly includes that export
 - `../../runs/current/` MAY remain neutral or historical
 - `../../examples/` MUST remain unchanged unless the task explicitly asks to
   archive, refresh, or add preserved example apps
@@ -66,19 +66,16 @@ and run scripts MUST be created under:
 
 - local gitignored `../../app/`
 
-Accepted artifact copies MAY later be placed under:
+Accepted artifact copies or delivery-oriented documentation MAY later be
+placed under local `../../app/` only when the product brief explicitly asks
+for them.
 
-- local `../../app/docs/`
-
-Accepted baseline export for future change runs MUST live under:
-
-- local `../../app/docs/playbook-baseline/current/`
-- local `../../app/docs/change-history/`
+- canonical accepted baseline export for future change runs MUST live under:
+  - `../../runs/current/exports/playbook-baseline/current/`
 
 The generated app MUST also contain:
 
 - local `../../app/.gitignore`
-- local `../../app/BUSINESS_RULES.md`
 - local `../../app/install.sh`
 - local `../../app/run.sh`
 
@@ -87,23 +84,14 @@ The generated app MAY also contain optional Docker/container delivery files:
 - local `../../app/Dockerfile`
 - local `../../app/docker-compose.yml`
 
-For a delivered app that supports authoritative iteration, the generated app
-SHOULD also contain:
+The repository-local export exists so the playbook can:
 
-- local `../../app/docs/playbook-baseline/current/manifest.yaml`
-- local `../../app/docs/playbook-baseline/current/artifacts/**`
-- local `../../app/docs/change-history/`
-
-That file is the generated-app snapshot of the approved
-`runs/current/artifacts/product/business-rules.md` catalog.
-
-Those files exist so the generated app can:
-
-- become its own repository without extra ignore-policy work
-- run through the documented same-origin container path without a second
-  packaging pass
 - support future `iterative-change-run` work even when the original
   `runs/current/` snapshot is missing or stale
+
+If a generated app needs a portable documentation or baseline bundle for a
+specific delivery mode, that bundle MUST be treated as an explicit export
+artifact, not as the core playbook source of truth.
 
 Implementation work MUST NOT patch the static playbook source while building
 the app unless the task explicitly asks for a playbook update.
