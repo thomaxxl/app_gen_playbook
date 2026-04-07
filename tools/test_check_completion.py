@@ -36,6 +36,8 @@ class CheckCompletionTests(unittest.TestCase):
                 "check_completion.collect_qa_review_coverage_issues", return_value=[]
             ), patch(
                 "check_completion.audit_backend_orm_safrs", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_observer_runtime", return_value=[]
             ):
                 blockers = collect_blockers(repo_root)
 
@@ -107,6 +109,8 @@ class CheckCompletionTests(unittest.TestCase):
                 "check_completion.audit_backend_orm_safrs", return_value=[]
             ), patch(
                 "check_completion.collect_final_review_pack_issues", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_observer_runtime", return_value=[]
             ):
                 blockers = collect_blockers(repo_root)
 
@@ -173,6 +177,8 @@ class CheckCompletionTests(unittest.TestCase):
                 "check_completion.collect_qa_review_coverage_issues", return_value=[{"path": "runs/current/evidence/qa-delivery-review.md", "reason": "qa drift"}]
             ), patch(
                 "check_completion.audit_backend_orm_safrs", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_observer_runtime", return_value=[]
             ):
                 blockers = collect_blockers(repo_root)
 
@@ -1217,6 +1223,57 @@ class CheckCompletionTests(unittest.TestCase):
             blockers = collect_blockers(repo_root)
             matching = [blocker for blocker in blockers if blocker["kind"] == "backend-orm-safrs-audit-failed"]
             self.assertFalse(matching)
+
+    def test_reports_observer_runtime_stubbed_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "app/README.md",
+                "This run observer reads current-run status from the mirrored run_dashboard.sqlite3 data set in read-only mode.\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/config.py",
+                'DEFAULT_DB_PATH = BACKEND_DIR / "data" / "run_observer.sqlite3"\n',
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/bootstrap.py",
+                "\n".join(
+                    [
+                        "def ensure_schema(engine):",
+                        "    db_path.unlink()",
+                        "    Base.metadata.create_all(engine)",
+                        "def validate_observer_database(engine):",
+                        "    ensure_schema(engine)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "def _runtime_resource_records():",
+                        "    return {}",
+                        "def create_app():",
+                        '    mode = "schema-driven-runtime-recovery"',
+                        "    return _runtime_resource_records()",
+                    ]
+                )
+                + "\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["kind"] == "observer-runtime-audit-failed"]
+            self.assertTrue(matching)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,12 @@ This file defines the minimum backend validation checklist.
 - `runs/current/evidence/contract-samples.md` proves representative live SAFRS
   samples for the exposed resource and relationship surface, not only that
   `/jsonapi.json` exists
+- when the approved product is a read-only observer over a mirrored SQLite
+  dataset, the backend must query that live mirrored database rather than
+  serving hardcoded in-memory recovery payloads or demo rows
+- such an observer backend must not satisfy list/detail/compare/file proof by
+  returning seeded stub records from helper functions like
+  `_runtime_resource_records()`
 - collection route paths are validated after startup and match `admin.yaml
   endpoint` values
 - mutation payload `type` values are discovered from live SAFRS responses, not
@@ -101,6 +107,9 @@ If the app supports uploaded files:
   paths before route exposure
 - `reference/admin.yaml` is not treated as frozen until the post-exposure
   route-discovery reconciliation passes
+- observer-database validation is read-only: it may inspect the mirrored DB
+  for required tables or rows, but it must not delete, recreate, reseed, or
+  mutate the mirrored SQLite file on startup
 
 ## Rule validation
 

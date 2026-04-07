@@ -222,6 +222,7 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "ui-preview-review-conclusion-missing",
     "ui-preview-fallback-invalid",
     "backend-orm-safrs-audit-failed",
+    "observer-runtime-audit-failed",
     "frontend-route-coverage",
     "preview-coverage",
     "integration-review-coverage",

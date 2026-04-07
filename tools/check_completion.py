@@ -18,6 +18,7 @@ from orchestrator_common import (
     resolve_repo_root,
 )
 from check_backend_orm_safrs import audit_backend_orm_safrs
+from check_backend_observer_runtime import audit_backend_observer_runtime
 from final_review_pack import FINAL_REVIEW_INDEX, collect_final_review_pack_issues
 from validators.coverage.common import collect_quality_gate_evidence_issues
 from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
@@ -864,6 +865,17 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
             blockers.append(
                 {
                     "kind": "backend-orm-safrs-audit-failed",
+                    "path": "app/backend/src",
+                    "owner": "backend",
+                    "phase": "phase-6-integration-review",
+                    "reason": issue,
+                }
+            )
+        observer_runtime_issues = audit_backend_observer_runtime(repo_root)
+        for issue in observer_runtime_issues:
+            blockers.append(
+                {
+                    "kind": "observer-runtime-audit-failed",
                     "path": "app/backend/src",
                     "owner": "backend",
                     "phase": "phase-6-integration-review",

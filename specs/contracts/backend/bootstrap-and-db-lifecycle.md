@@ -13,11 +13,24 @@ The starter backend uses:
 
 Migrations and schema evolution are intentionally out of scope for this spec.
 
+Read-only mirrored observer apps are a distinct case:
+
+- they may point at an already-built mirrored SQLite database
+- they validate that mirrored DB for readability and expected schema shape
+- they do not own that DB's schema lifecycle
+
 ## Startup DB behavior
 
 - The backend creates the SQLite file if it does not exist
 - The backend runs `Base.metadata.create_all(engine)` on startup
 - Startup must not drop or recreate populated tables
+
+For read-only mirrored observer apps:
+
+- startup must not create a replacement observer DB if the mirrored file is
+  missing required tables; it should fail closed instead
+- startup must not delete, truncate, or recreate the mirrored observer DB
+- startup must not seed placeholder rows into the mirrored observer DB
 
 ## Foreign key behavior
 
