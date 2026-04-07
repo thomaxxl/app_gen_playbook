@@ -37,6 +37,7 @@ PHASE_ORDER = {
     "phase-5-parallel-implementation": 5,
     "phase-6-integration-review": 6,
     "phase-7-product-acceptance": 7,
+    "phase-8-qa-pre-delivery-validation": 8,
 }
 
 EARLY_PHASES = {
@@ -58,6 +59,7 @@ ROLE_LABELS = {
     "architect": "architect",
     "frontend": "frontend",
     "backend": "backend",
+    "qa": "qa",
     "deployment": "devops",
 }
 
@@ -77,6 +79,10 @@ ROLE_PURPOSE = {
     "backend": (
         "restore progress by completing missing canonical backend-design "
         "artifacts or backend-owned implementation follow-up"
+    ),
+    "qa": (
+        "restore progress by completing the final independent QA delivery "
+        "review artifacts and explicit live/screenshot proof for the current scope"
     ),
     "deployment": (
         "restore progress by completing missing optional devops artifacts when "
@@ -220,6 +226,7 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "preview-coverage",
     "integration-review-coverage",
     "acceptance-review-coverage",
+    "qa-review-coverage",
     "final-review-pack-incomplete",
     "reference-alignment-missing",
     "reference-fidelity-review-incomplete",
@@ -401,6 +408,11 @@ PHASE_REQUIRED_READS = {
         "playbook/task-bundles/acceptance-review.yaml",
         "playbook/process/phases/phase-7-product-acceptance.md",
         "specs/product/acceptance-review.md",
+    ),
+    "phase-8-qa-pre-delivery-validation": (
+        "playbook/task-bundles/qa-delivery-review.yaml",
+        "playbook/process/phases/phase-8-qa-pre-delivery-validation.md",
+        "playbook/process/read-sets/qa-core.md",
     ),
 }
 
@@ -697,6 +709,13 @@ def should_recover_phase(repo_root: Path, phase: str, all_needs: list[ArtifactNe
     if phase == "phase-7-product-acceptance":
         phase6_needs = [need for need in all_needs if need.phase == "phase-6-integration-review"]
         if phase6_needs:
+            return False
+        return frontend_backend_quiescent(repo_root) and other_core_roles_quiescent(repo_root, role)
+
+    if phase == "phase-8-qa-pre-delivery-validation":
+        phase6_needs = [need for need in all_needs if need.phase == "phase-6-integration-review"]
+        phase7_needs = [need for need in all_needs if need.phase == "phase-7-product-acceptance"]
+        if phase6_needs or phase7_needs:
             return False
         return frontend_backend_quiescent(repo_root) and other_core_roles_quiescent(repo_root, role)
 

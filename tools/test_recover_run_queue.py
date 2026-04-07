@@ -236,6 +236,13 @@ class RecoverRunQueueTests(unittest.TestCase):
                     "path": "runs/current/evidence/final/review-index.md",
                     "reason": "final review pack index is missing",
                 },
+                {
+                    "kind": "qa-review-coverage",
+                    "owner": "qa",
+                    "phase": "phase-8-qa-pre-delivery-validation",
+                    "path": "runs/current/evidence/qa-delivery-review.md",
+                    "reason": "QA review story US-007 is missing screenshot proof",
+                },
             ]
 
             with unittest.mock.patch("recover_run_queue.collect_blockers", return_value=blockers):
@@ -249,6 +256,7 @@ class RecoverRunQueueTests(unittest.TestCase):
                     ("architect", "phase-6-integration-review", "runs/current/artifacts/architecture/integration-review.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/artifacts/product/acceptance-review.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/evidence/final/review-index.md"),
+                    ("qa", "phase-8-qa-pre-delivery-validation", "runs/current/evidence/qa-delivery-review.md"),
                 ],
             )
 
@@ -816,6 +824,40 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("product_manager", targets)
             product_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["product_manager"]}
             self.assertEqual(product_paths, {"runs/current/artifacts/product/acceptance-review.md"})
+
+    def test_qa_review_is_only_requeued_after_acceptance_is_clear_and_other_roles_are_quiescent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
+            for role in ("product_manager", "architect", "frontend", "backend", "qa", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            write_app_baseline(repo_root)
+            write_required_phase6_evidence(repo_root)
+            write_run_artifact(repo_root / "runs/current/artifacts/product/acceptance-review.md", status="approved")
+
+            qa_need = ArtifactNeed(
+                role="qa",
+                phase="phase-8-qa-pre-delivery-validation",
+                path=repo_root / "runs/current/evidence/qa-delivery-review.md",
+                reason="Story Live Coverage rows are incomplete",
+            )
+
+            (repo_root / "runs/current/role-state/frontend/inflight/todo.md").write_text("busy\n", encoding="utf-8")
+            with unittest.mock.patch("recover_run_queue.collect_artifact_needs", return_value=[]):
+                with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[qa_need]):
+                    targets = select_recovery_targets(repo_root)
+            self.assertNotIn("qa", targets)
+
+            (repo_root / "runs/current/role-state/frontend/inflight/todo.md").unlink()
+            with unittest.mock.patch("recover_run_queue.collect_artifact_needs", return_value=[]):
+                with unittest.mock.patch("recover_run_queue.collect_completion_blocker_needs", return_value=[qa_need]):
+                    targets = select_recovery_targets(repo_root)
+
+            self.assertEqual(set(targets), {"qa"})
+            qa_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["qa"]}
+            self.assertEqual(qa_paths, {"runs/current/evidence/qa-delivery-review.md"})
 
     def test_recovery_note_includes_phase_bundle_and_template_reads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
