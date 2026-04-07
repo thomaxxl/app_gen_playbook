@@ -12,6 +12,7 @@ from recover_run_queue import (
     RuntimeEnvironmentEscalation,
     collect_completion_blocker_needs,
     select_recovery_targets,
+    write_stalled_run_triage_notes,
     write_phase_ceo_review_notes,
     write_recovery_notes,
     write_runtime_environment_notes,
@@ -858,6 +859,34 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertEqual(set(targets), {"qa"})
             qa_paths = {need.path.relative_to(repo_root).as_posix() for need in targets["qa"]}
             self.assertEqual(qa_paths, {"runs/current/evidence/qa-delivery-review.md"})
+
+    def test_stalled_run_triage_creates_ceo_note_when_blockers_remain_but_no_worker_queue_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
+            for role in ("product_manager", "architect", "frontend", "backend", "qa", "ceo", "deployment"):
+                ensure_role_dirs(repo_root, role)
+
+            blockers = [
+                {
+                    "kind": "qa-review-coverage",
+                    "owner": "qa",
+                    "phase": "phase-8-qa-pre-delivery-validation",
+                    "path": "runs/current/evidence/qa-delivery-review.md",
+                    "reason": "QA review story US-007 is missing screenshot proof",
+                }
+            ]
+
+            with unittest.mock.patch("recover_run_queue.collect_blockers", return_value=blockers):
+                created = write_stalled_run_triage_notes(repo_root, "test-change")
+
+            self.assertEqual(len(created), 1)
+            note_text = created[0].read_text(encoding="utf-8")
+            self.assertIn("to: ceo", note_text)
+            self.assertIn("topic: stalled-run-triage", note_text)
+            self.assertIn("no actionable worker inbox or inflight work remained", note_text)
+            self.assertIn("runs/current/evidence/qa-delivery-review.md", note_text)
 
     def test_recovery_note_includes_phase_bundle_and_template_reads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

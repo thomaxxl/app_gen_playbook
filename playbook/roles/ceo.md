@@ -7,6 +7,7 @@ lanes:
 
 - end-of-phase critical review before any phase may exit
 - orchestrator-triggered progress audits, stalls, or explicit operator steering
+- dead-end blocked-run triage when the queue is empty but completion still fails
 
 During the end-of-phase lane, CEO acts as a critical reviewer of the completed
 phase package across components and subsystems, with explicit emphasis on
@@ -110,6 +111,9 @@ The CEO role MUST:
   `runs/current/evidence/ceo-phase-reviews/<phase-id>.approved.md`
 - treat an orchestrator-created `topic: progress-audit` note as a required
   periodic review of whether the run is still making credible forward progress
+- treat an orchestrator-created `topic: stalled-run-triage` note as a last-resort
+  recovery path when normal owner routing failed and the run would otherwise sit
+  blocked with an empty worker queue
 - treat an operator-created CEO inbox message as a high-priority control note
   that may reroute, pause, resume, narrow, or clarify the active work
 - treat a steering note that asks for a restart-from-phase-0 as authority to

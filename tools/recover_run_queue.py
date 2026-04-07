@@ -450,6 +450,12 @@ class PendingPhaseCeoReview:
     required_reads: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class StalledRunTriage:
+    blocker_paths: tuple[str, ...]
+    blocker_summaries: tuple[str, ...]
+
+
 def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
@@ -518,6 +524,13 @@ def other_core_roles_quiescent(repo_root: Path, excluded_role: str) -> bool:
     for role in active_core_roles():
         if role == excluded_role:
             continue
+        if role_pending(repo_root, role):
+            return False
+    return True
+
+
+def all_worker_roles_quiescent(repo_root: Path) -> bool:
+    for role in (*active_core_roles(), "deployment"):
         if role_pending(repo_root, role):
             return False
     return True
@@ -1349,6 +1362,134 @@ def collect_pending_phase_ceo_reviews(repo_root: Path) -> list[PendingPhaseCeoRe
     return pending_reviews
 
 
+def collect_stalled_run_triage(repo_root: Path) -> StalledRunTriage | None:
+    if role_pending(repo_root, "ceo"):
+        return None
+    if initial_input_pending(repo_root):
+        return None
+    if not all_worker_roles_quiescent(repo_root):
+        return None
+    if (repo_root / "runs" / "current" / "orchestrator" / "operator-action-required.md").exists():
+        return None
+
+    blockers = collect_blockers(repo_root)
+    if not blockers:
+        return None
+
+    blocker_paths = _ordered_unique(
+        [
+            str(blocker.get("path", "")).strip()
+            for blocker in blockers
+            if str(blocker.get("path", "")).strip()
+        ]
+    )
+    blocker_summaries: list[str] = []
+    for blocker in blockers[:12]:
+        owner = str(blocker.get("owner", "")).strip() or "unknown"
+        phase = str(blocker.get("phase", "")).strip() or "unknown-phase"
+        reason = str(blocker.get("reason", "")).strip() or "completion blocker remains unresolved"
+        path = str(blocker.get("path", "")).strip()
+        summary = f"{owner} {phase}: {reason}"
+        if path:
+            summary += f" ({path})"
+        blocker_summaries.append(summary)
+    if len(blockers) > 12:
+        blocker_summaries.append(f"{len(blockers) - 12} additional completion blockers omitted for brevity")
+
+    return StalledRunTriage(
+        blocker_paths=tuple(blocker_paths),
+        blocker_summaries=tuple(blocker_summaries),
+    )
+
+
+def format_stalled_run_triage_note(
+    triage: StalledRunTriage,
+    change_id: str,
+    *,
+    facts_fingerprint: str,
+    blocker_key: str,
+    fingerprint: str,
+) -> str:
+    required_reads = _ordered_unique(
+        [
+            "runs/current/remarks.md",
+            "runs/current/orchestrator/run-status.json",
+            "runs/current/evidence/orchestrator/logs/orchestrator.log",
+            *triage.blocker_paths,
+        ]
+    )
+    lines: list[str] = [
+        "from: orchestrator",
+        "to: ceo",
+        "topic: stalled-run-triage",
+        "purpose: diagnose a blocked run with empty worker queues and unresolved completion blockers, then route the concrete next action",
+        f"change_id: {change_id}",
+        f"blocker_key: {blocker_key}",
+        f"blocker_fingerprint: {fingerprint}",
+        f"facts_fingerprint: {facts_fingerprint}",
+        "",
+        "## Required Reads",
+    ]
+    for item in required_reads:
+        lines.append(f"- {item}")
+    lines.extend(
+        [
+            "",
+            "## Requested Outputs",
+            "- determine why the remaining blockers did not reopen a normal owner lane",
+            "- either queue the concrete owner recovery note(s), repair the blocked run-owned artifact(s) directly, or route the issue to operator action if no local repair path remains",
+            "- do not leave the run blocked with an empty worker queue after this CEO triage turn",
+            "",
+            "## Dependencies",
+            "- CEO stall-intervention authority",
+            "",
+            "## Gate Status",
+            "- blocked",
+            "",
+            "## Blocking Issues",
+            "- the run has unresolved completion blockers but no actionable worker inbox or inflight work remained",
+        ]
+    )
+    for item in triage.blocker_summaries:
+        lines.append(f"- {item}")
+    lines.extend(
+        [
+            "",
+            "## Notes",
+            "- generated only as a last-resort safety net when normal recovery routing produced no actionable worker note",
+            "- use this to unblock routing gaps; do not normalize CEO as the primary owner for ordinary phase work",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def write_stalled_run_triage_notes(repo_root: Path, change_id: str) -> list[Path]:
+    triage = collect_stalled_run_triage(repo_root)
+    if triage is None:
+        return []
+
+    ceo_root = preferred_role_state_dir(repo_root, "ceo")
+    inbox_dir = ceo_root / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    facts_fingerprint = compute_facts_fingerprint(repo_root)
+    blocker_key = "stalled-run-triage:" + "|".join(triage.blocker_paths or triage.blocker_summaries)
+    fingerprint = blocker_fingerprint(blocker_key, facts_fingerprint)
+    if _same_generated_note_exists(ceo_root, "stalled-run-triage", fingerprint):
+        return []
+    _supersede_stale_generated_notes(ceo_root, "stalled-run-triage", fingerprint)
+
+    note_text = format_stalled_run_triage_note(
+        triage,
+        change_id,
+        facts_fingerprint=facts_fingerprint,
+        blocker_key=blocker_key,
+        fingerprint=fingerprint,
+    )
+    note_path = inbox_dir / f"{utc_stamp()}-from-orchestrator-to-ceo-stalled-run-triage.md"
+    written_path, _parked = _write_generated_note_with_prevalidation(repo_root, "ceo", note_path, note_text)
+    return [written_path] if written_path is not None else []
+
+
 def format_phase_ceo_review_note(
     review: PendingPhaseCeoReview,
     change_id: str,
@@ -1644,6 +1785,8 @@ def main() -> int:
     created.extend(write_source_scope_notes(repo_root, args.change_id))
     created.extend(write_runtime_environment_notes(repo_root, args.change_id))
     created.extend(write_phase_ceo_review_notes(repo_root, args.change_id))
+    if not created:
+        created.extend(write_stalled_run_triage_notes(repo_root, args.change_id))
     for path in created:
         print(path)
     return 0
