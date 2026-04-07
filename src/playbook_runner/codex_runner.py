@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
+import signal
 import subprocess
 from typing import Iterable
 
@@ -77,14 +79,26 @@ class CodexRunner:
             "--",
             *codex_cmd,
         ]
-        result = subprocess.run(
+        proc = subprocess.Popen(
             command,
             cwd=self.repo_root,
             text=True,
-            capture_output=True,
-            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
         )
-        return CodexResult(returncode=result.returncode, timed_out=result.returncode == 124)
+        timeout = self.timeout_seconds + 15 if self.timeout_seconds > 0 else None
+        try:
+            proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            _cleanup_process_group(proc.pid)
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
+            return CodexResult(returncode=124, timed_out=True)
+        return CodexResult(returncode=proc.returncode, timed_out=proc.returncode == 124)
 
 
 def expand_add_dirs(add_dirs: Iterable[Path]) -> list[Path]:
@@ -109,3 +123,18 @@ def _candidate_add_dirs(add_dir: Path) -> list[Path]:
     if resolved != add_dir:
         candidates.append(resolved)
     return candidates
+
+
+def _cleanup_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        os.killpg(pid, 0)
+    except ProcessLookupError:
+        return
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return

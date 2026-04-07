@@ -224,6 +224,84 @@ class CheckBackendOrmSafrsTests(unittest.TestCase):
             self.assertTrue(any("SQLAlchemy ORM model definitions" in issue for issue in issues))
             self.assertTrue(any("manual collection/item document adapters" in issue for issue in issues))
 
+    def test_approved_safrs_exposure_exception_waives_live_registration_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n| `Run` | yes |\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/safrs-exposure-exception.md",
+                "\n".join(
+                    [
+                        "owner: architect",
+                        "phase: phase-5-parallel-implementation",
+                        "status: approved",
+                        "",
+                        "# SAFRS Exposure Exception",
+                        "",
+                        "- manual replacement adapter approved as a temporary replacement contract",
+                        "- upstream runtime exception remains active",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/runtime_app/db.py",
+                "\n".join(
+                    [
+                        "from sqlalchemy.orm import declarative_base",
+                        "Base = declarative_base()",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/runtime_app/models.py",
+                "\n".join(
+                    [
+                        "from safrs import SAFRSBase",
+                        "from sqlalchemy.orm import Mapped, mapped_column",
+                        "from .db import Base",
+                        "class Project(SAFRSBase, Base):",
+                        "    id: Mapped[int] = mapped_column(primary_key=True)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/runtime_app/mirror_api.py",
+                "\n".join(
+                    [
+                        "def load_resource_specs(settings): return []",
+                        "def build_collection_document(connection, spec, request): return {'data': []}",
+                        "def build_item_document(connection, spec, item_id): return {'data': {}}",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/runtime_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "from .mirror_api import build_collection_document, build_item_document, load_resource_specs",
+                        "def create_app():",
+                        '    app = FastAPI(openapi_url=\"/jsonapi.json\")',
+                        "    for spec in load_resource_specs(None):",
+                        "        app.add_api_route(spec.endpoint, build_collection_document, methods=['GET'])",
+                        "        app.add_api_route(spec.endpoint + '/{item_id}', build_item_document, methods=['GET'])",
+                        "    return app",
+                    ]
+                )
+                + "\n",
+            )
+
+            issues = audit_backend_orm_safrs(repo_root)
+            self.assertEqual(issues, [])
+
 
 if __name__ == "__main__":
     unittest.main()

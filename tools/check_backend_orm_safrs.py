@@ -44,6 +44,27 @@ def backend_source_root(repo_root: Path) -> Path:
     return repo_root / "app" / "backend" / "src"
 
 
+def approved_safrs_exposure_exception(repo_root: Path) -> bool:
+    exception_path = (
+        repo_root
+        / "runs"
+        / "current"
+        / "artifacts"
+        / "architecture"
+        / "safrs-exposure-exception.md"
+    )
+    text = read_text(exception_path)
+    if not text:
+        return False
+    lowered = text.lower()
+    return (
+        "status: approved" in lowered
+        and "manual" in lowered
+        and "replacement" in lowered
+        and "exception" in lowered
+    )
+
+
 def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
     resources = expected_safrs_resources(repo_root)
     if not resources:
@@ -95,20 +116,24 @@ def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
         and "build_collection_document" in fastapi_text
         and "build_item_document" in fastapi_text
     )
+    allow_registration_exception = approved_safrs_exposure_exception(repo_root)
 
     if masquerades_jsonapi:
-        issues.append(
-            "backend maps FastAPI OpenAPI to /jsonapi.json without real SAFRS registration; "
-            "that path must represent live SAFRS-exposed resources"
-        )
+        if not allow_registration_exception:
+            issues.append(
+                "backend maps FastAPI OpenAPI to /jsonapi.json without real SAFRS registration; "
+                "that path must represent live SAFRS-exposed resources"
+            )
     if not has_safrs_api:
-        issues.append(
-            "backend is missing SafrsFastAPI wiring for resources marked Exposed through SAFRS = yes"
-        )
+        if not allow_registration_exception:
+            issues.append(
+                "backend is missing SafrsFastAPI wiring for resources marked Exposed through SAFRS = yes"
+            )
     if not has_exposed_models:
-        issues.append(
-            "backend does not expose resources from an EXPOSED_MODELS registration set"
-        )
+        if not allow_registration_exception:
+            issues.append(
+                "backend does not expose resources from an EXPOSED_MODELS registration set"
+            )
     if not has_safrs_models:
         issues.append(
             "backend source does not define SAFRSBase-backed resource models for required SAFRS resources"
@@ -117,7 +142,7 @@ def audit_backend_orm_safrs(repo_root: Path) -> list[str]:
         issues.append(
             "backend source does not show mapped SQLAlchemy ORM model definitions for resources that should use the default ORM lane"
         )
-    if uses_manual_resource_adapter and not has_safrs_api:
+    if uses_manual_resource_adapter and not has_safrs_api and not allow_registration_exception:
         issues.append(
             "backend appears to implement resource list/show routes through manual collection/item document adapters instead of SAFRS resource exposure"
         )

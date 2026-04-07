@@ -305,7 +305,11 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 yolo=False,
             )
 
-            with patch("playbook_runner.codex_runner.subprocess.run", return_value=SimpleNamespace(returncode=0)) as mock_run:
+            proc = SimpleNamespace(
+                communicate=lambda timeout=None: ("", ""),
+                returncode=0,
+            )
+            with patch("playbook_runner.codex_runner.subprocess.Popen", return_value=proc) as mock_popen:
                 runner.run(
                     cwd=repo_root,
                     prompt_file=prompt_file,
@@ -315,7 +319,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                     add_dirs=[],
                 )
 
-            command = mock_run.call_args.args[0]
+            command = mock_popen.call_args.args[0]
             self.assertIn("--dangerously-bypass-approvals-and-sandbox", command)
 
     def test_codex_runner_omits_bypass_flag_in_sandbox_mode(self) -> None:
@@ -335,7 +339,11 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 yolo=False,
             )
 
-            with patch("playbook_runner.codex_runner.subprocess.run", return_value=SimpleNamespace(returncode=0)) as mock_run:
+            proc = SimpleNamespace(
+                communicate=lambda timeout=None: ("", ""),
+                returncode=0,
+            )
+            with patch("playbook_runner.codex_runner.subprocess.Popen", return_value=proc) as mock_popen:
                 runner.run(
                     cwd=repo_root,
                     prompt_file=prompt_file,
@@ -345,7 +353,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                     add_dirs=[],
                 )
 
-            command = mock_run.call_args.args[0]
+            command = mock_popen.call_args.args[0]
             self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", command)
 
     def test_add_dir_from_rule_converts_globs_to_concrete_parent_dirs(self) -> None:
@@ -864,6 +872,68 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
 
             finish_worker.assert_called_once_with(role="frontend", status="interrupted", claimed_message=message_path.name)
             set_run_status.assert_called_once_with("interrupted")
+
+    def test_run_role_once_treats_outer_codex_timeout_as_retryable_interruption(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "backend" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: orchestrator\nto: backend\ntopic: recovery\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="backend", path=message_path, message=Message.parse(message_path))
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=124, timed_out=True)))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "")))
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
+                append_remark = stack.enter_context(patch.object(orchestrator, "append_remark"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
+                with self.assertRaisesRegex(RuntimeError, "Codex temporarily unavailable for role backend: codex turn timed out after 60 seconds"):
+                    orchestrator.run_role_once("backend")
+
+            finish_worker.assert_called_once_with(role="backend", status="interrupted", claimed_message=message_path.name)
+            set_run_status.assert_called_once_with("interrupted")
+            append_remark.assert_called_once()
 
     def test_run_role_once_accepts_completed_turn_even_when_codex_exit_code_is_nonzero(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1135,6 +1135,89 @@ class CheckCompletionTests(unittest.TestCase):
             matching = [blocker for blocker in blockers if blocker["kind"] == "backend-orm-safrs-audit-failed"]
             self.assertTrue(matching)
 
+    def test_approved_safrs_exposure_exception_suppresses_registration_audit_blockers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/backend-design/resource-exposure-policy.md",
+                "| `Project` | yes |\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/architecture/safrs-exposure-exception.md",
+                "\n".join(
+                    [
+                        "owner: architect",
+                        "phase: phase-5-parallel-implementation",
+                        "status: approved",
+                        "",
+                        "# SAFRS Exposure Exception",
+                        "",
+                        "- manual replacement adapter approved as a temporary replacement contract",
+                        "- upstream runtime exception remains active",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/db.py",
+                "\n".join(
+                    [
+                        "from sqlalchemy.orm import declarative_base",
+                        "Base = declarative_base()",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/models.py",
+                "\n".join(
+                    [
+                        "from safrs import SAFRSBase",
+                        "from sqlalchemy.orm import Mapped, mapped_column",
+                        "from .db import Base",
+                        "class Project(SAFRSBase, Base):",
+                        "    id: Mapped[int] = mapped_column(primary_key=True)",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/mirror_api.py",
+                "\n".join(
+                    [
+                        "def load_resource_specs(settings): return []",
+                        "def build_collection_document(connection, spec, request): return {'data': []}",
+                        "def build_item_document(connection, spec, item_id): return {'data': {}}",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "app/backend/src/my_app/fastapi_app.py",
+                "\n".join(
+                    [
+                        "from fastapi import FastAPI",
+                        "from .mirror_api import build_collection_document, build_item_document, load_resource_specs",
+                        "def create_app():",
+                        '    return FastAPI(openapi_url=\"/jsonapi.json\")',
+                    ]
+                )
+                + "\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["kind"] == "backend-orm-safrs-audit-failed"]
+            self.assertFalse(matching)
+
 
 if __name__ == "__main__":
     unittest.main()

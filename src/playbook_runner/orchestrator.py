@@ -75,6 +75,7 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
     "try again at",
     "rate limit",
     "too many requests",
+    "timed out",
     "stream disconnected before completion",
     "error sending request",
     "failed to lookup address information",
@@ -911,6 +912,8 @@ class Orchestrator:
             resume_id=resume_id or None,
         )
         ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
+        if codex_result.timed_out and not ok:
+            detail = detail or f"codex turn timed out after {self.config.timeout_seconds} seconds"
         if not ok:
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
             if is_retryable_codex_failure(detail):
