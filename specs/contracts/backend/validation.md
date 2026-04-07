@@ -59,13 +59,6 @@ This file defines the minimum backend validation checklist.
 - such an observer backend must not satisfy list/detail/compare/file proof by
   returning seeded stub records from helper functions like
   `_runtime_resource_records()`
-- when the current run includes authored `user-stories.md` and
-  `business-rules.md`, the observer backend MUST expose structured SAFRS
-  resources for:
-  `user_stories`, `user_story_traceability`, `business_rules`,
-  `business_rule_examples`, and `business_rule_story_links`
-- those observer product-scope resources MUST be backed by the mirrored
-  SQLite/read-model lane, not assembled in the browser from raw markdown
 - collection route paths are validated after startup and match `admin.yaml
   endpoint` values
 - mutation payload `type` values are discovered from live SAFRS responses, not
@@ -117,10 +110,6 @@ If the app supports uploaded files:
 - observer-database validation is read-only: it may inspect the mirrored DB
   for required tables or rows, but it must not delete, recreate, reseed, or
   mutate the mirrored SQLite file on startup
-- for local testing, the backend MAY copy `run_dashboard/run_dashboard.sqlite3`
-  into an app-local scratch path and point `APP_DB_PATH` / `MY_APP_DB_PATH`
-  there, but the copied DB still remains read-only observer input and the
-  original mirrored DB must not be mutated
 
 ## Rule validation
 

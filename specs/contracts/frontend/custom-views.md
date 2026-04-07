@@ -54,18 +54,6 @@ At minimum:
 - custom pages MUST stay inside the React-admin dataProvider context for any
   backend/API retrieval
 
-For run-observer dashboards that already mirror product-scope facts into
-structured DB resources, the default product-management expectation is:
-
-- `Current Run` or an equivalent primary monitoring page includes a visible
-  Product Scope summary entry point
-- `User Stories` is a first-class list/detail surface backed by structured DB
-  data, not browser-side markdown scraping
-- `Business Rules` is a first-class list/detail surface backed by structured
-  DB data, not browser-side markdown scraping
-- source markdown remains available as an explicit drill-down or download
-  action, not as the primary page body
-
 ## Data retrieval rule for custom views
 
 Custom pages, dashboards, landing surfaces, and no-layout routes MUST use the

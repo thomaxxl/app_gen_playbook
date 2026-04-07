@@ -31,11 +31,6 @@ REQUIRED_RESOURCES = {
     "OrchestratorEvent",
     "RunFile",
     "ChangeRequest",
-    "UserStory",
-    "UserStoryTraceability",
-    "BusinessRule",
-    "BusinessRuleExample",
-    "BusinessRuleStoryLink",
 }
 
 
