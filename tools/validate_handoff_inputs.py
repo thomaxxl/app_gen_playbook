@@ -14,6 +14,7 @@ from orchestrator_common import (
     canonical_artifacts_for_role_phases,
     message_header_field,
     owner_for_run_artifact,
+    path_matches_rule,
     parse_message_headers,
     parse_message_sections,
     parse_metadata_block,
@@ -22,6 +23,7 @@ from orchestrator_common import (
     resolve_repo_root,
     template_for_run_artifact,
 )
+from routing_resolver import resolve_writable_paths
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 QUALITY_EVIDENCE_PATHS = {
     "runs/current/evidence/contract-samples.md",
@@ -85,6 +87,17 @@ def referenced_paths(values: list[str]) -> set[str]:
     results: set[str] = set()
     for value in values:
         for match in re.findall(r"(runs/current/[A-Za-z0-9_./-]+|app/[A-Za-z0-9_./-]+|specs/[A-Za-z0-9_./-]+|playbook/[A-Za-z0-9_./-]+)", value):
+            results.add(match)
+    return results
+
+
+def explicit_output_paths(values: list[str]) -> set[str]:
+    results: set[str] = set()
+    for value in values:
+        normalized = normalize_path_token(value)
+        if normalized.startswith(("runs/current/", "app/")):
+            results.add(normalized)
+        for match in re.findall(r"(runs/current/[A-Za-z0-9_./-]+|app/[A-Za-z0-9_./-]+)", normalized):
             results.add(match)
     return results
 
@@ -157,12 +170,17 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
         for item in sections.get("required reads", [])
         if isinstance(item, str)
     ]
+    requested_outputs = [
+        normalize_path_token(item)
+        for item in sections.get("requested outputs", [])
+        if isinstance(item, str)
+    ]
     sender_runtime_role = normalize_runtime_role(message_header_field(headers, "from"))
 
     blockers: list[dict[str, str]] = []
     allowed_missing = referenced_paths(
         [item for item in sections.get("blocking issues", []) if isinstance(item, str)]
-        + [item for item in sections.get("requested outputs", []) if isinstance(item, str)]
+        + requested_outputs
     )
 
     for read in required_reads:
@@ -312,10 +330,34 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                             "owner": sender_runtime_role,
                             "message": (
                                 "handoff claims a passing gate but a canonical phase output is "
-                                f"{'missing' if status is None else 'still stub'}: {output}"
-                            ),
-                        }
-                    )
+                            f"{'missing' if status is None else 'still stub'}: {output}"
+                        ),
+                    }
+                )
+
+    if (repo_root / "playbook" / "routing" / "role-core.yaml").exists():
+        resolved_writable: list[str] | None = None
+        for output_path in sorted(explicit_output_paths(requested_outputs)):
+            if output_path.startswith(("specs/", "playbook/")):
+                continue
+            if resolved_writable is None:
+                resolved_writable = resolve_writable_paths(
+                    repo_root,
+                    runtime_role,
+                    explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
+                    explicit_phase=headers.get("phase"),
+                    message_required_reads=required_reads,
+                )
+            if any(path_matches_rule(output_path, rule) for rule in resolved_writable):
+                continue
+            blockers.append(
+                {
+                    "type": "requested-output-outside-scope",
+                    "path": output_path,
+                    "owner": owner_for_run_artifact(repo_root, repo_root / output_path) or "",
+                    "message": f"requested output is outside the receiver writable scope: {output_path}",
+                }
+            )
 
     return {
         "valid": not blockers,

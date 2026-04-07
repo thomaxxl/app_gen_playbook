@@ -16,6 +16,113 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_rejects_requested_output_outside_receiver_writable_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(repo_root / "playbook/summaries/global-core.md", "# global\n")
+            write_file(
+                repo_root / "playbook/routing/execution-scopes.yaml",
+                "\n".join(
+                    [
+                        "fullstack:",
+                        "  active_roles:",
+                        "    - architect",
+                        "    - backend",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I5-implementation-delta",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "playbook/routing/role-core.yaml",
+                "\n".join(
+                    [
+                        "backend:",
+                        "  always_load:",
+                        "    - playbook/summaries/global-core.md",
+                        "  writable:",
+                        "    - runs/current/role-state/backend/**",
+                        "    - runs/current/changes/*/candidate/artifacts/backend-design/**",
+                        "    - runs/current/changes/*/verification/**",
+                        "    - app/backend/**",
+                        "  cannot_write:",
+                        "    - app/frontend/**",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "playbook/routing/phase-bundles.yaml", "")
+            write_file(repo_root / "playbook/routing/capability-map.yaml", "")
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{\n  "change_id": "CR-1",\n  "current_phase": "phase-I5-implementation-delta",\n  "mode": "iterative-change-run",\n  "scope_profile": "fullstack"\n}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/classification.yaml",
+                "\n".join(
+                    [
+                        "scope_profile: fullstack",
+                        "active_roles:",
+                        "  - architect",
+                        "  - backend",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/role-loads/backend.yaml",
+                "\n".join(
+                    [
+                        "change_id: CR-1",
+                        "read_artifacts:",
+                        "  - runs/current/changes/CR-1/role-loads/backend.yaml",
+                        "candidate_artifacts:",
+                        "  - runs/current/changes/CR-1/candidate/artifacts/backend-design/observer-read-model-delta.md",
+                        "write_artifacts:",
+                        "  - runs/current/changes/CR-1/candidate/artifacts/backend-design/observer-read-model-delta.md",
+                        "read_app_paths:",
+                        "  - app/backend/src/my_app/config.py",
+                        "write_app_paths:",
+                        "  - app/backend/src/my_app/config.py",
+                        "verification_inputs:",
+                        "  - runs/current/changes/CR-1/verification/current-proof.md",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(repo_root / "app/backend/src/my_app/config.py", "# config\n")
+            message_path = repo_root / "runs/current/role-state/backend/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: backend",
+                        "",
+                        "## Required Reads",
+                        "- runs/current/changes/CR-1/role-loads/backend.yaml",
+                        "",
+                        "## Requested Outputs",
+                        "- update runs/current/changes/CR-OLD/verification/backend-real-data-review.md",
+                        "",
+                        "## Gate Status",
+                        "- pass",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "backend", message_path)
+
+            self.assertFalse(report["valid"])
+            messages = [blocker.get("message", "") for blocker in report["blockers"] if isinstance(blocker, dict)]
+            self.assertTrue(
+                any("requested output is outside the receiver writable scope" in message for message in messages),
+                json.dumps(report, indent=2),
+            )
+
     def test_required_reads_accept_markdown_wrapped_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
