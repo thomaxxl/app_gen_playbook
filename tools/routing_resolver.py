@@ -591,7 +591,17 @@ def _change_scoped_read_paths(
 def _narrow_change_writable_paths(
     writable: list[str],
     role_load_payload: Mapping[str, Any],
+    *,
+    bundle_payload: Mapping[str, Any] | None = None,
 ) -> list[str]:
+    def artifact_family(path: str) -> str | None:
+        parts = path.split("/")
+        if path.startswith("runs/current/artifacts/") and len(parts) >= 4:
+            return parts[3]
+        if path.startswith("runs/current/changes/") and "/candidate/artifacts/" in path and len(parts) >= 7:
+            return parts[6]
+        return None
+
     candidate_artifacts = _clean_declared_paths(_string_list(role_load_payload, "candidate_artifacts"))
     write_artifacts = _clean_declared_paths(_string_list(role_load_payload, "write_artifacts"))
     write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
@@ -602,10 +612,45 @@ def _narrow_change_writable_paths(
     if not artifact_writes and not write_app_paths and not verification_inputs:
         return writable
 
+    bundle_candidate_families: set[str] = set()
+    if isinstance(bundle_payload, dict):
+        bundle_candidate_rules = (
+            _string_list(bundle_payload, "required_candidate_artifacts")
+            + _string_list(bundle_payload, "writable_targets")
+        )
+        bundle_candidate_families = {
+            artifact_family(rule)
+            for rule in bundle_candidate_rules
+            if rule.startswith("runs/current/changes/*/candidate/artifacts/")
+        }
+        bundle_candidate_families.discard(None)
+
+    artifact_families = {
+        artifact_family(path)
+        for path in artifact_writes
+        if path.startswith("runs/current/artifacts/")
+    }
+    candidate_families = {
+        artifact_family(path)
+        for path in artifact_writes
+        if path.startswith("runs/current/changes/") and "/candidate/artifacts/" in path
+    }
+    artifact_families.discard(None)
+    candidate_families.discard(None)
+
     narrowed: list[str] = []
     for rule in writable:
+        if candidate_families and rule.startswith("runs/current/artifacts/"):
+            if artifact_family(rule) in bundle_candidate_families.intersection(candidate_families):
+                continue
+        if artifact_families and rule.startswith("runs/current/artifacts/"):
+            if artifact_family(rule) in artifact_families:
+                continue
+        if candidate_families and rule.startswith("runs/current/changes/*/candidate/artifacts/"):
+            if artifact_family(rule) in candidate_families:
+                continue
         if artifact_writes and (
-            rule.startswith("runs/current/artifacts/") or rule.startswith("runs/current/changes/*/candidate/artifacts/")
+            rule in artifact_writes
         ):
             continue
         if write_app_paths and rule.startswith("app/"):
@@ -847,7 +892,11 @@ def resolve_writable_paths(
 
     role_load_payload = packet.get("role_load_payload", {})
     if isinstance(role_load_payload, dict):
-        writable = _narrow_change_writable_paths(writable, role_load_payload)
+        writable = _narrow_change_writable_paths(
+            writable,
+            role_load_payload,
+            bundle_payload=bundle_payload if isinstance(bundle_payload, dict) else None,
+        )
 
     writable.append("runs/current/role-state/*/inbox/*.md")
     for role_state_dir in role_state_dir_names(runtime_role):

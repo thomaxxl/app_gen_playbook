@@ -644,6 +644,77 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertNotIn("runs/current/artifacts/ux/**", writable)
         self.assertNotIn("runs/current/changes/*/candidate/artifacts/ux/**", writable)
 
+    def test_architect_narrowing_preserves_canonical_architecture_scope_when_role_load_only_targets_change_packet_files(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "playbook/routing/role-core.yaml",
+            "\n".join(
+                [
+                    "architect:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/artifacts/architecture/**",
+                    "    - runs/current/evidence/contract-samples.md",
+                    "    - runs/current/role-state/architect/**",
+                    "    - runs/current/changes/*/candidate/artifacts/architecture/**",
+                    "    - runs/current/changes/*/role-loads/**",
+                    "  cannot_write:",
+                    "    - app/**",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "playbook/task-bundles/integration-review.yaml",
+            "\n".join(
+                [
+                    "name: integration-review",
+                    "role: architect",
+                    "required_phase:",
+                    "  - playbook/process/phases/phase-I6-integration-and-regression-review.md",
+                    "writable_targets:",
+                    "  - runs/current/artifacts/architecture/**",
+                    "  - runs/current/evidence/contract-samples.md",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/architect.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "  - runs/current/changes/CR-1/role-loads/architect.yaml",
+                    "candidate_artifacts:",
+                    "  - runs/current/changes/CR-1/candidate/artifacts/architecture/observer-product-scope-delta.md",
+                    "write_artifacts:",
+                    "  - runs/current/changes/CR-1/role-loads/architect.yaml",
+                    "  - runs/current/changes/CR-1/candidate/artifacts/architecture/observer-product-scope-delta.md",
+                    "read_app_paths: []",
+                    "write_app_paths: []",
+                    "verification_inputs:",
+                    "  - /tmp/sentient/src/components/Layout.tsx",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "architect",
+            explicit_task_bundle="playbook/task-bundles/integration-review.yaml",
+        )
+
+        self.assertIn("runs/current/artifacts/architecture/**", writable)
+        self.assertIn("runs/current/evidence/contract-samples.md", writable)
+        self.assertIn("runs/current/changes/CR-1/candidate/artifacts/architecture/observer-product-scope-delta.md", writable)
+        self.assertIn("runs/current/changes/CR-1/role-loads/architect.yaml", writable)
+
     def test_backend_inline_empty_role_load_lists_do_not_drop_backend_write_scope(self) -> None:
         repo_root = self.build_repo()
 
