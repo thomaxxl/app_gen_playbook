@@ -1038,6 +1038,79 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             finish_worker.assert_called_once_with(role="frontend", status="complete", claimed_message="")
             set_run_status.assert_not_called()
 
+    def test_run_role_once_auto_archives_completed_turn_left_in_inflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "deployment" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: architect\nto: devops\ntopic: recovery\n", encoding="utf-8")
+            context_path = repo_root / "runs" / "current" / "role-state" / "deployment" / "context.md"
+            context_path.parent.mkdir(parents=True, exist_ok=True)
+            context_path.write_text("# Deployment Context\n", encoding="utf-8")
+            processed_dir = repo_root / "runs" / "current" / "role-state" / "deployment" / "processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="deployment", path=message_path, message=Message.parse(message_path))
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                stack.enter_context(
+                    patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=0, timed_out=False))
+                )
+                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
+                stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
+                stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
+                append_remark = stack.enter_context(patch.object(orchestrator, "append_remark"))
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
+
+                self.assertTrue(orchestrator.run_role_once("deployment"))
+
+            self.assertFalse(message_path.exists())
+            self.assertTrue((processed_dir / "turn.md").exists())
+            finish_worker.assert_called_once_with(role="deployment", status="complete", claimed_message="")
+            append_remark.assert_called_once()
+            self.assertIn("Runner auto-archived completed claimed work", append_remark.call_args.args[0])
+
     def test_run_loop_marks_completed_run_with_complete_phase(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

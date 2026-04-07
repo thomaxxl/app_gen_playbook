@@ -1002,8 +1002,15 @@ class Orchestrator:
                     "The runner archived it so it cannot self-loop as actionable work.",
                 )
             else:
-                self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
-                raise RunnerError(f"Role {runtime_role} left claimed work in inflight: {message_path}")
+                processed_target = role_dir / "processed" / message_path.name
+                archive_suffix = "" if not processed_target.exists() else ".runner-archived"
+                archived = self.queue.archive(runtime_role, message_path, suffix=archive_suffix)
+                self.append_remark(
+                    "Runner auto-archived completed claimed work",
+                    f"Role:\n- {runtime_role}\n\nClaimed message:\n- {archived.relative_to(self.config.repo_root)}\n\n"
+                    "The turn completed successfully but left its claimed inbox item in `inflight/`. "
+                    "The runner archived the item automatically instead of failing the turn.",
+                )
         if not (role_dir / "context.md").exists():
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
             raise RunnerError(f"Role {runtime_role} did not update context.md")
