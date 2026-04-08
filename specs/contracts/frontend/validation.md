@@ -141,6 +141,11 @@ frontend package template before treating the playbook baseline as current.
   empty
 - every custom page defines loading, empty, and error states
 - every empty state includes a visible next step or explanation
+- any visible custom or shell-level search affordance is wired to real
+  search behavior; decorative placeholders or dead inputs are invalid
+- when a custom or shell-level search affordance exists outside the default
+  resource-list filters, it scopes to the intended context and renders either
+  filtered results or a dedicated results surface
 - form pages show grouped structure when the run-owned UX artifacts require it
 - critical flows remain usable at narrow widths only when the run explicitly
   keeps mobile/narrow-screen behavior in scope
@@ -307,6 +312,10 @@ The starter frontend MUST ship automated tests for:
   canonical SAFRS relationship path
 - that browser-level smoke proves icon-only edit/delete row actions exist on
   at least one generated `tomany` relationship tab
+- when the app exposes a visible custom or shell-level search affordance,
+  browser smoke submits a representative query and proves the URL or visible
+  result state changes through a real search flow rather than a decorative
+  placeholder
 - Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`
 

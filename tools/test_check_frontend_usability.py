@@ -297,6 +297,73 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
             issues = collect_issues(repo_root)
             self.assertFalse(any("reference-alignment" in issue for issue in issues))
 
+    def test_flags_decorative_search_input_without_real_search_behavior(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.tsx",
+                "\n".join(
+                    [
+                        'import InputBase from "@mui/material/InputBase";',
+                        "export default function App() {",
+                        '  return <InputBase placeholder="Search operations..." />;',
+                        "}",
+                    ]
+                ),
+            )
+            self.seed_runtime_files(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertTrue(any("search input appears decorative" in issue for issue in issues))
+
+    def test_accepts_wired_search_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.tsx",
+                "\n".join(
+                    [
+                        'import InputBase from "@mui/material/InputBase";',
+                        'import { useSearchParams } from "react-router-dom";',
+                        "export default function App() {",
+                        "  const [searchParams] = useSearchParams();",
+                        "  void searchParams;",
+                        "  return (",
+                        '    <form onSubmit={() => {}}>',
+                        '      <InputBase placeholder=\"Search operations...\" onChange={() => {}} />',
+                        "    </form>",
+                        "  );",
+                        "}",
+                    ]
+                ),
+            )
+            self.seed_runtime_files(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertFalse(any("search input appears decorative" in issue for issue in issues))
+
 
 if __name__ == "__main__":
     unittest.main()

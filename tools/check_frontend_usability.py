@@ -19,6 +19,26 @@ FORBIDDEN_USER_FACING_PHRASES = (
     "using committed admin.yaml snapshot",
 )
 RAW_ID_SOURCE_RE = re.compile(r'source\s*=\s*"[^"]*(_id|Id)"')
+SEARCH_PLACEHOLDER_RE = re.compile(r'placeholder\s*=\s*["\'][^"\']*search[^"\']*["\']', re.IGNORECASE)
+SEARCH_SUBMIT_MARKERS = (
+    "onsubmit=",
+    "onkeydown=",
+    "onclick=",
+    "navigate(",
+    "setsearchparams(",
+    "usesearchparams(",
+    'path="/search"',
+    "path='/search'",
+    'to="/search"',
+    "to='/search'",
+)
+SEARCH_FILTER_MARKERS = (
+    "matchessearchquery(",
+    "setsearchquery(",
+    "setfilter(",
+    "filter:scopedfilter",
+    "filter:{q:",
+)
 
 
 def extract_single_backtick_value(text: str, label: str) -> str | None:
@@ -77,6 +97,28 @@ def find_phrase_matches(src_root: Path, phrase: str) -> list[str]:
         for lineno, line in enumerate(lines, start=1):
             if phrase in line.lower():
                 matches.append(f"{path.relative_to(src_root.parents[2]).as_posix()}:{lineno}")
+    return matches
+
+
+def collect_decorative_search_matches(src_root: Path) -> list[str]:
+    matches: list[str] = []
+    for path in iter_frontend_sources(src_root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        lowered = text.lower()
+        if "inputbase" not in lowered and "textfield" not in lowered:
+            continue
+        if SEARCH_PLACEHOLDER_RE.search(text) is None:
+            continue
+        has_submit_behavior = any(marker in lowered for marker in SEARCH_SUBMIT_MARKERS)
+        has_live_filter_behavior = "onchange=" in lowered and any(
+            marker in lowered for marker in SEARCH_FILTER_MARKERS
+        )
+        if has_submit_behavior or has_live_filter_behavior:
+            continue
+        matches.append(path.relative_to(src_root.parents[2]).as_posix())
     return matches
 
 
@@ -216,6 +258,13 @@ def collect_issues(repo_root: Path) -> list[str]:
             issues.append(
                 f"forbidden recovery/debug copy {phrase!r} found in visible frontend source: {', '.join(matches[:5])}"
             )
+
+    decorative_search_matches = collect_decorative_search_matches(src_root)
+    if decorative_search_matches:
+        issues.append(
+            "visible search input appears decorative or unwired: "
+            + ", ".join(decorative_search_matches[:5])
+        )
 
     return issues
 
