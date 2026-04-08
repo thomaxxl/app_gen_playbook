@@ -200,6 +200,9 @@ EXCLUDED_SUFFIXES = {
     ".pyc",
     ".pyo",
     ".pyd",
+    ".swp",
+    ".swo",
+    ".swx",
     ".sqlite",
     ".sqlite3",
     ".sqlite-journal",
@@ -428,6 +431,9 @@ def should_ignore_path(path: Path, repo_root: Path) -> bool:
         return True
 
     if path.suffix in EXCLUDED_SUFFIXES:
+        return True
+
+    if path.name.endswith("~"):
         return True
 
     if path.is_file() and path.name in {".DS_Store", "Thumbs.db"}:

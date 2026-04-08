@@ -114,6 +114,25 @@ class RelpathTests(unittest.TestCase):
             self.assertNotIn("app/frontend/vitest.config.js", snapshot)
             self.assertNotIn("app/frontend/vitest.config.d.ts", snapshot)
 
+    def test_snapshot_ignores_editor_swap_and_backup_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_root = tmp_path / "repo"
+
+            repo_root.mkdir()
+            (repo_root / ".git").mkdir()
+
+            runs_dir = repo_root / "runs" / "current"
+            runs_dir.mkdir(parents=True)
+            (runs_dir / "remarks.md").write_text("remarks\n", encoding="utf-8")
+            (runs_dir / ".remarks.md.swp").write_text("swap\n", encoding="utf-8")
+            (runs_dir / "notes.md~").write_text("backup\n", encoding="utf-8")
+
+            snapshot = snapshot_repo_files(repo_root)
+            self.assertIn("runs/current/remarks.md", snapshot)
+            self.assertNotIn("runs/current/.remarks.md.swp", snapshot)
+            self.assertNotIn("runs/current/notes.md~", snapshot)
+
     def test_owner_for_run_artifact_falls_back_to_run_metadata_when_no_template_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
