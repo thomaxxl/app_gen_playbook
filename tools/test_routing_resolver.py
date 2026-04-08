@@ -8,6 +8,7 @@ from pathlib import Path
 from routing_resolver import (
     collect_packet_health_issues,
     parse_yaml_subset,
+    resolve_phase_bundle,
     resolve_forbidden_paths,
     resolve_read_packet,
     resolve_writable_paths,
@@ -95,6 +96,20 @@ class RoutingResolverTests(unittest.TestCase):
                     "    - app/rules/**",
                     "  cannot_write:",
                     "    - app/frontend/**",
+                    "",
+                    "qa:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/notes.md",
+                    "    - runs/current/evidence/qa-delivery-review.md",
+                    "    - runs/current/evidence/ui-previews/qa-manifest.md",
+                    "    - runs/current/evidence/ui-previews/qa/**",
+                    "    - runs/current/changes/*/verification/**",
+                    "    - runs/current/role-state/qa/**",
+                    "  cannot_write:",
+                    "    - runs/current/artifacts/**",
+                    "    - app/**",
                     "",
                     "architect:",
                     "  always_load:",
@@ -728,6 +743,71 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("app/backend/**", writable)
         self.assertIn("app/rules/**", writable)
         self.assertIn("runs/current/changes/CR-1/verification/backend-check.md", writable)
+
+    def test_bundle_resolution_does_not_fall_back_to_other_role_bundle(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "playbook/routing/phase-bundles.yaml",
+            "\n".join(
+                [
+                    "phase_6_integration_review:",
+                    "  summary: playbook/summaries/phases/phase-6.summary.md",
+                    "  architect: playbook/task-bundles/integration-review.yaml",
+                    "",
+                    "phase_8_qa_pre_delivery_validation:",
+                    "  summary: playbook/summaries/phases/phase-8.summary.md",
+                    "  qa: playbook/task-bundles/qa-delivery-review.yaml",
+                ]
+            )
+            + "\n",
+        )
+
+        summary_path, bundle_path = resolve_phase_bundle(
+            repo_root,
+            "qa",
+            message_required_reads=[
+                "playbook/task-bundles/integration-review.yaml",
+                "playbook/process/phases/phase-6-integration-review.md",
+                "playbook/task-bundles/change-integration-review.yaml",
+                "playbook/process/phases/phase-I6-integration-and-regression-review.md",
+                "runs/current/changes/CR-1/verification/reference-fidelity-review.md",
+            ],
+        )
+
+        self.assertIsNone(summary_path)
+        self.assertIsNone(bundle_path)
+
+    def test_qa_change_verification_write_scope_is_preserved_without_bundle_fallback(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "playbook/routing/phase-bundles.yaml",
+            "\n".join(
+                [
+                    "phase_6_integration_review:",
+                    "  summary: playbook/summaries/phases/phase-6.summary.md",
+                    "  architect: playbook/task-bundles/integration-review.yaml",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "qa",
+            message_required_reads=[
+                "playbook/task-bundles/integration-review.yaml",
+                "playbook/process/phases/phase-6-integration-review.md",
+                "playbook/task-bundles/change-integration-review.yaml",
+                "playbook/process/phases/phase-I6-integration-and-regression-review.md",
+                "runs/current/changes/CR-1/verification/reference-fidelity-review.md",
+            ],
+        )
+
+        self.assertIn("runs/current/changes/*/verification/**", writable)
+        self.assertNotIn("runs/current/artifacts/architecture/**", writable)
+        self.assertNotIn("runs/current/role-state/architect/**", writable)
 
     def test_forbidden_paths_and_diff_validation_enforce_cannot_write(self) -> None:
         repo_root = self.build_repo()

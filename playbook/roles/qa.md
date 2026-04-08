@@ -39,6 +39,7 @@ Runtime state lives in:
 - `../../runs/current/evidence/qa-delivery-review.md`
 - `../../runs/current/evidence/ui-previews/qa-manifest.md`
 - `../../runs/current/evidence/ui-previews/qa/**`
+- `../../runs/current/changes/*/verification/**` when QA owns a change-run verification review such as reference-fidelity validation
 - `../../runs/current/notes.md`
 - `../../runs/current/role-state/qa/**`
 - `../../BUGS.md`

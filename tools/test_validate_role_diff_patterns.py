@@ -159,6 +159,17 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_allows_qa_change_verification_review(self) -> None:
+        self.assertTrue(
+            is_allowed_change(
+                self.repo_root,
+                "qa",
+                "runs/current/changes/CR-20260408-090203/verification/reference-fidelity-review.md",
+                [],
+                allowed_write_rules=["runs/current/changes/*/verification/**"],
+            )
+        )
+
     def test_treats_change_outside_turn_roots_as_external(self) -> None:
         turn_roots = [self.repo_root / "runs" / "current" / "role-state" / "product_manager"]
         self.assertFalse(

@@ -119,6 +119,7 @@ qa:
     - runs/current/evidence/ui-previews/qa-manifest.md
     - runs/current/evidence/ui-previews/qa/**
     - runs/current/role-state/qa/**
+    - runs/current/changes/*/verification/**
   cannot_write:
     - runs/current/artifacts/**
     - app/**

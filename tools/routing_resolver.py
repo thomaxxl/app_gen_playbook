@@ -344,8 +344,11 @@ def resolve_phase_bundle(
                 summary = payload.get("summary")
                 return summary if isinstance(summary, str) else None, candidate
 
-    if bundle_candidates:
-        return None, bundle_candidates[0]
+    # Do not fall back to another role's task bundle just because it appeared
+    # in Required Reads. That can silently widen or skew the writable scope for
+    # recovery turns that only cite a cross-role review bundle as context.
+    if explicit_task_bundle:
+        return None, explicit_task_bundle
     return None, None
 
 

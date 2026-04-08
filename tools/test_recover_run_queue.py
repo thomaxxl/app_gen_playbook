@@ -590,6 +590,52 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertIn("runs/current/artifacts/product/acceptance-review.md", payload["read_artifacts"])
             self.assertIn("runs/current/artifacts/product/acceptance-review.md", payload["write_artifacts"])
 
+    def test_recovery_note_syncs_change_role_load_for_recovered_verification_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
+            ensure_role_dirs(repo_root, "qa")
+
+            change_id = "CR-test"
+            role_load_path = repo_root / "runs/current/changes" / change_id / "role-loads/qa.yaml"
+            write_file(
+                role_load_path,
+                "\n".join(
+                    [
+                        f"change_id: {change_id}",
+                        "scope_profile: fullstack",
+                        "active: true",
+                        "baseline_id: REL-test",
+                        "read_artifacts:",
+                        f"  - runs/current/changes/{change_id}/request.md",
+                        "write_artifacts: []",
+                        "read_app_paths: []",
+                        "write_app_paths: []",
+                        "verification_inputs: []",
+                        "",
+                    ]
+                ),
+            )
+
+            needs = [
+                ArtifactNeed(
+                    role="qa",
+                    phase="phase-6-integration-review",
+                    path=repo_root / f"runs/current/changes/{change_id}/verification/reference-fidelity-review.md",
+                    reason="binding external UI reference fidelity review is not approved: status=draft",
+                )
+            ]
+
+            created = write_recovery_notes(repo_root, {"qa": needs}, change_id)
+            self.assertEqual(len(created), 1)
+
+            payload = yaml.safe_load(role_load_path.read_text(encoding="utf-8"))
+            self.assertIn(
+                f"runs/current/changes/{change_id}/verification/reference-fidelity-review.md",
+                payload["verification_inputs"],
+            )
+
     def test_missing_docker_files_do_not_trigger_deployment_recovery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

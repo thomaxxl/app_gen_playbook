@@ -138,6 +138,7 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/evidence/qa-delivery-review.md",
         "runs/current/evidence/ui-previews/qa-manifest.md",
         "runs/current/evidence/ui-previews/qa/**",
+        "runs/current/changes/*/verification/**",
         "runs/current/role-state/qa/",
     ),
     "deployment": (

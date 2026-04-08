@@ -1704,6 +1704,7 @@ def sync_change_role_load_for_recovery(
     write_artifacts = _string_list(payload, "write_artifacts")
     read_app_paths = _string_list(payload, "read_app_paths")
     write_app_paths = _string_list(payload, "write_app_paths")
+    verification_inputs = _string_list(payload, "verification_inputs")
 
     changed = False
     for need in needs:
@@ -1714,6 +1715,12 @@ def sync_change_role_load_for_recovery(
             changed = changed or new_read_artifacts != read_artifacts or new_write_artifacts != write_artifacts
             read_artifacts = new_read_artifacts
             write_artifacts = new_write_artifacts
+            continue
+
+        if relative_path.startswith("runs/current/changes/") and "/verification/" in relative_path:
+            new_verification_inputs = _ordered_unique(verification_inputs + [relative_path])
+            changed = changed or new_verification_inputs != verification_inputs
+            verification_inputs = new_verification_inputs
             continue
 
         if relative_path.startswith("app/"):
@@ -1730,6 +1737,7 @@ def sync_change_role_load_for_recovery(
     payload["write_artifacts"] = write_artifacts
     payload["read_app_paths"] = read_app_paths
     payload["write_app_paths"] = write_app_paths
+    payload["verification_inputs"] = verification_inputs
     role_load_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
