@@ -70,6 +70,8 @@ ROLE_ALIASES = {
 }
 
 RETRYABLE_CODEX_FAILURE_MARKERS = (
+    "selected model is at capacity",
+    "model is at capacity",
     "usage limit",
     "purchase more credits",
     "try again at",
@@ -80,6 +82,8 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
     "error sending request",
     "failed to lookup address information",
 )
+
+MODEL_CAPACITY_RETRY_SECONDS = 15 * 60
 
 LOW_SIGNAL_REMARK_TITLES = {
     "Recovery notes queued",
@@ -110,6 +114,13 @@ def is_retryable_codex_failure(detail: str) -> bool:
     if not normalized:
         return False
     return any(marker in normalized for marker in RETRYABLE_CODEX_FAILURE_MARKERS)
+
+
+def is_capacity_codex_failure(detail: str) -> bool:
+    normalized = detail.strip().lower()
+    if not normalized:
+        return False
+    return "model is at capacity" in normalized
 
 
 def add_dir_from_rule(repo_root: Path, rule: str) -> Path | None:
@@ -578,6 +589,42 @@ class Orchestrator:
             self.set_run_status("interrupted")
             raise SystemExit(0)
 
+    def wait_for_codex_capacity_retry(
+        self,
+        runtime_role: str,
+        message_name: str,
+        detail: str,
+        *,
+        wait_seconds: int = MODEL_CAPACITY_RETRY_SECONDS,
+    ) -> None:
+        retry_minutes = wait_seconds // 60
+        self.log_line(
+            f"warning role={runtime_role} type=codex-model-capacity retry_in={retry_minutes}m message={message_name} detail={detail}"
+        )
+        deadline = time.time() + wait_seconds
+        while True:
+            if self.paths.kill_requested_md.exists():
+                body = (
+                    "The run was terminated during Codex capacity backoff by an operator kill request.\n\n"
+                    f"Kill file:\n- {self.paths.kill_requested_md.relative_to(self.config.repo_root)}\n"
+                )
+                self.append_remark("run stopped by operator kill request", body)
+                self.set_run_status("interrupted")
+                raise SystemExit(0)
+            if self.paths.pause_requested_md.exists():
+                body = (
+                    "The run was paused during Codex capacity backoff by an operator steering request.\n\n"
+                    f"Pause file:\n- {self.paths.pause_requested_md.relative_to(self.config.repo_root)}\n"
+                )
+                self.append_remark("run paused by operator request", body)
+                self.set_run_status("interrupted")
+                raise SystemExit(0)
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                break
+            time.sleep(min(5, remaining))
+        self.log_line(f"warning role={runtime_role} type=codex-model-capacity retrying message={message_name}")
+
     def maybe_operator_action_exit(self) -> None:
         if not self.paths.operator_action_required_md.exists():
             return
@@ -932,19 +979,24 @@ class Orchestrator:
         )
         self.tools.validate_role_diff_snapshot(snapshot_file)
         self.tools.build_prompt(runtime_role, display_role, role_file, message_path, prompt_file)
-        codex_result = self.codex.run(
-            cwd=role_dir,
-            prompt_file=prompt_file,
-            result_file=result_file,
-            jsonl_file=jsonl_file,
-            model=model,
-            add_dirs=add_dirs,
-            resume_id=resume_id or None,
-        )
-        ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
-        if codex_result.timed_out and not ok:
-            detail = detail or f"codex turn timed out after {self.config.timeout_seconds} seconds"
-        if not ok:
+        while True:
+            codex_result = self.codex.run(
+                cwd=role_dir,
+                prompt_file=prompt_file,
+                result_file=result_file,
+                jsonl_file=jsonl_file,
+                model=model,
+                add_dirs=add_dirs,
+                resume_id=resume_id or None,
+            )
+            ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
+            if codex_result.timed_out and not ok:
+                detail = detail or f"codex turn timed out after {self.config.timeout_seconds} seconds"
+            if ok:
+                break
+            if is_capacity_codex_failure(detail):
+                self.wait_for_codex_capacity_retry(runtime_role, message_path.name, detail)
+                continue
             self.tools.finish_worker(role=runtime_role, status="interrupted", claimed_message=message_path.name)
             if is_retryable_codex_failure(detail):
                 body = (

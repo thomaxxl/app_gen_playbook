@@ -16,6 +16,7 @@ from playbook_runner.orchestrator import (
     RunRequest,
     add_dir_from_rule,
     compact_completion_detail,
+    is_capacity_codex_failure,
     is_retryable_codex_failure,
 )
 from playbook_runner.queue_store import ClaimedMessage
@@ -651,6 +652,11 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
         detail = "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Mar 25th, 2026 5:59 PM."
         self.assertTrue(is_retryable_codex_failure(detail))
 
+    def test_retryable_codex_failure_detects_model_capacity(self) -> None:
+        detail = "Selected model is at capacity. Please try a different model."
+        self.assertTrue(is_retryable_codex_failure(detail))
+        self.assertTrue(is_capacity_codex_failure(detail))
+
     def test_retryable_codex_failure_detects_transport_disconnect(self) -> None:
         detail = "stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/responses)"
         self.assertTrue(is_retryable_codex_failure(detail))
@@ -1037,6 +1043,152 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
 
             finish_worker.assert_called_once_with(role="frontend", status="complete", claimed_message="")
             set_run_status.assert_not_called()
+
+    def test_wait_for_codex_capacity_retry_logs_warning_and_retry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            with ExitStack() as stack:
+                log_line = stack.enter_context(patch.object(orchestrator, "log_line"))
+                orchestrator.wait_for_codex_capacity_retry(
+                    "frontend",
+                    "turn.md",
+                    "Selected model is at capacity. Please try a different model.",
+                    wait_seconds=0,
+                )
+
+            self.assertEqual(log_line.call_count, 2)
+            self.assertIn("warning role=frontend type=codex-model-capacity retry_in=0m message=turn.md", log_line.call_args_list[0].args[0])
+            self.assertEqual(
+                log_line.call_args_list[1].args[0],
+                "warning role=frontend type=codex-model-capacity retrying message=turn.md",
+            )
+
+    def test_run_role_once_waits_and_retries_on_model_capacity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "frontend" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: product_manager\nto: frontend\ntopic: implementation\n", encoding="utf-8")
+            context_path = repo_root / "runs" / "current" / "role-state" / "frontend" / "context.md"
+            context_path.parent.mkdir(parents=True, exist_ok=True)
+            context_path.write_text("# Frontend Context\n", encoding="utf-8")
+            processed_dir = repo_root / "runs" / "current" / "role-state" / "frontend" / "processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="frontend", path=message_path, message=Message.parse(message_path))
+
+            def complete_turn() -> SimpleNamespace:
+                message_path.replace(processed_dir / message_path.name)
+                return SimpleNamespace(returncode=0, timed_out=False)
+
+            codex_attempts = {"count": 0}
+
+            def codex_run_side_effect(**_: object) -> SimpleNamespace:
+                codex_attempts["count"] += 1
+                if codex_attempts["count"] == 1:
+                    return SimpleNamespace(returncode=1, timed_out=False)
+                return complete_turn()
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                codex_run = stack.enter_context(
+                    patch.object(
+                        orchestrator.codex,
+                        "run",
+                        side_effect=codex_run_side_effect,
+                    )
+                )
+                stack.enter_context(
+                    patch.object(
+                        orchestrator.tools,
+                        "assert_codex_success",
+                        side_effect=[
+                            (False, "Selected model is at capacity. Please try a different model."),
+                            (True, ""),
+                        ],
+                    )
+                )
+                wait_for_retry = stack.enter_context(patch.object(orchestrator, "wait_for_codex_capacity_retry"))
+                stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
+                stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
+                stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
+                append_remark = stack.enter_context(patch.object(orchestrator, "append_remark"))
+                stack.enter_context(patch.object(orchestrator, "log_line"))
+
+                self.assertTrue(orchestrator.run_role_once("frontend"))
+
+            self.assertEqual(codex_run.call_count, 2)
+            wait_for_retry.assert_called_once_with(
+                "frontend",
+                message_path.name,
+                "Selected model is at capacity. Please try a different model.",
+            )
+            finish_worker.assert_called_once_with(role="frontend", status="complete", claimed_message="")
+            set_run_status.assert_not_called()
+            append_remark.assert_not_called()
 
     def test_run_role_once_auto_archives_completed_turn_left_in_inflight(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
