@@ -216,6 +216,20 @@ class RecoverRunQueueTests(unittest.TestCase):
                     "reason": "preview manifest is missing structured preview coverage for required story US-007",
                 },
                 {
+                    "kind": "ui-preview-scroll-validation-missing",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/ui-previews/manifest.md",
+                    "reason": "captured ui preview manifest must declare scroll_state_validation: reviewed",
+                },
+                {
+                    "kind": "ui-preview-shell-continuity-missing",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/ui-previews/manifest.md",
+                    "reason": "captured ui preview manifest must declare shell_continuity_validation: approved",
+                },
+                {
                     "kind": "integration-review-coverage",
                     "owner": "architect",
                     "phase": "phase-6-integration-review",
@@ -252,6 +266,8 @@ class RecoverRunQueueTests(unittest.TestCase):
                 [(need.role, need.phase, need.path.relative_to(repo_root).as_posix()) for need in needs],
                 [
                     ("frontend", "phase-5-parallel-implementation", "app/frontend/src/App.tsx"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
                     ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
                     ("architect", "phase-6-integration-review", "runs/current/artifacts/architecture/integration-review.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/artifacts/product/acceptance-review.md"),

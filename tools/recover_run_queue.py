@@ -208,6 +208,8 @@ ACTIONABLE_COMPLETION_BLOCKER_KINDS = {
     "ui-preview-manifest-unstructured",
     "ui-preview-images-missing",
     "ui-preview-content-validation-missing",
+    "ui-preview-scroll-validation-missing",
+    "ui-preview-shell-continuity-missing",
     "ui-preview-signoff-missing",
     "ui-preview-review-conclusion-missing",
     "ui-preview-fallback-invalid",

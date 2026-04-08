@@ -78,6 +78,20 @@ FRONTEND_EVIDENCE_OUTPUTS = {
     "runs/current/evidence/ui-previews/manifest.md",
 }
 EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
+
+
+def _normalize_reference_fidelity_text(text: str) -> str:
+    lowered = text.lower().replace("-", " ")
+    return re.sub(r"\s+", " ", lowered).strip()
+
+
+def acceptance_records_reference_fidelity(text: str) -> bool:
+    normalized = _normalize_reference_fidelity_text(text)
+    required_markers = (
+        "this acceptance review explicitly records the reference fidelity decision for binding external ui references",
+        "reference fidelity decision for binding external ui references: approved",
+    )
+    return all(marker in normalized for marker in required_markers)
 UI_PREVIEW_CAPTURE_STATES = {"captured", "not-required", "environment-blocked", "runtime-failed"}
 UI_PREVIEW_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 MARKDOWN_CAPTURE_STATUS_PATTERN = re.compile(
@@ -441,8 +455,8 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                                 phase="phase-6-integration-review",
                             )
                         )
-                acceptance_text = acceptance_review.read_text(encoding="utf-8").lower()
-                if "reference fidelity" not in acceptance_text:
+                acceptance_text = acceptance_review.read_text(encoding="utf-8")
+                if not acceptance_records_reference_fidelity(acceptance_text):
                     blockers.append(
                         artifact_blocker(
                             "acceptance-missing-reference-fidelity",
