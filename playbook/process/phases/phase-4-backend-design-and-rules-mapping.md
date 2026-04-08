@@ -12,6 +12,9 @@ and tests.
 - start from the Product Manager resource inventory and resource behavior
   matrix, user stories, and traceability matrix, not only the glossary and
   rule narrative
+- verify that journey-critical transitions, validations, and recovery paths
+  have backend support and use journey IDs when reviewing rule and event
+  coverage for approval, exception, or multi-step flows
 - map conceptual business concepts, relationships, lifecycle models, and
   business events to backend structures explicitly
 - record every non-1:1 mapping between conceptual concepts and backend
@@ -79,6 +82,8 @@ and tests.
 - backend design decisions do not have to guess about workflow depth because
   `user-stories.md` and `traceability-matrix.md` already record scenario,
   permission, and acceptance context
+- journey-critical approval, exception, and recovery paths have explicit
+  backend support and are not left as UX-only assumptions
 - every derived persisted field records any schema prerequisite, migration, or
   backfill plan before coding starts
 - every frontend-visible field maps to backend truth

@@ -11,6 +11,8 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/product/brief.md
   - runs/current/artifacts/product/ux-interview-questionnaire.md
+  - runs/current/artifacts/product/user-journeys.md
+  - runs/current/artifacts/product/journey-quality-checklist.md
   - runs/current/artifacts/product/acceptance-criteria.md
   - runs/current/artifacts/product/business-rules.md
   - runs/current/artifacts/product/custom-pages.md

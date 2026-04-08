@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from validators.coverage.compile_business_rules import compile_business_rules_payload
 from validators.coverage.compile_product_scope import compile_product_scope_payload
+from validators.coverage.compile_user_journeys import compile_user_journeys_payload
 from validators.coverage.validate_acceptance_review_coverage import collect_issues as collect_acceptance_review_coverage_issues
 from validators.coverage.validate_frontend_route_coverage import collect_issues as collect_frontend_route_coverage_issues
 from validators.coverage.validate_integration_review_coverage import collect_issues as collect_integration_review_coverage_issues
@@ -231,6 +232,156 @@ def seed_scope(repo_root: Path) -> None:
         + "\n",
     )
     write(
+        repo_root / "runs/current/artifacts/product/user-journeys.md",
+        "\n".join(
+            [
+                "# User Journey Catalog",
+                "",
+                "## Decision Rule",
+                "",
+                "- stories stay independently testable",
+                "- workflows stay operational",
+                "- journeys stay human-centered",
+                "",
+                "## Journey Taxonomy",
+                "",
+                "- primary-transaction",
+                "- review-approval",
+                "",
+                "## Journey Index",
+                "",
+                "| Journey ID | Title | Primary Actor | Supporting Actors | Journey Class | Release | Priority | Entry Trigger | Successful Outcome |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| J-001 | Requester reviews the overview | Requester | none | primary-transaction | R1 | P1 | Requester opens the home overview | The requester understands current work and next steps. |",
+                "| J-004 | Approver reviews a pending request | Approver | none | review-approval | R1 | P1 | Approver opens the pending approvals queue | The approver records a decision and the queue reflects it. |",
+                "",
+                "## Journey Details",
+                "",
+                "### J-001 - Requester reviews the overview",
+                "- **Primary Actor**: Requester",
+                "- **Supporting Actors**: none",
+                "- **Journey Class**: primary-transaction",
+                "- **Release**: R1",
+                "- **Why this journey matters**: The overview is the first trustworthy product surface for requesters.",
+                "- **Preconditions**: The requester can access current work.",
+                "- **Entry Trigger**: Requester opens the home overview.",
+                "- **Happy Path**: The requester sees current work and follows the primary CTA.",
+                "- **Alternate Paths**: The requester switches to a secondary summary card.",
+                "- **Failure / Recovery Paths**: If no work exists, the empty state explains what to do next.",
+                "- **Successful Outcome**: The requester understands the current work state and next step.",
+                "- **Independent Journey Test**: Open the overview as a requester and confirm the current work summary plus primary next step are usable.",
+                "- **Related Story IDs**: US-001",
+                "- **Related Workflow IDs**: WF-001",
+                "- **Related Rule IDs**: BR-001, BR-006",
+                "- **Related Business Event IDs**: none",
+                "- **Notes for UX / Visibility**: The overview must avoid placeholder aggregates and explain empty states clearly.",
+                "",
+                "### J-004 - Approver reviews a pending request",
+                "- **Primary Actor**: Approver",
+                "- **Supporting Actors**: none",
+                "- **Journey Class**: review-approval",
+                "- **Release**: R1",
+                "- **Why this journey matters**: Pending approvals are the control point before work can continue.",
+                "- **Preconditions**: A pending approval exists or the empty state is configured.",
+                "- **Entry Trigger**: Approver opens the pending approvals queue.",
+                "- **Happy Path**: The approver opens a request and records a decision.",
+                "- **Alternate Paths**: The approver rejects the request with a reason.",
+                "- **Failure / Recovery Paths**: Missing required reason or empty-queue states stay truthful and recoverable.",
+                "- **Successful Outcome**: The queue and audit trail reflect the recorded decision.",
+                "- **Independent Journey Test**: Open a pending approval, record a decision, and confirm the queue and audit trail update.",
+                "- **Related Story IDs**: US-004",
+                "- **Related Workflow IDs**: WF-003",
+                "- **Related Rule IDs**: BR-004, BR-005",
+                "- **Related Business Event IDs**: EV-004",
+                "- **Notes for UX / Visibility**: Queue empty states and rejection validation must be obvious.",
+                "",
+                "## Journey Coverage Summary",
+                "",
+                "- Requester: J-001",
+                "- Approver: J-004",
+                "",
+                "## Deferred / Later-Release Journeys",
+                "",
+                "- none",
+                "",
+                "## Open Questions",
+                "",
+                "- none",
+            ]
+        )
+        + "\n",
+    )
+    write(
+        repo_root / "runs/current/artifacts/product/journey-quality-checklist.md",
+        "\n".join(
+            [
+                "# Journey Quality Checklist",
+                "",
+                "- status: reviewed",
+                "- current-release journeys checked: J-001, J-004",
+                "- end-to-end completeness: pass",
+                "- actor coverage: pass",
+                "- recovery-path coverage: pass",
+                "- critical issues: none",
+                "- review_summary: The current-release journeys are concrete, user-centered, and aligned with the workflow and story catalog.",
+                "",
+            ]
+        ),
+    )
+    write(
+        repo_root / "runs/current/artifacts/product/workflows.md",
+        "\n".join(
+            [
+                "## WF-001 - Requester overview workflow",
+                "- user: Requester",
+                "- starting point: Home overview",
+                "- steps: review summary, inspect current item, follow primary CTA",
+                "- success outcome: requester understands current work and next step",
+                "- failure or validation outcome: empty state explains what to do next",
+                "- touched concept IDs: C-001",
+                "- business event IDs: none",
+                "- lifecycle/state transition notes: active, empty",
+                "- touched resources: Run",
+                "- related user story IDs: US-001",
+                "- related journey IDs: J-001",
+                "- explicit non-goals: bulk actions",
+                "",
+                "## WF-003 - Approval review workflow",
+                "- user: Approver",
+                "- starting point: Pending approvals queue",
+                "- steps: review pending item, approve or reject, confirm queue update",
+                "- success outcome: reviewer decision is recorded durably",
+                "- failure or validation outcome: missing required reason blocks the action",
+                "- touched concept IDs: C-004",
+                "- business event IDs: EV-004",
+                "- lifecycle/state transition notes: pending, approved, rejected",
+                "- touched resources: Approval",
+                "- related user story IDs: US-004",
+                "- related journey IDs: J-004",
+                "- explicit non-goals: delegated approval",
+                "",
+            ]
+        )
+        + "\n",
+    )
+    write(
+        repo_root / "runs/current/artifacts/product/acceptance-criteria.md",
+        "\n".join(
+            [
+                "# Acceptance Criteria",
+                "",
+                "## Journey Acceptance",
+                "",
+                "| Journey ID | Acceptance ID | Acceptance Rule | Evidence Mode |",
+                "| --- | --- | --- | --- |",
+                "| J-001 | AC-001 | The requester can use the overview to understand current work and the next step. | ui |",
+                "| J-004 | AC-004 | The approver can review the queue, record a decision, and trust the updated queue state. | ui |",
+                "",
+            ]
+        )
+        + "\n",
+    )
+    write(
         repo_root / "runs/current/artifacts/product/custom-pages.md",
         "\n".join(
             [
@@ -402,6 +553,18 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertIn("US-001", br_001["traceability_story_ids"])
             self.assertTrue(br_001["examples"]["valid"])
 
+    def test_compile_user_journeys_emits_structured_journey_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            payload, issues = compile_user_journeys_payload(repo_root)
+            self.assertEqual(issues, [])
+            self.assertEqual(len(payload["journeys"]), 2)
+            j_004 = next(journey for journey in payload["journeys"] if journey["journey_id"] == "J-004")
+            self.assertEqual(j_004["journey_class"], "review-approval")
+            self.assertIn("US-004", j_004["story_ids"])
+            self.assertEqual(j_004["primary_actor"], "Approver")
+
     def test_compile_product_scope_requires_capability_coverage_table(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -534,6 +697,18 @@ class CoverageValidatorTests(unittest.TestCase):
             )
             issues = collect_product_scope_contract_issues(repo_root)
             self.assertTrue(any("story quality checklist" in issue["reason"] for issue in issues))
+
+    def test_product_scope_contracts_fail_when_workflow_references_unknown_journey(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            workflows_text = (repo_root / "runs/current/artifacts/product/workflows.md").read_text(encoding="utf-8")
+            write(
+                repo_root / "runs/current/artifacts/product/workflows.md",
+                workflows_text.replace("related journey IDs: J-004", "related journey IDs: J-404"),
+            )
+            issues = collect_product_scope_contract_issues(repo_root)
+            self.assertTrue(any("does not resolve to a real journey" in issue["reason"] for issue in issues))
 
     def test_preview_coverage_fails_when_manifest_reviews_subset_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -142,3 +142,10 @@ The real artifact MUST explicitly list:
 - concepts that appear in the brief but remain ambiguous
 - terms that need a context split because they mean different things in
   different domain areas
+
+## Journey authoring guidance
+
+The business events and lifecycle models defined here SHOULD be reusable inputs
+for `user-journeys.md`. Journey authors SHOULD reuse concept IDs, lifecycle
+IDs, and business event IDs from this artifact instead of inventing parallel
+vocabulary for the same business meaning.

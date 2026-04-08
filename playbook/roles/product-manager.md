@@ -21,6 +21,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 - product framing
 - Who / Why / What / How framing
 - UX interview and walkthrough questionnaire
+- user-journeys catalog and journey-quality review
 - sparse-input interpretation
 - conceptual domain model
 - resource inventory and CRUD expectations
@@ -221,6 +222,23 @@ triage, booking, reconciliation, or similar core workflows, the questionnaire
 MUST include direct questions for those flows rather than relying on generic
 UX language.
 
+The Product Manager MUST author
+`../../runs/current/artifacts/product/user-journeys.md` as the authoritative
+human-readable journey catalog for the run. That artifact MUST:
+
+- distinguish end-to-end user goals from lower-level workflows
+- keep journeys human-centered instead of turning them into route or page
+  inventories
+- give every current-release journey a stable `J-*` ID
+- include happy-path plus alternate or recovery coverage where realistic
+- reference real story IDs, workflow IDs, rule IDs, and business event IDs
+
+The Product Manager MUST also complete
+`../../runs/current/artifacts/product/journey-quality-checklist.md` before
+handoff. It is the required quality pass proving current-release journeys are
+concrete, readable, end-to-end, and aligned with the current story/workflow
+set.
+
 `../../runs/current/artifacts/product/user-stories.md` is the authoritative
 scope catalog for the run. The Product Manager MUST not leave it as loose prose
 or a flat CRUD list. It MUST include:
@@ -228,6 +246,7 @@ or a flat CRUD list. It MUST include:
 - an actor-by-capability coverage matrix
 - a normalized `Capability Coverage` table as the canonical breadth ledger
 - the exact story index schema defined by `specs/product/user-stories.md`
+- a valid `Primary Journey ID` for every current-release story
 - the mandatory story-type taxonomy
 - story-core fields such as priority in the story index and the canonical
   `Why this priority` plus `Independent Test` fields in the current-release

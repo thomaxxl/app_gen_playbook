@@ -4,6 +4,7 @@ status: stub
 depends_on:
   - brief.md
   - conceptual-domain-model.md
+  - user-journeys.md
 unresolved:
   - replace with run-specific workflows
 last_updated_by: playbook
@@ -26,4 +27,5 @@ Each workflow MUST include:
 - lifecycle/state transition notes, when relevant
 - touched resources
 - related user story IDs
+- related journey IDs
 - explicit non-goals, if any

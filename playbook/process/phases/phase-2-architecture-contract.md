@@ -17,6 +17,9 @@ Convert product requirements into a stable cross-layer contract.
   resource boundaries
 - use `user-stories.md` and `traceability-matrix.md` as first-class inputs,
   not only workflow or page summaries
+- treat `user-journeys.md` as a normal architecture input for route/entry
+  decisions, custom-flow boundaries, and cross-role or approval-heavy path
+  complexity
 - pressure-test the UX interview questionnaire so architecture-sensitive
   navigation, search, and primary workflow questions are explicit before UX
   implementation proceeds
@@ -66,6 +69,9 @@ If the run differs from the starter trio, the Architect MUST read
 - each later role can work without guessing
 - user-story scope, workflow depth, permission context, and review obligations
   are explicit enough that architecture does not need to infer them indirectly
+- journey-critical route/entry, approval, and recovery boundaries are explicit
+  enough that later roles do not have to guess how end-to-end paths are
+  satisfied
 - the UX interview questionnaire has been reviewed for architecture-sensitive
   gaps in navigation, search/findability, and critical workflow transitions
 - runtime dependencies are explicit

@@ -92,6 +92,11 @@ exists, the Frontend agent MUST treat it as a first-class UX intent input.
 Accepted findings from PM, Architect, Product acceptance, or QA execution of
 that questionnaire are implementation scope, not optional polish.
 
+When `../../runs/current/artifacts/product/user-journeys.md` exists, the
+Frontend agent MUST treat it as a primary implementation input for Phase 3 and
+Phase 5. Journey-critical happy paths, alternate paths, blocked states, and
+recovery cues are delivery scope, not optional polish.
+
 The Frontend agent MUST use the React-admin dataProvider as the canonical
 frontend API access layer. If a page, dashboard, landing surface, or custom
 view needs backend data, it MUST retrieve that data through the approved
@@ -163,7 +168,8 @@ for the current task and permitted by the load plan.
 Typical task-driven reads:
 
 - product flow intent:
-  `product/resource-inventory.md`, `product/resource-behavior-matrix.md`,
+  `product/user-journeys.md`, `product/resource-inventory.md`,
+  `product/resource-behavior-matrix.md`,
   `product/workflows.md`, `product/business-rules.md`,
   `product/sample-data.md`, `product/custom-pages.md`
 - architecture wiring:

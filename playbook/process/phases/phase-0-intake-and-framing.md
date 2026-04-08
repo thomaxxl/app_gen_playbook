@@ -29,6 +29,10 @@ Classify that input using `../input-policy.md`.
 - choose the smallest coherent first-version framing that fits the house style
 - identify primary users
 - outline the Who / Why / What / How of the app in business language
+- identify the top end-to-end journeys implied by the brief
+- distinguish primary user goals from lower-level workflows
+- note whether the first-version scope has one dominant journey or several
+  distinct journeys
 - define top workflows
 - identify core resources
 - define initial scope and exclusions
@@ -49,6 +53,7 @@ Classify that input using `../input-policy.md`.
 - initial `runs/current/artifacts/product/user-stories.md`
 - initial `runs/current/artifacts/product/brief.md`
 - initial `runs/current/artifacts/product/problem-framing.md`
+- initial `runs/current/artifacts/product/user-journeys.md`
 - initial `runs/current/artifacts/product/workflows.md`
 - initial `runs/current/artifacts/product/domain-glossary.md`
 - initial `runs/current/artifacts/product/assumptions-and-open-questions.md`
@@ -57,8 +62,11 @@ Classify that input using `../input-policy.md`.
 
 - user and scope are explicitly documented
 - the primary Who / Why / What / How framing is explicit
+- top end-to-end journeys are identified, even if only as initial drafts
 - main resources are named
 - critical workflows are identified
+- the product framing names primary user goals, not only resources and
+  workflows
 - primary pain points and desired improvements are explicit enough for later UX
   work to inherit without guessing
 - sparse input has been actively interpreted rather than merely classified

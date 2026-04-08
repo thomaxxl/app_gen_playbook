@@ -14,6 +14,7 @@ required_artifacts:
 reference_only:
   - specs/product/README.md
   - specs/product/problem-framing.md
+  - specs/product/user-journeys.md
 writable_targets:
   - runs/current/artifacts/product/**
   - runs/current/role-state/product_manager/**

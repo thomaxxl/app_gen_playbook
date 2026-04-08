@@ -7,6 +7,8 @@ always_load:
   - playbook/process/read-sets/product-manager-core.md
   - specs/product/problem-framing.md
   - specs/product/ux-interview-questionnaire.md
+  - specs/product/user-journeys.md
+  - specs/product/journey-quality-checklist.md
   - specs/product/story-quality-checklist.md
   - specs/product/user-stories.md
   - specs/product/traceability-matrix.md

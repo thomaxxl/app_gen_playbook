@@ -32,6 +32,18 @@ FINAL_REVIEW_COPY_FILES: tuple[tuple[str, str, bool, str], ...] = (
         "reviewer question set for navigation, findability, and primary workflows",
     ),
     (
+        "runs/current/artifacts/product/user-journeys.md",
+        "user-journeys.md",
+        True,
+        "end-to-end user goals and recovery-aware experience paths",
+    ),
+    (
+        "runs/current/artifacts/product/journey-quality-checklist.md",
+        "journey-quality-checklist.md",
+        False,
+        "journey readability and completeness review",
+    ),
+    (
         "runs/current/artifacts/product/acceptance-criteria.md",
         "acceptance-criteria.md",
         True,

@@ -19,11 +19,11 @@ between the two models.
 | --- | --- | --- |
 | Problem framing / summary | `brief.md`, `input-interpretation.md`, `research-notes.md` | Product framing and sparse-input decisions live here. |
 | Conceptual domain model | `conceptual-domain-model.md`, `domain-glossary.md` | The business-facing concept, lifecycle, and event layer stays separate from app-resource or ORM design. |
-| User Scenarios & Testing | `user-stories.md` | Story blocks are the spec-kit-core scenario records. |
+| User Scenarios & Testing | `user-stories.md`, `user-journeys.md` | Story blocks remain the independently testable records; journeys capture end-to-end human paths that may span multiple stories. |
 | Requirements / scope commitments | `user-stories.md`, `traceability-matrix.md` | Story core stays in `user-stories.md`; implementation/review linkage stays in `traceability-matrix.md`. |
 | Key Entities | `resource-inventory.md`, `resource-behavior-matrix.md`, `sample-data.md` | Entity definitions, CRUD behavior, and sample records are split on purpose. |
 | Business rules | `business-rules.md` | The single authoritative human-readable rule catalog. |
-| Workflows / process | `workflows.md` | Multi-step journeys and transitions. |
+| Workflows / process | `workflows.md`, `user-journeys.md` | Workflows stay operational/state-aware; journeys stay human-centered and end-to-end. |
 | UX / page intent | `custom-pages.md`, `ux/navigation.md`, `ux/landing-strategy.md`, `ux/screen-inventory.md` | Playbook separates product intent from UX execution. |
 | Success criteria | `acceptance-criteria.md` | Delivery success and acceptance framing. |
 | Assumptions / open questions | `assumptions-and-open-questions.md` | Explicit unresolved product decisions. |
@@ -47,6 +47,7 @@ When translating from the playbook into a spec-kit document:
 When translating from spec-kit into the playbook:
 
 - expand User Scenarios & Testing into `user-stories.md`
+- expand end-to-end user-goal paths into `user-journeys.md`
 - expand conceptual entities, states, and business events into
   `conceptual-domain-model.md`
 - expand requirements-to-implementation linkage into `traceability-matrix.md`

@@ -23,6 +23,7 @@ class FinalReviewPackTests(unittest.TestCase):
             for relative in (
                 "runs/current/artifacts/product/brief.md",
                 "runs/current/artifacts/product/problem-framing.md",
+                "runs/current/artifacts/product/user-journeys.md",
                 "runs/current/artifacts/product/acceptance-criteria.md",
                 "runs/current/artifacts/product/user-stories.md",
                 "runs/current/artifacts/product/conceptual-domain-model.md",
@@ -83,6 +84,7 @@ class FinalReviewPackTests(unittest.TestCase):
             (repo_root / ".git").mkdir()
             write_file(repo_root / "runs/current/artifacts/product/brief.md", "brief v2\n")
             write_file(repo_root / "runs/current/artifacts/product/problem-framing.md", "framing v2\n")
+            write_file(repo_root / "runs/current/artifacts/product/user-journeys.md", "journeys v2\n")
             write_file(repo_root / "runs/current/artifacts/product/acceptance-criteria.md", "ok\n")
             write_file(repo_root / "runs/current/artifacts/product/user-stories.md", "ok\n")
             write_file(repo_root / "runs/current/artifacts/product/conceptual-domain-model.md", "ok\n")
@@ -102,6 +104,7 @@ class FinalReviewPackTests(unittest.TestCase):
             )
             write_file(repo_root / "runs/current/evidence/final/brief.md", "brief v1\n")
             write_file(repo_root / "runs/current/evidence/final/problem-framing.md", "framing v2\n")
+            write_file(repo_root / "runs/current/evidence/final/user-journeys.md", "journeys v1\n")
             write_file(repo_root / "runs/current/evidence/final/acceptance-criteria.md", "ok\n")
             write_file(repo_root / "runs/current/evidence/final/user-stories.md", "ok\n")
             write_file(repo_root / "runs/current/evidence/final/conceptual-domain-model.md", "ok\n")

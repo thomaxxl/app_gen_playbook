@@ -50,6 +50,17 @@ STORY_INDEX_COLUMNS = (
     "Delivery Class",
     "Release",
     "Story Type",
+    "Primary Journey ID",
+    "Story Statement",
+)
+PRE_JOURNEY_STORY_INDEX_COLUMNS = (
+    "Story ID",
+    "Title",
+    "Actor",
+    "Priority",
+    "Delivery Class",
+    "Release",
+    "Story Type",
     "Story Statement",
 )
 LEGACY_STORY_INDEX_COLUMNS = (
@@ -85,6 +96,26 @@ OLDER_LEGACY_STORY_INDEX_COLUMNS = (
 )
 TRACEABILITY_COLUMNS = (
     "Story ID",
+    "Journey IDs",
+    "Concept IDs",
+    "Workflow IDs",
+    "Business Event IDs",
+    "Rule IDs",
+    "Resource IDs",
+    "Primary Evidence Mode",
+    "Page IDs",
+    "Route IDs",
+    "State/Mode Coverage",
+    "Permission Context",
+    "Sample Data IDs",
+    "Acceptance IDs",
+    "Generated resource allowed as satisfier?",
+    "Required preview evidence",
+    "Required live QA evidence",
+    "Acceptance owner",
+)
+PRE_JOURNEY_TRACEABILITY_COLUMNS = (
+    "Story ID",
     "Concept IDs",
     "Workflow IDs",
     "Business Event IDs",
@@ -103,6 +134,24 @@ TRACEABILITY_COLUMNS = (
     "Acceptance owner",
 )
 TRANSITIONAL_TRACEABILITY_COLUMNS = (
+    "Story ID",
+    "Journey IDs",
+    "Workflow IDs",
+    "Rule IDs",
+    "Resource IDs",
+    "Primary Evidence Mode",
+    "Page IDs",
+    "Route IDs",
+    "State/Mode Coverage",
+    "Permission Context",
+    "Sample Data IDs",
+    "Acceptance IDs",
+    "Generated resource allowed as satisfier?",
+    "Required preview evidence",
+    "Required live QA evidence",
+    "Acceptance owner",
+)
+PRE_JOURNEY_TRANSITIONAL_TRACEABILITY_COLUMNS = (
     "Story ID",
     "Workflow IDs",
     "Rule IDs",
@@ -452,7 +501,7 @@ def _parse_user_story_catalog_text(
             story_index,
             f"{label} story index",
             STORY_INDEX_COLUMNS,
-            legacy_columns=(LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
+            legacy_columns=(PRE_JOURNEY_STORY_INDEX_COLUMNS, LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
         )
     )
     if not detail_text:
@@ -553,7 +602,14 @@ def _resolve_user_story_scope(
     for section_name in ("Added story index rows", "Changed story index rows"):
         rows = parse_markdown_table_from_section(text, section_name)
         if rows:
-            issues.extend(_header_issues(rows, f"{relpath} {section_name.lower()}", STORY_INDEX_COLUMNS))
+            issues.extend(
+                _header_issues(
+                    rows,
+                    f"{relpath} {section_name.lower()}",
+                    STORY_INDEX_COLUMNS,
+                    legacy_columns=(PRE_JOURNEY_STORY_INDEX_COLUMNS, LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
+                )
+            )
         for row in rows:
             story_id = row.get("Story ID", "").strip()
             if not story_id:
@@ -798,7 +854,13 @@ def _resolve_traceability_scope(
     relpath = _relative_path(repo_root, artifact_path)
     rows = parse_markdown_table_text(text)
     columns = _table_columns(rows)
-    if columns in {TRACEABILITY_COLUMNS, TRANSITIONAL_TRACEABILITY_COLUMNS, LEGACY_TRACEABILITY_COLUMNS}:
+    if columns in {
+        TRACEABILITY_COLUMNS,
+        PRE_JOURNEY_TRACEABILITY_COLUMNS,
+        TRANSITIONAL_TRACEABILITY_COLUMNS,
+        PRE_JOURNEY_TRANSITIONAL_TRACEABILITY_COLUMNS,
+        LEGACY_TRACEABILITY_COLUMNS,
+    }:
         return {
             "canonical_rows": rows,
             "delta_rows": [],
@@ -863,6 +925,7 @@ def _materialize_traceability_rows(
             continue
         trace_row = {
             "story_id": story_id,
+            "journey_ids": parse_csv_values(row.get("Journey IDs", "")),
             "concept_ids": _parse_optional_surface_ids(row.get("Concept IDs", "")),
             "workflow_ids": parse_csv_values(row.get("Workflow IDs", "")),
             "business_event_ids": _parse_optional_surface_ids(row.get("Business Event IDs", "")),
@@ -897,6 +960,7 @@ def _materialize_traceability_rows(
         if trace_row is None:
             trace_row = {
                 "story_id": story_id,
+                "journey_ids": [],
                 "concept_ids": [],
                 "workflow_ids": [],
                 "business_event_ids": [],
@@ -1161,7 +1225,7 @@ def _parse_user_story_catalog(
             story_index,
             f"{path.as_posix()} story index",
             STORY_INDEX_COLUMNS,
-            legacy_columns=(LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
+            legacy_columns=(PRE_JOURNEY_STORY_INDEX_COLUMNS, LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS),
         )
     )
     if not detail_text:
@@ -1260,7 +1324,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
     story_type_catalog_all: set[str] = set()
     current_release_story_ids: list[str] = []
     actual_story_columns = _table_columns(stories)
-    legacy_story_index = actual_story_columns in {LEGACY_STORY_INDEX_COLUMNS, OLDER_LEGACY_STORY_INDEX_COLUMNS}
+    legacy_story_index = actual_story_columns == OLDER_LEGACY_STORY_INDEX_COLUMNS
 
     for row in stories:
         story_id = row.get("Story ID", "").strip()
@@ -1273,6 +1337,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         delivery_class = _normalize_delivery_class(row.get("Delivery Class", ""), raw_priority)
         release = row.get("Release", "").strip()
         story_type = row.get("Story Type", "").strip().lower()
+        primary_journey_id = row.get("Primary Journey ID", "").strip()
         story_statement = row.get("Story Statement", "").strip()
         current_release = _is_current_release(release)
         story_block_required = _story_block_required(release)
@@ -1309,6 +1374,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             "delivery_class": delivery_class,
             "release": release,
             "story_type": story_type,
+            "primary_journey_id": primary_journey_id,
             "story_statement": story_statement,
             "why_priority": why_priority,
             "independent_test": independent_test,
@@ -1432,6 +1498,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         current_release_story_rows.append(
             {
                 "story_id": story_id,
+                "journey_ids": trace_row["journey_ids"],
                 "concept_ids": trace_row["concept_ids"],
                 "priority": story["priority"],
                 "delivery_class": story["delivery_class"],
@@ -1493,6 +1560,8 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
                 "release": story["release"],
                 "story_type": story["story_type"],
                 "story_statement": story["story_statement"],
+                "primary_journey_id": story["primary_journey_id"],
+                "journey_ids": trace_row["journey_ids"],
                 "why_priority": story["why_priority"],
                 "independent_test": story["independent_test"],
                 "concept_ids": trace_row["concept_ids"],

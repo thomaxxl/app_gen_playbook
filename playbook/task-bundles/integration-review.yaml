@@ -10,6 +10,7 @@ required_phase:
   - playbook/process/quality-gates.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/user-journeys.md
   - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/product/acceptance-criteria.md

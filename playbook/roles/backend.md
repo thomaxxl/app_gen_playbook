@@ -79,7 +79,7 @@ for the current task and permitted by the load plan.
 Typical task-driven reads:
 
 - product/backend semantics:
-  `product/conceptual-domain-model.md`,
+  `product/conceptual-domain-model.md`, `product/user-journeys.md`,
   `product/resource-inventory.md`, `product/resource-behavior-matrix.md`,
   `product/workflows.md`, `product/business-rules.md`,
   `product/sample-data.md`, `product/domain-glossary.md`
@@ -116,6 +116,12 @@ authoritative for dynamic UI data ownership. If that contract marks a surface
 as API-backed, the Backend agent MUST implement or clarify the required
 resource, read-model, or metadata lane instead of leaving the frontend to
 hardcode substitute values.
+
+When the current task touches approval, exception, or multi-step flows, the
+Backend agent MUST use `../../runs/current/artifacts/product/user-journeys.md`
+as a supporting input to confirm that journey-critical transitions,
+validations, and recovery paths are actually backed by rules, state changes,
+and API behavior.
 
 For persisted database-backed tables and relationships that the approved
 product, architecture, UX, or operator contracts need to list, show, filter,

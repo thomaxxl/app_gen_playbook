@@ -112,6 +112,11 @@ The QA agent MUST:
   real QA execution contract when present: answer its questions against the
   delivered app, cite the question IDs in `qa-delivery-review.md`, and reopen
   the owning role when the app fails a blocker-grade question
+- treat `runs/current/artifacts/product/user-journeys.md` as a real QA review
+  contract when present: cite journey IDs in `qa-delivery-review.md`, verify
+  that top current-release journeys actually complete end to end, and fail QA
+  when alternate or recovery paths promised by the journey catalog are absent,
+  misleading, or broken
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the

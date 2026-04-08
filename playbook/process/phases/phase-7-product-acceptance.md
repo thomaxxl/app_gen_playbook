@@ -21,6 +21,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - verify that the accepted app still matches the sparse-input interpretation
   chosen at the start
 - review user flows
+- explicitly review whether the top current-release journeys are complete
+  enough for first release and understandable to a non-technical reviewer
 - review the delivered visual direction against
   `runs/current/artifacts/ux/visual-direction.md` when that artifact exists,
   and fail acceptance if the implemented palette or emphasis model undermines
@@ -102,6 +104,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 ## Exit criteria
 
 - acceptance criteria are met
+- top current-release journeys are complete enough for first release and are
+  not broken by hidden rule behavior or missing exception paths
 - visible data matches `sample-data.md`
 - no unapproved demo, mock, or starter data remains visible
 - unresolved items are explicitly deferred

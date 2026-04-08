@@ -80,6 +80,7 @@ Every rule entry MUST include:
 
 Optional but recommended:
 
+- `Journey Relevance`
 - `Decision Table Ref`
 - `Implementation Notes`
 - `Traceability`
@@ -112,6 +113,10 @@ The run-owned file SHOULD align rule wording with:
 
 `Applies To` SHOULD use conceptual concept/state names where that is clearer
 than low-level field notation.
+
+`Journey Relevance` MAY list `J-*` IDs when a rule has strong user-facing
+impact on specific journeys. Use it to help UX, QA, and Product acceptance
+identify which rules materially shape visible end-to-end behavior.
 
 ## Worked examples
 

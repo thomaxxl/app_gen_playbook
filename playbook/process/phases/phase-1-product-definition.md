@@ -16,6 +16,11 @@ Turn business intent into an implementable product definition.
   stable statement of users, pain points, outcomes, and intended experience
 - turn those pain points and workflows into a user interview / walkthrough
   questionnaire that later roles can execute against the app
+- author `user-journeys.md` from its exact contract
+- distinguish current-release journeys from later-release journeys
+- ensure every current-release journey maps to real story and workflow IDs
+- capture alternate and recovery paths for journey-critical flows
+- author `journey-quality-checklist.md`
 - distinguish business concepts from application resources, admin screens, and
   backend persistence structures
 - write user stories or scenarios
@@ -58,6 +63,8 @@ Turn business intent into an implementable product definition.
 - `runs/current/artifacts/product/problem-framing.md`
 - completed `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/ux-interview-questionnaire.md`
+- `runs/current/artifacts/product/user-journeys.md`
+- `runs/current/artifacts/product/journey-quality-checklist.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
 - `runs/current/artifacts/product/resource-behavior-matrix.md`
@@ -77,6 +84,9 @@ Turn business intent into an implementable product definition.
 - the product package explicitly states who the app is for, why it matters,
   what outcomes it must deliver, and how the experience should reduce the
   main pain points
+- every current-release journey has a stable journey ID
+- every current-release journey includes a happy path and at least one
+  alternate or recovery path where relevant
 - the business-facing conceptual model is explicit enough that downstream
   roles do not have to infer core concepts from CRUD resources alone
 - important concept relationships, lifecycle states, and business events are
@@ -99,6 +109,8 @@ Turn business intent into an implementable product definition.
   implications instead of leaving the design intent implicit
 - `ux-interview-questionnaire.md` exists and translates the main user pain
   points plus core workflows into stable question IDs QA can execute later
+- every current-release story maps to a primary journey or explicitly records
+  why it does not
 - every current-release story is mapped in `traceability-matrix.md` to
   workflow IDs, rule IDs, resource IDs, page IDs, route IDs, permission
   context, sample-data references, acceptance IDs, and required review
@@ -115,4 +127,9 @@ Turn business intent into an implementable product definition.
 - `story-quality-checklist.md` is complete, non-placeholder, and records
   whether the current-release story set is concrete, testable, breadth-complete,
   and free of hidden implementation leakage
+- `journey-quality-checklist.md` is complete, non-placeholder, and records
+  whether the current-release journeys are concrete, end-to-end, and aligned
+  with the story/workflow set
+- the product package is not ready for handoff while `user-journeys.md` is
+  still a stub
 - the product package is marked `ready-for-handoff` or `approved`

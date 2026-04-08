@@ -18,6 +18,8 @@ Design the user journey and page behavior before implementation diverges.
 - answer the user interview and walkthrough questions in
   `ux-interview-questionnaire.md` through page hierarchy, navigation,
   search/findability behavior, and primary workflow design
+- treat `user-journeys.md` as a primary input and map each current-release
+  journey to visible navigation and screen transitions
 - define the hero/landing treatment that appears before any resource-grid
   content on the primary entry surface
 - define per-resource view strategy instead of using one generic CRUD layout
@@ -27,6 +29,8 @@ Design the user journey and page behavior before implementation diverges.
 - define which dashboard and landing summaries require joined API data
 - define form grouping, content clarity, and field-level guidance
 - define loading/error/empty states
+- identify journey-critical empty, loading, blocked, denied, and failure
+  states
 - define success and destructive-confirmation behavior
 - define responsive expectations and mobile fallbacks only if the run
   explicitly chooses to care about mobile; otherwise mobile may be ignored for
@@ -41,6 +45,8 @@ Design the user journey and page behavior before implementation diverges.
   configuration
 - define any approved frontend validation mirrors and trace them to business
   rule IDs
+- explicitly mark which journeys are fully satisfiable by generated UI versus
+  custom screens
 
 ## Outputs
 
@@ -68,6 +74,8 @@ during Phase 5.
 - the UX package is traceable to the product artifacts it implements
 - the UX package shows how the primary surfaces respond to the documented
   users, pain points, and experience intent from `problem-framing.md`
+- the UX package shows how current-release journeys are satisfied, including
+  alternate and recovery paths when those are part of the journey contract
 - the UX package can answer the blocker-grade questions from
   `ux-interview-questionnaire.md` without relying on hidden reviewer-only
   flows or unexplained implementation assumptions

@@ -3,6 +3,7 @@ phase: phase-1-product-definition
 status: stub
 depends_on:
   - user-stories.md
+  - user-journeys.md
   - workflows.md
   - custom-pages.md
   - acceptance-criteria.md
@@ -27,13 +28,17 @@ omitted until promoted into the current delivery scope.
 
 The real artifact MUST use this exact table schema:
 
-| Story ID | Concept IDs | Workflow IDs | Business Event IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| US-001 | C-001 | WF-001 | EV-001 | BR-001 | Request | ui | PAGE-001 | N001 | draft, submitted, blocked | operator with submit permission | SD-001 | AC-001 | no | yes | yes | product_manager |
+| Story ID | Journey IDs | Concept IDs | Workflow IDs | Business Event IDs | Rule IDs | Resource IDs | Primary Evidence Mode | Page IDs | Route IDs | State/Mode Coverage | Permission Context | Sample Data IDs | Acceptance IDs | Generated resource allowed as satisfier? | Required preview evidence | Required live QA evidence | Acceptance owner |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| US-001 | J-001 | C-001 | WF-001 | EV-001 | BR-001 | Request | ui | PAGE-001 | N001 | draft, submitted, blocked | operator with submit permission | SD-001 | AC-001 | no | yes | yes | product_manager |
 
 Rules:
 
 - `Story ID` MUST exist in `user-stories.md`
+- `Journey IDs` MUST point to real journey IDs or explicitly record `none`
+- every current-release story SHOULD normally have at least one `Journey ID`
+- if a story intentionally has `Journey IDs: none`, Product commentary MUST
+  explain why
 - `Concept IDs` MUST point to real conceptual concept IDs or explicitly record
   `none`
 - `Business Event IDs` MUST point to real conceptual business event IDs or

@@ -220,6 +220,12 @@ If the questionnaire misses a boundary-sensitive UX risk, the Architect MUST
 reopen or explicitly request Product Manager updates before treating the UX
 package as adequately framed.
 
+When `../../runs/current/artifacts/product/user-journeys.md` exists, the
+Architect MUST treat it as a first-class input for route and entry decisions,
+custom-flow boundaries, approval complexity, and end-to-end state transition
+coverage. Journeys inform architecture review, but they MUST NOT be rewritten
+as route diagrams or used as a substitute for architecture artifacts.
+
 Use the generic architecture templates under
 [../../specs/architecture/README.md](../../specs/architecture/README.md) when
 producing run-owned architecture artifacts.

@@ -36,6 +36,9 @@ readiness note in:
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories are the primary review obligations, while routes and
   pages are the proof surfaces attached to those stories
+- verify that each current-release journey can actually be completed end to
+  end and that journey-critical alternate or recovery paths behave as
+  described
 - record structured tables in `integration-review.md` for Story, Actor, Story
   Type, Scenario Depth, Page, and Route coverage instead of prose-only
   mentions
@@ -135,6 +138,8 @@ readiness note in:
 ## Exit criteria
 
 - frontend and backend contracts align
+- current-release journeys are completable end-to-end with the visible routes,
+  pages, states, and rules the product package promised
 - if packaging is in scope, the deployment contract and DevOps artifacts align
 - no business behavior exists in code without a matching rule entry in
   `runs/current/artifacts/product/business-rules.md`

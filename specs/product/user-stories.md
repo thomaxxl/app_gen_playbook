@@ -3,6 +3,7 @@ phase: phase-1-product-definition
 status: stub
 depends_on:
   - brief.md
+  - user-journeys.md
   - workflows.md
   - sample-data.md
   - acceptance-criteria.md
@@ -29,7 +30,8 @@ testability. Implementation mapping belongs in
 The real artifact MUST separate:
 
 - breadth: actor-by-capability coverage across the first-version scope
-- story core: the user journey, priority, and independent test for each story
+- story core: the user-facing outcome, primary journey anchor, priority, and
+  independent test for each story
 - depth: detailed scenario coverage for current-release stories
 - traceability: workflow/rule/page/route/evidence mapping in
   `traceability-matrix.md`
@@ -100,13 +102,17 @@ MUST stay aligned with that normalized ledger.
 The real artifact MUST include this exact table under the `## Story Index`
 heading.
 
-| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Story Statement |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| US-010 | Approver reviews pending requests | Approver | P1 | must | R1 | approval | As an Approver, I review pending requests and either approve or reject them with an audit note. |
+| Story ID | Title | Actor | Priority | Delivery Class | Release | Story Type | Primary Journey ID | Story Statement |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| US-010 | Approver reviews pending requests | Approver | P1 | must | R1 | approval | J-010 | As an Approver, I review pending requests and either approve or reject them with an audit note. |
 
 Rules:
 
 - keep the story core user-facing and testable
+- every current-release story MUST have a `Primary Journey ID`
+- later-release stories MAY use `none` only when the journey is intentionally
+  deferred
+- `Primary Journey ID` MUST point to a real journey in `user-journeys.md`
 - do not put workflow IDs, rule IDs, page IDs, route IDs, permission mapping,
   or sample-data mapping in the story index
 - do not duplicate `Why this priority` or `Independent Test` in the story
