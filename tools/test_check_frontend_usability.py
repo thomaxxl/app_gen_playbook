@@ -364,6 +364,41 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
             issues = collect_issues(repo_root)
             self.assertFalse(any("search input appears decorative" in issue for issue in issues))
 
+    def test_flags_decorative_filter_strip_without_interactivity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/App.tsx",
+                "\n".join(
+                    [
+                        'import Chip from "@mui/material/Chip";',
+                        "function FilterStrip({ filters }) {",
+                        "  return filters.map((filter) => (",
+                        '    <Chip key={filter.label} label={filter.label} variant={filter.active ? "filled" : "outlined"} />',
+                        "  ));",
+                        "}",
+                        "export default function App() {",
+                        "  return <FilterStrip filters={[{ label: 'Queue state' }]} />;",
+                        "}",
+                    ]
+                ),
+            )
+            self.seed_runtime_files(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertTrue(any("filter/scope chips appear decorative" in issue for issue in issues))
+
 
 if __name__ == "__main__":
     unittest.main()

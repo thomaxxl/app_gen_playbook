@@ -146,6 +146,12 @@ frontend package template before treating the playbook baseline as current.
 - when a custom or shell-level search affordance exists outside the default
   resource-list filters, it scopes to the intended context and renders either
   filtered results or a dedicated results surface
+- any visible filter, sort, scope, or queue-control affordance is either
+  functionally wired to change the page state/data or clearly rendered as
+  non-interactive status context; faux control chips are invalid
+- overview, landing, and dashboard surfaces use the visible viewport
+  deliberately; large empty regions or under-filled two-column layouts are
+  invalid when higher-priority summary/detail content could occupy that space
 - form pages show grouped structure when the run-owned UX artifacts require it
 - critical flows remain usable at narrow widths only when the run explicitly
   keeps mobile/narrow-screen behavior in scope
@@ -194,6 +200,9 @@ frontend package template before treating the playbook baseline as current.
 - integration evidence includes `runs/current/evidence/frontend-usability.md`
   summarizing the actual pages reviewed, the UX artifacts compared, and whether
   any internal/debug copy leaked into visible UI
+- `runs/current/evidence/frontend-usability.md` explicitly records whether
+  visible controls were interactive and whether the reviewed pages used layout
+  space effectively instead of shipping sparse whitespace-heavy shells
 
 ## UI preview evidence
 
@@ -213,6 +222,8 @@ content review rather than only file creation. At minimum it MUST state:
 - `content_validation_status: reviewed`
 - `scroll_state_validation: reviewed`
 - `shell_continuity_validation: approved`
+- `control_interactivity_validation: approved`
+- `layout_density_validation: approved`
 - `frontend_validation: approved`
 - `architect_validation: approved`
 - `product_manager_validation: approved`
@@ -253,6 +264,11 @@ For desktop left-rail shells, that review MUST prove at least:
 - the app bar starts flush with the rail instead of leaving a detached blank
   lane
 - shell hierarchy remains readable without duplicated or competing headings
+- visible chip/filter/scope controls that look actionable actually change
+  state, route, or in-page content when exercised
+- the reviewed page does not leave dominant unused whitespace while important
+  current-run content remains pushed below the fold or absent from the
+  companion column
 
 Typical trigger cases:
 

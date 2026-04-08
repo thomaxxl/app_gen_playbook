@@ -335,7 +335,9 @@ instead of scattering unrelated input-level validators.
   should review saved screenshots or treat preview capture as not required or
   environment-blocked
 - `runs/current/evidence/frontend-usability.md` recording the actual entry,
-  custom, and generated resource surfaces reviewed during integration
+  custom, and generated resource surfaces reviewed during integration,
+  including whether visible controls are interactive and whether the page
+  density/layout leaves avoidable dead space
 - handoff notes to `../../runs/current/role-state/architect/inbox/` when contracts break
 - coordination notes to `../../runs/current/role-state/backend/inbox/` when backend support is missing
 - readiness or completion notes to `../../runs/current/role-state/architect/inbox/` for integration review

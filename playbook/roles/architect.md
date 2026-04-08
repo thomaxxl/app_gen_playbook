@@ -337,6 +337,10 @@ content, not only the manifest metadata, before approving Gate C. Architect
 approval is recorded by setting `architect_validation: approved` in
 `../../runs/current/evidence/ui-previews/manifest.md`.
 
+Architect review MUST fail if the visible UI still contains decorative control
+chrome, dead filter/scope chips, or sparse whitespace-heavy layouts that leave
+important content under-filled or displaced.
+
 ## Completion rule
 
 Process every inbox file, update owned architecture artifacts, emit needed

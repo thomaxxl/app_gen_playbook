@@ -99,6 +99,11 @@ The QA agent MUST:
 - fail the review if relationship-rich resources technically work but still
   present bare counts or generic shells where the approved UX package called
   for labels, previews, or tabs
+- fail the review if visible filter/scope/action controls are decorative and do
+  not actually change state, route, or content
+- fail the review if major entry or overview surfaces leave dominant dead
+  whitespace while key summary/detail content is pushed below the fold or left
+  out of the visible companion panel
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the

@@ -148,6 +148,9 @@ During Phase 7 acceptance, the Product Manager MUST judge the actual user-facing
 app, not only technical gate notes. Product acceptance MUST fail if the visible
 UI still reads like a contract, recovery, route-inventory, or other
 implementation/debug shell instead of the intended product.
+Product acceptance MUST also fail if controls that look actionable do nothing
+or if the primary surfaces feel under-filled because avoidable whitespace
+dominates above-the-fold space.
 
 During acceptance closeout, the Product Manager MUST compile
 `../../runs/current/evidence/final/` as the reviewer-facing no-code audit pack.

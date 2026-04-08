@@ -690,6 +690,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "content_validation_status: reviewed",
             "scroll_state_validation: reviewed",
             "shell_continuity_validation: approved",
+            "control_interactivity_validation: approved",
+            "layout_density_validation: approved",
             "frontend_validation: approved",
             "architect_validation: approved",
             "product_manager_validation: approved",
@@ -711,6 +713,8 @@ def collect_frontend_runtime_issues(repo_root: Path) -> list[dict[str, str]]:
             "capture_status: captured",
             "scroll_state_validation: reviewed",
             "shell_continuity_validation: approved",
+            "control_interactivity_validation: approved",
+            "layout_density_validation: approved",
             "review_conclusion:",
         ):
             if _normalized(token) not in normalized:

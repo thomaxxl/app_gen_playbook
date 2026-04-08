@@ -838,6 +838,28 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                         }
                     )
 
+                if "control_interactivity_validation: approved" not in normalized_text:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-control-interactivity-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must declare control_interactivity_validation: approved",
+                        }
+                    )
+
+                if "layout_density_validation: approved" not in normalized_text:
+                    blockers.append(
+                        {
+                            "kind": "ui-preview-layout-density-missing",
+                            "path": relative_path,
+                            "owner": owner,
+                            "phase": phase,
+                            "reason": "captured ui preview manifest must declare layout_density_validation: approved",
+                        }
+                    )
+
                 missing_validations = [
                     role.replace("_", "-")
                     for role in ("frontend", "architect", "product_manager")

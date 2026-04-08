@@ -39,6 +39,25 @@ SEARCH_FILTER_MARKERS = (
     "filter:scopedfilter",
     "filter:{q:",
 )
+DECORATIVE_FILTER_STRIP_SIGNATURE = "function filterstrip({ filters }"
+DECORATIVE_FILTER_STRIP_MARKERS = (
+    "<chip",
+    "label={filter.label}",
+)
+INTERACTIVE_FILTER_MARKERS = (
+    "onclick=",
+    "component=",
+    "clickable",
+    "buttonbase",
+    "togglebutton",
+    "tablist",
+    "href=",
+    "to=",
+    "navigate(",
+    "setsearchparams(",
+    "setstate(",
+    "setfilter(",
+)
 
 
 def extract_single_backtick_value(text: str, label: str) -> str | None:
@@ -117,6 +136,24 @@ def collect_decorative_search_matches(src_root: Path) -> list[str]:
             marker in lowered for marker in SEARCH_FILTER_MARKERS
         )
         if has_submit_behavior or has_live_filter_behavior:
+            continue
+        matches.append(path.relative_to(src_root.parents[2]).as_posix())
+    return matches
+
+
+def collect_decorative_filter_strip_matches(src_root: Path) -> list[str]:
+    matches: list[str] = []
+    for path in iter_frontend_sources(src_root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        lowered = text.lower()
+        if DECORATIVE_FILTER_STRIP_SIGNATURE not in lowered:
+            continue
+        if not all(marker in lowered for marker in DECORATIVE_FILTER_STRIP_MARKERS):
+            continue
+        if any(marker in lowered for marker in INTERACTIVE_FILTER_MARKERS):
             continue
         matches.append(path.relative_to(src_root.parents[2]).as_posix())
     return matches
@@ -264,6 +301,13 @@ def collect_issues(repo_root: Path) -> list[str]:
         issues.append(
             "visible search input appears decorative or unwired: "
             + ", ".join(decorative_search_matches[:5])
+        )
+
+    decorative_filter_matches = collect_decorative_filter_strip_matches(src_root)
+    if decorative_filter_matches:
+        issues.append(
+            "visible filter/scope chips appear decorative or unwired: "
+            + ", ".join(decorative_filter_matches[:5])
         )
 
     return issues
