@@ -6,6 +6,10 @@ custom-page purpose, acceptance criteria, structured user-story scope,
 sample-data expectations, and final screenshot-content approval during
 acceptance.
 
+That framing MUST explicitly answer who the app is for, why it matters, what
+outcomes it must support, and how the experience should reduce the primary
+user pain points.
+
 The initial brief may be incomplete. Product Manager is responsible for
 researching the topic, filling product gaps, and documenting domain best
 practices and sensible first-version defaults before handoff.

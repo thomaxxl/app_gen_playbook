@@ -9,6 +9,7 @@ required_phase:
   - playbook/process/phases/phase-3-ux-and-interaction-design.md
 required_artifacts:
   - runs/current/artifacts/product/brief.md
+  - runs/current/artifacts/product/problem-framing.md
   - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/product/acceptance-criteria.md

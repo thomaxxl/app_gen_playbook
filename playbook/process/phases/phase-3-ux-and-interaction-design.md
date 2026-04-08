@@ -11,6 +11,8 @@ Design the user journey and page behavior before implementation diverges.
 - create screen inventory
 - define navigation/menu structure
 - define landing strategy and primary entry CTA hierarchy
+- map the visible experience back to the Who / Why / What / How framing and
+  pain points defined in `problem-framing.md`
 - define the hero/landing treatment that appears before any resource-grid
   content on the primary entry surface
 - define per-resource view strategy instead of using one generic CRUD layout
@@ -54,6 +56,8 @@ during Phase 5.
 ## Exit criteria
 
 - the UX package is traceable to the product artifacts it implements
+- the UX package shows how the primary surfaces respond to the documented
+  users, pain points, and experience intent from `problem-framing.md`
 - loading, empty, error, success, and recovery behavior are documented for the
   critical paths
 - page-shell, page-header, and primary CTA decisions are documented for the

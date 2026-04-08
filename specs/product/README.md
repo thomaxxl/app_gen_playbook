@@ -20,6 +20,10 @@ Rules:
   conceptual model for the run. It defines concepts, concept relationships,
   lifecycle/state models, and business events, and it MUST NOT be used as a
   disguised database, ORM, route, or endpoint design file.
+- `problem-framing.md` is the authoritative Who / Why / What / How framing for
+  the run. It captures the primary users, pain points, product promise, and
+  UX alignment implications in business language, and it MUST NOT become a
+  disguised route plan, backend design file, or component inventory.
 - `user-stories.md` is the authoritative scope catalog. It MUST keep the story
   core user-facing and testable, carry both the breadth matrix and normalized
   capability-coverage table, and use the exact story index schema the coverage
@@ -45,6 +49,7 @@ Template and reference files:
 - `input-interpretation.md`
 - `research-notes.md`
 - `brief.md`
+- `problem-framing.md`
 - `conceptual-domain-model.md`
 - `resource-inventory.md`
 - `resource-behavior-matrix.md`

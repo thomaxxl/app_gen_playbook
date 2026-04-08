@@ -28,9 +28,11 @@ Classify that input using `../input-policy.md`.
 - decide whether the app intent is explicit or inference-led
 - choose the smallest coherent first-version framing that fits the house style
 - identify primary users
+- outline the Who / Why / What / How of the app in business language
 - define top workflows
 - identify core resources
 - define initial scope and exclusions
+- identify the main user pain points and desired improvements
 - record rejected framing alternatives
 - classify the app shape:
   - admin CRUD only
@@ -46,6 +48,7 @@ Classify that input using `../input-policy.md`.
 - `runs/current/artifacts/product/research-notes.md`
 - initial `runs/current/artifacts/product/user-stories.md`
 - initial `runs/current/artifacts/product/brief.md`
+- initial `runs/current/artifacts/product/problem-framing.md`
 - initial `runs/current/artifacts/product/workflows.md`
 - initial `runs/current/artifacts/product/domain-glossary.md`
 - initial `runs/current/artifacts/product/assumptions-and-open-questions.md`
@@ -53,8 +56,11 @@ Classify that input using `../input-policy.md`.
 ## Exit criteria
 
 - user and scope are explicitly documented
+- the primary Who / Why / What / How framing is explicit
 - main resources are named
 - critical workflows are identified
+- primary pain points and desired improvements are explicit enough for later UX
+  work to inherit without guessing
 - sparse input has been actively interpreted rather than merely classified
 - missing domain detail has been replaced with researched conventions,
   explicit first-version choices, or documented assumptions

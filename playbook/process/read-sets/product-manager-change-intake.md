@@ -28,6 +28,7 @@ If the change affects business concepts, lifecycle/state models, or business
 events, the Product Manager MUST keep these in scope together for the change
 packet instead of inferring the delta only from resources or routes:
 
+- `problem-framing.md`
 - `conceptual-domain-model.md`
 - `user-stories.md`
 - `workflows.md`

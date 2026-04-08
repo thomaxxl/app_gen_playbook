@@ -12,6 +12,8 @@ Turn business intent into an implementable product definition.
   database structure
 - define the main business concepts, concept relationships, lifecycle/state
   models, and business events
+- refine the Who / Why / What / How framing so later UX work can inherit a
+  stable statement of users, pain points, outcomes, and intended experience
 - distinguish business concepts from application resources, admin screens, and
   backend persistence structures
 - write user stories or scenarios
@@ -51,6 +53,7 @@ Turn business intent into an implementable product definition.
   input was sparse or partial
 - completed `runs/current/artifacts/product/research-notes.md`
 - `runs/current/artifacts/product/conceptual-domain-model.md`
+- `runs/current/artifacts/product/problem-framing.md`
 - completed `runs/current/artifacts/product/user-stories.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
@@ -68,6 +71,9 @@ Turn business intent into an implementable product definition.
 ## Exit criteria
 
 - desired user-facing behavior is explicit
+- the product package explicitly states who the app is for, why it matters,
+  what outcomes it must deliver, and how the experience should reduce the
+  main pain points
 - the business-facing conceptual model is explicit enough that downstream
   roles do not have to infer core concepts from CRUD resources alone
 - important concept relationships, lifecycle states, and business events are
@@ -86,6 +92,8 @@ Turn business intent into an implementable product definition.
 - missing brief detail has been resolved into researched conventions,
   documented best-practice defaults, or explicit assumptions that downstream
   roles can follow without guessing
+- `problem-framing.md` includes a stable pain-point catalog and UX alignment
+  implications instead of leaving the design intent implicit
 - every current-release story is mapped in `traceability-matrix.md` to
   workflow IDs, rule IDs, resource IDs, page IDs, route IDs, permission
   context, sample-data references, acceptance IDs, and required review

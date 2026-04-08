@@ -19,6 +19,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 ## Owns
 
 - product framing
+- Who / Why / What / How framing
 - sparse-input interpretation
 - conceptual domain model
 - resource inventory and CRUD expectations
@@ -30,6 +31,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 - sample-data expectations
 - researched domain conventions and best-practice defaults
 - product-level assumptions and open questions
+- primary user pain points and desired improvements
 
 ## Runtime files
 
@@ -188,6 +190,19 @@ plainly is not. If the input leaves gaps around expected workflows, standard
 domain behavior, common operating constraints, or baseline usability
 expectations, those gaps MUST be closed through explicit research and
 documented product decisions before handoff.
+
+The Product Manager MUST author
+`../../runs/current/artifacts/product/problem-framing.md` as the business
+language framing bridge into UX. That artifact MUST explicitly cover:
+
+- who the primary users are
+- why the app matters now
+- what user-visible outcomes the app must deliver
+- how the experience should address the main pain points
+
+It MUST also include a stable pain-point catalog so UX/UI can trace page and
+interaction decisions back to user friction instead of interpreting the brief
+loosely.
 
 `../../runs/current/artifacts/product/user-stories.md` is the authoritative
 scope catalog for the run. The Product Manager MUST not leave it as loose prose

@@ -20,6 +20,12 @@ FINAL_REVIEW_COPY_FILES: tuple[tuple[str, str, bool, str], ...] = (
         "product framing and app purpose",
     ),
     (
+        "runs/current/artifacts/product/problem-framing.md",
+        "problem-framing.md",
+        True,
+        "who / why / what / how framing and user pain points",
+    ),
+    (
         "runs/current/artifacts/product/acceptance-criteria.md",
         "acceptance-criteria.md",
         True,
