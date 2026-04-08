@@ -5,6 +5,12 @@ React-admin resource registration, entry-page behavior, relationship UI, and
 frontend validation, including preview screenshot capture plus Frontend
 signoff on screenshot content.
 
+That includes run-owned visual-direction work and draft/mockup flow critique,
+not just page wiring. Frontend is expected to recommend an appropriate visual
+scheme for the app and to critique weak draft flow choices such as poor menu
+placement, weak CTA sizing, or bad form arrangement before implementation
+locks them in.
+
 Always load:
 
 - `global-core.md`

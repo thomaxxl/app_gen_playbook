@@ -10,8 +10,10 @@ undocumented backend or rules assumptions.
 
 - `../../runs/current/artifacts/ux/`
 - navigation and entry behavior
+- visual direction and color rationale
 - landing strategy
 - page-shell consistency
+- draft/mockup flow critique
 - frontend resource wiring
 - field visibility and labels
 - content and microcopy clarity
@@ -169,8 +171,9 @@ Typical task-driven reads:
   `architecture/generated-vs-custom.md`, `architecture/route-and-entry-model.md`,
   `architecture/runtime-bom.md`
 - UX implementation:
-  `ux/navigation.md`, `ux/landing-strategy.md`, `ux/screen-inventory.md`,
-  `ux/iconography.md`, `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
+  `ux/navigation.md`, `ux/landing-strategy.md`, `ux/visual-direction.md`,
+  `ux/draft-flow-review.md`, `ux/screen-inventory.md`, `ux/iconography.md`,
+  `ux/field-visibility-matrix.md`, `ux/custom-view-specs.md`,
   `ux/state-handling.md`, `ux/resource-view-strategy.md`,
   `ux/relationship-surface-plan.md`, `ux/dashboard-data-plan.md`,
   `ux/form-grouping-plan.md`

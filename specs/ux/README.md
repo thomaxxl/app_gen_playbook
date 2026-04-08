@@ -14,6 +14,8 @@ Rules:
 
 Template files:
 
+- `visual-direction.md`
+- `draft-flow-review.md`
 - `iconography.md`
 - `landing-strategy.md`
 - `navigation.md`
@@ -36,6 +38,8 @@ MUI icon family.
 
 The run-owned UX artifacts produced from these templates MUST capture:
 
+- visual mood, palette rationale, and readability/trust considerations
+- critiques of draft or mockup user flow before implementation hardens
 - entry-page strategy, primary CTA hierarchy, and proof/reassurance structure
 - icon-system choices when iconography is a visible UX decision
 - navigation and page hierarchy

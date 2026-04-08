@@ -13,6 +13,8 @@ meaning from implementation artifacts alone.
 ## Outputs
 
 - updated UX delta artifacts when the change affects UX behavior
+- updated visual-direction and draft-flow-review deltas when the change affects
+  visual language, navigation placement, CTA hierarchy, or form flow
 - when the input prompt or change packet includes binding external UI references,
   update `runs/current/changes/<change_id>/candidate/artifacts/ux/reference-alignment.md`
   so it records the priority order `input prompt > business model/contracts >

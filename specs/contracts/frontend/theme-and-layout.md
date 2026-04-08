@@ -22,6 +22,11 @@ The frontend SHOULD define an app-local MUI theme in `frontend/src/theme.ts`.
 The theme SHOULD remain lightweight and MUST prioritize readability over
 decorative novelty.
 
+When `runs/current/artifacts/ux/visual-direction.md` exists, the implemented
+theme and dominant shell/page materials MUST stay aligned with its chosen mood,
+palette rationale, and readability/trust rules rather than drifting to an
+arbitrary aesthetic.
+
 ## Page-shell defaults
 
 In-admin project pages SHOULD use the shared `PageHeader` pattern by default.

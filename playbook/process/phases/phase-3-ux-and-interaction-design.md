@@ -9,6 +9,8 @@ Design the user journey and page behavior before implementation diverges.
 ## Activities
 
 - create screen inventory
+- define visual direction and recommend the color scheme most appropriate for
+  the app's intended mood, trust posture, and readability needs
 - define navigation/menu structure
 - define landing strategy and primary entry CTA hierarchy
 - map the visible experience back to the Who / Why / What / How framing and
@@ -32,6 +34,9 @@ Design the user journey and page behavior before implementation diverges.
 - define accessibility-visible behavior and any higher-risk accessibility notes
 - define custom-page behavior
 - define relationship display patterns
+- review available mockups, draft surfaces, or reference screenshots and
+  record flow improvements around menu placement, button prominence/sizing,
+  CTA hierarchy, and form-field arrangement before implementation starts
 - define which screen and custom-view data is API-driven versus static UI
   configuration
 - define any approved frontend validation mirrors and trace them to business
@@ -40,6 +45,8 @@ Design the user journey and page behavior before implementation diverges.
 ## Outputs
 
 - `runs/current/artifacts/ux/navigation.md`
+- `runs/current/artifacts/ux/visual-direction.md`
+- `runs/current/artifacts/ux/draft-flow-review.md`
 - `runs/current/artifacts/ux/landing-strategy.md`
 - `runs/current/artifacts/ux/iconography.md`
 - `runs/current/artifacts/ux/screen-inventory.md`
@@ -64,6 +71,12 @@ during Phase 5.
 - the UX package can answer the blocker-grade questions from
   `ux-interview-questionnaire.md` without relying on hidden reviewer-only
   flows or unexplained implementation assumptions
+- `visual-direction.md` explains the chosen visual mood, color strategy, and
+  readability/trust rules instead of leaving the implemented palette as an
+  undocumented guess
+- `draft-flow-review.md` records concrete improvements for menu placement,
+  button hierarchy/sizing, and form arrangement when those concerns are
+  relevant to the reviewed draft
 - loading, empty, error, success, and recovery behavior are documented for the
   critical paths
 - page-shell, page-header, and primary CTA decisions are documented for the

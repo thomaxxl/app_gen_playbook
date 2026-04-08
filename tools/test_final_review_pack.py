@@ -30,6 +30,8 @@ class FinalReviewPackTests(unittest.TestCase):
                 "runs/current/artifacts/product/sample-data.md",
                 "runs/current/artifacts/product/acceptance-review.md",
                 "runs/current/artifacts/ux/navigation.md",
+                "runs/current/artifacts/ux/visual-direction.md",
+                "runs/current/artifacts/ux/draft-flow-review.md",
                 "runs/current/evidence/frontend-usability.md",
             ):
                 write_file(repo_root / relative, f"# {Path(relative).name}\n")
@@ -57,6 +59,14 @@ class FinalReviewPackTests(unittest.TestCase):
             self.assertEqual(
                 (repo_root / "runs/current/evidence/final/business-rules.md").read_text(encoding="utf-8"),
                 "# business-rules.md\n",
+            )
+            self.assertEqual(
+                (repo_root / "runs/current/evidence/final/visual-direction.md").read_text(encoding="utf-8"),
+                "# visual-direction.md\n",
+            )
+            self.assertEqual(
+                (repo_root / "runs/current/evidence/final/draft-flow-review.md").read_text(encoding="utf-8"),
+                "# draft-flow-review.md\n",
             )
             self.assertEqual(
                 (repo_root / "runs/current/evidence/final/ui-previews/overview.png").read_bytes(),

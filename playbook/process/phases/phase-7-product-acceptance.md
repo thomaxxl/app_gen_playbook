@@ -21,6 +21,10 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
 - verify that the accepted app still matches the sparse-input interpretation
   chosen at the start
 - review user flows
+- review the delivered visual direction against
+  `runs/current/artifacts/ux/visual-direction.md` when that artifact exists,
+  and fail acceptance if the implemented palette or emphasis model undermines
+  trust, readability, or the intended mood
 - review user stories against implementation
 - treat `runs/current/evidence/quality/review-plan.json` as story-first:
   current-release stories define what must be accepted, and routes/pages are
@@ -36,6 +40,10 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   `runs/current/artifacts/product/ux-interview-questionnaire.md` when that
   artifact exists, and fail acceptance if blocker-grade user questions remain
   unanswered or clearly fail in the visible experience
+- review `runs/current/artifacts/ux/draft-flow-review.md` when that artifact
+  exists and fail acceptance if blocker-grade menu placement, button
+  hierarchy/sizing, or form arrangement findings remain unresolved without an
+  explicit deferral
 - compare the actual entry page and required custom pages against
   `runs/current/artifacts/ux/landing-strategy.md`,
   `runs/current/artifacts/ux/screen-inventory.md`, and
@@ -122,6 +130,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   integration/runtime caveats
 - blocker-grade questionnaire findings are either resolved or explicitly
   deferred with owner and rationale
+- visual direction and blocker-grade draft-flow findings are either satisfied
+  in the delivered app or explicitly deferred with rationale
 
 ## Explicit fail conditions
 

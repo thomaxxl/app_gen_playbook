@@ -152,6 +152,13 @@ frontend package template before treating the playbook baseline as current.
 - overview, landing, and dashboard surfaces use the visible viewport
   deliberately; large empty regions or under-filled two-column layouts are
   invalid when higher-priority summary/detail content could occupy that space
+- when `runs/current/artifacts/ux/visual-direction.md` exists, the implemented
+  color/emphasis system remains readable and consistent with its trust/mood
+  rationale rather than collapsing into arbitrary decorative styling
+- when `runs/current/artifacts/ux/draft-flow-review.md` exists, blocker-grade
+  recommendations about menu placement, CTA hierarchy, button prominence, or
+  form arrangement are either visibly resolved or explicitly documented as
+  deferred
 - form pages show grouped structure when the run-owned UX artifacts require it
 - critical flows remain usable at narrow widths only when the run explicitly
   keeps mobile/narrow-screen behavior in scope

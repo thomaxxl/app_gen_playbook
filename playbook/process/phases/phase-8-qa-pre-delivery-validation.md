@@ -34,6 +34,10 @@ This phase begins only after:
   tested flows
 - review saved UI preview screenshots when present, but do not treat them as a
   substitute for live testing
+- use `runs/current/artifacts/ux/visual-direction.md` and
+  `runs/current/artifacts/ux/draft-flow-review.md` when they exist to judge
+  whether the delivered app preserves readability, trust, and smooth user
+  flow instead of only technically functioning
 - execute the required story review plan and document the supporting route/page
   coverage used to prove each live-tested current-release story
 - execute the Product+Architect-authored UX interview questionnaire when it

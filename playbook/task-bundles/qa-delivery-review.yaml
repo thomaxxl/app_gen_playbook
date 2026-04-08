@@ -34,6 +34,9 @@ required_artifacts:
   - runs/current/evidence/quality/test-results.md
   - runs/current/evidence/quality/quality-summary.md
   - app/run.sh
+reference_only:
+  - runs/current/artifacts/ux/visual-direction.md
+  - runs/current/artifacts/ux/draft-flow-review.md
 writable_targets:
   - runs/current/evidence/qa-delivery-review.md
   - runs/current/evidence/ui-previews/qa-manifest.md

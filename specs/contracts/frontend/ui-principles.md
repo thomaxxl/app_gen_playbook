@@ -30,6 +30,10 @@ Menu labels, page titles, and CTA labels MUST stay aligned with:
 - `../../runs/current/artifacts/ux/navigation.md`
 - `../../runs/current/artifacts/ux/screen-inventory.md`
 
+When `../../runs/current/artifacts/ux/draft-flow-review.md` exists, accepted
+recommendations about menu placement and return-path clarity are also
+implementation input, not optional commentary.
+
 If the run enables a non-default icon system, visible app-facing icons MUST
 also stay aligned with:
 
@@ -40,6 +44,10 @@ also stay aligned with:
 Each major section SHOULD expose one primary CTA by default.
 
 Secondary actions MUST remain visually subordinate to the primary CTA.
+
+When `../../runs/current/artifacts/ux/draft-flow-review.md` exists, accepted
+recommendations about button prominence or sizing MUST be reflected in the
+delivered surfaces unless explicitly deferred.
 
 Destructive actions MUST NOT share the same emphasis level as the safe primary
 next step.
@@ -72,6 +80,10 @@ By default, generated forms MUST:
 - keep most standard fields at one-third desktop width
 - render compact scalar fields narrower when appropriate
 - render multiline, file, and image fields full width
+
+When `../../runs/current/artifacts/ux/draft-flow-review.md` exists, accepted
+recommendations about field arrangement, section order, or form density MUST
+also be reflected in the delivered forms unless explicitly deferred.
 
 ## Required visible states
 

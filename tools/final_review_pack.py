@@ -74,6 +74,18 @@ FINAL_REVIEW_COPY_FILES: tuple[tuple[str, str, bool, str], ...] = (
         "visible entry points and user navigation",
     ),
     (
+        "runs/current/artifacts/ux/visual-direction.md",
+        "visual-direction.md",
+        False,
+        "visual mood, palette rationale, and readability/trust guidance",
+    ),
+    (
+        "runs/current/artifacts/ux/draft-flow-review.md",
+        "draft-flow-review.md",
+        False,
+        "draft/mockup critique and smoother-flow recommendations",
+    ),
+    (
         "runs/current/evidence/frontend-usability.md",
         "frontend-usability.md",
         True,
