@@ -20,6 +20,7 @@ product artifacts instead of handing downstream roles a sparse brief.
 
 - product framing
 - Who / Why / What / How framing
+- UX interview and walkthrough questionnaire
 - sparse-input interpretation
 - conceptual domain model
 - resource inventory and CRUD expectations
@@ -203,6 +204,22 @@ language framing bridge into UX. That artifact MUST explicitly cover:
 It MUST also include a stable pain-point catalog so UX/UI can trace page and
 interaction decisions back to user friction instead of interpreting the brief
 loosely.
+
+The Product Manager MUST also author
+`../../runs/current/artifacts/product/ux-interview-questionnaire.md` as the
+structured user-experience question set for the run. That artifact MUST:
+
+- turn pain points and key workflows into concrete reviewer questions
+- cover navigation/orientation, search/findability, primary workflow
+  completion, and trust or recovery cues when those concerns are relevant
+- stay user-facing instead of degrading into test-runner steps or
+  implementation tickets
+- be pressure-tested with Architect before UX design is treated as ready
+
+If the brief names domain-specific concerns such as checkout, approval,
+triage, booking, reconciliation, or similar core workflows, the questionnaire
+MUST include direct questions for those flows rather than relying on generic
+UX language.
 
 `../../runs/current/artifacts/product/user-stories.md` is the authoritative
 scope catalog for the run. The Product Manager MUST not leave it as loose prose

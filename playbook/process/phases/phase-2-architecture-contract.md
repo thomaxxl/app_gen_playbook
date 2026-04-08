@@ -17,6 +17,9 @@ Convert product requirements into a stable cross-layer contract.
   resource boundaries
 - use `user-stories.md` and `traceability-matrix.md` as first-class inputs,
   not only workflow or page summaries
+- pressure-test the UX interview questionnaire so architecture-sensitive
+  navigation, search, and primary workflow questions are explicit before UX
+  implementation proceeds
 - classify the run as starter, rename-only, or non-starter
 - classify each resource and record singleton-versus-first-class decisions
 - define canonical resource names
@@ -63,6 +66,8 @@ If the run differs from the starter trio, the Architect MUST read
 - each later role can work without guessing
 - user-story scope, workflow depth, permission context, and review obligations
   are explicit enough that architecture does not need to infer them indirectly
+- the UX interview questionnaire has been reviewed for architecture-sensitive
+  gaps in navigation, search/findability, and critical workflow transitions
 - runtime dependencies are explicit
 - runtime-bom is authored and freezes frontend/backend package sources before
   implementation

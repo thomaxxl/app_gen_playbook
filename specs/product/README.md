@@ -24,6 +24,10 @@ Rules:
   the run. It captures the primary users, pain points, product promise, and
   UX alignment implications in business language, and it MUST NOT become a
   disguised route plan, backend design file, or component inventory.
+- `ux-interview-questionnaire.md` is the authoritative user-experience
+  question set for reviewer and walkthrough use. It translates pain points and
+  key workflows into concrete user questions that QA can execute later, and it
+  MUST NOT degrade into a test runner script or implementation task list.
 - `user-stories.md` is the authoritative scope catalog. It MUST keep the story
   core user-facing and testable, carry both the breadth matrix and normalized
   capability-coverage table, and use the exact story index schema the coverage
@@ -50,6 +54,7 @@ Template and reference files:
 - `research-notes.md`
 - `brief.md`
 - `problem-framing.md`
+- `ux-interview-questionnaire.md`
 - `conceptual-domain-model.md`
 - `resource-inventory.md`
 - `resource-behavior-matrix.md`

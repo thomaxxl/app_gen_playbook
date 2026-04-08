@@ -14,6 +14,8 @@ Turn business intent into an implementable product definition.
   models, and business events
 - refine the Who / Why / What / How framing so later UX work can inherit a
   stable statement of users, pain points, outcomes, and intended experience
+- turn those pain points and workflows into a user interview / walkthrough
+  questionnaire that later roles can execute against the app
 - distinguish business concepts from application resources, admin screens, and
   backend persistence structures
 - write user stories or scenarios
@@ -55,6 +57,7 @@ Turn business intent into an implementable product definition.
 - `runs/current/artifacts/product/conceptual-domain-model.md`
 - `runs/current/artifacts/product/problem-framing.md`
 - completed `runs/current/artifacts/product/user-stories.md`
+- `runs/current/artifacts/product/ux-interview-questionnaire.md`
 - `runs/current/artifacts/product/brief.md`
 - `runs/current/artifacts/product/resource-inventory.md`
 - `runs/current/artifacts/product/resource-behavior-matrix.md`
@@ -94,6 +97,8 @@ Turn business intent into an implementable product definition.
   roles can follow without guessing
 - `problem-framing.md` includes a stable pain-point catalog and UX alignment
   implications instead of leaving the design intent implicit
+- `ux-interview-questionnaire.md` exists and translates the main user pain
+  points plus core workflows into stable question IDs QA can execute later
 - every current-release story is mapped in `traceability-matrix.md` to
   workflow IDs, rule IDs, resource IDs, page IDs, route IDs, permission
   context, sample-data references, acceptance IDs, and required review

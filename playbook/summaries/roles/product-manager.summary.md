@@ -10,6 +10,11 @@ That framing MUST explicitly answer who the app is for, why it matters, what
 outcomes it must support, and how the experience should reduce the primary
 user pain points.
 
+Product Manager also owns the user-facing walkthrough question set in
+`ux-interview-questionnaire.md`: a stable list of user interview or reviewer
+questions that pressure-tests navigation, findability, primary workflows, and
+experience friction before QA executes the delivered app.
+
 The initial brief may be incomplete. Product Manager is responsible for
 researching the topic, filling product gaps, and documenting domain best
 practices and sensible first-version defaults before handoff.

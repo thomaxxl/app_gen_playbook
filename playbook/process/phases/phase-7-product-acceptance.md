@@ -32,6 +32,10 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   acceptance artifact claims is satisfied, using routes/pages as supporting
   evidence rather than as the primary unit of scope
 - review custom pages
+- review the delivered app against
+  `runs/current/artifacts/product/ux-interview-questionnaire.md` when that
+  artifact exists, and fail acceptance if blocker-grade user questions remain
+  unanswered or clearly fail in the visible experience
 - compare the actual entry page and required custom pages against
   `runs/current/artifacts/ux/landing-strategy.md`,
   `runs/current/artifacts/ux/screen-inventory.md`, and
@@ -116,6 +120,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   generic admin resource list
 - Product Manager can explain the app in user terms without relying on
   integration/runtime caveats
+- blocker-grade questionnaire findings are either resolved or explicitly
+  deferred with owner and rationale
 
 ## Explicit fail conditions
 

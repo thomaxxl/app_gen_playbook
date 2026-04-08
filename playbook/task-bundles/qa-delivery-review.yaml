@@ -11,6 +11,7 @@ required_phase:
 required_artifacts:
   - runs/current/artifacts/architecture/integration-review.md
   - runs/current/artifacts/product/acceptance-review.md
+  - runs/current/artifacts/product/ux-interview-questionnaire.md
   - runs/current/artifacts/product/user-stories.md
   - runs/current/artifacts/product/workflows.md
   - runs/current/artifacts/product/acceptance-criteria.md

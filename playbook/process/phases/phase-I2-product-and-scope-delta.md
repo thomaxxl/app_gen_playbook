@@ -16,6 +16,8 @@ point, but it is no longer evidence that the request needs no change.
 
 - product-framing delta when the change affects users, pain points, product
   promise, or intended experience shape
+- UX interview questionnaire delta when the change affects navigation,
+  findability, first-run orientation, or any primary workflow
 - conceptual-domain-model delta when the change affects concepts, concept
   relationships, lifecycle/state models, or business events
 - updated user-story delta

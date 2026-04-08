@@ -22,6 +22,7 @@ undocumented backend or rules assumptions.
 - frontend build readiness
 - frontend-side validation notes
 - approved frontend validation mirrors
+- implementation of accepted UX interview and walkthrough findings
 
 ## Runtime files
 
@@ -83,6 +84,11 @@ must be fetched from the backend.
 The Frontend agent MUST also treat
 `../../app/frontend/src/generated/uxModel.ts` as the executable frontend
 view model compiled from the run-owned UX artifact package.
+
+When `../../runs/current/artifacts/product/ux-interview-questionnaire.md`
+exists, the Frontend agent MUST treat it as a first-class UX intent input.
+Accepted findings from PM, Architect, Product acceptance, or QA execution of
+that questionnaire are implementation scope, not optional polish.
 
 The Frontend agent MUST use the React-admin dataProvider as the canonical
 frontend API access layer. If a page, dashboard, landing surface, or custom

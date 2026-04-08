@@ -29,7 +29,13 @@ events, the Product Manager MUST keep these in scope together for the change
 packet instead of inferring the delta only from resources or routes:
 
 - `problem-framing.md`
+- `ux-interview-questionnaire.md`
 - `conceptual-domain-model.md`
 - `user-stories.md`
 - `workflows.md`
 - `traceability-matrix.md`
+
+If the change affects navigation, search/findability, first-run orientation,
+or any primary task flow, the Product Manager MUST keep
+`ux-interview-questionnaire.md` in scope and update the user questions instead
+of treating the UX delta as obvious.

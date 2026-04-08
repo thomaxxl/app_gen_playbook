@@ -11,6 +11,7 @@ Required startup reads:
 - `../../roles/shared-responsibilities.md`
 - `../../../specs/product/README.md`
 - `../../../specs/product/problem-framing.md`
+- `../../../specs/product/ux-interview-questionnaire.md`
 - `../../../specs/product/conceptual-domain-model.md`
 - `../../../specs/product/story-quality-checklist.md`
 - `../../../specs/product/spec-kit-crosswalk.md`

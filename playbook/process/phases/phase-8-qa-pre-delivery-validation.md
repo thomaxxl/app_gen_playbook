@@ -36,6 +36,9 @@ This phase begins only after:
   substitute for live testing
 - execute the required story review plan and document the supporting route/page
   coverage used to prove each live-tested current-release story
+- execute the Product+Architect-authored UX interview questionnaire when it
+  exists, answer the question IDs against the live app, and cite the findings
+  in the QA review
 - cite the required current-release story IDs from the review plan when
   recording what QA actually exercised
 - make sure the QA manifest records structured story-to-screenshot coverage
@@ -68,6 +71,9 @@ This phase begins only after:
   only runtime survivability of a narrow smoke subset, and uses the review-plan
   story obligations when judging whether required capabilities were actually
   tested
+- QA answers the blocker-grade questionnaire items from
+  `ux-interview-questionnaire.md` when present and fails closed when those
+  questions expose unresolved UX defects
 - QA fails closed when basic user testing only proves reviewer deep links
   rather than discoverable user flows
 - QA either approves delivery or reopens the run with explicit owner handoffs

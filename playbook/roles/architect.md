@@ -17,6 +17,7 @@ backend, and rules can implement without guessing.
 - resource classification
 - integration boundary decisions
 - final integration review
+- UX questionnaire pressure-test for boundary-sensitive flows
 
 ## Runtime files
 
@@ -203,6 +204,21 @@ raised finding.
 
 The Architect MUST replace starter-placeholder content in those gating
 artifacts before Phase 2 is handed off for implementation.
+
+When `../../runs/current/artifacts/product/ux-interview-questionnaire.md`
+exists, the Architect MUST treat it as a first-class product input. During
+Phase 2 or change analysis, the Architect MUST pressure-test whether the
+question set adequately covers:
+
+- navigation and return-path clarity across route boundaries
+- search/findability behavior that depends on API or resource design
+- primary workflow handoffs that cross page, state, or resource boundaries
+- trust, proof, and recovery cues that depend on backend or architecture
+  behavior
+
+If the questionnaire misses a boundary-sensitive UX risk, the Architect MUST
+reopen or explicitly request Product Manager updates before treating the UX
+package as adequately framed.
 
 Use the generic architecture templates under
 [../../specs/architecture/README.md](../../specs/architecture/README.md) when

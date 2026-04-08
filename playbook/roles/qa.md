@@ -59,6 +59,9 @@ The QA agent MUST:
   execution context
 - perform basic user testing against the real running app, not only file or
   route inspection
+- execute the Product+Architect-authored UX interview questionnaire as a live
+  walkthrough when that artifact exists, and record the answered questions plus
+  findings in the QA review
 - treat QA as a completeness gate, not only a smoke/runtime pass
 - fail the review if required CRUD or search support only works through
   manually typed deep links instead of the delivered UI's normal navigation
@@ -104,6 +107,10 @@ The QA agent MUST:
 - fail the review if major entry or overview surfaces leave dominant dead
   whitespace while key summary/detail content is pushed below the fold or left
   out of the visible companion panel
+- treat `runs/current/artifacts/product/ux-interview-questionnaire.md` as a
+  real QA execution contract when present: answer its questions against the
+  delivered app, cite the question IDs in `qa-delivery-review.md`, and reopen
+  the owning role when the app fails a blocker-grade question
 - review the saved screenshot evidence when it exists, but not treat screenshots
   alone as a substitute for live QA
 - require `../../runs/current/evidence/ui-previews/qa-manifest.md` plus the

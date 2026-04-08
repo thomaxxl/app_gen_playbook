@@ -26,6 +26,12 @@ FINAL_REVIEW_COPY_FILES: tuple[tuple[str, str, bool, str], ...] = (
         "who / why / what / how framing and user pain points",
     ),
     (
+        "runs/current/artifacts/product/ux-interview-questionnaire.md",
+        "ux-interview-questionnaire.md",
+        False,
+        "reviewer question set for navigation, findability, and primary workflows",
+    ),
+    (
         "runs/current/artifacts/product/acceptance-criteria.md",
         "acceptance-criteria.md",
         True,
