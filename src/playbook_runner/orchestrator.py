@@ -409,11 +409,13 @@ class Orchestrator:
     def blocked_exit(self, title: str, body: str) -> int:
         self.append_remark(title, body)
         self.set_run_status("blocked")
+        self.log_line(f"run-finish status=blocked title={title}")
         raise RunnerError(f"{title}\n\n{body}")
 
     def interrupted_exit(self, title: str, body: str, *, returncode: int = 1) -> int:
         self.append_remark(title, body)
         self.set_run_status("interrupted")
+        self.log_line(f"run-finish status=interrupted title={title}")
         raise RunnerError(f"{title}\n\n{body}") if returncode else 0
 
     def enforce_execution_prereqs(self) -> None:
@@ -657,6 +659,7 @@ class Orchestrator:
             )
             self.append_remark("run stopped by operator kill request", body)
             self.set_run_status("interrupted")
+            self.log_line("run-finish status=interrupted title=run stopped by operator kill request")
             raise SystemExit(0)
         if self.paths.pause_requested_md.exists():
             if self.queue.pending_actionable_count(self.active_roles(), lane="inflight") > 0:
@@ -667,6 +670,7 @@ class Orchestrator:
             )
             self.append_remark("run paused by operator request", body)
             self.set_run_status("interrupted")
+            self.log_line("run-finish status=interrupted title=run paused by operator request")
             raise SystemExit(0)
 
     def wait_for_codex_capacity_retry(
@@ -1187,6 +1191,7 @@ class Orchestrator:
             if complete:
                 self.set_run_status("complete", "complete")
                 self.append_remark("Run complete", detail or "Completion checker passed.")
+                self.log_line("run-finish status=complete phase=complete")
                 return 0
 
             self.maybe_operator_action_exit()

@@ -1464,11 +1464,50 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             with patch.object(orchestrator, "handle_pause_or_kill"), \
                 patch.object(orchestrator.tools, "check_completion", return_value=(True, "done")), \
                 patch.object(orchestrator, "set_run_status") as set_run_status, \
-                patch.object(orchestrator, "append_remark") as append_remark:
+                patch.object(orchestrator, "append_remark") as append_remark, \
+                patch.object(orchestrator, "log_line") as log_line:
                 self.assertEqual(orchestrator.run_loop(), 0)
 
             set_run_status.assert_called_once_with("complete", "complete")
             append_remark.assert_called_once_with("Run complete", "done")
+            log_line.assert_called_once_with("run-finish status=complete phase=complete")
+
+    def test_blocked_exit_logs_terminal_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="iterate", scope="fullstack", resume=False, target_role=None, input_file=None))
+
+            with patch.object(orchestrator, "append_remark") as append_remark, \
+                patch.object(orchestrator, "set_run_status") as set_run_status, \
+                patch.object(orchestrator, "log_line") as log_line:
+                with self.assertRaisesRegex(RuntimeError, "run requires operator action"):
+                    orchestrator.blocked_exit("run requires operator action", "detail")
+
+            append_remark.assert_called_once_with("run requires operator action", "detail")
+            set_run_status.assert_called_once_with("blocked")
+            log_line.assert_called_once_with("run-finish status=blocked title=run requires operator action")
 
 
 if __name__ == "__main__":
