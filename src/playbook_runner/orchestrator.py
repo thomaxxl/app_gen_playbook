@@ -619,10 +619,20 @@ class Orchestrator:
     def extract_summary(self, result_path: Path) -> str:
         if not result_path.exists():
             return ""
-        for line in result_path.read_text(encoding="utf-8").splitlines():
+        lines = result_path.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines):
             stripped = line.strip()
-            if stripped:
+            if stripped.startswith("Summary:"):
                 return stripped[:200]
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if set(stripped) <= {"─"}:
+                continue
+            if stripped.startswith("▸ "):
+                continue
+            return stripped[:200]
         return ""
 
     def run_recovery_pass(self) -> bool:

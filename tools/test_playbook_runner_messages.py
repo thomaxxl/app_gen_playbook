@@ -409,7 +409,22 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             )
 
             def communicate(timeout=None):  # type: ignore[no-untyped-def]
-                raw_file.write_text("Goose result", encoding="utf-8")
+                raw_file.write_text(
+                    "\n".join(
+                        [
+                            "",
+                            "  ────────────────────────────────────────",
+                            "  ▸ write",
+                            "    path /tmp/file.md",
+                            "    content: demo",
+                            "",
+                            "Summary: Goose result",
+                            "",
+                            "- bullet",
+                        ]
+                    ),
+                    encoding="utf-8",
+                )
                 return ("", "")
 
             proc = SimpleNamespace(communicate=communicate, returncode=0)
@@ -436,10 +451,55 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             self.assertEqual(env["CHATGPT_CODEX_REASONING_EFFORT"], "high")
             self.assertTrue(env["XDG_STATE_HOME"].endswith("runs/current/orchestrator/goose/state"))
             self.assertTrue(env["XDG_DATA_HOME"].endswith("runs/current/orchestrator/goose/data"))
-            self.assertEqual(result_file.read_text(encoding="utf-8"), "Goose result")
+            self.assertEqual(result_file.read_text(encoding="utf-8"), "Summary: Goose result\n\n- bullet\n")
             jsonl_text = jsonl_file.read_text(encoding="utf-8")
             self.assertIn('"type": "session.started"', jsonl_text)
             self.assertIn('"type": "turn.completed"', jsonl_text)
+
+    def test_extract_summary_prefers_summary_line_and_skips_transcript_bars(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            result_file = repo_root / "result.md"
+            result_file.write_text(
+                "\n".join(
+                    [
+                        "",
+                        "  ────────────────────────────────────────",
+                        "  ▸ write",
+                        "Summary: Processed the architect recovery item cleanly.",
+                        "- downstream note",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            self.assertEqual(
+                orchestrator.extract_summary(result_file),
+                "Summary: Processed the architect recovery item cleanly.",
+            )
 
     def test_resume_forces_fresh_session_when_backend_changes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -373,7 +373,7 @@ def _write_goose_compatibility_jsonl(
     ]
 
     if run_result.returncode == 0 and raw_output.strip():
-        result_file.write_text(raw_output, encoding="utf-8")
+        result_file.write_text(_extract_goose_final_message(raw_output), encoding="utf-8")
         events.append({"type": "turn.completed"})
     else:
         error_message = _compact_goose_error(raw_output)
@@ -393,6 +393,38 @@ def _compact_goose_error(output: str) -> str:
     if not lines:
         return ""
     return "\n".join(lines[-20:])
+
+
+def _extract_goose_final_message(output: str) -> str:
+    text = output.replace("\r\n", "\n").strip()
+    if not text:
+        return ""
+
+    lines = [line.rstrip() for line in text.splitlines()]
+    summary_index: int | None = None
+    for index, line in enumerate(lines):
+        if line.strip().startswith("Summary:"):
+            summary_index = index
+    if summary_index is not None:
+        return "\n".join(lines[summary_index:]).strip() + "\n"
+
+    transcript_markers = ("────────────────", "▸ ")
+    candidate_start = 0
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if any(marker in stripped for marker in transcript_markers):
+            candidate_start = index + 1
+            continue
+        if stripped.startswith(("command:", "content:", "path ", "timeout_secs:", "(no output)")):
+            candidate_start = index + 1
+            continue
+
+    cleaned = "\n".join(lines[candidate_start:]).strip()
+    if cleaned:
+        return cleaned + "\n"
+    return text + "\n"
 
 
 def _cleanup_process_group(pid: int) -> None:
