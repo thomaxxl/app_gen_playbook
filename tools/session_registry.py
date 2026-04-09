@@ -111,7 +111,7 @@ def cmd_set(args: argparse.Namespace) -> int:
     data.setdefault("roles", {})[args.role] = {
         "resume_id": args.resume_id,
         "thread_id": args.thread_id or args.resume_id,
-        "backend": args.backend or "codex_exec_legacy",
+        "backend": args.backend or "goose_codex_bridge",
         "provider": args.provider,
         "session_name": args.session_name or args.thread_id or args.resume_id,
         "resume_strategy": args.resume_strategy,
@@ -163,7 +163,7 @@ def cmd_record_from_jsonl(args: argparse.Namespace) -> int:
     data.setdefault("roles", {})[args.role] = {
         "resume_id": parsed.resume_id,
         "thread_id": parsed.thread_id or parsed.resume_id,
-        "backend": args.backend or "codex_exec_legacy",
+        "backend": args.backend or "goose_codex_bridge",
         "provider": args.provider,
         "session_name": args.session_name or parsed.thread_id or parsed.resume_id,
         "resume_strategy": args.resume_strategy,

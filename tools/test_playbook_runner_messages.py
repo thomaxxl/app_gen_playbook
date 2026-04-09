@@ -481,6 +481,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 runtime_env="host",
                 auto_start_app=False,
                 enable_parallel_workers=False,
+                agent_backend="codex_exec_legacy",
                 models=ModelConfig(
                     fast="",
                     main="gpt-5.4",
@@ -673,6 +674,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 runtime_env="host",
                 auto_start_app=False,
                 enable_parallel_workers=False,
+                agent_backend="codex_exec_legacy",
                 models=ModelConfig(
                     fast="",
                     main="gpt-5.4",
@@ -967,6 +969,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 runtime_env="host",
                 auto_start_app=False,
                 enable_parallel_workers=False,
+                agent_backend="codex_exec_legacy",
                 models=ModelConfig(
                     fast="",
                     main="gpt-5.4",

@@ -198,10 +198,16 @@ The orchestrator SHOULD also honor:
 - `PLAYBOOK_ENABLE_PARALLEL_WORKERS=0|1`
 - `PLAYBOOK_AGENT_BACKEND=codex_exec_legacy|goose_codex_bridge`
 
-The default agent backend remains `codex_exec_legacy` until the Goose bridge
-has demonstrated parity on enough fresh runs. `goose_codex_bridge` is an
-explicit opt-in bridge mode that keeps Codex as the provider while moving the
-outer runner boundary to Goose.
+Fresh runs SHOULD default to `goose_codex_bridge`. That bridge keeps Codex as
+the provider while moving the outer runner boundary to Goose.
+
+If the operator runs `--resume` without explicitly setting
+`PLAYBOOK_AGENT_BACKEND`, the orchestrator SHOULD reuse the paused run's
+recorded pinned backend from `runs/current/orchestrator/runtime-environment.json`
+instead of silently switching families mid-run.
+
+`codex_exec_legacy` remains a supported explicit opt-out for operators who
+need the old direct Codex runner.
 
 Every run MUST record backend-neutral execution metadata in
 `runs/current/orchestrator/runtime-environment.json`, including:
@@ -242,6 +248,12 @@ for later turns rather than trying to cross-resume old session IDs.
 If an operator intentionally migrates a pinned paused run to a different
 backend, they MUST set:
 
+- `PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION=1`
+
+To migrate a paused direct-Codex run to Goose-on-Codex, the operator SHOULD
+resume with:
+
+- `PLAYBOOK_AGENT_BACKEND=goose_codex_bridge`
 - `PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION=1`
 
 If the runtime env was only the implicit default and host-mode execution

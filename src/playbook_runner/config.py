@@ -15,7 +15,7 @@ def normalize_runtime_env(raw_value: str) -> str:
 def normalize_agent_backend(raw_value: str) -> str:
     normalized = raw_value.strip().lower()
     aliases = {
-        "": "codex_exec_legacy",
+        "": "goose_codex_bridge",
         "codex": "codex_exec_legacy",
         "codex_exec": "codex_exec_legacy",
         "codex_exec_legacy": "codex_exec_legacy",
@@ -24,7 +24,7 @@ def normalize_agent_backend(raw_value: str) -> str:
         "goose_codex": "goose_codex_bridge",
         "goose_codex_bridge": "goose_codex_bridge",
     }
-    return aliases.get(normalized, "codex_exec_legacy")
+    return aliases.get(normalized, "goose_codex_bridge")
 
 
 @dataclass(frozen=True)
@@ -52,7 +52,7 @@ class RunnerConfig:
     auto_start_app: bool
     enable_parallel_workers: bool
     models: ModelConfig
-    agent_backend: str = "codex_exec_legacy"
+    agent_backend: str = "goose_codex_bridge"
     goose_provider: str = "chatgpt_codex"
     allow_backend_migration: bool = False
 
@@ -90,7 +90,7 @@ class RunnerConfig:
             auto_start_app=os.getenv("PLAYBOOK_AUTO_START_APP", "1") == "1",
             enable_parallel_workers=os.getenv("PLAYBOOK_ENABLE_PARALLEL_WORKERS", "0") == "1",
             models=models,
-            agent_backend=normalize_agent_backend(os.getenv("PLAYBOOK_AGENT_BACKEND", "codex_exec_legacy")),
+            agent_backend=normalize_agent_backend(os.getenv("PLAYBOOK_AGENT_BACKEND", "goose_codex_bridge")),
             goose_provider=os.getenv("PLAYBOOK_GOOSE_PROVIDER", os.getenv("GOOSE_PROVIDER", "chatgpt_codex")).strip()
             or "chatgpt_codex",
             allow_backend_migration=os.getenv("PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION", "0") == "1",
