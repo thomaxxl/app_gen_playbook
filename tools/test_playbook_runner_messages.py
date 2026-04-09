@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from playbook_runner.config import ModelConfig, RunnerConfig
-from playbook_runner.codex_runner import CodexRunner, expand_add_dirs
+from playbook_runner.codex_runner import CodexRunner, GooseCodexBridgeRunner, expand_add_dirs
 from playbook_runner.messages import Message, message_indicates_progress, message_requires_phase5_ready
 from playbook_runner.orchestrator import (
     Orchestrator,
@@ -387,6 +387,117 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
 
             command = mock_popen.call_args.args[0]
             self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", command)
+
+    def test_goose_bridge_runner_uses_named_session_and_writable_xdg_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            prompt_file = repo_root / "prompt.md"
+            result_file = repo_root / "result.md"
+            raw_file = repo_root / "raw.txt"
+            jsonl_file = repo_root / "result.jsonl"
+            prompt_file.write_text("prompt", encoding="utf-8")
+
+            runner = GooseCodexBridgeRunner(
+                repo_root=repo_root,
+                python_bin="python3",
+                timeout_seconds=60,
+                reasoning_effort="high",
+                runtime_env="host",
+                yolo=False,
+                goose_provider="chatgpt_codex",
+                goose_state_root=repo_root / "runs" / "current" / "orchestrator" / "goose",
+            )
+
+            def communicate(timeout=None):  # type: ignore[no-untyped-def]
+                raw_file.write_text("Goose result", encoding="utf-8")
+                return ("", "")
+
+            proc = SimpleNamespace(communicate=communicate, returncode=0)
+            with patch("playbook_runner.codex_runner.subprocess.Popen", return_value=proc) as mock_popen:
+                runner.run(
+                    cwd=repo_root,
+                    prompt_file=prompt_file,
+                    result_file=result_file,
+                    jsonl_file=jsonl_file,
+                    model="gpt-5.4",
+                    add_dirs=[],
+                    session_name="app-gen:RUN-1:frontend",
+                    raw_output_file=raw_file,
+                )
+
+            command = mock_popen.call_args.args[0]
+            self.assertIn("goose", command)
+            self.assertIn("--name", command)
+            self.assertIn("app-gen:RUN-1:frontend", command)
+            self.assertIn("--provider", command)
+            self.assertIn("chatgpt_codex", command)
+            env = mock_popen.call_args.kwargs["env"]
+            self.assertEqual(env["GOOSE_PROVIDER"], "chatgpt_codex")
+            self.assertEqual(env["CHATGPT_CODEX_REASONING_EFFORT"], "high")
+            self.assertTrue(env["XDG_STATE_HOME"].endswith("runs/current/orchestrator/goose/state"))
+            self.assertTrue(env["XDG_DATA_HOME"].endswith("runs/current/orchestrator/goose/data"))
+            self.assertEqual(result_file.read_text(encoding="utf-8"), "Goose result")
+            jsonl_text = jsonl_file.read_text(encoding="utf-8")
+            self.assertIn('"type": "session.started"', jsonl_text)
+            self.assertIn('"type": "turn.completed"', jsonl_text)
+
+    def test_resume_forces_fresh_session_when_backend_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            sessions = repo_root / "runs" / "current" / "evidence" / "orchestrator" / "sessions.json"
+            sessions.parent.mkdir(parents=True, exist_ok=True)
+            role_dir = repo_root / "runs" / "current" / "role-state" / "architect"
+            role_dir.mkdir(parents=True, exist_ok=True)
+            sessions.write_text(
+                (
+                    "{\n"
+                    '  "version": 1,\n'
+                    '  "roles": {\n'
+                    '    "architect": {\n'
+                    '      "resume_id": "sess-123",\n'
+                    '      "backend": "codex_exec_legacy",\n'
+                    f'      "cwd": "{role_dir}",\n'
+                    '      "sandbox_mode": "bypass",\n'
+                    '      "writable_roots": [\n'
+                    f'        "{repo_root / "runs" / "current" / "artifacts" / "architecture"}"\n'
+                    "      ]\n"
+                    "    }\n"
+                    "  }\n"
+                    "}\n"
+                ),
+                encoding="utf-8",
+            )
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+                agent_backend="goose_codex_bridge",
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            resume_id, stored_roots = orchestrator.resolve_resume_id(
+                "architect",
+                role_dir,
+                [repo_root / "runs" / "current" / "artifacts" / "architecture"],
+            )
+            self.assertEqual(resume_id, "")
+            self.assertEqual(stored_roots, [])
 
     def test_add_dir_from_rule_converts_globs_to_concrete_parent_dirs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

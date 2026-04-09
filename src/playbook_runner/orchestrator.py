@@ -20,7 +20,7 @@ from routing_resolver import (
     resolve_writable_paths,
 )
 
-from .codex_runner import CodexRunner, expand_add_dirs
+from .codex_runner import build_agent_runner, expand_add_dirs
 from .config import RunnerConfig
 from .legacy_tools import LegacyTools
 from .markdown_log import append_markdown_log
@@ -220,16 +220,19 @@ class Orchestrator:
         self.paths = PlaybookPaths(config.repo_root)
         self.queue = QueueStore(self.paths)
         self.tools = LegacyTools(config.repo_root, python_bin=python_bin)
-        self.codex = CodexRunner(
+        self.codex = build_agent_runner(
             repo_root=config.repo_root,
             python_bin=python_bin,
             timeout_seconds=config.timeout_seconds,
             reasoning_effort=config.models.reasoning_effort,
             runtime_env=config.runtime_env,
             yolo=request.yolo,
+            agent_backend=config.agent_backend,
+            goose_provider=config.goose_provider,
         )
         self.python_bin = python_bin
         self.active_change_id = ""
+        self.run_id = ""
         self.dashboard_process: subprocess.Popen[str] | None = None
         self.run_mode_name = MODE_TO_RUN_MODE[request.mode]
 
@@ -331,6 +334,15 @@ class Orchestrator:
             encoding="utf-8",
         )
 
+    def load_runtime_environment_state(self) -> dict[str, object]:
+        if not self.paths.runtime_environment_json.exists():
+            return {}
+        try:
+            payload = json.loads(self.paths.runtime_environment_json.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
     def write_runtime_environment_state(self) -> None:
         source = "default"
         if os.getenv("PLAYBOOK_RUNTIME_ENV", "").strip():
@@ -341,9 +353,58 @@ class Orchestrator:
             "runner_epoch": self.utc_now(),
             "sandbox_mode": self.codex.sandbox_mode(),
             "yolo": self.request.yolo,
+            "run_id": self.run_id,
+            "agent_backend": self.codex.backend_name(),
+            "agent_provider": self.codex.provider_name(),
+            "agent_resume_strategy": self.codex.resume_strategy(),
+            "agent_schema_version": 1,
         }
         self.paths.runtime_environment_json.parent.mkdir(parents=True, exist_ok=True)
         self.paths.runtime_environment_json.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    def enforce_agent_backend_resume_policy(self) -> None:
+        recorded = self.load_runtime_environment_state()
+        recorded_backend = str(recorded.get("agent_backend", "")).strip()
+        recorded_provider = str(recorded.get("agent_provider", "")).strip()
+        requested_backend = self.codex.backend_name()
+        requested_provider = self.codex.provider_name()
+
+        if not recorded_backend:
+            if requested_backend != "codex_exec_legacy":
+                self.tools.session_clear(self.paths.sessions_json)
+                self.append_remark(
+                    "Legacy run adopted explicit agent backend",
+                    "This run predates backend pinning, so resume is adopting a fresh explicit agent backend.\n\n"
+                    f"Backend:\n- {requested_backend}\n\n"
+                    f"Provider:\n- {requested_provider}\n\n"
+                    "Any legacy stored role sessions were cleared so the resumed run starts fresh backend sessions.",
+                )
+            return
+
+        if recorded_backend == requested_backend and (not recorded_provider or recorded_provider == requested_provider):
+            return
+
+        if not self.config.allow_backend_migration:
+            body = (
+                "Cannot resume because the run is pinned to a different agent backend.\n\n"
+                f"Recorded backend:\n- {recorded_backend}\n\n"
+                f"Recorded provider:\n- {recorded_provider or '<default>'}\n\n"
+                f"Requested backend:\n- {requested_backend}\n\n"
+                f"Requested provider:\n- {requested_provider}\n\n"
+                "If you intentionally want to migrate this paused run, rerun with:\n"
+                "- `PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION=1`\n"
+            )
+            self.write_operator_action_required("agent backend mismatch", body)
+            self.blocked_exit("run requires operator action", body)
+
+        self.tools.session_clear(self.paths.sessions_json)
+        self.append_remark(
+            "Agent backend migrated on resume",
+            f"Recorded backend:\n- {recorded_backend}\n\n"
+            f"Requested backend:\n- {requested_backend}\n\n"
+            f"Requested provider:\n- {requested_provider}\n\n"
+            "Stored role sessions were cleared so the resumed run restarts clean backend-owned sessions.",
+        )
 
     def blocked_exit(self, title: str, body: str) -> int:
         self.append_remark(title, body)
@@ -453,6 +514,7 @@ class Orchestrator:
         self.tools.session_init(self.paths.sessions_json)
         self.tools.session_clear(self.paths.sessions_json)
         self.tools.init_run(mode=self.run_mode_name, scope_profile=self.request.scope)
+        self.run_id = str(self.load_run_status().get("run_id", "")).strip()
         self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
 
@@ -489,6 +551,7 @@ class Orchestrator:
         self.tools.snapshot_app_baseline(output=baseline_output)
         self.tools.init_run(mode=self.run_mode_name, scope_profile=self.request.scope, change_id=self.active_change_id)
         self.set_run_status("active", "phase-I1-change-intake-and-triage")
+        self.run_id = str(self.load_run_status().get("run_id", "")).strip()
         self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
 
@@ -513,8 +576,10 @@ class Orchestrator:
         if mode in MODE_TO_RUN_MODE.values():
             self.run_mode_name = mode
         self.active_change_id = str(payload.get("change_id", "")).strip()
+        self.run_id = str(payload.get("run_id", "")).strip()
         self.request.scope = str(payload.get("scope_profile", "")).strip() or self.request.scope
         self.clear_steering_requests_on_startup()
+        self.enforce_agent_backend_resume_policy()
         self.set_run_status("active")
         self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
@@ -542,6 +607,11 @@ class Orchestrator:
             "deployment": models.deployment,
             "ceo": models.ceo,
         }.get(runtime_role, models.fast)
+
+    def role_session_name(self, runtime_role: str) -> str:
+        run_id = self.run_id or "RUN-current"
+        safe_run_id = re.sub(r"[^A-Za-z0-9_.:-]+", "-", run_id)
+        return f"app-gen:{safe_run_id}:{runtime_role}"
 
     def steering_blocks_new_claims(self) -> bool:
         return self.paths.kill_requested_md.exists() or self.paths.pause_requested_md.exists()
@@ -737,6 +807,18 @@ class Orchestrator:
         if not resume_id:
             return "", []
 
+        stored_backend = str(entry.get("backend", "")).strip() or "codex_exec_legacy"
+        if stored_backend != self.codex.backend_name():
+            return "", []
+
+        stored_provider = str(entry.get("provider", "")).strip()
+        if stored_provider and stored_provider != self.codex.provider_name():
+            return "", []
+
+        stored_resume_strategy = str(entry.get("resume_strategy", "")).strip()
+        if stored_resume_strategy and stored_resume_strategy != self.codex.resume_strategy():
+            return "", []
+
         stored_cwd = str(entry.get("cwd", "")).strip()
         if stored_cwd and stored_cwd != str(role_dir):
             return "", []
@@ -882,6 +964,7 @@ class Orchestrator:
         prompt_file = self.paths.prompts_dir / f"{turn_key}.prompt.md"
         result_file = self.paths.final_dir / f"{turn_key}.result.md"
         jsonl_file = self.paths.jsonl_dir / f"{turn_key}.events.jsonl"
+        raw_backend_file = self.paths.evidence_root / f"{turn_key}.{self.codex.backend_name()}.raw.txt"
         snapshot_file = self.paths.evidence_root / f"{turn_key}.snapshot.json"
         validation_file = self.paths.evidence_root / f"{turn_key}.validation.md"
         handoff_validation_json = self.paths.evidence_root / f"{turn_key}.handoff-validation.json"
@@ -967,6 +1050,7 @@ class Orchestrator:
         resume_id, stored_session_roots = self.resolve_resume_id(runtime_role, role_dir, add_dirs)
         if resume_id and stored_session_roots:
             session_roots = stored_session_roots
+        session_name = self.role_session_name(runtime_role)
         self.log_line(
             f"agent-start role={runtime_role} model={model or '<default>'} message={message_path.name} session={resume_id or 'new'}"
         )
@@ -988,6 +1072,8 @@ class Orchestrator:
                 model=model,
                 add_dirs=add_dirs,
                 resume_id=resume_id or None,
+                session_name=session_name,
+                raw_output_file=raw_backend_file,
             )
             ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
             if codex_result.timed_out and not ok:
@@ -1031,6 +1117,11 @@ class Orchestrator:
             role_dir,
             writable_roots=session_roots,
             sandbox_mode=self.codex.sandbox_mode(),
+            backend=self.codex.backend_name(),
+            provider=self.codex.provider_name(),
+            session_name=session_name,
+            resume_strategy=self.codex.resume_strategy(),
+            raw_session_metadata=self.codex.session_metadata(session_name=session_name, cwd=role_dir),
         )
         self.tools.sync_session(role=runtime_role, registry=self.paths.sessions_json)
         self.validate_role_outputs(

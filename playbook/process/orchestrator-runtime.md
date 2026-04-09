@@ -179,6 +179,20 @@ The orchestrator SHOULD also honor:
 
 - `PLAYBOOK_RUNTIME_ENV=sandbox|host`
 - `PLAYBOOK_ENABLE_PARALLEL_WORKERS=0|1`
+- `PLAYBOOK_AGENT_BACKEND=codex_exec_legacy|goose_codex_bridge`
+
+The default agent backend remains `codex_exec_legacy` until the Goose bridge
+has demonstrated parity on enough fresh runs. `goose_codex_bridge` is an
+explicit opt-in bridge mode that keeps Codex as the provider while moving the
+outer runner boundary to Goose.
+
+Every run MUST record backend-neutral execution metadata in
+`runs/current/orchestrator/runtime-environment.json`, including:
+
+- `agent_backend`
+- `agent_provider`
+- `agent_resume_strategy`
+- `agent_schema_version`
 
 It MUST record that setting, its source, and the current runner epoch in
 `runs/current/orchestrator/runtime-environment.json`.
@@ -192,6 +206,26 @@ When `PLAYBOOK_RUNTIME_ENV=host`, the orchestrator MUST launch Codex turns in
 host-capable mode rather than leaving them in the default sandbox, otherwise
 browser/runtime prereqs can pass while the actual role turns still fail inside
 a narrower execution context.
+
+When `PLAYBOOK_AGENT_BACKEND=goose_codex_bridge`, the orchestrator MUST:
+
+- call Goose headless while keeping Codex as the configured provider
+- preserve the same prompt/result/evidence file contract the rest of the
+  playbook already expects
+- write a raw Goose output sidecar plus a compatibility event file
+- keep repo-owned role-diff and writable-boundary validation as the source of
+  truth rather than trusting provider-side sandbox semantics
+
+Normal backend/provider drift inside an already-pinned run is invalid.
+Legacy runs created before backend pinning MAY be adopted into an explicit
+backend on `--resume`; if that adoption changes the runner family, the
+orchestrator MUST clear stored role sessions and start fresh backend sessions
+for later turns rather than trying to cross-resume old session IDs.
+
+If an operator intentionally migrates a pinned paused run to a different
+backend, they MUST set:
+
+- `PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION=1`
 
 If the runtime env was only the implicit default and host-mode execution
 preflight proves the current execution context forbids localhost bind

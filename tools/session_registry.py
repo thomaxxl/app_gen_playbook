@@ -107,13 +107,20 @@ def cmd_get(args: argparse.Namespace) -> int:
 def cmd_set(args: argparse.Namespace) -> int:
     path = Path(args.registry)
     data = load_registry(path)
+    raw_session_metadata = json.loads(args.raw_session_metadata_json) if args.raw_session_metadata_json else {}
     data.setdefault("roles", {})[args.role] = {
         "resume_id": args.resume_id,
         "thread_id": args.thread_id or args.resume_id,
+        "backend": args.backend or "codex_exec_legacy",
+        "provider": args.provider,
+        "session_name": args.session_name or args.thread_id or args.resume_id,
+        "resume_strategy": args.resume_strategy,
         "model": args.model,
         "cwd": args.cwd,
         "sandbox_mode": args.sandbox_mode,
         "writable_roots": list(args.writable_root or []),
+        "raw_session_metadata": raw_session_metadata,
+        "schema_version": args.schema_version,
         "last_used_at": utc_now(),
     }
     save_registry(path, data)
@@ -144,16 +151,28 @@ def cmd_record_from_jsonl(args: argparse.Namespace) -> int:
         parsed.resume_id = existing.get("resume_id")
         parsed.thread_id = existing.get("thread_id")
 
+    if not parsed.resume_id and args.session_name:
+        parsed.resume_id = args.session_name
+    if not parsed.thread_id and args.session_name:
+        parsed.thread_id = args.session_name
+
     if not parsed.resume_id:
         raise RuntimeError("could not discover a resume_id from JSONL and no prior role entry exists")
 
+    raw_session_metadata = json.loads(args.raw_session_metadata_json) if args.raw_session_metadata_json else {}
     data.setdefault("roles", {})[args.role] = {
         "resume_id": parsed.resume_id,
         "thread_id": parsed.thread_id or parsed.resume_id,
+        "backend": args.backend or "codex_exec_legacy",
+        "provider": args.provider,
+        "session_name": args.session_name or parsed.thread_id or parsed.resume_id,
+        "resume_strategy": args.resume_strategy,
         "model": args.model,
         "cwd": args.cwd,
         "sandbox_mode": args.sandbox_mode,
         "writable_roots": list(args.writable_root or []),
+        "raw_session_metadata": raw_session_metadata,
+        "schema_version": args.schema_version,
         "last_used_at": utc_now(),
         "source_jsonl": args.jsonl,
     }
@@ -195,6 +214,12 @@ def build_parser() -> argparse.ArgumentParser:
     set_parser.add_argument("--cwd", required=True)
     set_parser.add_argument("--sandbox-mode", default="sandbox")
     set_parser.add_argument("--writable-root", action="append", default=[])
+    set_parser.add_argument("--backend", default="")
+    set_parser.add_argument("--provider", default="")
+    set_parser.add_argument("--session-name", default="")
+    set_parser.add_argument("--resume-strategy", default="")
+    set_parser.add_argument("--raw-session-metadata-json", default="")
+    set_parser.add_argument("--schema-version", type=int, default=1)
 
     remove_parser = sub.add_parser("remove")
     remove_parser.add_argument("--registry", required=True)
@@ -211,6 +236,12 @@ def build_parser() -> argparse.ArgumentParser:
     record_parser.add_argument("--cwd", required=True)
     record_parser.add_argument("--sandbox-mode", default="sandbox")
     record_parser.add_argument("--writable-root", action="append", default=[])
+    record_parser.add_argument("--backend", default="")
+    record_parser.add_argument("--provider", default="")
+    record_parser.add_argument("--session-name", default="")
+    record_parser.add_argument("--resume-strategy", default="")
+    record_parser.add_argument("--raw-session-metadata-json", default="")
+    record_parser.add_argument("--schema-version", type=int, default=1)
 
     return parser
 

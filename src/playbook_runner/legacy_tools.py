@@ -142,6 +142,11 @@ class LegacyTools:
         *,
         writable_roots: list[str] | None = None,
         sandbox_mode: str = "sandbox",
+        backend: str = "",
+        provider: str = "",
+        session_name: str = "",
+        resume_strategy: str = "",
+        raw_session_metadata: dict[str, Any] | None = None,
     ) -> None:
         args = [
             "session_registry.py",
@@ -159,6 +164,16 @@ class LegacyTools:
             "--sandbox-mode",
             sandbox_mode,
         ]
+        if backend:
+            args.extend(["--backend", backend])
+        if provider:
+            args.extend(["--provider", provider])
+        if session_name:
+            args.extend(["--session-name", session_name])
+        if resume_strategy:
+            args.extend(["--resume-strategy", resume_strategy])
+        if raw_session_metadata:
+            args.extend(["--raw-session-metadata-json", json.dumps(raw_session_metadata, sort_keys=True)])
         for root in writable_roots or []:
             args.extend(["--writable-root", root])
         self.run(
