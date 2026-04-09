@@ -179,6 +179,7 @@ class GooseCodexBridgeRunner(AgentRunner):
         env["XDG_STATE_HOME"] = str(state_root / "state")
         env["XDG_DATA_HOME"] = str(state_root / "data")
         env["XDG_CACHE_HOME"] = str(state_root / "cache")
+        env.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(Path.home() / ".cache" / "ms-playwright"))
         env["GOOSE_PROVIDER"] = self.goose_provider
         if self.reasoning_effort:
             env["CHATGPT_CODEX_REASONING_EFFORT"] = self.reasoning_effort

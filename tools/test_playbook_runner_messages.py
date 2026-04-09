@@ -451,6 +451,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             self.assertEqual(env["CHATGPT_CODEX_REASONING_EFFORT"], "high")
             self.assertTrue(env["XDG_STATE_HOME"].endswith("runs/current/orchestrator/goose/state"))
             self.assertTrue(env["XDG_DATA_HOME"].endswith("runs/current/orchestrator/goose/data"))
+            self.assertEqual(env["PLAYWRIGHT_BROWSERS_PATH"], str(Path.home() / ".cache" / "ms-playwright"))
             self.assertEqual(result_file.read_text(encoding="utf-8"), "Summary: Goose result\n\n- bullet\n")
             jsonl_text = jsonl_file.read_text(encoding="utf-8")
             self.assertIn('"type": "session.started"', jsonl_text)

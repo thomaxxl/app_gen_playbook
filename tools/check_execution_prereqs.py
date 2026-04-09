@@ -151,6 +151,16 @@ def frontend_tool_path(repo_root: Path, name: str) -> Path:
     return frontend_node_modules_path(repo_root) / ".bin" / name
 
 
+def playwright_browsers_path(repo_root: Path) -> Path:
+    raw_candidate = runtime_env_value(repo_root, "PLAYWRIGHT_BROWSERS_PATH")
+    if raw_candidate:
+        candidate = Path(raw_candidate).expanduser()
+        if not candidate.is_absolute():
+            candidate = (repo_root / candidate).resolve(strict=False)
+        return candidate
+    return Path.home() / ".cache" / "ms-playwright"
+
+
 def frontend_safrs_jsonapi_client_source_path(repo_root: Path) -> Path:
     return app_workspace_path(repo_root) / "tmp" / "safrs-jsonapi-client"
 
@@ -609,6 +619,9 @@ def check_playwright_screenshot(repo_root: Path) -> CheckResult:
     playwright_path = frontend_tool_path(repo_root, "playwright")
     if not playwright_path.exists():
         return CheckResult("playwright_screenshot", "blocked", f"missing playwright executable: {playwright_path}")
+    browsers_path = playwright_browsers_path(repo_root)
+    playwright_env = dict(os.environ)
+    playwright_env["PLAYWRIGHT_BROWSERS_PATH"] = str(browsers_path)
 
     with tempfile.TemporaryDirectory(prefix="playwright-check-") as tmpdir:
         screenshot_path = Path(tmpdir) / "smoke.png"
@@ -623,33 +636,50 @@ def check_playwright_screenshot(repo_root: Path) -> CheckResult:
         proc = subprocess.run(
             screenshot_command,
             capture_output=True,
+            env=playwright_env,
             text=True,
         )
         if proc.returncode != 0:
             install_proc = subprocess.run(
                 [str(playwright_path), "install", "chromium"],
                 capture_output=True,
+                env=playwright_env,
                 text=True,
             )
             if install_proc.returncode == 0:
                 proc = subprocess.run(
                     screenshot_command,
                     capture_output=True,
+                    env=playwright_env,
                     text=True,
                 )
             else:
                 return CheckResult(
                     "playwright_screenshot",
                     "blocked",
-                    (install_proc.stderr or install_proc.stdout).strip()
-                    or "failed to install the Playwright Chromium runtime",
+                    "\n".join(
+                        [
+                            f"configured Playwright browsers path: {browsers_path}",
+                            (install_proc.stderr or install_proc.stdout).strip()
+                            or "failed to install the Playwright Chromium runtime",
+                        ]
+                    ),
                 )
         if proc.returncode == 0 and screenshot_path.exists():
-            return CheckResult("playwright_screenshot", "ok", f"captured screenshot at {screenshot_path.name}")
+            return CheckResult(
+                "playwright_screenshot",
+                "ok",
+                f"captured screenshot at {screenshot_path.name} using Playwright browsers path {browsers_path}",
+            )
         return CheckResult(
             "playwright_screenshot",
             "blocked",
-            (proc.stderr or proc.stdout).strip() or "playwright screenshot did not produce an output file",
+            "\n".join(
+                [
+                    f"configured Playwright browsers path: {browsers_path}",
+                    (proc.stderr or proc.stdout).strip() or "playwright screenshot did not produce an output file",
+                ]
+            ),
         )
 
 

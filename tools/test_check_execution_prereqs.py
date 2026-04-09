@@ -182,6 +182,24 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertIn("sandbox runtime mode defers Playwright browser-launch validation", result.detail)
 
+    def test_playwright_browsers_path_defaults_to_shared_home_cache(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            with unittest.mock.patch.dict("os.environ", {}, clear=True):
+                resolved = check_execution_prereqs.playwright_browsers_path(repo_root)
+        self.assertEqual(resolved, Path.home() / ".cache" / "ms-playwright")
+
+    def test_playwright_browsers_path_expands_user_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            with unittest.mock.patch.dict(
+                "os.environ",
+                {"PLAYWRIGHT_BROWSERS_PATH": "~/.cache/ms-playwright"},
+                clear=False,
+            ):
+                resolved = check_execution_prereqs.playwright_browsers_path(repo_root)
+        self.assertEqual(resolved, Path.home() / ".cache" / "ms-playwright")
+
     def test_check_repo_local_skills_requires_default_repo_skills(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -360,6 +378,10 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
                 def fake_run(args, capture_output=False, text=False, **kwargs):
                     command = list(args)
+                    self.assertEqual(
+                        kwargs.get("env", {}).get("PLAYWRIGHT_BROWSERS_PATH"),
+                        str(Path.home() / ".cache" / "ms-playwright"),
+                    )
                     if command[:2] == [str(playwright_path), "screenshot"]:
                         if screenshot_path.exists():
                             return subprocess.CompletedProcess(command, 0, "", "")
@@ -375,6 +397,7 @@ class CheckExecutionPrereqsTests(unittest.TestCase):
 
             self.assertEqual(result.status, "ok")
             self.assertIn("captured screenshot", result.detail)
+            self.assertIn(str(Path.home() / ".cache" / "ms-playwright"), result.detail)
 
     def test_frontend_node_modules_path_resolves_relative_override_from_app_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
