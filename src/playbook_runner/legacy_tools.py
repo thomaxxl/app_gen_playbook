@@ -350,9 +350,12 @@ class LegacyTools:
         detail = (result.stdout + result.stderr).strip()
         return result.returncode == 0, detail
 
-    def assert_codex_success(self, jsonl_file: Path, result_file: Path) -> tuple[bool, str]:
-        result = self.run("assert_codex_success.py", str(jsonl_file), str(result_file), check=False)
+    def assert_agent_success(self, jsonl_file: Path, result_file: Path) -> tuple[bool, str]:
+        result = self.run("assert_agent_success.py", str(jsonl_file), str(result_file), check=False)
         return result.returncode == 0, (result.stdout + result.stderr).strip()
+
+    def assert_codex_success(self, jsonl_file: Path, result_file: Path) -> tuple[bool, str]:
+        return self.assert_agent_success(jsonl_file, result_file)
 
     def phase5_ready(self) -> bool:
         result = self.run("check_phase5_ready.py", "--repo-root", str(self.repo_root), check=False)

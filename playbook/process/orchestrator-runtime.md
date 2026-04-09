@@ -10,7 +10,7 @@ They are responsible for:
 - activating the backend virtualenv when present
 - delegating into the Python control plane under `src/playbook_runner/`
 
-The orchestration state machine, queue claims, message parsing, and Codex turn
+The orchestration state machine, queue claims, message parsing, and agent turn
 dispatch now live in the Python runner package rather than in sourced Bash
 modules.
 
@@ -27,7 +27,7 @@ The orchestrator MUST:
 - seed the Product Manager inbox from the supplied brief or change request
 - reinitialize iteration runs so stale completion state does not leak into the
   next change cycle
-- process exactly one inbox message per Codex role invocation
+- process exactly one inbox message per agent role invocation
 - keep durable run state in artifacts, inbox traces, and role-local
   `context.md`
 - use `codex exec resume` only when the current turn's resolved writable roots
@@ -61,7 +61,7 @@ The orchestrator MUST:
 
 ## Logging
 
-For every Codex role invocation, the orchestrator MUST emit a visible log line
+For every agent role invocation, the orchestrator MUST emit a visible log line
 when the role starts.
 
 That start log MUST include at least:
@@ -72,7 +72,7 @@ That start log MUST include at least:
 - model
 - whether the invocation is a fresh session or a resumed session
 
-For every successful Codex role invocation, the orchestrator MUST emit a
+For every successful agent role invocation, the orchestrator MUST emit a
 visible finish log line.
 
 That finish log MUST include at least:
@@ -94,16 +94,33 @@ large copied completion dumps, and routine role verification notes belong in
 `runs/current/notes.md`, role-owned artifacts, or
 `runs/current/remarks-events.jsonl`, not in the markdown log.
 
-The raw stdout and stderr stream from each `codex exec` invocation MUST be
-captured in the matching per-turn JSONL file under:
+The compatibility event stream for each role turn MUST be captured in the
+matching per-turn JSONL file under:
 
 - `runs/current/evidence/orchestrator/jsonl/*.events.jsonl`
 
-Transient Codex stream reconnect events recorded as JSONL `error` items MUST
-NOT be treated as fatal if the same turn later reaches `turn.completed` and
-produces a non-empty final result message. The orchestrator MUST only fail the
-turn for transport-layer `error` events when no later successful completion is
-present, or when Codex emits `turn.failed`.
+Each turn SHOULD also emit a normalized turn summary artifact under:
+
+- `runs/current/evidence/orchestrator/turns/*.turn.json`
+
+That summary SHOULD record at least:
+
+- backend
+- provider
+- model
+- role
+- session name
+- normalized turn status
+- start/end timestamps
+- final result path
+- raw backend output path
+- error summary when present
+
+Transient backend transport reconnect events recorded as JSONL `error` items
+MUST NOT be treated as fatal if the same turn later reaches `turn.completed`
+and produces a non-empty final result message. The orchestrator MUST only fail
+the turn for transport-layer `error` events when no later successful
+completion is present, or when the backend emits `turn.failed`.
 
 Recovery actions SHOULD be recorded in:
 
@@ -111,9 +128,9 @@ Recovery actions SHOULD be recorded in:
 
 The repository SHOULD provide a simple operator monitor that can tail all
 current and newly-created per-turn JSONL files concurrently. The default
-startup view SHOULD stay compact, showing only a rolling tail window per
-stream rather than dumping whole files. `scripts/monitor.sh` defaults to the
-last `100` lines per stream and SHOULD honor `MONITOR_TAIL_LINES` as an
+startup view SHOULD stay compact, showing only a rolling tail window across
+existing streams rather than dumping whole files. `scripts/monitor.sh`
+defaults to the last `100` lines and SHOULD honor `MONITOR_TAIL_LINES` as an
 override.
 
 Repository snapshotting and diff validation MUST treat repo-local symlink

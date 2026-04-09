@@ -58,6 +58,7 @@ class ShellScriptSyntaxTests(unittest.TestCase):
         self.assertIn('tail -n "$initial_lines" -F "$file"', script)
         self.assertIn('python3 - "$MONITOR_TAIL_LINES" "${files[@]}"', script)
         self.assertIn('showing last $MONITOR_TAIL_LINES lines across existing streams, then following new output', script)
+        self.assertIn('monitoring agent event streams in: $JSONL_DIR', script)
 
     def test_run_playbook_wrapper_exports_host_runtime_by_default(self) -> None:
         source_repo_root = Path(__file__).resolve().parents[1]

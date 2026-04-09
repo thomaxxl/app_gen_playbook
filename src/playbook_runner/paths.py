@@ -49,6 +49,10 @@ class PlaybookPaths:
         return self.evidence_root / "final"
 
     @property
+    def turn_summaries_dir(self) -> Path:
+        return self.evidence_root / "turns"
+
+    @property
     def logs_dir(self) -> Path:
         return self.evidence_root / "logs"
 
@@ -144,6 +148,7 @@ class PlaybookPaths:
             self.prompts_dir,
             self.jsonl_dir,
             self.final_dir,
+            self.turn_summaries_dir,
             self.logs_dir,
         ):
             path.mkdir(parents=True, exist_ok=True)

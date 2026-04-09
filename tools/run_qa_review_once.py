@@ -197,7 +197,7 @@ def main() -> int:
     ]
 
     log_line(repo_root, f"agent-start role=qa model={qa_model} message={note_name} session=new")
-    codex_result = subprocess.run(
+    agent_result = subprocess.run(
         [
             "python3",
             str(repo_root / "tools" / "run_process_group.py"),
@@ -217,21 +217,21 @@ def main() -> int:
         text=True,
         check=False,
     )
-    if codex_result.returncode != 0:
-        detail = (codex_result.stderr or codex_result.stdout or "").strip()
-        raise SystemExit(f"qa codex execution failed: {detail}")
+    if agent_result.returncode != 0:
+        detail = (agent_result.stderr or agent_result.stdout or "").strip()
+        raise SystemExit(f"qa agent execution failed: {detail}")
 
     require_ok(
         run_command(
             [
                 "python3",
-                str(repo_root / "tools" / "assert_codex_success.py"),
+                str(repo_root / "tools" / "assert_agent_success.py"),
                 str(jsonl_path),
                 str(result_path),
             ],
             repo_root,
         ),
-        "assert_codex_success",
+        "assert_agent_success",
     )
 
     require_ok(

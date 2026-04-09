@@ -99,7 +99,7 @@ discover_new_files() {
   done < <(list_jsonl_files)
 }
 
-echo "monitoring Codex event streams in: $JSONL_DIR" >&2
+echo "monitoring agent event streams in: $JSONL_DIR" >&2
 echo "showing last $MONITOR_TAIL_LINES lines across existing streams, then following new output" >&2
 echo "press Ctrl-C to stop" >&2
 

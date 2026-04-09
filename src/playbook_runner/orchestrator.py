@@ -689,7 +689,7 @@ class Orchestrator:
         while True:
             if self.paths.kill_requested_md.exists():
                 body = (
-                    "The run was terminated during Codex capacity backoff by an operator kill request.\n\n"
+                    "The run was terminated during agent capacity backoff by an operator kill request.\n\n"
                     f"Kill file:\n- {self.paths.kill_requested_md.relative_to(self.config.repo_root)}\n"
                 )
                 self.append_remark("run stopped by operator kill request", body)
@@ -697,7 +697,7 @@ class Orchestrator:
                 raise SystemExit(0)
             if self.paths.pause_requested_md.exists():
                 body = (
-                    "The run was paused during Codex capacity backoff by an operator steering request.\n\n"
+                    "The run was paused during agent capacity backoff by an operator steering request.\n\n"
                     f"Pause file:\n- {self.paths.pause_requested_md.relative_to(self.config.repo_root)}\n"
                 )
                 self.append_remark("run paused by operator request", body)
@@ -883,6 +883,46 @@ class Orchestrator:
             encoding="utf-8",
         )
 
+    def write_turn_summary_artifact(
+        self,
+        output_path: Path,
+        *,
+        runtime_role: str,
+        message_path: Path,
+        model: str,
+        session_name: str,
+        resume_id: str,
+        started_at: str,
+        ended_at: str,
+        status: str,
+        result_file: Path,
+        jsonl_file: Path,
+        raw_output_file: Path,
+        error_summary: str = "",
+    ) -> None:
+        payload = {
+            "schema_version": 1,
+            "backend": self.codex.backend_name(),
+            "provider": self.codex.provider_name(),
+            "model": model,
+            "role": runtime_role,
+            "message": message_path.name,
+            "session_name": session_name,
+            "resume_identifier": resume_id,
+            "resume_strategy": self.codex.resume_strategy(),
+            "status": status,
+            "started_at": started_at,
+            "ended_at": ended_at,
+            "final_result_path": str(result_file.relative_to(self.config.repo_root)),
+            "compatibility_event_path": str(jsonl_file.relative_to(self.config.repo_root)),
+            "raw_output_path": str(raw_output_file.relative_to(self.config.repo_root)),
+            "final_result_present": result_file.exists(),
+            "raw_output_present": raw_output_file.exists(),
+            "error_summary": error_summary,
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
     def queue_packet_health_recovery(
         self,
         runtime_role: str,
@@ -979,6 +1019,7 @@ class Orchestrator:
         result_file = self.paths.final_dir / f"{turn_key}.result.md"
         jsonl_file = self.paths.jsonl_dir / f"{turn_key}.events.jsonl"
         raw_backend_file = self.paths.evidence_root / f"{turn_key}.{self.codex.backend_name()}.raw.txt"
+        turn_summary_file = self.paths.turn_summaries_dir / f"{turn_key}.turn.json"
         snapshot_file = self.paths.evidence_root / f"{turn_key}.snapshot.json"
         validation_file = self.paths.evidence_root / f"{turn_key}.validation.md"
         handoff_validation_json = self.paths.evidence_root / f"{turn_key}.handoff-validation.json"
@@ -1077,8 +1118,9 @@ class Orchestrator:
         )
         self.tools.validate_role_diff_snapshot(snapshot_file)
         self.tools.build_prompt(runtime_role, display_role, role_file, message_path, prompt_file)
+        turn_started_at = self.utc_now()
         while True:
-            codex_result = self.codex.run(
+            agent_result = self.codex.run(
                 cwd=role_dir,
                 prompt_file=prompt_file,
                 result_file=result_file,
@@ -1089,11 +1131,27 @@ class Orchestrator:
                 session_name=session_name,
                 raw_output_file=raw_backend_file,
             )
-            ok, detail = self.tools.assert_codex_success(jsonl_file, result_file)
-            if codex_result.timed_out and not ok:
-                detail = detail or f"codex turn timed out after {self.config.timeout_seconds} seconds"
+            ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
+            if agent_result.timed_out and not ok:
+                detail = detail or f"agent turn timed out after {self.config.timeout_seconds} seconds"
             if ok:
                 break
+            ended_at = self.utc_now()
+            self.write_turn_summary_artifact(
+                turn_summary_file,
+                runtime_role=runtime_role,
+                message_path=message_path,
+                model=model or "<default>",
+                session_name=session_name,
+                resume_id=resume_id or "",
+                started_at=turn_started_at,
+                ended_at=ended_at,
+                status="interrupted" if is_retryable_codex_failure(detail) else "failed",
+                result_file=result_file,
+                jsonl_file=jsonl_file,
+                raw_output_file=raw_backend_file,
+                error_summary=detail,
+            )
             if is_capacity_codex_failure(detail):
                 self.wait_for_codex_capacity_retry(runtime_role, message_path.name, detail)
                 continue
@@ -1102,18 +1160,18 @@ class Orchestrator:
                 body = (
                     f"Role:\n- {runtime_role}\n\n"
                     f"Message:\n- {message_path.name}\n\n"
-                    "Codex reported a temporary usage or rate limit before the role could complete.\n\n"
+                    "The active agent backend reported a temporary usage or rate limit before the role could complete.\n\n"
                     f"Detail:\n- {detail}\n\n"
                     "The claimed message was left in `inflight/` so a later `--resume` can retry it."
                 )
-                self.append_remark("Codex usage limit interrupted role execution", body)
+                self.append_remark("Agent backend temporarily unavailable during role execution", body)
                 self.set_run_status("interrupted")
-                raise RunnerError(f"Codex temporarily unavailable for role {runtime_role}: {detail}")
+                raise RunnerError(f"agent temporarily unavailable for role {runtime_role}: {detail}")
             body = (
                 f"Role:\n- {runtime_role}\n\n"
                 f"Message:\n- {message_path.name}\n\n"
-                f"Return code:\n- {codex_result.returncode}\n\n"
-                f"Error:\n```\n{detail or 'unknown codex error'}\n```\n\n"
+                f"Return code:\n- {agent_result.returncode}\n\n"
+                f"Error:\n```\n{detail or 'unknown agent error'}\n```\n\n"
                 "The claimed message was left in `inflight/` so a later `--resume` can retry or continue from this turn."
             )
             self.append_remark(
@@ -1121,7 +1179,7 @@ class Orchestrator:
                 body,
             )
             self.set_run_status("interrupted")
-            raise RunnerError(f"Codex interrupted for role {runtime_role}: {detail or 'unknown codex error'}")
+            raise RunnerError(f"agent interrupted for role {runtime_role}: {detail or 'unknown agent error'}")
 
         self.tools.session_record_from_jsonl(
             self.paths.sessions_json,
@@ -1138,15 +1196,48 @@ class Orchestrator:
             raw_session_metadata=self.codex.session_metadata(session_name=session_name, cwd=role_dir),
         )
         self.tools.sync_session(role=runtime_role, registry=self.paths.sessions_json)
-        self.validate_role_outputs(
-            runtime_role,
-            snapshot_file,
-            validation_file,
-            message_path,
-            turn_roots=write_dirs,
-            scope_artifact=routing_file,
-            allowed_write_rules=write_rules,
-            forbidden_write_rules=forbidden_rules,
+        try:
+            self.validate_role_outputs(
+                runtime_role,
+                snapshot_file,
+                validation_file,
+                message_path,
+                turn_roots=write_dirs,
+                scope_artifact=routing_file,
+                allowed_write_rules=write_rules,
+                forbidden_write_rules=forbidden_rules,
+            )
+        except RunnerError as exc:
+            self.write_turn_summary_artifact(
+                turn_summary_file,
+                runtime_role=runtime_role,
+                message_path=message_path,
+                model=model or "<default>",
+                session_name=session_name,
+                resume_id=resume_id or "",
+                started_at=turn_started_at,
+                ended_at=self.utc_now(),
+                status="invalid_output",
+                result_file=result_file,
+                jsonl_file=jsonl_file,
+                raw_output_file=raw_backend_file,
+                error_summary=str(exc),
+            )
+            raise
+
+        self.write_turn_summary_artifact(
+            turn_summary_file,
+            runtime_role=runtime_role,
+            message_path=message_path,
+            model=model or "<default>",
+            session_name=session_name,
+            resume_id=resume_id or "",
+            started_at=turn_started_at,
+            ended_at=self.utc_now(),
+            status="success",
+            result_file=result_file,
+            jsonl_file=jsonl_file,
+            raw_output_file=raw_backend_file,
         )
 
         if message_path.exists():

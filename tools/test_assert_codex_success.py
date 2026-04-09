@@ -7,12 +7,19 @@ import unittest
 from pathlib import Path
 
 
-class AssertCodexSuccessTests(unittest.TestCase):
+class AssertAgentSuccessTests(unittest.TestCase):
     def setUp(self) -> None:
         self.repo_root = Path(__file__).resolve().parents[1]
-        self.script = self.repo_root / "tools" / "assert_codex_success.py"
+        self.script = self.repo_root / "tools" / "assert_agent_success.py"
+        self.legacy_script = self.repo_root / "tools" / "assert_codex_success.py"
 
-    def run_script(self, jsonl_lines: list[dict[str, object]], result_text: str | None) -> subprocess.CompletedProcess[str]:
+    def run_script(
+        self,
+        jsonl_lines: list[dict[str, object]],
+        result_text: str | None,
+        *,
+        script: Path | None = None,
+    ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
             jsonl_path = tmp_path / "events.jsonl"
@@ -26,7 +33,7 @@ class AssertCodexSuccessTests(unittest.TestCase):
                 result_path.write_text(result_text, encoding="utf-8")
 
             return subprocess.run(
-                ["python3", str(self.script), str(jsonl_path), str(result_path)],
+                ["python3", str(script or self.script), str(jsonl_path), str(result_path)],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -40,6 +47,18 @@ class AssertCodexSuccessTests(unittest.TestCase):
                 {"type": "turn.completed"},
             ],
             "Summary: completed successfully\n",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_legacy_wrapper_still_works(self) -> None:
+        result = self.run_script(
+            [
+                {"type": "thread.started"},
+                {"type": "turn.completed"},
+            ],
+            "Summary: completed successfully\n",
+            script=self.legacy_script,
         )
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

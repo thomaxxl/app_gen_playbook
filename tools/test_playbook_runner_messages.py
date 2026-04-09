@@ -1007,7 +1007,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=add_dirs))
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=write_dirs))
                 stack.enter_context(patch.object(orchestrator.codex, "run", side_effect=complete_turn))
-                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_agent_success", return_value=(True, "")))
                 stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
                 stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
                 validate_role_outputs = stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
@@ -1017,6 +1017,16 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
 
             validate_role_outputs.assert_called_once()
             self.assertEqual(validate_role_outputs.call_args.kwargs["turn_roots"], write_dirs)
+            turn_summaries = sorted((repo_root / "runs" / "current" / "evidence" / "orchestrator" / "turns").glob("*.turn.json"))
+            self.assertEqual(len(turn_summaries), 1)
+            payload = json.loads(turn_summaries[0].read_text(encoding="utf-8"))
+            self.assertEqual(payload["backend"], "codex_exec_legacy")
+            self.assertEqual(payload["provider"], "codex")
+            self.assertEqual(payload["role"], "product_manager")
+            self.assertEqual(payload["status"], "success")
+            self.assertEqual(payload["message"], message_path.name)
+            self.assertTrue(payload["final_result_path"].endswith(".result.md"))
+            self.assertTrue(payload["compatibility_event_path"].endswith(".events.jsonl"))
 
     def test_run_role_once_surfaces_failed_command_detail_and_marks_run_interrupted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1069,13 +1079,13 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
                 stack.enter_context(patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=1, timed_out=False)))
                 stack.enter_context(
-                    patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "Quiet Current did not persist status=ready."))
+                    patch.object(orchestrator.tools, "assert_agent_success", return_value=(False, "Quiet Current did not persist status=ready."))
                 )
                 finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
                 set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
                 stack.enter_context(patch.object(orchestrator, "append_remark"))
                 stack.enter_context(patch.object(orchestrator, "log_line"))
-                with self.assertRaisesRegex(RuntimeError, "Codex interrupted for role frontend: Quiet Current did not persist status=ready\\."):
+                with self.assertRaisesRegex(RuntimeError, "agent interrupted for role frontend: Quiet Current did not persist status=ready\\."):
                     orchestrator.run_role_once("frontend")
 
             finish_worker.assert_called_once_with(role="frontend", status="interrupted", claimed_message=message_path.name)
@@ -1131,12 +1141,12 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
                 stack.enter_context(patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=124, timed_out=True)))
-                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(False, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_agent_success", return_value=(False, "")))
                 finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
                 set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
                 append_remark = stack.enter_context(patch.object(orchestrator, "append_remark"))
                 stack.enter_context(patch.object(orchestrator, "log_line"))
-                with self.assertRaisesRegex(RuntimeError, "Codex temporarily unavailable for role backend: codex turn timed out after 60 seconds"):
+                with self.assertRaisesRegex(RuntimeError, "agent temporarily unavailable for role backend: agent turn timed out after 60 seconds"):
                     orchestrator.run_role_once("backend")
 
             finish_worker.assert_called_once_with(role="backend", status="interrupted", claimed_message=message_path.name)
@@ -1202,7 +1212,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
                 stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
                 stack.enter_context(patch.object(orchestrator.codex, "run", side_effect=complete_turn))
-                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_agent_success", return_value=(True, "")))
                 stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
                 stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
                 stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
@@ -1333,7 +1343,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(
                     patch.object(
                         orchestrator.tools,
-                        "assert_codex_success",
+                        "assert_agent_success",
                         side_effect=[
                             (False, "Selected model is at capacity. Please try a different model."),
                             (True, ""),
@@ -1418,7 +1428,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 stack.enter_context(
                     patch.object(orchestrator.codex, "run", return_value=SimpleNamespace(returncode=0, timed_out=False))
                 )
-                stack.enter_context(patch.object(orchestrator.tools, "assert_codex_success", return_value=(True, "")))
+                stack.enter_context(patch.object(orchestrator.tools, "assert_agent_success", return_value=(True, "")))
                 stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
                 stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
                 stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
