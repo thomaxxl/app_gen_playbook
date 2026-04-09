@@ -809,6 +809,105 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertNotIn("runs/current/artifacts/architecture/**", writable)
         self.assertNotIn("runs/current/role-state/architect/**", writable)
 
+    def test_architect_integration_review_preserves_canonical_architecture_review_output(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "playbook/routing/role-core.yaml",
+            "\n".join(
+                [
+                    "architect:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/notes.md",
+                    "    - runs/current/artifacts/architecture/**",
+                    "    - runs/current/evidence/ui-previews/**",
+                    "    - runs/current/evidence/quality/**",
+                    "    - runs/current/role-state/architect/**",
+                    "    - runs/current/changes/*/candidate/artifacts/architecture/**",
+                    "    - runs/current/changes/*/verification/**",
+                    "  cannot_write:",
+                    "    - runs/current/artifacts/product/**",
+                    "    - runs/current/artifacts/ux/**",
+                    "",
+                    "frontend:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - app/frontend/**",
+                    "  cannot_write: []",
+                    "",
+                    "backend:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - app/backend/**",
+                    "  cannot_write: []",
+                    "",
+                    "qa:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/changes/*/verification/**",
+                    "  cannot_write: []",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "playbook/task-bundles/integration-review.yaml",
+            "\n".join(
+                [
+                    "name: integration-review",
+                    "role: architect",
+                    "required_phase:",
+                    "  - playbook/process/phases/phase-6-integration-review.md",
+                    "writable_targets:",
+                    "  - runs/current/artifacts/architecture/**",
+                    "  - runs/current/evidence/ui-previews/**",
+                    "  - runs/current/evidence/quality/**",
+                    "  - runs/current/role-state/architect/**",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            repo_root,
+            "runs/current/changes/CR-1/role-loads/architect.yaml",
+            "\n".join(
+                [
+                    "change_id: CR-1",
+                    "read_artifacts:",
+                    "  - runs/current/artifacts/architecture/route-and-entry-model.md",
+                    "candidate_artifacts:",
+                    "  - runs/current/changes/CR-1/candidate/artifacts/architecture/search-modal-contract-delta.md",
+                    "write_artifacts:",
+                    "  - runs/current/artifacts/architecture/route-and-entry-model.md",
+                    "  - runs/current/artifacts/architecture/data-sourcing-contract.md",
+                    "  - runs/current/changes/CR-1/candidate/artifacts/architecture/search-modal-contract-delta.md",
+                    "verification_inputs:",
+                    "  - runs/current/changes/CR-1/verification/frontend-search-modal-proof.md",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "architect",
+            explicit_task_bundle="playbook/task-bundles/integration-review.yaml",
+            message_required_reads=[
+                "playbook/task-bundles/integration-review.yaml",
+                "playbook/process/phases/phase-6-integration-review.md",
+            ],
+        )
+
+        self.assertIn("runs/current/artifacts/architecture/**", writable)
+        self.assertIn("runs/current/artifacts/architecture/route-and-entry-model.md", writable)
+        self.assertIn("runs/current/artifacts/architecture/data-sourcing-contract.md", writable)
+
     def test_forbidden_paths_and_diff_validation_enforce_cannot_write(self) -> None:
         repo_root = self.build_repo()
 

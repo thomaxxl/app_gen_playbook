@@ -609,6 +609,7 @@ def _narrow_change_writable_paths(
     write_artifacts = _clean_declared_paths(_string_list(role_load_payload, "write_artifacts"))
     write_app_paths = _clean_declared_paths(_string_list(role_load_payload, "write_app_paths"))
     verification_inputs = _clean_declared_paths(_string_list(role_load_payload, "verification_inputs"))
+    bundle_name = str(bundle_payload.get("name", "")).strip().lower() if isinstance(bundle_payload, dict) else ""
 
     artifact_writes = candidate_artifacts + write_artifacts
 
@@ -627,6 +628,12 @@ def _narrow_change_writable_paths(
             if rule.startswith("runs/current/changes/*/candidate/artifacts/")
         }
         bundle_candidate_families.discard(None)
+    bundle_artifact_wildcard_rules = {
+        rule
+        for rule in (_string_list(bundle_payload, "writable_targets") if isinstance(bundle_payload, dict) else [])
+        if rule.startswith("runs/current/artifacts/") and rule.endswith("/**")
+    }
+    preserve_bundle_review_family_rules = "review" in bundle_name
 
     artifact_families = {
         artifact_family(path)
@@ -647,6 +654,9 @@ def _narrow_change_writable_paths(
             if artifact_family(rule) in bundle_candidate_families.intersection(candidate_families):
                 continue
         if artifact_families and rule.startswith("runs/current/artifacts/"):
+            if preserve_bundle_review_family_rules and rule in bundle_artifact_wildcard_rules:
+                narrowed.append(rule)
+                continue
             if artifact_family(rule) in artifact_families:
                 continue
         if candidate_families and rule.startswith("runs/current/changes/*/candidate/artifacts/"):
