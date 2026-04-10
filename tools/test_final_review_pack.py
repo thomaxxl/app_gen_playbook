@@ -78,6 +78,43 @@ class FinalReviewPackTests(unittest.TestCase):
                 b"png-b",
             )
 
+    def test_compile_final_review_pack_removes_previous_iteration_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for relative in (
+                "runs/current/artifacts/product/brief.md",
+                "runs/current/artifacts/product/problem-framing.md",
+                "runs/current/artifacts/product/user-journeys.md",
+                "runs/current/artifacts/product/acceptance-criteria.md",
+                "runs/current/artifacts/product/user-stories.md",
+                "runs/current/artifacts/product/conceptual-domain-model.md",
+                "runs/current/artifacts/product/business-rules.md",
+                "runs/current/artifacts/product/sample-data.md",
+                "runs/current/artifacts/product/acceptance-review.md",
+                "runs/current/artifacts/ux/navigation.md",
+                "runs/current/evidence/frontend-usability.md",
+            ):
+                write_file(repo_root / relative, f"# {Path(relative).name}\n")
+
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "---\nowner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n---\n\n# Acceptance\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: captured\n",
+            )
+            write_file(repo_root / "runs/current/evidence/ui-previews/overview.png", b"png-a")
+            write_file(repo_root / "runs/current/evidence/final/README.md", "# Final\n")
+            write_file(repo_root / "runs/current/evidence/final/stale-note.md", "old\n")
+            write_file(repo_root / "runs/current/evidence/final/ui-previews/stale.png", b"old")
+
+            compile_final_review_pack(repo_root)
+
+            self.assertFalse((repo_root / "runs/current/evidence/final/stale-note.md").exists())
+            self.assertFalse((repo_root / "runs/current/evidence/final/ui-previews/stale.png").exists())
+
     def test_collect_final_review_pack_issues_detects_stale_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
@@ -117,6 +154,37 @@ class FinalReviewPackTests(unittest.TestCase):
 
             issues = collect_final_review_pack_issues(repo_root)
             self.assertTrue(any("brief.md" in issue and "stale" in issue for issue in issues))
+
+    def test_collect_final_review_pack_issues_detects_unexpected_extra_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            for relative in (
+                "runs/current/artifacts/product/brief.md",
+                "runs/current/artifacts/product/problem-framing.md",
+                "runs/current/artifacts/product/user-journeys.md",
+                "runs/current/artifacts/product/acceptance-criteria.md",
+                "runs/current/artifacts/product/user-stories.md",
+                "runs/current/artifacts/product/conceptual-domain-model.md",
+                "runs/current/artifacts/product/business-rules.md",
+                "runs/current/artifacts/product/sample-data.md",
+                "runs/current/artifacts/product/acceptance-review.md",
+                "runs/current/artifacts/ux/navigation.md",
+                "runs/current/evidence/frontend-usability.md",
+            ):
+                write_file(repo_root / relative, "ok\n")
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "---\nowner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n---\n",
+            )
+            write_file(repo_root / "runs/current/evidence/ui-previews/manifest.md", "capture_status: not-required\n")
+            write_file(repo_root / "runs/current/evidence/final/README.md", "# Final\n")
+
+            compile_final_review_pack(repo_root)
+            write_file(repo_root / "runs/current/evidence/final/old-iteration.md", "stale\n")
+
+            issues = collect_final_review_pack_issues(repo_root)
+            self.assertTrue(any("unexpected stale file `old-iteration.md`" in issue for issue in issues))
 
 
 if __name__ == "__main__":

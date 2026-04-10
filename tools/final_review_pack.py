@@ -313,4 +313,23 @@ def collect_final_review_pack_issues(repo_root: Path) -> list[str]:
     if capture_status == "captured" and not copied_preview_images:
         issues.append("ui preview manifest says screenshots were captured, but the final review pack has none")
 
+    expected_relpaths = {"README.md", "review-index.md"}
+    expected_relpaths.update(
+        dest_rel
+        for source_rel, dest_rel, _, _ in FINAL_REVIEW_COPY_FILES
+        if (repo_root / source_rel).exists()
+    )
+    expected_relpaths.update(
+        (Path("ui-previews") / source.relative_to(preview_root)).as_posix()
+        for source in _iter_image_files(preview_root)
+    )
+
+    if final_root.exists():
+        for candidate in sorted(path for path in final_root.rglob("*") if path.is_file()):
+            relpath = candidate.relative_to(final_root).as_posix()
+            if relpath not in expected_relpaths:
+                issues.append(
+                    f"final review pack contains unexpected stale file `{relpath}`; rebuild the pack from current sources"
+                )
+
     return issues

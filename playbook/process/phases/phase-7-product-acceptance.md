@@ -71,6 +71,8 @@ drift work open in `runs/current/role-state/architect/inbox/` or `inflight/`.
   pack by copying the accepted high-level product artifacts, reference
   screenshot manifests, and captured screenshots that should be reviewable
   without opening source files
+- rebuild `runs/current/evidence/final/` from a clean slate so stale files
+  from earlier iterations do not survive in the reviewer-facing pack
 - refresh `runs/current/evidence/final/review-index.md` so it explains the
   copied review pack contents and why they are sufficient for high-level
   product evaluation

@@ -3,6 +3,9 @@
 Use `runs/current/evidence/final/` as the no-code audit pack for the delivered
 app.
 
+Refresh this directory as a clean rebuild. Do not leave copied files from an
+earlier iteration in place when the accepted evidence changes.
+
 The Product Manager owns this directory during acceptance and MUST refresh it
 as the final review bundle for downstream human or CEO review.
 

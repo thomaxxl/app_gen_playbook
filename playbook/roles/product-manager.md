@@ -165,6 +165,10 @@ MUST explain the copied contents and serve as the audit entrypoint. Use
 `python3 tools/compile_final_review_pack.py --repo-root .` or produce an
 equivalent refreshed pack manually.
 
+Refreshing the final review pack MUST be a clean rebuild, not an additive
+copy. Previous final-pack files from earlier iterations MUST be removed before
+the new pack is prepared so reviewers only see the current accepted evidence.
+
 When UI previews were captured, the Product Manager MUST review the actual
 images and record `product_manager_validation: approved` in
 `../../runs/current/evidence/ui-previews/manifest.md` only after confirming
