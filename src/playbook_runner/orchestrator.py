@@ -224,6 +224,8 @@ class Orchestrator:
             repo_root=config.repo_root,
             python_bin=python_bin,
             timeout_seconds=config.timeout_seconds,
+            activity_grace_seconds=config.activity_grace_seconds,
+            max_timeout_extension_seconds=config.max_timeout_extension_seconds,
             reasoning_effort=config.models.reasoning_effort,
             runtime_env=config.runtime_env,
             yolo=request.yolo,
@@ -1135,6 +1137,8 @@ class Orchestrator:
                 session_name=session_name,
                 raw_output_file=raw_backend_file,
                 timeout_seconds=turn_timeout_seconds,
+                activity_grace_seconds=self.config.activity_grace_seconds,
+                max_timeout_extension_seconds=self.config.max_timeout_extension_seconds,
             )
             ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
             if agent_result.timed_out and not ok:

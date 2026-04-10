@@ -32,12 +32,43 @@ def cleanup_process_group(pgid: int) -> None:
     wait_for_process_group_exit(pgid, 1.0)
 
 
+def latest_output_timestamp(output_file: Path) -> float:
+    try:
+        return output_file.stat().st_mtime
+    except FileNotFoundError:
+        return 0.0
+
+
+def should_extend_timeout(
+    *,
+    start_time: float,
+    now: float,
+    latest_activity_time: float,
+    timeout_seconds: int,
+    activity_grace_seconds: int,
+    max_timeout_extension_seconds: int,
+) -> bool:
+    if timeout_seconds <= 0 or activity_grace_seconds <= 0:
+        return False
+    if now - start_time <= timeout_seconds:
+        return False
+    if latest_activity_time <= 0:
+        return False
+    if now - latest_activity_time > activity_grace_seconds:
+        return False
+    if max_timeout_extension_seconds <= 0:
+        return True
+    return now - start_time <= timeout_seconds + max_timeout_extension_seconds
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cwd", required=True)
     parser.add_argument("--prompt-file", required=True)
     parser.add_argument("--output-file", required=True)
     parser.add_argument("--timeout-seconds", type=int, default=0)
+    parser.add_argument("--activity-grace-seconds", type=int, default=0)
+    parser.add_argument("--max-timeout-extension-seconds", type=int, default=0)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
@@ -62,11 +93,30 @@ def main() -> int:
             start_new_session=True,
             text=False,
         )
-        try:
-            proc.wait(timeout=args.timeout_seconds if args.timeout_seconds > 0 else None)
-        except subprocess.TimeoutExpired:
-            cleanup_process_group(proc.pid)
-            return 124
+        if args.timeout_seconds <= 0:
+            proc.wait()
+        else:
+            start_time = time.time()
+            poll_seconds = 5.0
+            while True:
+                try:
+                    proc.wait(timeout=poll_seconds)
+                    break
+                except subprocess.TimeoutExpired:
+                    now = time.time()
+                    if now - start_time <= args.timeout_seconds:
+                        continue
+                    if should_extend_timeout(
+                        start_time=start_time,
+                        now=now,
+                        latest_activity_time=latest_output_timestamp(output_file),
+                        timeout_seconds=args.timeout_seconds,
+                        activity_grace_seconds=args.activity_grace_seconds,
+                        max_timeout_extension_seconds=args.max_timeout_extension_seconds,
+                    ):
+                        continue
+                    cleanup_process_group(proc.pid)
+                    return 124
 
         return_code = proc.returncode
         cleanup_process_group(proc.pid)

@@ -62,6 +62,14 @@ def resolve_role_timeout_seconds(agent_backend: str) -> dict[str, int]:
     return overrides
 
 
+def resolve_activity_grace_seconds() -> int:
+    return int(os.getenv("AGENT_ACTIVITY_GRACE_SECONDS", "300"))
+
+
+def resolve_max_timeout_extension_seconds() -> int:
+    return int(os.getenv("AGENT_MAX_TIMEOUT_EXTENSION_SECONDS", "1800"))
+
+
 @dataclass(frozen=True)
 class ModelConfig:
     fast: str
@@ -91,6 +99,8 @@ class RunnerConfig:
     goose_provider: str = "chatgpt_codex"
     allow_backend_migration: bool = False
     role_timeout_seconds: dict[str, int] = field(default_factory=dict)
+    activity_grace_seconds: int = 300
+    max_timeout_extension_seconds: int = 1800
 
     @classmethod
     def from_env(cls, repo_root: Path) -> "RunnerConfig":
@@ -132,4 +142,6 @@ class RunnerConfig:
             or "chatgpt_codex",
             allow_backend_migration=os.getenv("PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION", "0") == "1",
             role_timeout_seconds=resolve_role_timeout_seconds(agent_backend),
+            activity_grace_seconds=resolve_activity_grace_seconds(),
+            max_timeout_extension_seconds=resolve_max_timeout_extension_seconds(),
         )

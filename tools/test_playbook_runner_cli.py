@@ -20,6 +20,8 @@ class PlaybookRunnerCliTests(unittest.TestCase):
             self.assertEqual(config.agent_backend, "goose_codex_bridge")
             self.assertEqual(config.timeout_seconds, 3600)
             self.assertEqual(config.role_timeout_seconds["frontend"], 7200)
+            self.assertEqual(config.activity_grace_seconds, 300)
+            self.assertEqual(config.max_timeout_extension_seconds, 1800)
 
     def test_runner_config_uses_legacy_codex_timeout_for_direct_codex(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

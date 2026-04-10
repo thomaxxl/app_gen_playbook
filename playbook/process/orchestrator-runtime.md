@@ -212,6 +212,14 @@ browser or build lanes. By default, Goose-backed `frontend` turns SHOULD use a
 longer ceiling than the generic Goose timeout, and operators MAY override that
 with `FRONTEND_COMMAND_TIMEOUT_SECONDS`.
 
+When a turn reaches its soft timeout but the backend is still emitting fresh
+output, the subprocess wrapper SHOULD treat that as progress and extend the
+turn temporarily instead of killing it immediately. That activity-based grace
+window SHOULD be bounded by:
+
+- `AGENT_ACTIVITY_GRACE_SECONDS` for how recent output must be
+- `AGENT_MAX_TIMEOUT_EXTENSION_SECONDS` for the maximum total extension
+
 If the operator runs `--resume` without explicitly setting
 `PLAYBOOK_AGENT_BACKEND`, the orchestrator SHOULD reuse the paused run's
 recorded pinned backend from `runs/current/orchestrator/runtime-environment.json`

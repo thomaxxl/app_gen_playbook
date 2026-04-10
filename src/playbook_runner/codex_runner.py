@@ -45,6 +45,8 @@ class AgentRunner:
         session_name: str | None = None,
         raw_output_file: Path | None = None,
         timeout_seconds: int | None = None,
+        activity_grace_seconds: int | None = None,
+        max_timeout_extension_seconds: int | None = None,
     ) -> CodexResult:
         raise NotImplementedError
 
@@ -59,6 +61,8 @@ class CodexRunner(AgentRunner):
         reasoning_effort: str,
         runtime_env: str,
         yolo: bool,
+        activity_grace_seconds: int = 300,
+        max_timeout_extension_seconds: int = 1800,
     ):
         self.repo_root = repo_root
         self.python_bin = python_bin
@@ -66,6 +70,8 @@ class CodexRunner(AgentRunner):
         self.reasoning_effort = reasoning_effort
         self.runtime_env = runtime_env
         self.yolo = yolo
+        self.activity_grace_seconds = activity_grace_seconds
+        self.max_timeout_extension_seconds = max_timeout_extension_seconds
 
     def backend_name(self) -> str:
         return "codex_exec_legacy"
@@ -101,6 +107,8 @@ class CodexRunner(AgentRunner):
         session_name: str | None = None,
         raw_output_file: Path | None = None,
         timeout_seconds: int | None = None,
+        activity_grace_seconds: int | None = None,
+        max_timeout_extension_seconds: int | None = None,
     ) -> CodexResult:
         del session_name
         del raw_output_file
@@ -127,6 +135,8 @@ class CodexRunner(AgentRunner):
             prompt_file=prompt_file,
             output_file=jsonl_file,
             timeout_seconds=timeout_seconds or self.timeout_seconds,
+            activity_grace_seconds=activity_grace_seconds or self.activity_grace_seconds,
+            max_timeout_extension_seconds=max_timeout_extension_seconds or self.max_timeout_extension_seconds,
             command=codex_cmd,
         )
 
@@ -143,6 +153,8 @@ class GooseCodexBridgeRunner(AgentRunner):
         yolo: bool,
         goose_provider: str,
         goose_state_root: Path,
+        activity_grace_seconds: int = 300,
+        max_timeout_extension_seconds: int = 1800,
     ):
         self.repo_root = repo_root
         self.python_bin = python_bin
@@ -152,6 +164,8 @@ class GooseCodexBridgeRunner(AgentRunner):
         self.yolo = yolo
         self.goose_provider = goose_provider.strip() or "chatgpt_codex"
         self.goose_state_root = goose_state_root
+        self.activity_grace_seconds = activity_grace_seconds
+        self.max_timeout_extension_seconds = max_timeout_extension_seconds
 
     def backend_name(self) -> str:
         return "goose_codex_bridge"
@@ -201,6 +215,8 @@ class GooseCodexBridgeRunner(AgentRunner):
         session_name: str | None = None,
         raw_output_file: Path | None = None,
         timeout_seconds: int | None = None,
+        activity_grace_seconds: int | None = None,
+        max_timeout_extension_seconds: int | None = None,
     ) -> CodexResult:
         del add_dirs
         if not session_name:
@@ -238,6 +254,8 @@ class GooseCodexBridgeRunner(AgentRunner):
             prompt_file=prompt_file,
             output_file=raw_path,
             timeout_seconds=timeout_seconds or self.timeout_seconds,
+            activity_grace_seconds=activity_grace_seconds or self.activity_grace_seconds,
+            max_timeout_extension_seconds=max_timeout_extension_seconds or self.max_timeout_extension_seconds,
             command=goose_cmd,
             cwd=cwd,
             env=self.goose_env(),
@@ -262,6 +280,8 @@ def build_agent_runner(
     repo_root: Path,
     python_bin: str,
     timeout_seconds: int,
+    activity_grace_seconds: int,
+    max_timeout_extension_seconds: int,
     reasoning_effort: str,
     runtime_env: str,
     yolo: bool,
@@ -278,6 +298,8 @@ def build_agent_runner(
             yolo=yolo,
             goose_provider=goose_provider,
             goose_state_root=repo_root / "runs" / "current" / "orchestrator" / "goose",
+            activity_grace_seconds=activity_grace_seconds,
+            max_timeout_extension_seconds=max_timeout_extension_seconds,
         )
     return CodexRunner(
         repo_root=repo_root,
@@ -286,6 +308,8 @@ def build_agent_runner(
         reasoning_effort=reasoning_effort,
         runtime_env=runtime_env,
         yolo=yolo,
+        activity_grace_seconds=activity_grace_seconds,
+        max_timeout_extension_seconds=max_timeout_extension_seconds,
     )
 
 
@@ -320,6 +344,8 @@ def _run_with_prompt_file(
     prompt_file: Path,
     output_file: Path,
     timeout_seconds: int,
+    activity_grace_seconds: int,
+    max_timeout_extension_seconds: int,
     command: list[str],
     cwd: Path | None = None,
     env: dict[str, str] | None = None,
@@ -336,6 +362,10 @@ def _run_with_prompt_file(
         str(output_file),
         "--timeout-seconds",
         str(timeout_seconds),
+        "--activity-grace-seconds",
+        str(activity_grace_seconds),
+        "--max-timeout-extension-seconds",
+        str(max_timeout_extension_seconds),
         "--",
         *command,
     ]
