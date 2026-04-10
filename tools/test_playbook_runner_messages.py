@@ -457,6 +457,62 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             self.assertIn('"type": "session.started"', jsonl_text)
             self.assertIn('"type": "turn.completed"', jsonl_text)
 
+    def test_goose_bridge_runner_failure_without_explicit_error_uses_exit_code_message(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            prompt_file = repo_root / "prompt.md"
+            result_file = repo_root / "result.md"
+            raw_file = repo_root / "raw.txt"
+            jsonl_file = repo_root / "result.jsonl"
+            prompt_file.write_text("prompt", encoding="utf-8")
+
+            runner = GooseCodexBridgeRunner(
+                repo_root=repo_root,
+                python_bin="python3",
+                timeout_seconds=60,
+                reasoning_effort="high",
+                runtime_env="host",
+                yolo=False,
+                goose_provider="chatgpt_codex",
+                goose_state_root=repo_root / "runs" / "current" / "orchestrator" / "goose",
+            )
+
+            def communicate(timeout=None):  # type: ignore[no-untyped-def]
+                raw_file.write_text(
+                    "\n".join(
+                        [
+                            "",
+                            "  ────────────────────────────────────────",
+                            "  ▸ shell",
+                            "    command: sed -n '1,200p' src/MonitorPages.tsx",
+                            "",
+                            "function demo() {",
+                            "  setState((previous) => ({ ...previous, error: null, isLoading: true }));",
+                            "}",
+                        ]
+                    ),
+                    encoding="utf-8",
+                )
+                return ("", "")
+
+            proc = SimpleNamespace(communicate=communicate, returncode=1)
+            with patch("playbook_runner.codex_runner.subprocess.Popen", return_value=proc):
+                runner.run(
+                    cwd=repo_root,
+                    prompt_file=prompt_file,
+                    result_file=result_file,
+                    jsonl_file=jsonl_file,
+                    model="gpt-5.4",
+                    add_dirs=[],
+                    session_name="app-gen:RUN-1:frontend",
+                    raw_output_file=raw_file,
+                )
+
+            jsonl_text = jsonl_file.read_text(encoding="utf-8")
+            self.assertIn("goose run failed with exit code 1; no explicit error was captured in Goose output", jsonl_text)
+            self.assertNotIn("setState((previous)", jsonl_text)
+            self.assertFalse(result_file.exists())
+
     def test_extract_summary_prefers_summary_line_and_skips_transcript_bars(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

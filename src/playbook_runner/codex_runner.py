@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 from typing import Iterable
@@ -381,7 +382,13 @@ def _write_goose_compatibility_jsonl(
         if run_result.timed_out:
             error_message = error_message or "goose run timed out"
         elif not error_message:
-            error_message = f"goose run failed with exit code {run_result.returncode}"
+            if raw_output.strip():
+                error_message = (
+                    f"goose run failed with exit code {run_result.returncode}; "
+                    "no explicit error was captured in Goose output"
+                )
+            else:
+                error_message = f"goose run failed with exit code {run_result.returncode}"
         events.append({"type": "turn.failed", "error": {"message": error_message}})
 
     with jsonl_file.open("w", encoding="utf-8") as handle:
@@ -393,7 +400,30 @@ def _compact_goose_error(output: str) -> str:
     lines = [line.rstrip() for line in output.strip().splitlines() if line.strip()]
     if not lines:
         return ""
-    return "\n".join(lines[-20:])
+    tail = lines[-80:]
+    failure_patterns = (
+        re.compile(r"^\s*error:", re.IGNORECASE),
+        re.compile(r"^\s*traceback\b", re.IGNORECASE),
+        re.compile(r"^\s*\d+\s+failed\b", re.IGNORECASE),
+        re.compile(r"\bcommand exited with code\b", re.IGNORECASE),
+        re.compile(r"\blooks like playwright\b", re.IGNORECASE),
+        re.compile(r"\bno such file or directory\b", re.IGNORECASE),
+        re.compile(r"\bselected model is at capacity\b", re.IGNORECASE),
+        re.compile(r"\bstream disconnected before completion\b", re.IGNORECASE),
+        re.compile(r"\berror sending request\b", re.IGNORECASE),
+        re.compile(r"\bfailed to lookup address information\b", re.IGNORECASE),
+        re.compile(r"\bbind failed\b", re.IGNORECASE),
+        re.compile(r"\brole diff validation failed\b", re.IGNORECASE),
+    )
+    first_signal_index: int | None = None
+    for index, line in enumerate(tail):
+        if any(pattern.search(line) for pattern in failure_patterns):
+            first_signal_index = index
+            break
+    if first_signal_index is None:
+        return ""
+    start = max(0, first_signal_index - 2)
+    return "\n".join(tail[start:])
 
 
 def _extract_goose_final_message(output: str) -> str:
