@@ -1206,7 +1206,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 set_run_status = stack.enter_context(patch.object(orchestrator, "set_run_status"))
                 append_remark = stack.enter_context(patch.object(orchestrator, "append_remark"))
                 stack.enter_context(patch.object(orchestrator, "log_line"))
-                with self.assertRaisesRegex(RuntimeError, "agent temporarily unavailable for role backend: agent turn timed out after 60 seconds"):
+                with self.assertRaisesRegex(RuntimeError, "agent temporarily unavailable for role backend: agent turn timed out after 60 seconds without output activity"):
                     orchestrator.run_role_once("backend")
 
             finish_worker.assert_called_once_with(role="backend", status="interrupted", claimed_message=message_path.name)

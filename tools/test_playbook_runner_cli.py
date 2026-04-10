@@ -18,10 +18,10 @@ class PlaybookRunnerCliTests(unittest.TestCase):
             with patch.dict(os.environ, {}, clear=True):
                 config = RunnerConfig.from_env(repo_root)
             self.assertEqual(config.agent_backend, "goose_codex_bridge")
-            self.assertEqual(config.timeout_seconds, 3600)
-            self.assertEqual(config.role_timeout_seconds["frontend"], 7200)
-            self.assertEqual(config.activity_grace_seconds, 300)
-            self.assertEqual(config.max_timeout_extension_seconds, 1800)
+            self.assertEqual(config.timeout_seconds, 1800)
+            self.assertEqual(config.role_timeout_seconds["frontend"], 2400)
+            self.assertEqual(config.activity_grace_seconds, 0)
+            self.assertEqual(config.max_timeout_extension_seconds, 0)
 
     def test_runner_config_uses_legacy_codex_timeout_for_direct_codex(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

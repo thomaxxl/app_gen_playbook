@@ -1142,7 +1142,7 @@ class Orchestrator:
             )
             ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
             if agent_result.timed_out and not ok:
-                detail = detail or f"agent turn timed out after {turn_timeout_seconds} seconds"
+                detail = detail or f"agent turn timed out after {turn_timeout_seconds} seconds without output activity"
             if ok:
                 break
             ended_at = self.utc_now()

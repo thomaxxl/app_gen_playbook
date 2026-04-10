@@ -39,26 +39,9 @@ def latest_output_timestamp(output_file: Path) -> float:
         return 0.0
 
 
-def should_extend_timeout(
-    *,
-    start_time: float,
-    now: float,
-    latest_activity_time: float,
-    timeout_seconds: int,
-    activity_grace_seconds: int,
-    max_timeout_extension_seconds: int,
-) -> bool:
-    if timeout_seconds <= 0 or activity_grace_seconds <= 0:
-        return False
-    if now - start_time <= timeout_seconds:
-        return False
-    if latest_activity_time <= 0:
-        return False
-    if now - latest_activity_time > activity_grace_seconds:
-        return False
-    if max_timeout_extension_seconds <= 0:
-        return True
-    return now - start_time <= timeout_seconds + max_timeout_extension_seconds
+def timeout_deadline(start_time: float, latest_activity_time: float, timeout_seconds: int) -> float:
+    anchor = latest_activity_time if latest_activity_time > start_time else start_time
+    return anchor + timeout_seconds
 
 
 def main() -> int:
@@ -67,7 +50,6 @@ def main() -> int:
     parser.add_argument("--prompt-file", required=True)
     parser.add_argument("--output-file", required=True)
     parser.add_argument("--timeout-seconds", type=int, default=0)
-    parser.add_argument("--activity-grace-seconds", type=int, default=0)
     parser.add_argument("--max-timeout-extension-seconds", type=int, default=0)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -98,22 +80,19 @@ def main() -> int:
         else:
             start_time = time.time()
             poll_seconds = 5.0
+            initial_activity_time = latest_output_timestamp(output_file)
+            deadline = timeout_deadline(start_time, initial_activity_time, args.timeout_seconds)
             while True:
                 try:
                     proc.wait(timeout=poll_seconds)
                     break
                 except subprocess.TimeoutExpired:
                     now = time.time()
-                    if now - start_time <= args.timeout_seconds:
+                    latest_activity_time = latest_output_timestamp(output_file)
+                    deadline = timeout_deadline(start_time, latest_activity_time, args.timeout_seconds)
+                    if now <= deadline:
                         continue
-                    if should_extend_timeout(
-                        start_time=start_time,
-                        now=now,
-                        latest_activity_time=latest_output_timestamp(output_file),
-                        timeout_seconds=args.timeout_seconds,
-                        activity_grace_seconds=args.activity_grace_seconds,
-                        max_timeout_extension_seconds=args.max_timeout_extension_seconds,
-                    ):
+                    if args.max_timeout_extension_seconds > 0 and now <= start_time + args.timeout_seconds + args.max_timeout_extension_seconds:
                         continue
                     cleanup_process_group(proc.pid)
                     return 124

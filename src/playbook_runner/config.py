@@ -35,7 +35,7 @@ def resolve_timeout_seconds(agent_backend: str) -> int:
         return int(
             os.getenv(
                 "GOOSE_COMMAND_TIMEOUT_SECONDS",
-                os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "3600"),
+                os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1800"),
             )
         )
     return int(os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1500"))
@@ -58,16 +58,16 @@ def resolve_role_timeout_seconds(agent_backend: str) -> dict[str, int]:
             overrides[role] = int(explicit)
 
     if agent_backend == "goose_codex_bridge" and "frontend" not in overrides:
-        overrides["frontend"] = int(os.getenv("GOOSE_FRONTEND_COMMAND_TIMEOUT_SECONDS", "7200"))
+        overrides["frontend"] = int(os.getenv("GOOSE_FRONTEND_COMMAND_TIMEOUT_SECONDS", "2400"))
     return overrides
 
 
 def resolve_activity_grace_seconds() -> int:
-    return int(os.getenv("AGENT_ACTIVITY_GRACE_SECONDS", "300"))
+    return 0
 
 
 def resolve_max_timeout_extension_seconds() -> int:
-    return int(os.getenv("AGENT_MAX_TIMEOUT_EXTENSION_SECONDS", "1800"))
+    return int(os.getenv("AGENT_MAX_TIMEOUT_EXTENSION_SECONDS", "0"))
 
 
 @dataclass(frozen=True)

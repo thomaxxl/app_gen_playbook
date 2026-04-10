@@ -202,9 +202,9 @@ Fresh runs SHOULD default to `goose_codex_bridge`. That bridge keeps Codex as
 the provider while moving the outer runner boundary to Goose.
 
 Because Goose adds outer-runner overhead on top of Codex, Goose-backed turns
-SHOULD use a longer default hard timeout than legacy direct Codex turns.
+SHOULD use an activity-reset idle timeout rather than a pure wall-clock limit.
 Unless the operator overrides it, `goose_codex_bridge` SHOULD default to
-`GOOSE_COMMAND_TIMEOUT_SECONDS=3600`, while `codex_exec_legacy` MAY continue
+`GOOSE_COMMAND_TIMEOUT_SECONDS=1800`, while `codex_exec_legacy` MAY continue
 to use the shorter `CODEX_COMMAND_TIMEOUT_SECONDS` default.
 
 The orchestrator MAY also apply role-specific timeout overrides for heavy
@@ -212,13 +212,12 @@ browser or build lanes. By default, Goose-backed `frontend` turns SHOULD use a
 longer ceiling than the generic Goose timeout, and operators MAY override that
 with `FRONTEND_COMMAND_TIMEOUT_SECONDS`.
 
-When a turn reaches its soft timeout but the backend is still emitting fresh
-output, the subprocess wrapper SHOULD treat that as progress and extend the
-turn temporarily instead of killing it immediately. That activity-based grace
-window SHOULD be bounded by:
+When a turn continues emitting fresh output, the subprocess wrapper SHOULD
+reset the timeout counter from the most recent output activity instead of
+killing the turn on the original start-time deadline.
 
-- `AGENT_ACTIVITY_GRACE_SECONDS` for how recent output must be
-- `AGENT_MAX_TIMEOUT_EXTENSION_SECONDS` for the maximum total extension
+If operators still want a wall-clock cap beyond that idle-timeout behavior,
+they MAY set `AGENT_MAX_TIMEOUT_EXTENSION_SECONDS`.
 
 If the operator runs `--resume` without explicitly setting
 `PLAYBOOK_AGENT_BACKEND`, the orchestrator SHOULD reuse the paused run's
