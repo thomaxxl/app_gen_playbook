@@ -146,6 +146,15 @@ frontend package template before treating the playbook baseline as current.
 - when a custom or shell-level search affordance exists outside the default
   resource-list filters, it scopes to the intended context and renders either
   filtered results or a dedicated results surface
+- when a custom or shell-level search affordance exists, the visible result
+  cards must explain why a hit matched in human-readable language; generic
+  fallback summaries that hide the matched concept are invalid
+- first-line search results must not surface raw JSON, dense machine blobs, or
+  unrelated generic fallback copy when the query matched a more specific
+  concept in the underlying data
+- if the UI keeps a draft query separate from the active submitted query, the
+  page must make that distinction visible; silent drift between the visible
+  input text and the shown result set is invalid
 - any visible filter, sort, scope, or queue-control affordance is either
   functionally wired to change the page state/data or clearly rendered as
   non-interactive status context; faux control chips are invalid
@@ -339,6 +348,22 @@ The starter frontend MUST ship automated tests for:
   browser smoke submits a representative query and proves the URL or visible
   result state changes through a real search flow rather than a decorative
   placeholder
+- when the app exposes a visible custom or shell-level search affordance,
+  browser proof covers representative queries from real product concepts such
+  as user stories, business rules, workflows, route/surface names, and a
+  negative/no-match term instead of only synthetic operational queries
+- when the app exposes a visible custom or shell-level search affordance,
+  browser proof explicitly records:
+  `search_scope_truthfulness_validation: approved`,
+  `search_query_alignment_validation: approved`,
+  `search_match_explainability_validation: approved`, and
+  `search_representative_query_validation: approved`
+- when the app exposes a visible custom or shell-level search affordance,
+  `runs/current/evidence/frontend-usability.md` explicitly records:
+  `search_scope_truthfulness_validation: approved`,
+  `search_query_alignment_validation: approved`,
+  `search_match_explainability_validation: approved`, and
+  `search_relevance_validation: approved`
 - Vite base-path and proxy configuration for `/app/`, `/jsonapi.json`,
   and `/ui`
 

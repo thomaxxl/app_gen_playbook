@@ -399,6 +399,123 @@ class CheckFrontendUsabilityTests(unittest.TestCase):
             issues = collect_issues(repo_root)
             self.assertTrue(any("filter/scope chips appear decorative" in issue for issue in issues))
 
+    def test_flags_search_evidence_that_accepts_frontend_fallbacks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/SearchExperience.tsx",
+                "\n".join(
+                    [
+                        "export function SearchExperience() {",
+                        '  return <input type=\"search\" placeholder=\"Search operations...\" />;',
+                        "}",
+                    ]
+                ),
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-browser-proof.md",
+                "\n".join(
+                    [
+                        "# Frontend Browser Proof",
+                        "",
+                        "search_result_humanization_validation: approved-with-frontend-fallbacks",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-usability.md",
+                "\n".join(
+                    [
+                        "# Frontend Usability",
+                        "",
+                        "human_readable_result_validation: approved-with-frontend-fallbacks",
+                    ]
+                )
+                + "\n",
+            )
+            self.seed_runtime_files(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertTrue(any("frontend-browser-proof accepts search fallback status" in issue for issue in issues))
+            self.assertTrue(any("frontend-usability accepts search fallback status" in issue for issue in issues))
+            self.assertTrue(any("search_query_alignment_validation" in issue for issue in issues))
+
+    def test_accepts_search_evidence_with_explicit_relevance_and_alignment_approval(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            for rel in (
+                "runs/current/artifacts/ux/resource-view-strategy.md",
+                "runs/current/artifacts/ux/relationship-surface-plan.md",
+                "runs/current/artifacts/ux/dashboard-data-plan.md",
+                "runs/current/artifacts/ux/form-grouping-plan.md",
+            ):
+                write_file(repo_root / rel, "# Ready\n")
+            write_file(
+                repo_root / "runs/current/artifacts/ux/landing-strategy.md",
+                "- Entry-page title: `Library Overview`\n- Primary CTA label: `Add Song`\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/SearchExperience.tsx",
+                "\n".join(
+                    [
+                        'import { useSearchParams } from "react-router-dom";',
+                        "export function SearchExperience() {",
+                        "  const [searchParams, setSearchParams] = useSearchParams();",
+                        "  void searchParams; void setSearchParams;",
+                        "  return <input type=\"search\" placeholder=\"Search operations...\" onChange={() => {}} />;",
+                        "}",
+                    ]
+                ),
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-browser-proof.md",
+                "\n".join(
+                    [
+                        "# Frontend Browser Proof",
+                        "",
+                        "search_result_humanization_validation: approved",
+                        "search_scope_truthfulness_validation: approved",
+                        "search_query_alignment_validation: approved",
+                        "search_match_explainability_validation: approved",
+                        "search_representative_query_validation: approved",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-usability.md",
+                "\n".join(
+                    [
+                        "# Frontend Usability",
+                        "",
+                        "search_ergonomics_validation: approved",
+                        "human_readable_result_validation: approved",
+                        "search_scope_truthfulness_validation: approved",
+                        "search_query_alignment_validation: approved",
+                        "search_match_explainability_validation: approved",
+                        "search_relevance_validation: approved",
+                    ]
+                )
+                + "\n",
+            )
+            self.seed_runtime_files(repo_root)
+
+            issues = collect_issues(repo_root)
+            self.assertFalse(any("search fallback status" in issue for issue in issues))
+            self.assertFalse(any("search_query_alignment_validation" in issue for issue in issues))
+
 
 if __name__ == "__main__":
     unittest.main()

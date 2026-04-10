@@ -168,6 +168,14 @@ readiness note in:
 - `runs/current/evidence/frontend-usability.md` explicitly states which entry,
   custom, generated list/show/form pages were reviewed and confirms whether any
   internal implementation/debug copy leaked into user-visible UI
+- when the app exposes a custom or shell-level search affordance,
+  `runs/current/evidence/frontend-browser-proof.md` explicitly records approved
+  search scope truthfulness, query/result alignment, match explainability, and
+  representative-query coverage rather than only route wiring
+- when the app exposes a custom or shell-level search affordance,
+  `runs/current/evidence/frontend-usability.md` explicitly records approved
+  search relevance and match explainability rather than accepting generic
+  fallback summaries that hide the matched concept
 - `runs/current/evidence/quality/coverage-report.md` proves required actor,
   current-release story, scenario-depth, page, and route coverage rather than
   only reviewed subset quality
@@ -216,6 +224,10 @@ Integration review fails when:
 - a required CRUD path was not proven
 - a required CRUD or search flow only worked through manual URL entry instead
   of the delivered UI
+- a visible search result card hides the matched concept behind generic
+  fallback copy so a user cannot understand why the result matched
+- a visible search input can drift silently from the active submitted query so
+  the shown result set does not truthfully represent the visible query text
 - the app only proved shell loading and not live data rendering
 - visible pages still read like internal shells
 - leftover unapproved demo, mock, or starter data is visible

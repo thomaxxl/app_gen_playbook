@@ -50,6 +50,14 @@ This phase begins only after:
   required story
 - verify that supported CRUD and search flows are reachable through normal UI
   navigation and actions, not only through manually typed deep links
+- verify that visible search results explain why they matched in human-readable
+  language instead of hiding the match behind generic fallback copy
+- verify that the visible search input and the active result set stay aligned,
+  or that any draft-versus-submitted query distinction is explicit to the user
+- when the app exposes custom search, exercise representative queries from
+  real product concepts such as user stories, business rules, workflows,
+  route/surface names, and a no-result term instead of only synthetic
+  operational queries
 - treat missing required routes, CTA drift, or generic substitution of required
   PM workspace surfaces as blocking QA failures unless explicitly waived
 - reopen the owning role when QA finds a real defect

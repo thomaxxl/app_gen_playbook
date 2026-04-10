@@ -357,7 +357,9 @@ instead of scattering unrelated input-level validators.
 - `runs/current/evidence/frontend-usability.md` recording the actual entry,
   custom, and generated resource surfaces reviewed during integration,
   including whether visible controls are interactive and whether the page
-  density/layout leaves avoidable dead space
+  density/layout leaves avoidable dead space; when custom search exists, this
+  review must also record approved search scope truthfulness, query/result
+  alignment, match explainability, and search relevance
 - handoff notes to `../../runs/current/role-state/architect/inbox/` when contracts break
 - coordination notes to `../../runs/current/role-state/backend/inbox/` when backend support is missing
 - readiness or completion notes to `../../runs/current/role-state/architect/inbox/` for integration review

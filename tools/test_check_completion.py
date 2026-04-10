@@ -852,6 +852,147 @@ class CheckCompletionTests(unittest.TestCase):
             self.assertEqual(len(browser_matching), 1)
             self.assertEqual(browser_matching[0]["kind"], "missing-required-evidence-output")
 
+    def test_blocks_custom_search_when_frontend_search_reviews_use_fallback_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/SearchExperience.tsx",
+                'export function SearchExperience() { return <input type="search" />; }\n',
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "\n".join(
+                    [
+                        "# Contract Samples",
+                        "",
+                        "## SAFRS resource coverage",
+                        "- discovered from /jsonapi.json",
+                        "",
+                        "## Relationship coverage",
+                        "- relationship proof present",
+                        "",
+                        "## Approved non-SAFRS exceptions",
+                        "- none",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-usability.md",
+                "\n".join(
+                    [
+                        "# Frontend Usability",
+                        "",
+                        "search_ergonomics_validation: approved",
+                        "human_readable_result_validation: approved-with-frontend-fallbacks",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-browser-proof.md",
+                "\n".join(
+                    [
+                        "# Frontend Browser Proof",
+                        "",
+                        "search_result_humanization_validation: approved-with-frontend-fallbacks",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: not-required\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            matching = [blocker for blocker in blockers if blocker["kind"] == "search-review-fallback-accepted"]
+            self.assertTrue(matching)
+
+    def test_accepts_custom_search_when_frontend_search_reviews_are_explicitly_approved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "app/frontend/src/SearchExperience.tsx",
+                'export function SearchExperience() { return <input type="search" />; }\n',
+            )
+            write_file(
+                repo_root / "runs/current/evidence/contract-samples.md",
+                "\n".join(
+                    [
+                        "# Contract Samples",
+                        "",
+                        "## SAFRS resource coverage",
+                        "- discovered from /jsonapi.json",
+                        "",
+                        "## Relationship coverage",
+                        "- relationship proof present",
+                        "",
+                        "## Approved non-SAFRS exceptions",
+                        "- none",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-usability.md",
+                "\n".join(
+                    [
+                        "# Frontend Usability",
+                        "",
+                        "search_ergonomics_validation: approved",
+                        "human_readable_result_validation: approved",
+                        "search_scope_truthfulness_validation: approved",
+                        "search_query_alignment_validation: approved",
+                        "search_match_explainability_validation: approved",
+                        "search_relevance_validation: approved",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/frontend-browser-proof.md",
+                "\n".join(
+                    [
+                        "# Frontend Browser Proof",
+                        "",
+                        "search_result_humanization_validation: approved",
+                        "search_scope_truthfulness_validation: approved",
+                        "search_query_alignment_validation: approved",
+                        "search_match_explainability_validation: approved",
+                        "search_representative_query_validation: approved",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/evidence/ui-previews/manifest.md",
+                "# UI Preview Manifest\n\ncapture_status: not-required\n",
+            )
+
+            blockers = collect_blockers(repo_root)
+            self.assertFalse(any(blocker["kind"] == "search-review-fallback-accepted" for blocker in blockers))
+            self.assertFalse(any(blocker["kind"] == "search-browser-proof-incomplete" for blocker in blockers))
+            self.assertFalse(any(blocker["kind"] == "search-usability-review-incomplete" for blocker in blockers))
+
     def test_requires_structured_contract_samples(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

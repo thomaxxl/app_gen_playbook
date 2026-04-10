@@ -67,6 +67,11 @@ The QA agent MUST:
 - fail the review if required CRUD or search support only works through
   manually typed deep links instead of the delivered UI's normal navigation
   and actions
+- fail the review if visible search results technically navigate but still do
+  not explain in human-readable language why the result matched
+- fail the review if the visible search input can drift from the submitted
+  query that produced the currently shown results without a clear pending or
+  active-query distinction
 - fail the review if default list pages are overloaded, generic metadata
   tables instead of usable task-oriented product surfaces
 - fail the review if a supported collection surface only shows a teaser subset
@@ -134,6 +139,9 @@ The QA agent MUST:
   IDs, not only the route paths
 - verify that required CRUD/search flows remain discoverable from those routes
   without reviewer-only URL entry
+- exercise representative search queries drawn from real product concepts such
+  as user stories, business rules, workflows, route/surface names, and a
+  no-result term when the delivered app exposes custom search
 - fail the review if a story-required visible route/page is missing, silently
   substituted by a generic shell, or absent from the documented live QA
   coverage

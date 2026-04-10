@@ -39,6 +39,34 @@ SEARCH_FILTER_MARKERS = (
     "filter:scopedfilter",
     "filter:{q:",
 )
+SEARCH_AFFORDANCE_MARKERS = (
+    'type="search"',
+    "type='search'",
+    'path="/search"',
+    "path='/search'",
+    "searchexperience",
+    "overlay=search",
+    "search_q",
+)
+SEARCH_BROWSER_PROOF_REQUIRED_STATUSES = {
+    "search_result_humanization_validation": "approved",
+    "search_scope_truthfulness_validation": "approved",
+    "search_query_alignment_validation": "approved",
+    "search_match_explainability_validation": "approved",
+    "search_representative_query_validation": "approved",
+}
+SEARCH_USABILITY_REQUIRED_STATUSES = {
+    "search_ergonomics_validation": "approved",
+    "human_readable_result_validation": "approved",
+    "search_scope_truthfulness_validation": "approved",
+    "search_query_alignment_validation": "approved",
+    "search_match_explainability_validation": "approved",
+    "search_relevance_validation": "approved",
+}
+SEARCH_FALLBACK_APPROVAL_MARKERS = (
+    "approved-with-frontend-fallbacks",
+    "pass-with-frontend-fallbacks",
+)
 DECORATIVE_FILTER_STRIP_SIGNATURE = "function filterstrip({ filters }"
 DECORATIVE_FILTER_STRIP_MARKERS = (
     "<chip",
@@ -163,6 +191,25 @@ def read_text_if_exists(path: Path) -> str:
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
+
+
+def markdown_scalar_value(text: str, label: str) -> str | None:
+    match = re.search(
+        rf"(?im)^(?:-\s*)?{re.escape(label)}:\s*([a-z0-9_-]+)\s*$",
+        text,
+    )
+    return match.group(1).strip().lower() if match else None
+
+
+def frontend_exposes_custom_search(src_root: Path) -> bool:
+    for path in iter_frontend_sources(src_root):
+        try:
+            lowered = path.read_text(encoding="utf-8").lower()
+        except UnicodeDecodeError:
+            continue
+        if any(marker in lowered for marker in SEARCH_AFFORDANCE_MARKERS):
+            return True
+    return False
 
 
 def active_change_external_reference_manifest(repo_root: Path) -> dict[str, object]:
@@ -309,6 +356,47 @@ def collect_issues(repo_root: Path) -> list[str]:
             "visible filter/scope chips appear decorative or unwired: "
             + ", ".join(decorative_filter_matches[:5])
         )
+
+    if frontend_exposes_custom_search(src_root):
+        browser_proof = repo_root / "runs/current/evidence/frontend-browser-proof.md"
+        browser_proof_text = read_text_if_exists(browser_proof)
+        if browser_proof_text:
+            normalized_browser_proof = browser_proof_text.lower()
+            for marker in SEARCH_FALLBACK_APPROVAL_MARKERS:
+                if marker in normalized_browser_proof:
+                    issues.append(
+                        f"frontend-browser-proof accepts search fallback status instead of full approval: {marker}"
+                    )
+            for label, expected in SEARCH_BROWSER_PROOF_REQUIRED_STATUSES.items():
+                actual = markdown_scalar_value(browser_proof_text, label)
+                if actual is None:
+                    issues.append(
+                        f"frontend-browser-proof is missing required search review field: {label}"
+                    )
+                elif actual != expected:
+                    issues.append(
+                        f"frontend-browser-proof must declare {label}: {expected}, found {actual}"
+                    )
+
+        usability_review = repo_root / "runs/current/evidence/frontend-usability.md"
+        usability_text = read_text_if_exists(usability_review)
+        if usability_text:
+            normalized_usability = usability_text.lower()
+            for marker in SEARCH_FALLBACK_APPROVAL_MARKERS:
+                if marker in normalized_usability:
+                    issues.append(
+                        f"frontend-usability accepts search fallback status instead of full approval: {marker}"
+                    )
+            for label, expected in SEARCH_USABILITY_REQUIRED_STATUSES.items():
+                actual = markdown_scalar_value(usability_text, label)
+                if actual is None:
+                    issues.append(
+                        f"frontend-usability is missing required search review field: {label}"
+                    )
+                elif actual != expected:
+                    issues.append(
+                        f"frontend-usability must declare {label}: {expected}, found {actual}"
+                    )
 
     return issues
 

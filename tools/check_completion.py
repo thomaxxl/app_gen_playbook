@@ -108,6 +108,26 @@ UI_PREVIEW_VALIDATION_PATTERNS = {
     "architect": re.compile(r"(?im)^(?:-\s*)?architect_validation:\s*([a-z0-9_-]+)\s*$"),
     "product_manager": re.compile(r"(?im)^(?:-\s*)?product_manager_validation:\s*([a-z0-9_-]+)\s*$"),
 }
+SEARCH_RESULT_REVIEW_PATTERN_TEMPLATE = r"(?im)^(?:-\s*)?{label}:\s*([a-z0-9_-]+)\s*$"
+SEARCH_EVIDENCE_FALLBACK_MARKERS = (
+    "approved-with-frontend-fallbacks",
+    "pass-with-frontend-fallbacks",
+)
+SEARCH_BROWSER_PROOF_REQUIRED_STATUSES = {
+    "search_result_humanization_validation": "approved",
+    "search_scope_truthfulness_validation": "approved",
+    "search_query_alignment_validation": "approved",
+    "search_match_explainability_validation": "approved",
+    "search_representative_query_validation": "approved",
+}
+SEARCH_USABILITY_REQUIRED_STATUSES = {
+    "search_ergonomics_validation": "approved",
+    "human_readable_result_validation": "approved",
+    "search_scope_truthfulness_validation": "approved",
+    "search_query_alignment_validation": "approved",
+    "search_match_explainability_validation": "approved",
+    "search_relevance_validation": "approved",
+}
 CONTRACT_SAMPLES_REQUIRED_PATTERNS = (
     (
         re.compile(r"(?im)^##\s+SAFRS resource coverage\s*$"),
@@ -132,6 +152,41 @@ def metadata_status(path: Path) -> str:
     if not path.exists():
         return ""
     return str(parse_metadata_block(path).get("status", "")).strip().lower()
+
+
+def markdown_scalar_value(text: str, label: str) -> str | None:
+    pattern = re.compile(
+        SEARCH_RESULT_REVIEW_PATTERN_TEMPLATE.format(label=re.escape(label))
+    )
+    match = pattern.search(text)
+    return match.group(1).strip().lower() if match else None
+
+
+def frontend_exposes_custom_search(repo_root: Path) -> bool:
+    src_root = repo_root / "app" / "frontend" / "src"
+    if not src_root.exists():
+        return False
+    for path in src_root.rglob("*"):
+        if path.suffix not in {".js", ".jsx", ".ts", ".tsx"} or not path.is_file():
+            continue
+        try:
+            lowered = path.read_text(encoding="utf-8").lower()
+        except UnicodeDecodeError:
+            continue
+        if any(
+            marker in lowered
+            for marker in (
+                'type="search"',
+                "type='search'",
+                'path="/search"',
+                "path='/search'",
+                "searchexperience",
+                "overlay=search",
+                "search_q",
+            )
+        ):
+            return True
+    return False
 
 
 def active_role_queues_present(repo_root: Path) -> bool:
@@ -891,6 +946,63 @@ def collect_blockers(repo_root: Path) -> list[dict[str, str]]:
                             "owner": owner,
                             "phase": phase,
                             "reason": "captured ui preview manifest must include a non-placeholder review_conclusion describing what the screenshots prove",
+                        }
+                    )
+
+    if not delivery_terminal and frontend_active and frontend_exposes_custom_search(repo_root):
+        browser_proof_path = repo_root / "runs" / "current" / "evidence" / "frontend-browser-proof.md"
+        if browser_proof_path.exists():
+            browser_proof_text = browser_proof_path.read_text(encoding="utf-8")
+            normalized_browser_proof = browser_proof_text.lower()
+            for marker in SEARCH_EVIDENCE_FALLBACK_MARKERS:
+                if marker in normalized_browser_proof:
+                    blockers.append(
+                        {
+                            "kind": "search-review-fallback-accepted",
+                            "path": browser_proof_path.relative_to(repo_root).as_posix(),
+                            "owner": "architect",
+                            "phase": "phase-6-integration-review",
+                            "reason": f"frontend browser proof still accepts a search fallback posture ({marker}) instead of approved search relevance",
+                        }
+                    )
+            for label, expected in SEARCH_BROWSER_PROOF_REQUIRED_STATUSES.items():
+                actual = markdown_scalar_value(browser_proof_text, label)
+                if actual != expected:
+                    blockers.append(
+                        {
+                            "kind": "search-browser-proof-incomplete",
+                            "path": browser_proof_path.relative_to(repo_root).as_posix(),
+                            "owner": "architect",
+                            "phase": "phase-6-integration-review",
+                            "reason": f"frontend browser proof must declare {label}: {expected} for shipped custom search, found {actual or 'missing'}",
+                        }
+                    )
+
+        usability_path = repo_root / "runs" / "current" / "evidence" / "frontend-usability.md"
+        if usability_path.exists():
+            usability_text = usability_path.read_text(encoding="utf-8")
+            normalized_usability = usability_text.lower()
+            for marker in SEARCH_EVIDENCE_FALLBACK_MARKERS:
+                if marker in normalized_usability:
+                    blockers.append(
+                        {
+                            "kind": "search-review-fallback-accepted",
+                            "path": usability_path.relative_to(repo_root).as_posix(),
+                            "owner": "architect",
+                            "phase": "phase-6-integration-review",
+                            "reason": f"frontend usability review still accepts a search fallback posture ({marker}) instead of approved search relevance",
+                        }
+                    )
+            for label, expected in SEARCH_USABILITY_REQUIRED_STATUSES.items():
+                actual = markdown_scalar_value(usability_text, label)
+                if actual != expected:
+                    blockers.append(
+                        {
+                            "kind": "search-usability-review-incomplete",
+                            "path": usability_path.relative_to(repo_root).as_posix(),
+                            "owner": "architect",
+                            "phase": "phase-6-integration-review",
+                            "reason": f"frontend usability review must declare {label}: {expected} for shipped custom search, found {actual or 'missing'}",
                         }
                     )
 
