@@ -47,6 +47,7 @@ class AgentRunner:
         timeout_seconds: int | None = None,
         activity_grace_seconds: int | None = None,
         max_timeout_extension_seconds: int | None = None,
+        watch_paths: Iterable[Path] = (),
     ) -> CodexResult:
         raise NotImplementedError
 
@@ -109,6 +110,7 @@ class CodexRunner(AgentRunner):
         timeout_seconds: int | None = None,
         activity_grace_seconds: int | None = None,
         max_timeout_extension_seconds: int | None = None,
+        watch_paths: Iterable[Path] = (),
     ) -> CodexResult:
         del session_name
         del raw_output_file
@@ -137,6 +139,7 @@ class CodexRunner(AgentRunner):
             timeout_seconds=timeout_seconds or self.timeout_seconds,
             activity_grace_seconds=activity_grace_seconds or self.activity_grace_seconds,
             max_timeout_extension_seconds=max_timeout_extension_seconds or self.max_timeout_extension_seconds,
+            watch_paths=watch_paths,
             command=codex_cmd,
         )
 
@@ -217,6 +220,7 @@ class GooseCodexBridgeRunner(AgentRunner):
         timeout_seconds: int | None = None,
         activity_grace_seconds: int | None = None,
         max_timeout_extension_seconds: int | None = None,
+        watch_paths: Iterable[Path] = (),
     ) -> CodexResult:
         del add_dirs
         if not session_name:
@@ -256,6 +260,7 @@ class GooseCodexBridgeRunner(AgentRunner):
             timeout_seconds=timeout_seconds or self.timeout_seconds,
             activity_grace_seconds=activity_grace_seconds or self.activity_grace_seconds,
             max_timeout_extension_seconds=max_timeout_extension_seconds or self.max_timeout_extension_seconds,
+            watch_paths=watch_paths,
             command=goose_cmd,
             cwd=cwd,
             env=self.goose_env(),
@@ -346,6 +351,7 @@ def _run_with_prompt_file(
     timeout_seconds: int,
     activity_grace_seconds: int,
     max_timeout_extension_seconds: int,
+    watch_paths: Iterable[Path],
     command: list[str],
     cwd: Path | None = None,
     env: dict[str, str] | None = None,
@@ -366,9 +372,15 @@ def _run_with_prompt_file(
         str(activity_grace_seconds),
         "--max-timeout-extension-seconds",
         str(max_timeout_extension_seconds),
-        "--",
-        *command,
     ]
+    seen_watch_paths: set[str] = set()
+    for path in watch_paths:
+        key = str(path)
+        if key in seen_watch_paths:
+            continue
+        seen_watch_paths.add(key)
+        runner_command.extend(["--watch-path", key])
+    runner_command.extend(["--", *command])
     proc = subprocess.Popen(
         runner_command,
         cwd=repo_root,

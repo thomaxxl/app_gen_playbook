@@ -39,6 +39,36 @@ def latest_output_timestamp(output_file: Path) -> float:
         return 0.0
 
 
+def latest_path_timestamp(path: Path) -> float:
+    try:
+        path_stat = path.stat()
+    except FileNotFoundError:
+        return 0.0
+    latest = path_stat.st_mtime
+    if not path.is_dir():
+        return latest
+
+    for root, dirs, files in os.walk(path):
+        for name in dirs:
+            try:
+                latest = max(latest, (Path(root) / name).stat().st_mtime)
+            except FileNotFoundError:
+                continue
+        for name in files:
+            try:
+                latest = max(latest, (Path(root) / name).stat().st_mtime)
+            except FileNotFoundError:
+                continue
+    return latest
+
+
+def latest_activity_timestamp(output_file: Path, watch_paths: list[Path]) -> float:
+    latest = latest_output_timestamp(output_file)
+    for path in watch_paths:
+        latest = max(latest, latest_path_timestamp(path))
+    return latest
+
+
 def timeout_deadline(start_time: float, latest_activity_time: float, timeout_seconds: int) -> float:
     anchor = latest_activity_time if latest_activity_time > start_time else start_time
     return anchor + timeout_seconds
@@ -52,6 +82,7 @@ def main() -> int:
     parser.add_argument("--timeout-seconds", type=int, default=0)
     parser.add_argument("--activity-grace-seconds", type=int, default=0)
     parser.add_argument("--max-timeout-extension-seconds", type=int, default=0)
+    parser.add_argument("--watch-path", action="append", default=[])
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
@@ -64,6 +95,7 @@ def main() -> int:
     cwd = Path(args.cwd).resolve()
     prompt_file = Path(args.prompt_file).resolve()
     output_file = Path(args.output_file).resolve()
+    watch_paths = [Path(item).resolve() for item in args.watch_path]
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with prompt_file.open("rb") as stdin_handle, output_file.open("w", encoding="utf-8") as output_handle:
@@ -81,7 +113,7 @@ def main() -> int:
         else:
             start_time = time.time()
             poll_seconds = 5.0
-            initial_activity_time = latest_output_timestamp(output_file)
+            initial_activity_time = latest_activity_timestamp(output_file, watch_paths)
             deadline = timeout_deadline(start_time, initial_activity_time, args.timeout_seconds)
             while True:
                 try:
@@ -89,7 +121,7 @@ def main() -> int:
                     break
                 except subprocess.TimeoutExpired:
                     now = time.time()
-                    latest_activity_time = latest_output_timestamp(output_file)
+                    latest_activity_time = latest_activity_timestamp(output_file, watch_paths)
                     deadline = timeout_deadline(start_time, latest_activity_time, args.timeout_seconds)
                     if now <= deadline + max(0, args.activity_grace_seconds):
                         continue

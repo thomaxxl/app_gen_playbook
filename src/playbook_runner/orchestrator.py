@@ -1157,6 +1157,7 @@ class Orchestrator:
                 timeout_seconds=turn_timeout_seconds,
                 activity_grace_seconds=self.config.activity_grace_seconds,
                 max_timeout_extension_seconds=self.config.max_timeout_extension_seconds,
+                watch_paths=write_dirs,
             )
             ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
             if agent_result.timed_out and not ok:

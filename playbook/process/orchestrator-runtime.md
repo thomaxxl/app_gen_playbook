@@ -213,9 +213,10 @@ browser or build lanes. By default, Goose-backed `frontend` turns SHOULD use a
 longer ceiling than the generic Goose timeout, and operators MAY override that
 with `FRONTEND_COMMAND_TIMEOUT_SECONDS`.
 
-When a turn continues emitting fresh output, the subprocess wrapper SHOULD
-reset the timeout counter from the most recent output activity instead of
-killing the turn on the original start-time deadline.
+When a turn continues emitting fresh output or updating watched writable
+workspace paths, the subprocess wrapper SHOULD reset the timeout counter from
+the most recent observed activity instead of killing the turn on the original
+start-time deadline.
 
 If operators still want a wall-clock cap beyond that idle-timeout behavior,
 they MAY set `AGENT_MAX_TIMEOUT_EXTENSION_SECONDS`.
