@@ -17,6 +17,10 @@ FORBIDDEN_USER_FACING_PHRASES = (
     "restored backend contract",
     "queue endpoint remains provisional",
     "using committed admin.yaml snapshot",
+    "modal-first search keeps the page mounted",
+    "the current page stays mounted behind this route-backed overlay",
+    "filters stay hidden until the operator asks for them",
+    "query stays primary, while blocker-backed filters reveal only when the operator asks for them",
 )
 RAW_ID_SOURCE_RE = re.compile(r'source\s*=\s*"[^"]*(_id|Id)"')
 SEARCH_PLACEHOLDER_RE = re.compile(r'placeholder\s*=\s*["\'][^"\']*search[^"\']*["\']', re.IGNORECASE)

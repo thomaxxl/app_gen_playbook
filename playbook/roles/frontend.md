@@ -308,6 +308,13 @@ The Frontend agent MUST NOT mark screenshot evidence complete if the images are
 blank, crashed, fallback-only, or otherwise fail to show the intended product
 surface.
 
+During screenshot review, the Frontend agent MUST also reject visible copy that
+reads like implementation rationale, UI-control mechanics, or routing posture
+instead of product language. Helper text is not a default requirement. When the
+run-owned UX artifacts explicitly call for added guidance, prefer contextual
+disclosure such as an info icon, popover, tooltip, or expandable help surface
+instead of always-visible helper copy under primary controls.
+
 The Frontend agent MUST NOT ship hardcoded dynamic or ephemeral user-visible
 data such as dashboard metrics, blockers, history rows, queue rows, verification
 state, or environment-derived summaries. If the approved UX needs that data

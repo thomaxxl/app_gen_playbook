@@ -13,6 +13,15 @@ if __package__ in {None, ""}:
 else:
     from delivery_gate_common import delivery_approval_recorded
 
+
+REQUIRED_APPROVAL_HEADINGS = (
+    "## Final Review Pack Review",
+    "## UX/UI Critical Review",
+    "## Findings",
+    "## Decision",
+)
+
+
 def collect_issues(repo_root: Path) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     validation_path = repo_root / "runs" / "current" / "evidence" / "ceo-delivery-validation.md"
@@ -42,13 +51,38 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
                 "reason": "missing delivery-approved artifact",
             }
         )
-    elif not delivery_approval_recorded(repo_root):
-        issues.append(
-            {
-                "path": approval_path.relative_to(repo_root).as_posix(),
-                "reason": "delivery-approved artifact does not record CEO approval",
-            }
-        )
+    else:
+        approval_text = approval_path.read_text(encoding="utf-8")
+        lowered = approval_text.lower()
+        if not delivery_approval_recorded(repo_root):
+            issues.append(
+                {
+                    "path": approval_path.relative_to(repo_root).as_posix(),
+                    "reason": "delivery-approved artifact does not record CEO approval",
+                }
+            )
+        if "review_posture: critical" not in lowered:
+            issues.append(
+                {
+                    "path": approval_path.relative_to(repo_root).as_posix(),
+                    "reason": "delivery-approved artifact must declare `review_posture: critical`",
+                }
+            )
+        for heading in REQUIRED_APPROVAL_HEADINGS:
+            if heading.lower() not in lowered:
+                issues.append(
+                    {
+                        "path": approval_path.relative_to(repo_root).as_posix(),
+                        "reason": f"delivery-approved artifact is missing the required heading `{heading}`",
+                    }
+                )
+        if "phase reset" not in lowered and "gate reset" not in lowered and "no reset required" not in lowered:
+            issues.append(
+                {
+                    "path": approval_path.relative_to(repo_root).as_posix(),
+                    "reason": "delivery-approved artifact must explicitly record whether a gate or phase reset was required",
+                }
+            )
     return issues
 
 

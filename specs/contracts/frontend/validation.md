@@ -161,6 +161,14 @@ frontend package template before treating the playbook baseline as current.
 - overview, landing, and dashboard surfaces use the visible viewport
   deliberately; large empty regions or under-filled two-column layouts are
   invalid when higher-priority summary/detail content could occupy that space
+- user-facing helper text stays minimal and domain-relevant; always-visible
+  copy explaining implementation posture, routing mechanics, or control
+  behavior is invalid unless the run-owned UX artifacts explicitly require an
+  operator-facing explanation
+- when extra user guidance is necessary, the preferred lane is contextual help
+  such as an info icon, popover, tooltip, help drawer, or another deliberate
+  progressive-disclosure surface rather than persistent helper text under core
+  controls
 - when `runs/current/artifacts/ux/visual-direction.md` exists, the implemented
   color/emphasis system remains readable and consistent with its trust/mood
   rationale rather than collapsing into arbitrary decorative styling

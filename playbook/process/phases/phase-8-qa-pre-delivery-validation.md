@@ -7,6 +7,11 @@ Lead: QA
 Independently validate the delivered app before CEO gives final delivery
 approval.
 
+CEO then performs a separate critical reviewer-facing pass over the final pack,
+screenshots, and delivery posture. That pass is not a formality and may reset
+delivery back to an earlier gate or phase when reviewer-facing quality is still
+misleading or below bar.
+
 ## Trigger
 
 This phase begins only after:

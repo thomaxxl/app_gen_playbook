@@ -10,6 +10,11 @@ Every phase also fails closed without a CEO critical review approval under
 CEO must challenge component and subsystem quality, with explicit UX/UI review
 every time, and must block the phase when design or integration issues remain.
 
+The final delivery pass is stricter still: CEO must review the reviewer-facing
+final pack and screenshots as an external reviewer would, use direct blocking
+language when they are not in line, and reset the owning gate or phase instead
+of approving with caveats when reviewer-facing quality still drifts.
+
 The prose here explains gate intent. The executable enforcement source lives in
 the sidecar policy registry under `specs/policy/`, especially:
 

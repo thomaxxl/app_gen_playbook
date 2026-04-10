@@ -363,6 +363,14 @@ Architect review MUST fail if the visible UI still contains decorative control
 chrome, dead filter/scope chips, or sparse whitespace-heavy layouts that leave
 important content under-filled or displaced.
 
+Architect review MUST also fail if the captured screens still rely on visible
+helper text or explanatory copy that describes implementation mechanics,
+routing posture, or control behavior instead of the actual app content and
+task flow. If guidance is genuinely necessary, Architect should prefer a
+contextual disclosure pattern such as an info icon, popover, tooltip, or
+intentional help surface rather than approving persistent helper copy by
+default.
+
 ## Completion rule
 
 Process every inbox file, update owned architecture artifacts, emit needed

@@ -113,6 +113,13 @@ The QA agent MUST:
 - fail the review if major entry or overview surfaces leave dominant dead
   whitespace while key summary/detail content is pushed below the fold or left
   out of the visible companion panel
+- fail the review if visible helper text or explanatory copy describes
+  implementation mechanics, routing posture, or control behavior instead of
+  the actual app content and task flow, unless the run-owned UX artifacts
+  explicitly require that guidance
+- when extra guidance is necessary, treat contextual disclosure patterns such
+  as info icons, popovers, tooltips, or similar progressive-disclosure widgets
+  as the preferred lane over persistent helper text
 - treat `runs/current/artifacts/product/ux-interview-questionnaire.md` as a
   real QA execution contract when present: answer its questions against the
   delivered app, cite the question IDs in `qa-delivery-review.md`, and reopen

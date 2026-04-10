@@ -118,10 +118,19 @@ The frontend MUST:
 
 - use labels and helper text that match the domain language from the product
   artifacts
+- keep visible copy minimal and focused on the task, content, or decision the
+  user is making right now
 - avoid vague button labels such as `Submit` when a specific verb is
   available
 - avoid using placeholder text as the only label
 - explain empty states in user language rather than implementation language
+- avoid always-visible helper text that explains implementation mechanics,
+  control posture, or frontend routing behavior
+
+When additional guidance is genuinely needed and the run-owned UX artifacts
+explicitly justify it, the frontend SHOULD prefer contextual disclosure such
+as an info icon, popover, tooltip, help drawer, or expandable explanation
+instead of persistent helper copy competing with the main content.
 
 When a page needs to render a long formatted prose block such as help content,
 policy notes, onboarding guidance, release notes, or domain documentation, the

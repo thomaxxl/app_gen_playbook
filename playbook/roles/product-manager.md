@@ -175,6 +175,13 @@ images and record `product_manager_validation: approved` in
 the screenshots show usable content instead of blank, crashed, fallback, or
 placeholder screens.
 
+Product review of those screenshots MUST also fail if visible text is dominated
+by helper copy, implementation rationale, or interaction mechanics instead of
+the product’s actual content and workflow. Extra guidance should be minimal and
+intentional; when the UX package truly requires it, prefer contextual help such
+as info icons, popovers, or similar progressive-disclosure patterns over
+persistent explanatory text.
+
 For a fresh run, the Product Manager MUST NOT use `../../examples/` or
 `../../app/` as product inputs unless the task explicitly requests comparison
 or maintenance.
