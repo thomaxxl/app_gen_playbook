@@ -24,6 +24,7 @@ A feature is done only when all of these are true:
 - `runs/current/evidence/ceo-delivery-validation.md` exists and records a
   successful delivery validation
 - `runs/current/orchestrator/delivery-approved.md` exists
+- CEO's final-pack delivery review records that no unresolved issues remain
 - at least one generated resource list is proven to render correct live data,
   not only a shell, spinner, or empty scaffold
 - docs and templates match the implementation

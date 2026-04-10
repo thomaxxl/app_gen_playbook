@@ -37,7 +37,7 @@ class ValidateDeliveryApprovalTests(unittest.TestCase):
                         "User-facing copy, guidance density, and reviewer-facing polish were challenged directly.",
                         "",
                         "## Findings",
-                        "No reviewer-facing drift remained at approval time. No reset required.",
+                        "All issues resolved. No unresolved issues remain. No reset required.",
                         "",
                         "## Decision",
                         "Approved for delivery.",
@@ -68,6 +68,7 @@ class ValidateDeliveryApprovalTests(unittest.TestCase):
             issues = collect_issues(repo_root)
             self.assertTrue(any("review_posture: critical" in issue["reason"] for issue in issues))
             self.assertTrue(any("Final Review Pack Review" in issue["reason"] for issue in issues))
+            self.assertTrue(any("no unresolved issues remain" in issue["reason"] for issue in issues))
 
 
 if __name__ == "__main__":

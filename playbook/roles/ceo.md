@@ -166,13 +166,12 @@ The CEO role MUST:
   audit, not as a ceremonial signoff; challenge the screenshots, copied review
   artifacts, and visible UX copy as if they were the only materials an
   external reviewer would see
-- use direct, unambiguous blocking language when reviewer-facing quality is not
-  acceptable; do not soften serious final-pack drift, UX/UI issues, or
-  misleading copy into advisory notes
-- if the final review pack, screenshots, or reviewer-facing UX still contain
-  misleading implementation text, decorative helper copy, low-quality
-  interaction wording, or other delivery-scope drift, block delivery and reset
-  the owning gate or phase instead of approving with caveats
+- use direct, unambiguous blocking language when any issue remains; do not
+  soften unresolved drift, UX/UI defects, misleading copy, or other delivery
+  problems into advisory notes
+- if the final review pack, screenshots, reviewer-facing UX, or any other
+  delivery-scope surface still contains unresolved issues, block delivery and
+  reset the owning gate or phase instead of approving with caveats
 - before approving successful delivery, fail closed if
   `runs/current/evidence/quality/quality-summary.md` or
   `runs/current/evidence/quality/crud-matrix.md` still says `blocked`, or if

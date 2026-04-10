@@ -83,6 +83,13 @@ def collect_issues(repo_root: Path) -> list[dict[str, str]]:
                     "reason": "delivery-approved artifact must explicitly record whether a gate or phase reset was required",
                 }
             )
+        if "no unresolved issues remain" not in lowered and "all issues resolved" not in lowered:
+            issues.append(
+                {
+                    "path": approval_path.relative_to(repo_root).as_posix(),
+                    "reason": "delivery-approved artifact must explicitly state that no unresolved issues remain",
+                }
+            )
     return issues
 
 
