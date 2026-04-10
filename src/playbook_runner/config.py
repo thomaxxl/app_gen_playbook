@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -41,6 +41,27 @@ def resolve_timeout_seconds(agent_backend: str) -> int:
     return int(os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1500"))
 
 
+def resolve_role_timeout_seconds(agent_backend: str) -> dict[str, int]:
+    overrides: dict[str, int] = {}
+    role_env_names = {
+        "product_manager": "PRODUCT_MANAGER",
+        "architect": "ARCHITECT",
+        "frontend": "FRONTEND",
+        "backend": "BACKEND",
+        "qa": "QA",
+        "deployment": "DEPLOYMENT",
+        "ceo": "CEO",
+    }
+    for role, env_prefix in role_env_names.items():
+        explicit = os.getenv(f"{env_prefix}_COMMAND_TIMEOUT_SECONDS")
+        if explicit:
+            overrides[role] = int(explicit)
+
+    if agent_backend == "goose_codex_bridge" and "frontend" not in overrides:
+        overrides["frontend"] = int(os.getenv("GOOSE_FRONTEND_COMMAND_TIMEOUT_SECONDS", "7200"))
+    return overrides
+
+
 @dataclass(frozen=True)
 class ModelConfig:
     fast: str
@@ -69,6 +90,7 @@ class RunnerConfig:
     agent_backend: str = "goose_codex_bridge"
     goose_provider: str = "chatgpt_codex"
     allow_backend_migration: bool = False
+    role_timeout_seconds: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def from_env(cls, repo_root: Path) -> "RunnerConfig":
@@ -109,4 +131,5 @@ class RunnerConfig:
             goose_provider=os.getenv("PLAYBOOK_GOOSE_PROVIDER", os.getenv("GOOSE_PROVIDER", "chatgpt_codex")).strip()
             or "chatgpt_codex",
             allow_backend_migration=os.getenv("PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION", "0") == "1",
+            role_timeout_seconds=resolve_role_timeout_seconds(agent_backend),
         )

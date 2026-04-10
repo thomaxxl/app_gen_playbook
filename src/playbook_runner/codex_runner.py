@@ -44,6 +44,7 @@ class AgentRunner:
         resume_id: str | None = None,
         session_name: str | None = None,
         raw_output_file: Path | None = None,
+        timeout_seconds: int | None = None,
     ) -> CodexResult:
         raise NotImplementedError
 
@@ -99,6 +100,7 @@ class CodexRunner(AgentRunner):
         resume_id: str | None = None,
         session_name: str | None = None,
         raw_output_file: Path | None = None,
+        timeout_seconds: int | None = None,
     ) -> CodexResult:
         del session_name
         del raw_output_file
@@ -124,7 +126,7 @@ class CodexRunner(AgentRunner):
             python_bin=self.python_bin,
             prompt_file=prompt_file,
             output_file=jsonl_file,
-            timeout_seconds=self.timeout_seconds,
+            timeout_seconds=timeout_seconds or self.timeout_seconds,
             command=codex_cmd,
         )
 
@@ -198,6 +200,7 @@ class GooseCodexBridgeRunner(AgentRunner):
         resume_id: str | None = None,
         session_name: str | None = None,
         raw_output_file: Path | None = None,
+        timeout_seconds: int | None = None,
     ) -> CodexResult:
         del add_dirs
         if not session_name:
@@ -234,7 +237,7 @@ class GooseCodexBridgeRunner(AgentRunner):
             python_bin=self.python_bin,
             prompt_file=prompt_file,
             output_file=raw_path,
-            timeout_seconds=self.timeout_seconds,
+            timeout_seconds=timeout_seconds or self.timeout_seconds,
             command=goose_cmd,
             cwd=cwd,
             env=self.goose_env(),

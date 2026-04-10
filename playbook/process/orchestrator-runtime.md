@@ -207,6 +207,11 @@ Unless the operator overrides it, `goose_codex_bridge` SHOULD default to
 `GOOSE_COMMAND_TIMEOUT_SECONDS=3600`, while `codex_exec_legacy` MAY continue
 to use the shorter `CODEX_COMMAND_TIMEOUT_SECONDS` default.
 
+The orchestrator MAY also apply role-specific timeout overrides for heavy
+browser or build lanes. By default, Goose-backed `frontend` turns SHOULD use a
+longer ceiling than the generic Goose timeout, and operators MAY override that
+with `FRONTEND_COMMAND_TIMEOUT_SECONDS`.
+
 If the operator runs `--resume` without explicitly setting
 `PLAYBOOK_AGENT_BACKEND`, the orchestrator SHOULD reuse the paused run's
 recorded pinned backend from `runs/current/orchestrator/runtime-environment.json`

@@ -233,6 +233,9 @@ class Orchestrator:
         self.python_bin = python_bin
         self.active_change_id = ""
         self.run_id = ""
+
+    def turn_timeout_seconds(self, runtime_role: str) -> int:
+        return self.config.role_timeout_seconds.get(runtime_role, self.config.timeout_seconds)
         self.dashboard_process: subprocess.Popen[str] | None = None
         self.run_mode_name = MODE_TO_RUN_MODE[request.mode]
 
@@ -1120,6 +1123,7 @@ class Orchestrator:
         self.tools.build_prompt(runtime_role, display_role, role_file, message_path, prompt_file)
         turn_started_at = self.utc_now()
         while True:
+            turn_timeout_seconds = self.turn_timeout_seconds(runtime_role)
             agent_result = self.codex.run(
                 cwd=role_dir,
                 prompt_file=prompt_file,
@@ -1130,10 +1134,11 @@ class Orchestrator:
                 resume_id=resume_id or None,
                 session_name=session_name,
                 raw_output_file=raw_backend_file,
+                timeout_seconds=turn_timeout_seconds,
             )
             ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
             if agent_result.timed_out and not ok:
-                detail = detail or f"agent turn timed out after {self.config.timeout_seconds} seconds"
+                detail = detail or f"agent turn timed out after {turn_timeout_seconds} seconds"
             if ok:
                 break
             ended_at = self.utc_now()
