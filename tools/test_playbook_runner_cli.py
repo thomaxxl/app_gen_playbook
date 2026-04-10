@@ -18,6 +18,29 @@ class PlaybookRunnerCliTests(unittest.TestCase):
             with patch.dict(os.environ, {}, clear=True):
                 config = RunnerConfig.from_env(repo_root)
             self.assertEqual(config.agent_backend, "goose_codex_bridge")
+            self.assertEqual(config.timeout_seconds, 3600)
+
+    def test_runner_config_uses_legacy_codex_timeout_for_direct_codex(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            with patch.dict(os.environ, {"PLAYBOOK_AGENT_BACKEND": "codex_exec_legacy"}, clear=True):
+                config = RunnerConfig.from_env(repo_root)
+            self.assertEqual(config.agent_backend, "codex_exec_legacy")
+            self.assertEqual(config.timeout_seconds, 1500)
+
+    def test_runner_config_allows_goose_specific_timeout_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            with patch.dict(
+                os.environ,
+                {
+                    "PLAYBOOK_AGENT_BACKEND": "goose_codex_bridge",
+                    "GOOSE_COMMAND_TIMEOUT_SECONDS": "2700",
+                },
+                clear=True,
+            ):
+                config = RunnerConfig.from_env(repo_root)
+            self.assertEqual(config.timeout_seconds, 2700)
 
     def test_resume_adopts_recorded_backend_when_backend_env_is_unset(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

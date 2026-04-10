@@ -201,6 +201,12 @@ The orchestrator SHOULD also honor:
 Fresh runs SHOULD default to `goose_codex_bridge`. That bridge keeps Codex as
 the provider while moving the outer runner boundary to Goose.
 
+Because Goose adds outer-runner overhead on top of Codex, Goose-backed turns
+SHOULD use a longer default hard timeout than legacy direct Codex turns.
+Unless the operator overrides it, `goose_codex_bridge` SHOULD default to
+`GOOSE_COMMAND_TIMEOUT_SECONDS=3600`, while `codex_exec_legacy` MAY continue
+to use the shorter `CODEX_COMMAND_TIMEOUT_SECONDS` default.
+
 If the operator runs `--resume` without explicitly setting
 `PLAYBOOK_AGENT_BACKEND`, the orchestrator SHOULD reuse the paused run's
 recorded pinned backend from `runs/current/orchestrator/runtime-environment.json`

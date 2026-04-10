@@ -27,6 +27,20 @@ def normalize_agent_backend(raw_value: str) -> str:
     return aliases.get(normalized, "goose_codex_bridge")
 
 
+def resolve_timeout_seconds(agent_backend: str) -> int:
+    explicit = os.getenv("AGENT_COMMAND_TIMEOUT_SECONDS")
+    if explicit:
+        return int(explicit)
+    if agent_backend == "goose_codex_bridge":
+        return int(
+            os.getenv(
+                "GOOSE_COMMAND_TIMEOUT_SECONDS",
+                os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "3600"),
+            )
+        )
+    return int(os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1500"))
+
+
 @dataclass(frozen=True)
 class ModelConfig:
     fast: str
@@ -58,6 +72,7 @@ class RunnerConfig:
 
     @classmethod
     def from_env(cls, repo_root: Path) -> "RunnerConfig":
+        agent_backend = normalize_agent_backend(os.getenv("PLAYBOOK_AGENT_BACKEND", "goose_codex_bridge"))
         fast = os.getenv("FAST_MODEL", "")
         main = os.getenv("MAIN_MODEL", "gpt-5.4")
         long_model = os.getenv("LONG_MODEL", "gpt-5.3-codex-spark")
@@ -85,12 +100,12 @@ class RunnerConfig:
             repo_root=repo_root,
             poll_seconds=int(os.getenv("POLL_SECONDS", "1")),
             lease_seconds=int(os.getenv("LEASE_SECONDS", "600")),
-            timeout_seconds=int(os.getenv("CODEX_COMMAND_TIMEOUT_SECONDS", "1500")),
+            timeout_seconds=resolve_timeout_seconds(agent_backend),
             runtime_env=normalize_runtime_env(os.getenv("PLAYBOOK_RUNTIME_ENV", "host")),
             auto_start_app=os.getenv("PLAYBOOK_AUTO_START_APP", "1") == "1",
             enable_parallel_workers=os.getenv("PLAYBOOK_ENABLE_PARALLEL_WORKERS", "0") == "1",
             models=models,
-            agent_backend=normalize_agent_backend(os.getenv("PLAYBOOK_AGENT_BACKEND", "goose_codex_bridge")),
+            agent_backend=agent_backend,
             goose_provider=os.getenv("PLAYBOOK_GOOSE_PROVIDER", os.getenv("GOOSE_PROVIDER", "chatgpt_codex")).strip()
             or "chatgpt_codex",
             allow_backend_migration=os.getenv("PLAYBOOK_ALLOW_AGENT_BACKEND_MIGRATION", "0") == "1",
