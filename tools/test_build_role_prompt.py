@@ -82,6 +82,8 @@ class BuildRolePromptTests(unittest.TestCase):
         self.assertIn("terminate any processes you started for this turn", source)
         self.assertIn("keeps only durable context relevant to future turns or future runs", source)
         self.assertIn("Forbidden writes:", source)
+        self.assertIn("do not write verification shell snippets that fake stdin or hide producer failures", source)
+        self.assertIn("cmd | python - <<'PY'", source)
 
     def test_canonical_outputs_extract_evidence_paths_from_requested_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

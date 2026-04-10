@@ -103,6 +103,11 @@ view needs backend data, it MUST retrieve that data through the approved
 dataProvider contract rather than calling backend APIs directly from component
 code.
 
+When the Frontend agent writes ad hoc verification commands for API/browser
+proof, those commands MUST be truthful and directly executable. In particular,
+the agent MUST NOT use `curl ... | python - <<'PY'` or any heredoc form that
+replaces stdin and invalidates the intended pipe.
+
 Whenever the work touches:
 
 - React-admin dataProvider setup

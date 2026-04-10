@@ -281,6 +281,7 @@ def emit_full_prompt(
         "- do not edit artifacts owned by another role\n"
         "- do not silently patch playbook contract areas unless the inbox task explicitly delegates playbook maintenance\n"
         "- do not leave background servers, watchers, or helper processes running when you hand off this turn\n"
+        "- do not write verification shell snippets that fake stdin or hide producer failures; avoid `cmd | python - <<'PY'` and similar broken pipe/heredoc combinations\n"
     )
 
     print("Current message metadata:\n")
@@ -384,6 +385,7 @@ def emit_short_prompt(
     print("- Do not edit another role's artifact area or app subtree.")
     print("- If contract drift exists, write a handoff into the Architect inbox instead of silently patching around it.")
     print("- Do not leave background servers, watchers, or helper processes running after this turn.")
+    print("- Verification shell snippets must be executable as written; do not use broken pipe/heredoc combinations like `cmd | python - <<'PY'`.")
     print("- Rewrite your role context.md so it stays compact and keeps only durable context relevant to future turns or future runs.")
     print("- Terminate any processes you started for this turn.")
     print("- Move the claimed inflight work item into processed/.")

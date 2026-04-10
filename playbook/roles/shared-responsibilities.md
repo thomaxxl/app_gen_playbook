@@ -40,6 +40,18 @@ details that need more precision than the global summary.
 - Agents MUST NOT rely on parallel background work to finish later after they
   hand off. If persistent runtime work is required, it must be explicitly
   orchestrator-owned and recorded as such.
+- Verification shell snippets MUST be executable as written and MUST use
+  stdin/exit-status patterns that actually match the intended check.
+- Agents MUST NOT combine a producer pipeline with `python - <<'PY'` or
+  similar heredoc patterns that replace the consumer stdin and silently discard
+  the piped payload.
+- When validating JSON from a command, agents SHOULD either:
+  - pipe into `python -c '...'`
+  - write the payload to a temp file and parse that file
+  - or use `jq`
+- When a shell check depends on a pipeline, agents MUST use a form that
+  preserves the real producer failure status instead of reading only the last
+  command's success.
 
 When `dependency_provisioning.mode = reuse-preferred` or the legacy alias
 `preprovisioned-reuse-only`:
