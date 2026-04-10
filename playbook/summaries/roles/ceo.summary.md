@@ -34,7 +34,8 @@ Before successful delivery, CEO must wait for QA approval in
 `scripts/run_playbook.sh --ceo-delivery-validate`, validate `app/run.sh`
 booted the app successfully, and write
 `runs/current/orchestrator/delivery-approved.md`.
-Every CEO unblock intervention MUST be recorded in `runs/current/remarks.md`.
+Only CEO-detected playbook/process feedback belongs in `runs/current/remarks.md`;
+ordinary unblock interventions belong in the owned evidence and runtime files.
 
 Always load:
 

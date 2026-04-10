@@ -88,11 +88,12 @@ The summary SHOULD be taken from a final response line starting with
 The orchestrator MUST persist its machine-readable evidence under
 `runs/current/evidence/orchestrator/`.
 
-`runs/current/remarks.md` is the compact high-signal human log owned by the
-orchestrator and CEO. It MUST stay concise. Repeated per-turn churn,
-large copied completion dumps, and routine role verification notes belong in
-`runs/current/notes.md`, role-owned artifacts, or
-`runs/current/remarks-events.jsonl`, not in the markdown log.
+`runs/current/remarks.md` is the curated playbook-feedback log owned by the
+orchestrator and CEO. It MUST stay concise and MUST contain only durable
+feedback about playbook/process defects, ambiguities, or improvements.
+Repeated per-turn churn, approval history, role execution notes, and routine
+verification output belong in `runs/current/notes.md`, role-owned artifacts,
+or `runs/current/remarks-events.jsonl`, not in the markdown log.
 
 The compatibility event stream for each role turn MUST be captured in the
 matching per-turn JSONL file under:
@@ -278,7 +279,7 @@ If the runtime env was only the implicit default and host-mode execution
 preflight proves the current execution context forbids localhost bind
 validation, the orchestrator SHOULD auto-pivot to
 `PLAYBOOK_RUNTIME_ENV=sandbox` before dispatching roles. That pivot MUST be
-recorded in `runtime-environment.json` and `runs/current/remarks.md`.
+recorded in `runtime-environment.json` and `runs/current/remarks-events.jsonl`.
 
 If the operator does not set `PLAYBOOK_ENABLE_PARALLEL_WORKERS`, the
 orchestrator SHOULD default to `0`. Parallel background workers are disabled by
@@ -865,7 +866,8 @@ If the handoff is invalid, the orchestrator MUST:
 
 - reject the receiver dispatch
 - create a correction note back to the sender when the sender is a normal role
-- record the rejection in `runs/current/remarks.md` and
+- record the rejection in `runs/current/remarks.md` when it exposes durable
+  playbook/process feedback, and always in
   `runs/current/evidence/orchestrator/recovery-log.md`
 
 If a newer pending sender-to-receiver handoff already exists for the same
@@ -885,7 +887,8 @@ A run is stalled when all of the following are true:
 
 When a stall is detected, the orchestrator MUST:
 
-- append a human-readable diagnosis to `runs/current/remarks.md`
+- append a human-readable playbook/process diagnosis to
+  `runs/current/remarks.md`
 - create a CEO inbox note describing the stall
 - invoke the CEO role once before deciding the run is irrecoverable
 - terminate non-zero only if the CEO intervention does not restore forward
@@ -912,7 +915,8 @@ The CEO intervention path MUST:
   remaining blocker requires external operator action, environment
   provisioning, credentials, or a policy decision the agents cannot make
   after local repair paths have been exhausted
-- record every CEO unblock intervention in `runs/current/remarks.md`
+- record ordinary CEO unblock work in owned evidence/runtime files and
+  promote only durable playbook/process feedback into `runs/current/remarks.md`
 - avoid becoming a normal always-on review role
 
 When `runs/current/orchestrator/operator-action-required.md` exists, the
@@ -933,7 +937,7 @@ If actionable inbox or inflight work still exists, but no recent
 `agent-start`, `agent-finish`, or worker heartbeat has occurred within the
 configured idle threshold, the orchestrator MUST:
 
-- append a diagnosis to `runs/current/remarks.md`
+- append a playbook/process diagnosis to `runs/current/remarks.md`
 - emit a visible operator log line
 - terminate non-zero instead of sleeping indefinitely
 

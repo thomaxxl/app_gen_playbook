@@ -20,7 +20,8 @@ Run baseline alignment when:
 
 - updated current-state artifacts where drift is confirmed
 - baseline evidence under `runs/current/evidence/baseline/`
-- a short note in `runs/current/remarks.md`
+- a short note in `runs/current/notes.md`, or in `runs/current/remarks.md`
+  only when the baseline drift exposed durable playbook/process feedback
 - restored `runs/current/artifacts/**` from
   `runs/current/exports/playbook-baseline/current/` when the portable baseline
   export is the only trustworthy accepted snapshot

@@ -12,6 +12,7 @@ from playbook_runner.config import ModelConfig, RunnerConfig
 from playbook_runner.codex_runner import CodexRunner, GooseCodexBridgeRunner, expand_add_dirs
 from playbook_runner.messages import Message, message_indicates_progress, message_requires_phase5_ready
 from playbook_runner.orchestrator import (
+    MODE_TO_RUN_MODE,
     Orchestrator,
     RunRequest,
     add_dir_from_rule,
@@ -23,6 +24,93 @@ from playbook_runner.queue_store import ClaimedMessage
 
 
 class PlaybookRunnerMessageTests(unittest.TestCase):
+    def test_orchestrator_initializes_run_mode_name_and_timeout_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                role_timeout_seconds={"frontend": 90},
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+
+            orchestrator = Orchestrator(
+                config,
+                RunRequest(mode="iterate", scope="fullstack", resume=False, target_role=None, input_file=None),
+            )
+
+            self.assertEqual(orchestrator.run_mode_name, MODE_TO_RUN_MODE["iterate"])
+            self.assertIsNone(orchestrator.dashboard_process)
+            self.assertEqual(orchestrator.turn_timeout_seconds("frontend"), 90)
+            self.assertEqual(orchestrator.turn_timeout_seconds("backend"), 60)
+
+    def test_append_remark_promotes_only_feedback_titles_to_markdown(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(
+                config,
+                RunRequest(mode="iterate", scope="fullstack", resume=False, target_role=None, input_file=None),
+            )
+            orchestrator.ensure_run_notes()
+
+            orchestrator.append_remark("Role execution failed", "detail")
+            remarks_text = orchestrator.paths.remarks_md.read_text(encoding="utf-8")
+            self.assertNotIn("Role execution failed", remarks_text)
+
+            first_event = json.loads(orchestrator.paths.remarks_events_jsonl.read_text(encoding="utf-8").splitlines()[0])
+            self.assertFalse(first_event["high_signal"])
+
+            orchestrator.append_remark("Run stalled", "feedback detail")
+            remarks_text = orchestrator.paths.remarks_md.read_text(encoding="utf-8")
+            self.assertIn("Run stalled", remarks_text)
+            self.assertIn("feedback detail", remarks_text)
+
+            events = [
+                json.loads(line)
+                for line in orchestrator.paths.remarks_events_jsonl.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            self.assertTrue(events[-1]["high_signal"])
+
     def test_compact_console_message_hides_model_and_session_for_agent_start(self) -> None:
         message = "agent-start role=frontend model=gpt-5.4 message=turn.md session=019d5ee2-25ae-70f3-b575-fa7417f12435"
         self.assertEqual(

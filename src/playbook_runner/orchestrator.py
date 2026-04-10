@@ -85,11 +85,19 @@ RETRYABLE_CODEX_FAILURE_MARKERS = (
 
 MODEL_CAPACITY_RETRY_SECONDS = 15 * 60
 
-LOW_SIGNAL_REMARK_TITLES = {
-    "Recovery notes queued",
+REMARK_FEEDBACK_TITLES = {
     "Invalid Handoff Rejected",
-    "Run complete",
+    "Invalid change packet routing",
+    "Role diff validation failed",
+    "Run stalled",
 }
+
+REMARK_FEEDBACK_PREFIXES = (
+    "Playbook feedback:",
+    "Playbook ambiguity:",
+    "Playbook improvement:",
+    "CEO stall triage",
+)
 
 WILDCARD_CHARS = set("*?[")
 
@@ -174,6 +182,13 @@ def json_compatible(value: object) -> object:
     return value
 
 
+def remark_belongs_in_markdown(title: str) -> bool:
+    normalized = title.strip()
+    if normalized in REMARK_FEEDBACK_TITLES:
+        return True
+    return any(normalized.startswith(prefix) for prefix in REMARK_FEEDBACK_PREFIXES)
+
+
 def root_set_covers(current_roots: Iterable[str], stored_roots: Iterable[str]) -> bool:
     stored_paths = [Path(root) for root in stored_roots]
     for current in current_roots:
@@ -235,11 +250,11 @@ class Orchestrator:
         self.python_bin = python_bin
         self.active_change_id = ""
         self.run_id = ""
+        self.dashboard_process: subprocess.Popen[str] | None = None
+        self.run_mode_name = MODE_TO_RUN_MODE[request.mode]
 
     def turn_timeout_seconds(self, runtime_role: str) -> int:
         return self.config.role_timeout_seconds.get(runtime_role, self.config.timeout_seconds)
-        self.dashboard_process: subprocess.Popen[str] | None = None
-        self.run_mode_name = MODE_TO_RUN_MODE[request.mode]
 
     def utc_now(self) -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -257,9 +272,9 @@ class Orchestrator:
         return now.strftime("%m-%d %H:%M:%S")
 
     def append_remark(self, title: str, body: str) -> None:
-        high_signal = title not in LOW_SIGNAL_REMARK_TITLES
-        self.append_remark_event(title, body, high_signal=high_signal)
-        if high_signal:
+        feedback = remark_belongs_in_markdown(title)
+        self.append_remark_event(title, body, high_signal=feedback)
+        if feedback:
             append_markdown_log(self.paths.remarks_md, "# Run Remarks", title, body)
 
     def append_note(self, title: str, body: str) -> None:
@@ -301,6 +316,9 @@ class Orchestrator:
         )
 
     def ensure_run_notes(self) -> None:
+        self.paths.remarks_md.parent.mkdir(parents=True, exist_ok=True)
+        self.paths.notes_md.parent.mkdir(parents=True, exist_ok=True)
+        self.paths.remarks_events_jsonl.parent.mkdir(parents=True, exist_ok=True)
         if not self.paths.remarks_md.exists():
             self.paths.remarks_md.write_text("# Run Remarks\n\n", encoding="utf-8")
         if not self.paths.remarks_events_jsonl.exists():

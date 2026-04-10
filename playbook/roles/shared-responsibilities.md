@@ -125,7 +125,9 @@ Exception rule:
   playbook-runtime defects under `playbook/`, `scripts/`, and `tools/` when
   those defects are the blocker preventing the current run from advancing
 - CEO MUST return control to the normal owner as soon as the stall is cleared
-- CEO MUST record every unblock intervention in `runs/current/remarks.md`
+- CEO MUST record ordinary unblock interventions in owned evidence/runtime
+  files and MAY promote only durable playbook/process feedback into
+  `runs/current/remarks.md`
 - CEO MUST NOT use this exception to edit `specs/`, `templates/`, or unrelated
   playbook source beyond the local runtime repair needed to unblock the
   current run unless the task explicitly became playbook maintenance
@@ -190,8 +192,8 @@ complete:
 Roles SHOULD compact `context.md` regularly by rewriting it in place, removing
 resolved or stale detail instead of only appending new notes.
 
-`runs/current/remarks.md` is reserved for the compact high-signal playbook log.
-Normal runtime roles MUST NOT use it as a shared execution diary, repeated
+`runs/current/remarks.md` is reserved for curated playbook feedback only.
+Normal runtime roles MUST NOT use it as a shared execution diary, approval log,
 verification log, or stale-blocker scratchpad. They SHOULD record those details
 in `runs/current/notes.md`, role-owned artifacts, or evidence files instead.
 The normal direct writers for `runs/current/remarks.md` are the orchestrator

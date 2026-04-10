@@ -156,10 +156,10 @@ When a run is complete:
 - local `../../app/` MUST contain the generated app
 - `../../runs/current/input.md` SHOULD preserve the brief used for the run
 - `../../runs/template/` SHOULD remain neutral and reusable for the next run
-- `../../runs/current/remarks.md` SHOULD preserve only the compact high-signal
-  playbook log, especially orchestrator-detected stall diagnoses, invalid
-  handoff/recovery findings, CEO unblock interventions, and durable playbook
-  feedback promoted out of ad hoc role notes
+- `../../runs/current/remarks.md` SHOULD preserve only curated playbook
+  feedback, especially orchestrator-detected control-plane defects, invalid
+  handoff/recovery findings, ambiguities in contracts or instructions, and
+  durable process improvements promoted out of ad hoc role notes
 - `../../runs/current/notes.md` SHOULD preserve other run-level notes and
   feedback that do not belong in the app tree, including repeated
   verification output, stale-blocker churn notes, and provisional role

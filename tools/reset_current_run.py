@@ -75,7 +75,7 @@ ROLE_LOCAL_AGENTS_RULES = {
     "frontend": "treat relationship tabs and related-record popups as baseline behavior unless run-owned UX artifacts explicitly override them",
     "backend": "treat backend route discovery and admin.yaml reconciliation as mandatory before claiming frontend stability",
     "qa": "independently validate the delivered app before CEO approval, reopen the owning lanes when real defects remain, and do not silently patch implementation as part of QA",
-    "ceo": "perform the mandatory end-of-phase critical review, with explicit UX/UI scrutiny, before any phase can exit; if stalled, inspect the full run state, repair the current blocker even in local playbook runtime files when necessary, validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval, and record every unblock intervention in runs/current/remarks.md, including phase-review decisions",
+    "ceo": "perform the mandatory end-of-phase critical review, with explicit UX/UI scrutiny, before any phase can exit; if stalled, inspect the full run state, repair the current blocker even in local playbook runtime files when necessary, validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval, and promote only durable playbook/process feedback into runs/current/remarks.md",
     "deployment": "do not change application semantics while implementing packaging or runtime normalization",
 }
 
@@ -207,10 +207,11 @@ def reset_current_run(repo_root: Path) -> Path:
     remarks_path.write_text(
         "# Run Remarks\n\n"
         "Neutral at run start.\n\n"
-        "Use this file for the compact high-signal playbook log only.\n"
-        "Orchestrator and CEO interventions belong here. Ordinary role notes,\n"
-        "verification churn, and repeated stale-blocker diagnostics belong in\n"
-        "runs/current/notes.md.\n",
+        "Use this file only for curated playbook feedback and improvement\n"
+        "notes. Record ambiguities, control-plane defects, and durable process\n"
+        "fixes here. Ordinary role notes, verification churn, CEO phase\n"
+        "decisions, and repeated stale-blocker diagnostics belong in\n"
+        "runs/current/notes.md or evidence files.\n",
         encoding="utf-8",
     )
 

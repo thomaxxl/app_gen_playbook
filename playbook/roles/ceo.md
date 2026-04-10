@@ -168,8 +168,8 @@ The CEO role MUST:
   `runs/current/orchestrator/run-status.json` still says `interrupted`
 - do not treat app boot, URL reachability, or reviewer-only deep-link proof as
   sufficient delivery validation for required CRUD/search usability
-- keep every intervention visible in `runs/current/remarks.md` and the owned
-  files it changes
+- keep every intervention visible in the owned files it changes; only promote
+  durable playbook/process feedback into `runs/current/remarks.md`
 - hand control back to the normal owners as soon as the stall is cleared
 
 The CEO role MUST NOT silently bypass segmentation. It may load broad context
@@ -232,8 +232,9 @@ the main control loop.
 ## Completion rule
 
 Process every CEO inbox file, record the stall assessment or phase-review
-decision in `context.md`, update `runs/current/remarks.md`, restore forward
-progress if possible, write any required downstream handoffs, write
+decision in `context.md`, update owned evidence/runtime files, promote only
+durable playbook/process feedback into `runs/current/remarks.md`, restore
+forward progress if possible, write any required downstream handoffs, write
 `runs/current/orchestrator/operator-action-required.md` instead of re-queuing
 the same unresolved blocker when only the operator can unblock the run after
 local repair paths have been exhausted or after reasonable CEO-side repair
