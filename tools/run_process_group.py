@@ -50,6 +50,7 @@ def main() -> int:
     parser.add_argument("--prompt-file", required=True)
     parser.add_argument("--output-file", required=True)
     parser.add_argument("--timeout-seconds", type=int, default=0)
+    parser.add_argument("--activity-grace-seconds", type=int, default=0)
     parser.add_argument("--max-timeout-extension-seconds", type=int, default=0)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -90,7 +91,7 @@ def main() -> int:
                     now = time.time()
                     latest_activity_time = latest_output_timestamp(output_file)
                     deadline = timeout_deadline(start_time, latest_activity_time, args.timeout_seconds)
-                    if now <= deadline:
+                    if now <= deadline + max(0, args.activity_grace_seconds):
                         continue
                     if args.max_timeout_extension_seconds > 0 and now <= start_time + args.timeout_seconds + args.max_timeout_extension_seconds:
                         continue
