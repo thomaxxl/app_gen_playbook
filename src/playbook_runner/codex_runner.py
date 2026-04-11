@@ -390,9 +390,8 @@ def _run_with_prompt_file(
         stderr=subprocess.PIPE,
         start_new_session=True,
     )
-    timeout = timeout_seconds + 15 if timeout_seconds > 0 else None
     try:
-        proc.communicate(timeout=timeout)
+        proc.communicate()
     except subprocess.TimeoutExpired:
         _cleanup_process_group(proc.pid)
         try:

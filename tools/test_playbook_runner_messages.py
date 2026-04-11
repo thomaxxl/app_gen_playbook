@@ -16,6 +16,7 @@ from playbook_runner.orchestrator import (
     Orchestrator,
     RunRequest,
     add_dir_from_rule,
+    activity_watch_paths_from_rule,
     compact_completion_detail,
     is_capacity_codex_failure,
     is_retryable_codex_failure,
@@ -72,6 +73,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 runtime_env="host",
                 auto_start_app=False,
                 enable_parallel_workers=False,
+                agent_backend="codex_exec_legacy",
                 models=ModelConfig(
                     fast="",
                     main="gpt-5.4",
@@ -363,6 +365,23 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             expanded = expand_add_dirs([link])
             self.assertIn(link, expanded)
             self.assertIn(external.resolve(), expanded)
+
+    def test_activity_watch_paths_expand_wildcard_rule_to_specific_inbox_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            qa_inbox = repo_root / "runs" / "current" / "role-state" / "qa" / "inbox"
+            frontend_inbox = repo_root / "runs" / "current" / "role-state" / "frontend" / "inbox"
+            qa_inbox.mkdir(parents=True, exist_ok=True)
+            frontend_inbox.mkdir(parents=True, exist_ok=True)
+            (qa_inbox / "a.md").write_text("a\n", encoding="utf-8")
+            (frontend_inbox / "b.md").write_text("b\n", encoding="utf-8")
+
+            watch_paths = activity_watch_paths_from_rule(repo_root, "runs/current/role-state/*/inbox/*.md")
+
+            self.assertEqual(
+                [str(path) for path in watch_paths],
+                sorted([str(frontend_inbox), str(qa_inbox)]),
+            )
 
     def test_dashboard_sidecar_skips_blocking_sync_once_on_startup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1080,6 +1099,7 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
                 },
                 add_dirs=[repo_root / "app" / "frontend"],
                 write_dirs=[repo_root / "app" / "frontend"],
+                activity_watch_paths=[repo_root / "runs" / "current" / "evidence" / "qa-delivery-review.md"],
                 write_rules=["app/frontend/**"],
                 forbidden_rules=["app/backend/**"],
                 packet_health_issues=[],
@@ -1300,6 +1320,97 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             finish_worker.assert_called_once_with(role="backend", status="interrupted", claimed_message=message_path.name)
             set_run_status.assert_called_once_with("interrupted")
             append_remark.assert_called_once()
+
+    def test_run_role_once_retries_goose_timeout_with_fresh_session(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            message_path = repo_root / "runs" / "current" / "role-state" / "qa" / "inflight" / "turn.md"
+            message_path.parent.mkdir(parents=True, exist_ok=True)
+            message_path.write_text("from: frontend\nto: qa\ntopic: delivery-review\n", encoding="utf-8")
+            context_path = repo_root / "runs" / "current" / "role-state" / "qa" / "context.md"
+            context_path.parent.mkdir(parents=True, exist_ok=True)
+            context_path.write_text("# QA Context\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "evidence" / "orchestrator").mkdir(parents=True, exist_ok=True)
+            (repo_root / "runs" / "current" / "remarks.md").write_text("# Run Remarks\n\n", encoding="utf-8")
+            (repo_root / "runs" / "current" / "notes.md").write_text("# Run Notes\n\n", encoding="utf-8")
+
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                agent_backend="goose_codex_bridge",
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="new", scope="fullstack", resume=False, target_role=None, input_file=None))
+            claim = ClaimedMessage(runtime_role="qa", path=message_path, message=Message.parse(message_path))
+            run_calls: list[dict[str, object]] = []
+
+            def goose_run(**kwargs: object) -> SimpleNamespace:
+                run_calls.append(kwargs)
+                if len(run_calls) == 1:
+                    return SimpleNamespace(returncode=124, timed_out=True)
+                return SimpleNamespace(returncode=0, timed_out=False)
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(orchestrator.queue, "claim_next", return_value=claim))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_handoff", return_value=(True, {})))
+                stack.enter_context(patch.object(orchestrator.tools, "start_worker"))
+                stack.enter_context(patch.object(orchestrator.tools, "validate_role_diff_snapshot"))
+                stack.enter_context(patch.object(orchestrator.tools, "build_prompt"))
+                stack.enter_context(
+                    patch("playbook_runner.orchestrator.resolve_read_packet", return_value={"read_paths": [], "change_context": {}, "role_load_manifest": ""})
+                )
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_writable_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.resolve_forbidden_paths", return_value=[]))
+                stack.enter_context(patch("playbook_runner.orchestrator.collect_packet_health_issues", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_add_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator, "resolve_turn_write_dirs", return_value=[]))
+                stack.enter_context(patch.object(orchestrator.codex, "run", side_effect=goose_run))
+                stack.enter_context(
+                    patch.object(
+                        orchestrator.tools,
+                        "assert_agent_success",
+                        side_effect=[(False, "goose run timed out"), (True, "")],
+                    )
+                )
+                session_remove = stack.enter_context(patch.object(orchestrator.tools, "session_remove"))
+                stack.enter_context(patch.object(orchestrator.tools, "session_record_from_jsonl"))
+                stack.enter_context(patch.object(orchestrator.tools, "sync_session"))
+                stack.enter_context(patch.object(orchestrator, "validate_role_outputs"))
+                finish_worker = stack.enter_context(patch.object(orchestrator.tools, "finish_worker"))
+                log_line = stack.enter_context(patch.object(orchestrator, "log_line"))
+
+                self.assertTrue(orchestrator.run_role_once("qa"))
+
+            self.assertEqual(len(run_calls), 2)
+            self.assertIsNone(run_calls[0]["resume_id"])
+            self.assertIsNone(run_calls[1]["resume_id"])
+            self.assertEqual(run_calls[0]["session_name"], "app-gen:RUN-current:qa")
+            self.assertEqual(run_calls[1]["session_name"], "app-gen:RUN-current:qa:timeout-retry-1")
+            session_remove.assert_called_once_with(orchestrator.paths.sessions_json, "qa")
+            self.assertTrue(
+                any(
+                    "warning role=qa type=goose-timeout retry=fresh-session message=turn.md" in call.args[0]
+                    for call in log_line.call_args_list
+                )
+            )
+            finish_worker.assert_called_once_with(role="qa", status="complete", claimed_message="")
 
     def test_run_role_once_accepts_completed_turn_even_when_codex_exit_code_is_nonzero(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

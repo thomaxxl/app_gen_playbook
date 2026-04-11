@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import glob
 import json
 import os
 from pathlib import Path
@@ -158,6 +159,79 @@ def add_dir_from_rule(repo_root: Path, rule: str) -> Path | None:
     if base.suffix or base.name.startswith("."):
         return base.parent
     return base
+
+
+def is_probable_file_rule(normalized: str, target: Path) -> bool:
+    if normalized.endswith("/"):
+        return False
+    return bool(target.suffix or target.name.startswith("."))
+
+
+def minimize_watch_paths(paths: Iterable[Path]) -> list[Path]:
+    normalized: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        candidate = path.resolve() if path.exists() else path
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(candidate)
+
+    kept: list[Path] = []
+    for candidate in sorted(normalized, key=lambda item: (len(item.parts), str(item)), reverse=True):
+        if any(existing == candidate or existing.is_relative_to(candidate) for existing in kept):
+            continue
+        kept.append(candidate)
+    return sorted(kept, key=str)
+
+
+def activity_watch_paths_from_rule(repo_root: Path, rule: str) -> list[Path]:
+    normalized = rule.strip().strip("`")
+    if not normalized:
+        return []
+
+    target = Path(normalized) if normalized.startswith("/") else repo_root / normalized
+    has_wildcard = any(any(char in part for char in WILDCARD_CHARS) for part in target.parts)
+
+    if not has_wildcard:
+        if is_probable_file_rule(normalized, target):
+            return [target]
+        return [target]
+
+    anchor_parts: list[str] = []
+    for part in target.parts:
+        if any(char in part for char in WILDCARD_CHARS):
+            break
+        anchor_parts.append(part)
+    if not anchor_parts:
+        return []
+
+    anchor = Path(*anchor_parts)
+    patterns: list[Path] = []
+    pattern = target
+    while True:
+        patterns.append(pattern)
+        if pattern == anchor or pattern.parent == pattern:
+            break
+        pattern = pattern.parent
+
+    for candidate_pattern in patterns:
+        matches = glob.glob(str(candidate_pattern), recursive=True)
+        if not matches:
+            continue
+        watch_paths: list[Path] = []
+        for match in matches:
+            candidate = Path(match)
+            if candidate.is_file():
+                watch_paths.append(candidate.parent)
+            else:
+                watch_paths.append(candidate)
+        reduced = minimize_watch_paths(watch_paths)
+        if reduced:
+            return reduced
+
+    return [anchor]
 
 
 def canonical_add_dir_keys(add_dirs: Iterable[Path]) -> list[str]:
@@ -838,6 +912,14 @@ class Orchestrator:
             write_dirs.append(candidate)
         return write_dirs
 
+    def resolve_turn_activity_watch_paths(self, write_rules: Iterable[str]) -> list[Path]:
+        watch_paths: list[Path] = []
+        for rule in write_rules:
+            if not isinstance(rule, str):
+                continue
+            watch_paths.extend(activity_watch_paths_from_rule(self.config.repo_root, rule))
+        return minimize_watch_paths(watch_paths)
+
     def resolve_resume_id(self, runtime_role: str, role_dir: Path, add_dirs: list[Path]) -> tuple[str, list[str]]:
         entry = self.tools.session_entry(self.paths.sessions_json, runtime_role)
         resume_id = str(entry.get("resume_id", "")).strip()
@@ -884,6 +966,7 @@ class Orchestrator:
         packet: dict[str, object],
         add_dirs: list[Path],
         write_dirs: list[Path],
+        activity_watch_paths: list[Path],
         write_rules: list[str],
         forbidden_rules: list[str],
         packet_health_issues: list[str],
@@ -896,6 +979,7 @@ class Orchestrator:
             "forbidden_rules": forbidden_rules,
             "add_dirs": [str(path) for path in add_dirs],
             "write_roots": [str(path) for path in write_dirs],
+            "activity_watch_paths": [str(path) for path in activity_watch_paths],
             "change_context": packet.get("change_context", {}),
             "role_load_manifest": packet.get("role_load_manifest", ""),
             "packet_health_issues": packet_health_issues,
@@ -1087,6 +1171,7 @@ class Orchestrator:
         forbidden_rules = resolve_forbidden_paths(self.config.repo_root, runtime_role)
         add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)
         write_dirs = self.resolve_turn_write_dirs(runtime_role, message_path)
+        activity_watch_paths = self.resolve_turn_activity_watch_paths(write_rules)
         routing_file = self.paths.evidence_root / f"{turn_key}.routing.json"
         packet_health_issues = collect_packet_health_issues(
             self.config.repo_root,
@@ -1101,6 +1186,7 @@ class Orchestrator:
             packet=packet,
             add_dirs=add_dirs,
             write_dirs=write_dirs,
+            activity_watch_paths=activity_watch_paths,
             write_rules=write_rules,
             forbidden_rules=forbidden_rules,
             packet_health_issues=packet_health_issues,
@@ -1142,6 +1228,7 @@ class Orchestrator:
         self.tools.validate_role_diff_snapshot(snapshot_file)
         self.tools.build_prompt(runtime_role, display_role, role_file, message_path, prompt_file)
         turn_started_at = self.utc_now()
+        timeout_retry_used = False
         while True:
             turn_timeout_seconds = self.turn_timeout_seconds(runtime_role)
             agent_result = self.codex.run(
@@ -1157,13 +1244,22 @@ class Orchestrator:
                 timeout_seconds=turn_timeout_seconds,
                 activity_grace_seconds=self.config.activity_grace_seconds,
                 max_timeout_extension_seconds=self.config.max_timeout_extension_seconds,
-                watch_paths=write_dirs,
+                watch_paths=activity_watch_paths,
             )
             ok, detail = self.tools.assert_agent_success(jsonl_file, result_file)
             if agent_result.timed_out and not ok:
                 detail = detail or f"agent turn timed out after {turn_timeout_seconds} seconds without output activity"
             if ok:
                 break
+            if agent_result.timed_out and self.codex.backend_name() == "goose_codex_bridge" and not timeout_retry_used:
+                timeout_retry_used = True
+                self.tools.session_remove(self.paths.sessions_json, runtime_role)
+                resume_id = ""
+                session_name = f"{self.role_session_name(runtime_role)}:timeout-retry-1"
+                self.log_line(
+                    f"warning role={runtime_role} type=goose-timeout retry=fresh-session message={message_path.name}"
+                )
+                continue
             ended_at = self.utc_now()
             self.write_turn_summary_artifact(
                 turn_summary_file,
