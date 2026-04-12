@@ -81,7 +81,6 @@ PHASE5_READY_PHASES = {
 
 ROLE_OWNED_PREFIXES = {
     "product_manager": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/product/",
         "runs/current/evidence/final/",
@@ -98,7 +97,6 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/changes/*/promotion.yaml",
     ),
     "architect": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/architecture/",
         "runs/current/role-state/architect/",
@@ -110,7 +108,6 @@ ROLE_OWNED_PREFIXES = {
         "app/README.md",
     ),
     "frontend": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/ux/",
         "runs/current/evidence/frontend-browser-proof.md",
@@ -122,7 +119,6 @@ ROLE_OWNED_PREFIXES = {
         "app/frontend/",
     ),
     "backend": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/backend-design/",
         "runs/current/role-state/backend/",
@@ -133,7 +129,6 @@ ROLE_OWNED_PREFIXES = {
         "app/reference/admin.yaml",
     ),
     "qa": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/evidence/qa-delivery-review.md",
         "runs/current/evidence/ui-previews/qa-manifest.md",
@@ -142,7 +137,6 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/role-state/qa/",
     ),
     "deployment": (
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/artifacts/devops/",
         "runs/current/role-state/devops/",
@@ -161,7 +155,6 @@ ROLE_OWNED_PREFIXES = {
         "runs/current/artifacts/",
         "runs/current/changes/",
         "runs/current/role-state/",
-        "runs/current/remarks.md",
         "runs/current/notes.md",
         "runs/current/orchestrator/delivery-approved.md",
         "runs/current/orchestrator/ceo-progress-followup-requested.md",

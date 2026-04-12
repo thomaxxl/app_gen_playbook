@@ -99,6 +99,16 @@ class ValidateRoleDiffPatternTests(unittest.TestCase):
             )
         )
 
+    def test_rejects_ceo_remarks_write(self) -> None:
+        self.assertFalse(
+            is_allowed_change(
+                self.repo_root,
+                "ceo",
+                "runs/current/remarks.md",
+                [],
+            )
+        )
+
     def test_rejects_ceo_change_in_specs(self) -> None:
         self.assertFalse(
             is_allowed_change(

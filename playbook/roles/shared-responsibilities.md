@@ -196,10 +196,10 @@ resolved or stale detail instead of only appending new notes.
 Normal runtime roles MUST NOT use it as a shared execution diary, approval log,
 verification log, or stale-blocker scratchpad. They SHOULD record those details
 in `runs/current/notes.md`, role-owned artifacts, or evidence files instead.
-The normal direct writers for `runs/current/remarks.md` are the orchestrator
-and CEO. Other roles should surface durable playbook feedback through their
-owned notes/artifacts and explicit handoffs; if that feedback matters, the
-orchestrator or CEO can promote it into `remarks.md`.
+The orchestrator is the normal direct writer for `runs/current/remarks.md`.
+All roles, including CEO, should surface durable playbook feedback through
+their owned notes/artifacts and explicit handoffs; if that feedback matters,
+the orchestrator can promote it into `remarks.md`.
 
 When recording verification results in `context.md`, evidence artifacts, or
 `runs/current/notes.md`, agents MUST state explicitly whether the check

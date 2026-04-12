@@ -135,7 +135,6 @@ ceo:
     - runs/current/artifacts/**
     - runs/current/changes/**
     - runs/current/role-state/**
-    - runs/current/remarks.md
     - runs/current/notes.md
     - runs/current/orchestrator/delivery-approved.md
     - runs/current/orchestrator/ceo-progress-followup-requested.md

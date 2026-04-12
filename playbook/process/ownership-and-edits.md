@@ -40,21 +40,24 @@ Rules:
 - non-owning roles must request changes through inbox handoff unless
   ownership is explicitly delegated
 - `runs/current/remarks.md` and `runs/current/notes.md` are shared run-level
-  note files; any role MAY append concise entries, but roles MUST use
-  `remarks.md` only for playbook feedback and ambiguities, and MUST use
-  `notes.md` for other run feedback or observations
+  note files, but only the orchestrator MAY write directly to
+  `runs/current/remarks.md`; roles MUST route durable playbook feedback
+  through owned notes/artifacts or explicit handoffs so the orchestrator can
+  curate it
+- roles MUST use `notes.md` for ordinary run feedback or observations
 - exception: during an orchestrator-declared stall intervention, the CEO MAY
   temporarily edit any file under `runs/current/artifacts/`, any role lane
-  under `runs/current/role-state/`, `runs/current/remarks.md`,
-  `runs/current/notes.md`,
+  under `runs/current/role-state/`, `runs/current/notes.md`,
   `runs/current/orchestrator/delivery-approved.md`,
   `runs/current/orchestrator/operator-action-required.md`,
   `runs/current/orchestrator/pause-requested.md`,
   `runs/current/evidence/ceo-delivery-validation.md`, any local `app/`
   subtree, and local playbook runtime surfaces under `playbook/`, `scripts/`,
   and `tools/` when those files are needed to restore progress
-- when CEO uses that stall-only override to unblock the run, CEO MUST append
-  the diagnosis and repair summary to `runs/current/remarks.md`
+- when CEO uses that stall-only override to unblock the run, CEO MUST record
+  the diagnosis and repair summary in owned evidence/runtime files or
+  `runs/current/notes.md`; only curated playbook feedback should later be
+  promoted into `runs/current/remarks.md`
 - the CEO emergency override MUST NOT be used during normal phase execution
 - the CEO emergency override MUST NOT edit `specs/`, `templates/`, or
   unrelated playbook source beyond the local runtime repair needed to unblock

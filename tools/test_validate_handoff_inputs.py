@@ -16,6 +16,35 @@ def write_file(path: Path, content: str) -> None:
 
 
 class ValidateHandoffInputsTests(unittest.TestCase):
+    def test_normalizes_workspace_app_required_reads_to_app_alias(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir(parents=True)
+            (repo_root / ".git").mkdir()
+            workspace_app = repo_root.parent / "agp_workspace" / "app"
+            write_file(workspace_app / "frontend/src/SearchExperience.tsx", "export const SearchExperience = null;\n")
+            (repo_root / "app").symlink_to(workspace_app)
+
+            message_path = repo_root / "runs/current/role-state/architect/inflight/handoff.md"
+            write_file(
+                message_path,
+                "\n".join(
+                    [
+                        "from: qa",
+                        "to: architect",
+                        "",
+                        "## Required Reads",
+                        "- agp_workspace/app/frontend/src/SearchExperience.tsx",
+                        "",
+                        "## Gate Status",
+                        "- blocked",
+                    ]
+                ),
+            )
+
+            report = validate_message(repo_root, "architect", message_path)
+            self.assertTrue(report["valid"], json.dumps(report, indent=2))
+
     def test_rejects_requested_output_outside_receiver_writable_scope(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

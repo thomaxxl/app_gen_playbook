@@ -44,7 +44,7 @@ class ResetCurrentRunTests(unittest.TestCase):
             ceo_agents = (repo_root / "runs" / "current" / "role-state" / "ceo" / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("repair the current blocker even in local playbook runtime files when necessary", ceo_agents)
             self.assertIn("validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval", ceo_agents)
-            self.assertIn("record every unblock intervention in runs/current/remarks.md", ceo_agents)
+            self.assertIn("so the orchestrator can curate runs/current/remarks.md", ceo_agents)
             self.assertIn("keeping only compact durable context relevant to future turns or future runs", ceo_agents)
             qa_agents = (repo_root / "runs" / "current" / "role-state" / "qa" / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("independently validate the delivered app before CEO approval", qa_agents)

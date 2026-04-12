@@ -75,7 +75,7 @@ ROLE_LOCAL_AGENTS_RULES = {
     "frontend": "treat relationship tabs and related-record popups as baseline behavior unless run-owned UX artifacts explicitly override them",
     "backend": "treat backend route discovery and admin.yaml reconciliation as mandatory before claiming frontend stability",
     "qa": "independently validate the delivered app before CEO approval, reopen the owning lanes when real defects remain, and do not silently patch implementation as part of QA",
-    "ceo": "perform the mandatory end-of-phase critical review, with explicit UX/UI scrutiny, before any phase can exit; if stalled, inspect the full run state, repair the current blocker even in local playbook runtime files when necessary, validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval, and promote only durable playbook/process feedback into runs/current/remarks.md",
+    "ceo": "perform the mandatory end-of-phase critical review, with explicit UX/UI scrutiny, before any phase can exit; if stalled, inspect the full run state, repair the current blocker even in local playbook runtime files when necessary, validate delivery through scripts/run_playbook.sh --ceo-delivery-validate before final approval, and record durable playbook/process feedback in owned notes or evidence so the orchestrator can curate runs/current/remarks.md",
     "deployment": "do not change application semantics while implementing packaging or runtime normalization",
 }
 

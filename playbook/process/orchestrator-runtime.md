@@ -89,7 +89,7 @@ The orchestrator MUST persist its machine-readable evidence under
 `runs/current/evidence/orchestrator/`.
 
 `runs/current/remarks.md` is the curated playbook-feedback log owned by the
-orchestrator and CEO. It MUST stay concise and MUST contain only durable
+orchestrator. It MUST stay concise and MUST contain only durable
 feedback about playbook/process defects, ambiguities, or improvements.
 Repeated per-turn churn, approval history, role execution notes, and routine
 verification output belong in `runs/current/notes.md`, role-owned artifacts,

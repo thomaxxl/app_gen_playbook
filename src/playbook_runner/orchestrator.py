@@ -1051,7 +1051,8 @@ class Orchestrator:
 
         change_root = Path(change_context.get("change_root", "")) if change_context.get("change_root") else None
         change_id = str(change_context.get("change_id", "")).strip() or self.active_change_id
-        role_load_manifest = str(packet.get("role_load_manifest", "")).strip()
+        raw_role_load_manifest = packet.get("role_load_manifest", "")
+        role_load_manifest = raw_role_load_manifest.strip() if isinstance(raw_role_load_manifest, str) else ""
         topic_slug = f"packet-health-{runtime_role}"
         issue_fingerprint = json.dumps(sorted(issues), sort_keys=True)
         note_text_lines = [

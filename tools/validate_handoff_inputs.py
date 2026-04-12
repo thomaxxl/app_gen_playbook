@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -76,25 +77,71 @@ def normalize_runtime_role(value: str | None) -> str | None:
     return DISPLAY_TO_RUNTIME.get(stripped)
 
 
-def normalize_path_token(value: str) -> str:
+def canonicalize_repo_path_token(repo_root: Path, value: str) -> str:
     stripped = value.strip()
     if len(stripped) >= 2 and stripped[0] == "`" and stripped[-1] == "`":
-        return stripped[1:-1].strip()
+        stripped = stripped[1:-1].strip()
+    if stripped.lower() in {"none", "null"}:
+        return ""
+
+    app_link = repo_root / "app"
+    if not app_link.exists():
+        return stripped
+
+    try:
+        app_target = app_link.resolve(strict=False)
+    except OSError:
+        return stripped
+
+    token_path = Path(stripped)
+    candidates: list[Path] = []
+    if token_path.is_absolute():
+        candidates.append(token_path)
+    else:
+        candidates.append((repo_root / token_path).resolve(strict=False))
+        candidates.append((repo_root.parent / token_path).resolve(strict=False))
+
+    for candidate in candidates:
+        try:
+            rel = candidate.relative_to(app_target)
+        except ValueError:
+            continue
+        rel_text = rel.as_posix().strip(".")
+        if not rel_text:
+            return "app"
+        return f"app/{rel_text}"
+
+    target_text = str(app_target)
+    if stripped == target_text:
+        return "app"
+    if stripped.startswith(target_text + os.sep):
+        suffix = stripped[len(target_text) + 1 :].replace(os.sep, "/")
+        return f"app/{suffix}"
     return stripped
 
 
-def referenced_paths(values: list[str]) -> set[str]:
+def normalize_path_token(repo_root: Path, value: str) -> str:
+    return canonicalize_repo_path_token(repo_root, value)
+
+
+def referenced_paths(repo_root: Path, values: list[str]) -> set[str]:
     results: set[str] = set()
     for value in values:
         for match in re.findall(r"(runs/current/[A-Za-z0-9_./-]+|app/[A-Za-z0-9_./-]+|specs/[A-Za-z0-9_./-]+|playbook/[A-Za-z0-9_./-]+)", value):
-            results.add(match)
+            normalized = normalize_path_token(repo_root, match)
+            if normalized:
+                results.add(normalized)
+        for match in re.findall(r"([A-Za-z0-9_./-]*app/[A-Za-z0-9_./-]+)", value):
+            normalized = normalize_path_token(repo_root, match)
+            if normalized:
+                results.add(normalized)
     return results
 
 
-def explicit_output_paths(values: list[str]) -> set[str]:
+def explicit_output_paths(repo_root: Path, values: list[str]) -> set[str]:
     results: set[str] = set()
     for value in values:
-        normalized = normalize_path_token(value)
+        normalized = normalize_path_token(repo_root, value)
         if normalized.startswith(("runs/current/", "app/")):
             results.add(normalized)
         for match in re.findall(r"(runs/current/[A-Za-z0-9_./-]+|app/[A-Za-z0-9_./-]+)", normalized):
@@ -166,12 +213,12 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
     sections = parse_message_sections(message_text, headers=headers)
     gate_status = str(sections.get("gate status", "unspecified")).strip().lower()
     required_reads = [
-        normalize_path_token(item)
+        normalize_path_token(repo_root, item)
         for item in sections.get("required reads", [])
         if isinstance(item, str)
     ]
     requested_outputs = [
-        normalize_path_token(item)
+        normalize_path_token(repo_root, item)
         for item in sections.get("requested outputs", [])
         if isinstance(item, str)
     ]
@@ -179,6 +226,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
 
     blockers: list[dict[str, str]] = []
     allowed_missing = referenced_paths(
+        repo_root,
         [item for item in sections.get("blocking issues", []) if isinstance(item, str)]
         + requested_outputs
     )
@@ -337,7 +385,7 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
 
     if (repo_root / "playbook" / "routing" / "role-core.yaml").exists():
         resolved_writable: list[str] | None = None
-        for output_path in sorted(explicit_output_paths(requested_outputs)):
+        for output_path in sorted(explicit_output_paths(repo_root, requested_outputs)):
             if output_path.startswith(("specs/", "playbook/")):
                 continue
             if resolved_writable is None:
