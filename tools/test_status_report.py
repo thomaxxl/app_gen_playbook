@@ -61,6 +61,36 @@ class StatusReportTests(unittest.TestCase):
             self.assertTrue(
                 any(blocker["kind"] == "active-change-run-pending" for blocker in payload["completion"]["blockers"])
             )
+            self.assertEqual(
+                payload["phases"]["phase-I1-change-intake-and-triage"]["state"]
+                if "phase-I1-change-intake-and-triage" in payload["phases"]
+                else "not-present",
+                "not-present",
+            )
+
+    def test_phase_summary_marks_phase_blocked_when_completion_blocker_targets_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+
+            write_file(
+                repo_root / "specs/product/acceptance-review.md",
+                "owner: product_manager\nphase: phase-7-product-acceptance\nstatus: stub\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "---\nowner: product_manager\nphase: phase-7-product-acceptance\nstatus: approved\n---\n\n# Acceptance Review\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"active","mode":"new-full-run","current_phase":"phase-7-product-acceptance"}\n',
+            )
+
+            payload = report_payload(repo_root)
+
+            self.assertFalse(payload["completion"]["complete"])
+            self.assertEqual(payload["phases"]["phase-7-product-acceptance"]["state"], "blocked")
+            self.assertGreaterEqual(len(payload["phases"]["phase-7-product-acceptance"]["blocked"]), 1)
 
     def test_iterative_change_run_uses_pm_reopened_gate_selection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

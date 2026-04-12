@@ -318,13 +318,28 @@ def phase_requirements(repo_root: Path) -> dict[str, list[str]]:
     return {phase: sorted(paths) for phase, paths in sorted(by_phase.items())}
 
 
-def phase_summary(repo_root: Path) -> dict[str, dict[str, Any]]:
+def blockers_by_phase(blockers: list[dict[str, Any]]) -> dict[str, list[str]]:
+    grouped: dict[str, list[str]] = {}
+    for blocker in blockers:
+        phase = str(blocker.get("phase", "")).strip()
+        if not phase:
+            continue
+        reason = str(blocker.get("reason", "")).strip()
+        path = str(blocker.get("path", "")).strip()
+        label = reason or path or blocker.get("kind", "blocker")
+        grouped.setdefault(phase, []).append(label)
+    return grouped
+
+
+def phase_summary(repo_root: Path, completion_blockers: list[dict[str, Any]] | None = None) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     by_phase = phase_requirements(repo_root)
+    phase_blockers = blockers_by_phase(completion_blockers or [])
     for phase, paths in by_phase.items():
         statuses = {path: artifact_status(repo_root, path) for path in paths}
         missing = [path for path, status in statuses.items() if status == "missing"]
         blocked = [path for path, status in statuses.items() if status == "blocked"]
+        blocked.extend(phase_blockers.get(phase, []))
         stub = [path for path, status in statuses.items() if status == "stub"]
         draft = [path for path, status in statuses.items() if status in {"draft", "superseded", "unknown"}]
         scores = [STATUS_SCORES.get(status, 0.2) for status in statuses.values()]
@@ -332,6 +347,7 @@ def phase_summary(repo_root: Path) -> dict[str, dict[str, Any]]:
 
         if blocked:
             state = "blocked"
+            score = min(score, STATUS_SCORES["blocked"])
         elif paths and not missing and not stub and all(
             statuses[path] in {"ready-for-handoff", "approved"} for path in paths
         ):
@@ -496,7 +512,6 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
         for path in sorted(workers_root.glob("*.json")):
             workers[path.stem] = load_json(path)
 
-    phases = phase_summary(repo_root)
     phase5_blockers = collect_phase5_blockers(repo_root)
     completion_blockers = collect_blockers(repo_root)
     change_pending = change_run_pending(repo_root, run_status)
@@ -512,6 +527,7 @@ def report_payload(repo_root: Path) -> dict[str, Any]:
                 "reason": "active iteration/change run pending; Product Manager must confirm reopened phases before the run can be considered complete",
             }
         )
+    phases = phase_summary(repo_root, completion_blockers)
     current_phase = compute_current_phase(repo_root, run_status, roles, phases, not completion_blockers)
     payload = {
         "generated_at": utc_now(),
