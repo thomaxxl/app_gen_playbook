@@ -829,17 +829,42 @@ def collect_source_scope_escalations(repo_root: Path) -> list[SourceScopeEscalat
             for item in sections.get("requested outputs", [])
             if isinstance(item, str)
         ]
-        source_scope_context = [
+        required_next_step = [
+            item
+            for item in sections.get("required next step", [])
+            if isinstance(item, str)
+        ]
+        required_scope = [
+            item
+            for item in sections.get("required scope", [])
+            if isinstance(item, str)
+        ]
+        required_work = [
+            item
+            for item in sections.get("required work", [])
+            if isinstance(item, str)
+        ]
+        direct_request_context = [
             *requested_outputs,
+            *required_next_step,
+            *required_scope,
+            *required_work,
+        ]
+        source_scope_context = [
+            *direct_request_context,
             *required_reads_section,
+            *[item for item in sections.get("summary", []) if isinstance(item, str)],
+            *[item for item in sections.get("status", []) if isinstance(item, str)],
             *[item for item in sections.get("notes", []) if isinstance(item, str)],
             *[item for item in sections.get("blocking issues", []) if isinstance(item, str)],
             *[item for item in sections.get("requested orchestrator action", []) if isinstance(item, str)],
+            *[item for item in sections.get("current blocker", []) if isinstance(item, str)],
             *[item for item in sections.get("current state", []) if isinstance(item, str)],
+            *[item for item in sections.get("preserve this contract", []) if isinstance(item, str)],
             headers.get("topic", ""),
             headers.get("purpose", ""),
         ]
-        requested_paths = _source_scope_paths(requested_outputs)
+        requested_paths = _source_scope_paths(direct_request_context)
         if not requested_paths and any(SOURCE_SCOPE_HINT_PATTERN.search(line) for line in source_scope_context if line):
             negated_paths = set(_negated_source_scope_paths(source_scope_context))
             candidate_paths = [
@@ -917,6 +942,8 @@ def collect_runtime_environment_escalations(repo_root: Path) -> list[RuntimeEnvi
         runtime_context = [
             *requested_outputs,
             *required_reads_section,
+            *[item for item in sections.get("summary", []) if isinstance(item, str)],
+            *[item for item in sections.get("status", []) if isinstance(item, str)],
             *[item for item in sections.get("notes", []) if isinstance(item, str)],
             *[item for item in sections.get("blocking issues", []) if isinstance(item, str)],
             *[item for item in sections.get("remaining blockers", []) if isinstance(item, str)],
@@ -924,6 +951,8 @@ def collect_runtime_environment_escalations(repo_root: Path) -> list[RuntimeEnvi
             *[item for item in sections.get("next routing need", []) if isinstance(item, str)],
             *[item for item in sections.get("current blocker", []) if isinstance(item, str)],
             *[item for item in sections.get("current state", []) if isinstance(item, str)],
+            *[item for item in sections.get("required next step", []) if isinstance(item, str)],
+            *[item for item in sections.get("required work", []) if isinstance(item, str)],
             *[item for item in sections.get("status", []) if isinstance(item, str)],
             headers.get("topic", ""),
             headers.get("purpose", ""),

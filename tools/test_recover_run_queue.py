@@ -401,6 +401,55 @@ class RecoverRunQueueTests(unittest.TestCase):
             self.assertNotIn("edit `specs/architecture/integration-review.md`", note_text)
             self.assertNotIn("edit `playbook/spec`", note_text)
 
+    def test_source_scope_escalation_accepts_runtime_write_scope_note_format(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_recovery_validation_baseline(repo_root)
+            for role in ("orchestrator", "ceo"):
+                ensure_role_dirs(repo_root, role)
+            write_file(repo_root / "tools/validators/coverage/compile_product_scope.py", "# compile scope\n")
+            write_file(
+                repo_root / "tools/validators/coverage/extract_frontend_surface_registry.py",
+                "# extract surfaces\n",
+            )
+
+            escalation = repo_root / "runs/current/role-state/orchestrator/inbox/20260410-233555-from-architect-to-orchestrator-expand-write-scope-for-coverage-compiler-repair.md"
+            write_file(
+                escalation,
+                "\n".join(
+                    [
+                        "from: architect",
+                        "to: orchestrator",
+                        "topic: expand-write-scope-for-coverage-compiler-repair",
+                        "purpose: requeue architect with the write scope needed to repair shared coverage compilation and regenerate facts",
+                        "",
+                        "## Summary",
+                        "- Architecture canon remains unchanged.",
+                        "",
+                        "## Status",
+                        "- allowed writes still exclude `tools/validators/coverage/compile_product_scope.py`, `runs/current/facts/**`, and `tools/validators/coverage/extract_frontend_surface_registry.py`.",
+                        "",
+                        "## Required Scope",
+                        "- `tools/validators/coverage/compile_product_scope.py`",
+                        "- `runs/current/facts/**`",
+                        "- `tools/validators/coverage/extract_frontend_surface_registry.py`",
+                        "",
+                        "## Required Work",
+                        "1. Patch the current-release traceability validation in `tools/validators/coverage/compile_product_scope.py`.",
+                        "2. Regenerate `runs/current/facts/product-scope.json`.",
+                        "3. Reopen route extraction only if `tools/validators/coverage/extract_frontend_surface_registry.py` is still implicated.",
+                    ]
+                ),
+            )
+
+            created = write_source_scope_notes(repo_root, "")
+            self.assertEqual(len(created), 1)
+
+            note_text = created[0].read_text(encoding="utf-8")
+            self.assertIn("edit `tools/validators/coverage/compile_product_scope.py`", note_text)
+            self.assertIn("edit `tools/validators/coverage/extract_frontend_surface_registry.py`", note_text)
+
     def test_runtime_environment_escalation_creates_ceo_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

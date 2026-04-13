@@ -684,7 +684,10 @@ class Orchestrator:
         self.write_runtime_environment_state()
         self.enforce_execution_prereqs()
         complete, _ = self.tools.check_completion()
-        if not complete and self.queue.pending_actionable_count(self.active_roles()) == 0:
+        if not complete and (
+            self.queue.pending_actionable_count(self.active_roles()) == 0
+            or self.orchestrator_inbox_has_messages()
+        ):
             self.run_recovery_pass()
 
     def seed(self) -> None:
@@ -745,6 +748,10 @@ class Orchestrator:
             )
             return True
         return False
+
+    def orchestrator_inbox_has_messages(self) -> bool:
+        inbox_dir = self.paths.role_dir("orchestrator") / "inbox"
+        return inbox_dir.exists() and any(inbox_dir.glob("*.md"))
 
     def phase5_ready(self) -> bool:
         return self.tools.phase5_ready()
@@ -1423,6 +1430,8 @@ class Orchestrator:
                 return 0
 
             self.maybe_operator_action_exit()
+            if self.orchestrator_inbox_has_messages() and self.run_recovery_pass():
+                continue
             progressed = False
             for runtime_role in self.active_roles():
                 if runtime_role in {"frontend", "backend", "deployment"} and not self.phase5_ready():
