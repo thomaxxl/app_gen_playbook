@@ -20,6 +20,7 @@ from routing_resolver import (
     resolve_read_packet,
     resolve_writable_paths,
 )
+from runtime_role_agents import role_agents_content
 
 from .codex_runner import build_agent_runner, expand_add_dirs
 from .config import RunnerConfig
@@ -957,6 +958,16 @@ class Orchestrator:
             return resume_id, list(stored_roots)
         return "", []
 
+    def ensure_runtime_role_agents(self, runtime_role: str, role_dir: Path) -> None:
+        agents_path = role_dir / "AGENTS.md"
+        expected = role_agents_content(runtime_role)
+        if agents_path.exists():
+            current = agents_path.read_text(encoding="utf-8")
+            if current == expected:
+                return
+        agents_path.parent.mkdir(parents=True, exist_ok=True)
+        agents_path.write_text(expected, encoding="utf-8")
+
     def write_turn_scope_artifact(
         self,
         output_path: Path,
@@ -1147,6 +1158,7 @@ class Orchestrator:
         display_role = ROLE_DISPLAY[runtime_role]
         role_file = ROLE_FILES[runtime_role]
         role_dir = self.paths.role_dir(runtime_role)
+        self.ensure_runtime_role_agents(runtime_role, role_dir)
         model = self.role_model(runtime_role)
         message_text = message_path.read_text(encoding="utf-8")
         headers = parse_message_headers(message_text)

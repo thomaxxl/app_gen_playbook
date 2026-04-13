@@ -538,6 +538,9 @@ misleading inbox-state failure.
 
 At run reset, the orchestrator runtime MUST seed local role directories under
 `runs/current/role-state/<role>/` with a role-local `AGENTS.md`.
+Before dispatching any role turn, it MUST also refresh that file from the
+current playbook runtime rules so stale runtime instructions cannot survive a
+later playbook fix.
 
 The optional DevOps lane uses the runtime role token `deployment`, but its
 physical run-state directory MUST be:

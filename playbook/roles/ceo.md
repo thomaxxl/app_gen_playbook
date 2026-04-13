@@ -80,7 +80,6 @@ stall diagnosis proves they are needed.
 - `../../runs/current/orchestrator/ceo-progress-followup-requested.md`
 - `../../runs/current/orchestrator/operator-action-required.md`
 - `../../runs/current/orchestrator/delivery-approved.md`
-- `../../runs/current/remarks.md`
 - `../../runs/current/evidence/ceo-phase-reviews/**`
 - `../../runs/current/evidence/ceo-delivery-validation.md`
 - `../../runs/current/evidence/contract-samples.md`
