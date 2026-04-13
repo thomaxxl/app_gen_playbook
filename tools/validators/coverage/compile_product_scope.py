@@ -1512,6 +1512,11 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
         )
         primary_evidence_mode = trace_row["primary_evidence_mode"]
         ui_evidence_required = primary_evidence_mode in UI_EVIDENCE_MODES
+        generated_resource_ui_satisfier = (
+            trace_row["generated_resource_allowed"] == "yes"
+            and bool(trace_row["route_ids"])
+            and bool(trace_row["resource_ids"])
+        )
         delta_only_trace = story_id in delta_only_story_ids
         if not trace_row["concept_ids"] and not delta_only_trace:
             issues.append(f"{story_id}: current-release story is missing concept mapping in traceability matrix")
@@ -1523,7 +1528,7 @@ def compile_product_scope_payload(repo_root: Path) -> tuple[dict[str, Any], list
             issues.append(f"{story_id}: no resource mapping in traceability matrix")
         if primary_evidence_mode not in ALLOWED_PRIMARY_EVIDENCE_MODES:
             issues.append(f"{story_id}: primary evidence mode must be one of {sorted(ALLOWED_PRIMARY_EVIDENCE_MODES)}")
-        if ui_evidence_required and not trace_row["page_ids"]:
+        if ui_evidence_required and not trace_row["page_ids"] and not generated_resource_ui_satisfier:
             issues.append(f"{story_id}: no page mapping in traceability matrix for ui-backed story")
         if ui_evidence_required and not trace_row["route_ids"]:
             issues.append(f"{story_id}: no route mapping in traceability matrix for ui-backed story")

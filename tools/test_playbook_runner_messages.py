@@ -1542,6 +1542,51 @@ class PlaybookRunnerMessageTests(unittest.TestCase):
             append_remark.assert_called_once_with("Run complete", "done")
             log_line.assert_called_once_with("run-finish status=complete phase=complete")
 
+    def test_run_loop_runs_recovery_before_dispatch_when_orchestrator_inbox_has_messages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            config = RunnerConfig(
+                repo_root=repo_root,
+                poll_seconds=1,
+                lease_seconds=600,
+                timeout_seconds=60,
+                runtime_env="host",
+                auto_start_app=False,
+                enable_parallel_workers=False,
+                models=ModelConfig(
+                    fast="",
+                    main="gpt-5.4",
+                    long="gpt-5.4",
+                    product_manager="gpt-5.4",
+                    architect="gpt-5.4",
+                    frontend="gpt-5.4",
+                    backend="gpt-5.4",
+                    qa="gpt-5.4",
+                    deployment="gpt-5.4",
+                    ceo="gpt-5.4",
+                    reasoning_effort="high",
+                ),
+            )
+            orchestrator = Orchestrator(config, RunRequest(mode="iterate", scope="fullstack", resume=False, target_role=None, input_file=None))
+
+            with patch.object(orchestrator, "handle_pause_or_kill"), \
+                patch.object(orchestrator.tools, "check_completion", side_effect=[(False, "blocked"), (True, "done")]), \
+                patch.object(orchestrator, "maybe_operator_action_exit"), \
+                patch.object(orchestrator, "orchestrator_inbox_has_messages", return_value=True), \
+                patch.object(orchestrator, "run_recovery_pass", return_value=True) as run_recovery_pass, \
+                patch.object(orchestrator, "run_role_once", return_value=False) as run_role_once, \
+                patch.object(orchestrator, "active_roles", return_value=["architect"]), \
+                patch.object(orchestrator, "set_run_status") as set_run_status, \
+                patch.object(orchestrator, "append_remark") as append_remark, \
+                patch.object(orchestrator, "log_line") as log_line:
+                self.assertEqual(orchestrator.run_loop(), 0)
+
+            run_recovery_pass.assert_called_once_with()
+            run_role_once.assert_not_called()
+            set_run_status.assert_called_once_with("complete", "complete")
+            append_remark.assert_called_once_with("Run complete", "done")
+            log_line.assert_called_once_with("run-finish status=complete phase=complete")
+
     def test_blocked_exit_logs_terminal_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

@@ -238,10 +238,28 @@ MESSAGE_SECTION_TITLES = (
     "implementation evidence",
     "blocking issues",
     "notes",
+    "summary",
+    "status",
+    "requested orchestrator action",
+    "current blocker",
+    "current state",
+    "remaining blockers",
+    "recovery outcome",
+    "next routing need",
+    "required next step",
+    "required scope",
+    "required work",
+    "preserve this contract",
 )
 
 MESSAGE_SECTION_ALIASES = {
     "requested outputs completed": "requested outputs",
+    "blocking issue": "blocking issues",
+    "blocker": "blocking issues",
+    "blockers": "blocking issues",
+    "requested orchestrator actions": "requested orchestrator action",
+    "remaining blocker": "remaining blockers",
+    "required next steps": "required next step",
 }
 
 MESSAGE_FIELD_ALIASES = {

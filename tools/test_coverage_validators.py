@@ -668,6 +668,65 @@ class CoverageValidatorTests(unittest.TestCase):
             self.assertFalse(us_050["ui_surface_required"])
             self.assertEqual(us_050["supporting_surface_ids"], [])
 
+    def test_compile_product_scope_allows_generated_resource_ui_story_without_page_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            seed_scope(repo_root)
+            story_text = (repo_root / "runs/current/artifacts/product/user-stories.md").read_text(encoding="utf-8")
+            story_text = story_text.replace(
+                "| Approver | Inspect/Detail | US-004 |\n",
+                "| Approver | Inspect/Detail | US-004, US-050 |\n",
+            )
+            story_text = story_text.replace(
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |\n",
+                "| US-004 | Approver reviews pending request | Approver | P1 | must | R1 | approval | As an approver, I review pending approvals and record a decision. |\n"
+                "| US-050 | Approver inspects generated approval detail | Approver | P2 | should | R1 | crud | As an approver, I inspect generated approval detail without a custom wrapper page. |\n",
+            )
+            story_text += "\n".join(
+                [
+                    "",
+                    "### US-050 - Approver inspects generated approval detail (Priority: P2)",
+                    "**Actor**: Approver",
+                    "**Story Type**: crud",
+                    "**Release**: R1",
+                    "",
+                    "As an approver, I inspect generated approval detail without a custom wrapper page.",
+                    "",
+                    "**Why this priority**: Generated detail remains in scope, but a separate custom page would add friction without new value.",
+                    "**Independent Test**: Open one approval from the queue and confirm the generated detail view shows the current approval data without losing queue context.",
+                    "",
+                    "**Acceptance Scenarios**:",
+                    "1. **Given** a pending approval exists **When** the approver opens it from the queue **Then** the generated detail view shows the current approval data clearly.",
+                    "",
+                    "**Edge Cases**:",
+                    "- the approval no longer exists and the generated detail view must fail truthfully",
+                    "",
+                    "Context / trigger: Approver opens generated approval detail from the queue.",
+                    "Preconditions: At least one approval is pending.",
+                    "Happy path: The approver opens the generated detail and confirms the live data.",
+                    "Alternate paths: The approver returns to the queue without losing context.",
+                    "Negative / validation paths: Missing approval detail blocks the view with a truthful error.",
+                    "Empty-state expectation: The queue still explains when no approvals are available.",
+                    "Permission constraints: Only assigned approvers can inspect generated approval detail.",
+                    "Audit / notification expectation: Viewing the generated detail does not emit a new audit event.",
+                    "Non-goals: Building a duplicate custom detail shell is out of scope.",
+                    "Required evidence: Screenshot plus live route proof.",
+                    "",
+                ]
+            )
+            write(repo_root / "runs/current/artifacts/product/user-stories.md", story_text)
+
+            trace_text = (repo_root / "runs/current/artifacts/product/traceability-matrix.md").read_text(encoding="utf-8")
+            trace_text += "| US-050 | C-004 | WF-003 | EV-004 | BR-004 | Approval | ui | none | N007 | pending, stale-link | approver can inspect generated approval detail | SD-004 | AC-004 | yes | yes | yes | product_manager |\n"
+            write(repo_root / "runs/current/artifacts/product/traceability-matrix.md", trace_text)
+
+            payload, issues = compile_product_scope_payload(repo_root)
+            self.assertEqual(issues, [])
+            us_050 = next(story for story in payload["required_story_reviews"] if story["story_id"] == "US-050")
+            self.assertEqual(us_050["page_ids"], [])
+            self.assertEqual(us_050["route_ids"], ["N007"])
+            self.assertTrue(us_050["ui_surface_required"])
+
     def test_frontend_route_coverage_fails_on_missing_required_route_and_wrong_cta(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
