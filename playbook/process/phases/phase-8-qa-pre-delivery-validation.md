@@ -11,6 +11,9 @@ CEO then performs a separate critical reviewer-facing pass over the final pack,
 screenshots, and delivery posture. That pass is not a formality and may reset
 delivery back to an earlier gate or phase when reviewer-facing quality is still
 misleading or below bar.
+When screenshots exist, that CEO pass should use the repo-local
+`skills/mui-ux-review/SKILL.md` review workflow instead of ad hoc screenshot
+commentary.
 
 ## Trigger
 

@@ -30,11 +30,20 @@ class ValidateDeliveryApprovalTests(unittest.TestCase):
                         "approved_by: ceo",
                         "approved_at: 2026-03-22T22:27:04+01:00",
                         "",
+                        "## Context",
+                        "Review target: final review pack, preview screenshots, QA screenshots, and live delivery posture.",
+                        "",
+                        "## Overall Verdict",
+                        "The reviewer-facing package is coherent and no unresolved UX/UI issues remain.",
+                        "",
                         "## Final Review Pack Review",
                         "Reviewed the reviewer-facing final pack, copied screenshots, and reviewer index critically.",
                         "",
                         "## UX/UI Critical Review",
                         "User-facing copy, guidance density, and reviewer-facing polish were challenged directly.",
+                        "",
+                        "## Priority Summary",
+                        "Critical: 0, High: 0, Medium: 0, Low: 0.",
                         "",
                         "## Findings",
                         "All issues resolved. No unresolved issues remain. No reset required.",
@@ -67,7 +76,10 @@ class ValidateDeliveryApprovalTests(unittest.TestCase):
 
             issues = collect_issues(repo_root)
             self.assertTrue(any("review_posture: critical" in issue["reason"] for issue in issues))
+            self.assertTrue(any("Context" in issue["reason"] for issue in issues))
+            self.assertTrue(any("Overall Verdict" in issue["reason"] for issue in issues))
             self.assertTrue(any("Final Review Pack Review" in issue["reason"] for issue in issues))
+            self.assertTrue(any("Priority Summary" in issue["reason"] for issue in issues))
             self.assertTrue(any("no unresolved issues remain" in issue["reason"] for issue in issues))
 
 

@@ -15,8 +15,11 @@ else:
 
 
 REQUIRED_APPROVAL_HEADINGS = (
+    "## Context",
+    "## Overall Verdict",
     "## Final Review Pack Review",
     "## UX/UI Critical Review",
+    "## Priority Summary",
     "## Findings",
     "## Decision",
 )

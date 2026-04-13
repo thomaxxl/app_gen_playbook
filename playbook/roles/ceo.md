@@ -54,6 +54,7 @@ The runtime directory contains:
 - [../summaries/process-core.md](../summaries/process-core.md)
 - [../summaries/roles/ceo.summary.md](../summaries/roles/ceo.summary.md)
 - [../process/read-sets/ceo-core.md](../process/read-sets/ceo-core.md)
+- [../../skills/mui-ux-review/SKILL.md](../../skills/mui-ux-review/SKILL.md)
 - [../../runs/current/artifacts/architecture/capability-profile.md](../../runs/current/artifacts/architecture/capability-profile.md)
 - [../../runs/current/artifacts/architecture/load-plan.md](../../runs/current/artifacts/architecture/load-plan.md)
 
@@ -161,10 +162,17 @@ The CEO role MUST:
   pack under `runs/current/evidence/final/`, and write
   `runs/current/orchestrator/delivery-approved.md` with an explicit
   `status: approved` metadata line
+- when preview or QA screenshots exist, load and apply
+  `../../skills/mui-ux-review/SKILL.md` as the default UX/UI critique lane for
+  the CEO delivery review instead of ad hoc screenshot commentary
 - treat the final review-pack pass as a deliberately severe reviewer-facing
   audit, not as a ceremonial signoff; challenge the screenshots, copied review
   artifacts, and visible UX copy as if they were the only materials an
   external reviewer would see
+- adapt the skill's review workflow and report structure into the CEO delivery
+  approval artifact: record context/assumptions, an overall verdict,
+  prioritized severity counts, and concrete findings tied to visible screen
+  regions and user goals
 - use direct, unambiguous blocking language when any issue remains; do not
   soften unresolved drift, UX/UI defects, misleading copy, or other delivery
   problems into advisory notes

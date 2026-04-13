@@ -109,4 +109,9 @@ skill, Playwright runtime, or browser runtime was missing, the operator must
 install or provision it before the final smoke run instead of skipping that
 gate.
 
+If CEO is reviewing captured preview or QA screenshots during the final
+delivery pass, the playbook SHOULD use the repo-local `mui-ux-review` skill as
+the default critique lane so the reviewer-facing UX/UI audit stays structured,
+severity-based, and concrete.
+
 If one layer works only because another layer guessed, the feature is not done.

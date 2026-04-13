@@ -34,6 +34,10 @@ Before successful delivery, CEO must wait for QA approval in
 `scripts/run_playbook.sh --ceo-delivery-validate`, validate `app/run.sh`
 booted the app successfully, and write
 `runs/current/orchestrator/delivery-approved.md`.
+When preview or QA screenshots exist, CEO must use
+`skills/mui-ux-review/SKILL.md` as the default critique lane for the final
+UX/UI review and reflect that structured audit in the delivery approval
+artifact.
 CEO-detected playbook/process feedback should be recorded in owned notes or
 evidence so the orchestrator can curate `runs/current/remarks.md`; ordinary
 unblock interventions belong in the owned evidence and runtime files.

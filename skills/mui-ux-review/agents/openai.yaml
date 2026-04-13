@@ -1,0 +1,4 @@
+interface:
+  display_name: "MUI UX Review"
+  short_description: "Audit MUI pages and suggest concrete fixes"
+  default_prompt: "Use $mui-ux-review to review this page or workflow, prioritize UX/UI issues, and recommend concrete Material UI improvements."

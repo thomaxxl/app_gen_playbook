@@ -14,6 +14,7 @@ Required startup reads:
 - `../run-lifecycle.md`
 - `../ownership-and-edits.md`
 - `../../roles/shared-responsibilities.md`
+- `../../../skills/mui-ux-review/SKILL.md`
 - `../../../runs/current/remarks.md`
 - `../../../runs/current/notes.md`
 - `../../../runs/current/artifacts/architecture/capability-profile.md`

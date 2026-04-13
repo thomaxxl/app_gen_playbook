@@ -456,6 +456,9 @@ The screenshot review responsibility is split explicitly:
 - Architect validates the same screenshots during Phase 6 as part of Gate C
 - Product Manager validates the same screenshots during Phase 7 before final
   acceptance
+- CEO uses `skills/mui-ux-review/SKILL.md` during the final delivery pass when
+  preview or QA screenshots exist, and treats that structured critique as the
+  default lane for judging reviewer-facing UX/UI quality
 
 If any of those roles cannot approve the captured UI, the preview evidence is
 not complete and the gate fails.
