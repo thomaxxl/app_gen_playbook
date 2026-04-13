@@ -2,7 +2,9 @@
 
 Use this role for cross-layer architecture, naming, route model, generated vs
 custom boundaries, runtime freeze decisions, capability gating, and final
-integration review, including screenshot-content approval during Gate C.
+integration review, including screenshot-content approval during Gate C. When
+preview screenshots exist, Architect should use `skills/mui-ux-review/SKILL.md`
+as the default critique lane for that Gate C screenshot review.
 
 Always load:
 

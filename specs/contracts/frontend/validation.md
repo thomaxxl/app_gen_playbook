@@ -454,6 +454,8 @@ The screenshot review responsibility is split explicitly:
 - Frontend validates that the captured surfaces rendered the intended visible
   content and records the first signoff in the manifest
 - Architect validates the same screenshots during Phase 6 as part of Gate C
+  and uses `skills/mui-ux-review/SKILL.md` as the default critique workflow
+  when preview captures exist
 - Product Manager validates the same screenshots during Phase 7 before final
   acceptance
 - CEO uses `skills/mui-ux-review/SKILL.md` during the final delivery pass when

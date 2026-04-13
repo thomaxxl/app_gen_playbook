@@ -71,12 +71,14 @@ class ValidateFrontendAdapterContractsTests(unittest.TestCase):
                 "playbook/roles/architect.md",
                 "specs/contracts/frontend/validation.md",
                 "playbook/process/phases/phase-3-ux-and-interaction-design.md",
+                "playbook/process/phases/phase-6-integration-review.md",
                 "skills/mui-db-admin-ux/SKILL.md",
             ):
                 write_file(repo_root / rel, "placeholder\n")
 
             issues = collect_ux_skill_issues(repo_root)
             self.assertTrue(any("skills/mui-db-admin-ux/SKILL.md" in issue["reason"] for issue in issues))
+            self.assertTrue(any("skills/mui-ux-review/SKILL.md" in issue["reason"] for issue in issues))
 
     def test_search_wrapper_validator_detects_legacy_avoid_package_note(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

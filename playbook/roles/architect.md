@@ -191,6 +191,11 @@ advanced MUI surface decisions for a database-driven frontend, the Architect
 MUST require the UX analysis defined by `../../skills/mui-db-admin-ux/SKILL.md`
 before accepting a generic CRUD layout or a non-standard UI exception.
 
+During Phase 6 screenshot review, when preview captures exist, the Architect
+MUST also load and apply `../../skills/mui-ux-review/SKILL.md` as the default
+critique workflow for the first real screenshot/content review rather than
+relying on ad hoc screenshot commentary.
+
 If a relationship is intentionally not public, that MUST be a documented SAFRS
 decision using ordinary SAFRS controls such as hidden relationships or
 relationship item-mode choices, not an implicit omission followed by a custom

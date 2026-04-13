@@ -76,6 +76,9 @@ readiness note in:
   `runs/current/evidence/ui-previews/`
 - use the repo-local `playwright-skill` as the default browser automation lane
   for that live verification and capture work
+- use the repo-local `mui-ux-review` skill as the default critique lane for
+  the first real screenshot/content review by Architect once preview captures
+  exist, instead of ad hoc screenshot commentary
 - when the generated app provides `npm run capture:ui-previews`, use that
   script through the Playwright skill as the canonical preview-capture path
   instead of inventing separate route-level screenshots
@@ -84,7 +87,8 @@ readiness note in:
 - validate the captured screenshots yourself as Architect and record
   `architect_validation: approved` in
   `runs/current/evidence/ui-previews/manifest.md` only after reviewing the
-  image content against the UX artifacts
+  image content against the UX artifacts through the structured
+  `skills/mui-ux-review/SKILL.md` workflow
 - write `runs/current/evidence/frontend-browser-proof.md` as the canonical
   browser-level proof record for the live launcher path
 - maintain `runs/current/evidence/ui-previews/manifest.md` so screenshot
@@ -99,6 +103,9 @@ readiness note in:
   and a review conclusion
 - record the reviewed user-facing surfaces and usability conclusion in
   `runs/current/evidence/frontend-usability.md`
+- carry the skill-driven review into the Architect evidence by recording
+  context/assumptions, an overall verdict, prioritized severity, and concrete
+  screenshot findings instead of only a loose approval note
 - verify rules across create/update/delete/reparent flows
 - verify empty/loading/error states
 - verify packaged route behavior when packaging is in scope

@@ -119,6 +119,7 @@ def collect_ux_skill_issues(repo_root: Path) -> list[dict[str, str]]:
             ],
             repo_root / "playbook" / "process" / "read-sets" / "architect-review-core.md": [
                 "skills/mui-db-admin-ux/SKILL.md",
+                "skills/mui-ux-review/SKILL.md",
             ],
             repo_root / "playbook" / "roles" / "frontend.md": [
                 "skills/mui-db-admin-ux/SKILL.md",
@@ -128,6 +129,7 @@ def collect_ux_skill_issues(repo_root: Path) -> list[dict[str, str]]:
             repo_root / "playbook" / "roles" / "architect.md": [
                 "skills/mui-db-admin-ux/SKILL.md",
                 "advanced MUI surface decisions",
+                "skills/mui-ux-review/SKILL.md",
             ],
             repo_root / "skills" / "mui-db-admin-ux" / "SKILL.md": [
                 "resource-view-strategy.md",
@@ -142,12 +144,17 @@ def collect_ux_skill_issues(repo_root: Path) -> list[dict[str, str]]:
                 "relationship-surface-plan.md",
                 "dashboard-data-plan.md",
                 "form-grouping-plan.md",
+                "skills/mui-ux-review/SKILL.md",
             ],
             repo_root / "playbook" / "process" / "phases" / "phase-3-ux-and-interaction-design.md": [
                 "resource-view-strategy.md",
                 "relationship-surface-plan.md",
                 "dashboard-data-plan.md",
                 "form-grouping-plan.md",
+            ],
+            repo_root / "playbook" / "process" / "phases" / "phase-6-integration-review.md": [
+                "skills/mui-ux-review/SKILL.md",
+                "first real screenshot/content review",
             ],
         },
         "missing frontend UX skill or planning contract input",
