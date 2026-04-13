@@ -81,14 +81,14 @@ EVIDENCE_PLACEHOLDER_MARKER = "starter_status: pending-review-evidence"
 
 
 def _normalize_reference_fidelity_text(text: str) -> str:
-    lowered = text.lower().replace("-", " ")
+    lowered = text.lower().replace("-", " ").replace("_", " ")
     return re.sub(r"\s+", " ", lowered).strip()
 
 
 def acceptance_records_reference_fidelity(text: str) -> bool:
     normalized = _normalize_reference_fidelity_text(text)
     required_markers = (
-        "this acceptance review explicitly records the reference fidelity decision for binding external ui references",
+        "explicitly records the reference fidelity decision for binding external ui references",
         "reference fidelity decision for binding external ui references: approved",
     )
     return all(marker in normalized for marker in required_markers)

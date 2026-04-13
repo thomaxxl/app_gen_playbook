@@ -231,6 +231,116 @@ class CheckCompletionTests(unittest.TestCase):
             kinds = {blocker["kind"] for blocker in blockers}
             self.assertNotIn("acceptance-missing-reference-fidelity", kinds)
 
+    def test_acceptance_reference_fidelity_check_accepts_underscore_gate_record(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / ".git").mkdir()
+            write_file(
+                repo_root / "playbook/routing/execution-scopes.yaml",
+                "\n".join(
+                    [
+                        "frontend-only:",
+                        "  active_roles:",
+                        "    - product_manager",
+                        "    - architect",
+                        "    - frontend",
+                        "    - qa",
+                        "  iterative-change-run:",
+                        "    active_phases:",
+                        "      - phase-I1-change-intake-and-triage",
+                        "      - phase-I6-integration-and-regression-review",
+                        "      - phase-I7-change-acceptance",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/orchestrator/run-status.json",
+                '{"status":"active","mode":"iterative-change-run","current_phase":"phase-I7-change-acceptance","change_id":"CR-1","scope_profile":"frontend-only"}\n',
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/classification.yaml",
+                "\n".join(
+                    [
+                        "kind: change",
+                        "scope_profile: frontend-only",
+                        "active_roles:",
+                        "  - product_manager",
+                        "  - architect",
+                        "  - frontend",
+                        "  - qa",
+                        "active_phases:",
+                        "  - phase-I1-change-intake-and-triage",
+                        "  - phase-I6-integration-and-regression-review",
+                        "  - phase-I7-change-acceptance",
+                    ]
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/external-references/manifest.json",
+                json.dumps(
+                    {
+                        "references": [
+                            {
+                                "category": "visual-ui",
+                                "fidelity": "mimic-look-and-feel",
+                                "source_path": "/tmp/sentient",
+                            }
+                        ]
+                    }
+                )
+                + "\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/candidate/artifacts/ux/reference-alignment.md",
+                "present\n",
+            )
+            write_file(
+                repo_root / "runs/current/changes/CR-1/verification/reference-fidelity-review.md",
+                "owner: qa\nphase: phase-6-integration-review\nstatus: approved\n",
+            )
+            write_file(
+                repo_root / "runs/current/artifacts/product/acceptance-review.md",
+                "\n".join(
+                    [
+                        "owner: product_manager",
+                        "phase: phase-I7-change-acceptance",
+                        "status: approved",
+                        "reference_fidelity_decision_for_binding_external_ui_references: approved",
+                        "",
+                        "# Acceptance Review",
+                        "",
+                        "This product acceptance review explicitly records the reference-fidelity decision for binding external UI references.",
+                        "",
+                        "- Exact gate record: `reference_fidelity_decision_for_binding_external_ui_references: approved`",
+                    ]
+                )
+                + "\n",
+            )
+
+            with patch("check_completion.required_run_artifact_paths", return_value=[]), patch(
+                "check_completion.collect_integration_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_acceptance_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_frontend_route_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_preview_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.collect_qa_review_coverage_issues", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_orm_safrs", return_value=[]
+            ), patch(
+                "check_completion.collect_final_review_pack_issues", return_value=[]
+            ), patch(
+                "check_completion.audit_backend_observer_runtime", return_value=[]
+            ):
+                blockers = collect_blockers(repo_root)
+
+            kinds = {blocker["kind"] for blocker in blockers}
+            self.assertNotIn("acceptance-missing-reference-fidelity", kinds)
+
     def test_backend_only_scope_skips_frontend_specific_completion_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

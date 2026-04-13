@@ -195,7 +195,7 @@ def write_required_phase6_evidence(repo_root: Path) -> None:
 
 
 class RecoverRunQueueTests(unittest.TestCase):
-    def test_collect_completion_blocker_needs_includes_story_review_and_frontend_route_blockers(self) -> None:
+    def test_collect_completion_blocker_needs_includes_story_review_frontend_route_and_search_review_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)
             (repo_root / ".git").mkdir()
@@ -237,6 +237,27 @@ class RecoverRunQueueTests(unittest.TestCase):
                     "reason": "integration review is missing Story Coverage row for US-007",
                 },
                 {
+                    "kind": "search-review-fallback-accepted",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/frontend-browser-proof.md",
+                    "reason": "frontend browser proof still accepts a search fallback posture (approved-with-frontend-fallbacks) instead of approved search relevance",
+                },
+                {
+                    "kind": "search-browser-proof-incomplete",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/frontend-browser-proof.md",
+                    "reason": "frontend browser proof must declare search_query_alignment_validation: approved for shipped custom search, found missing",
+                },
+                {
+                    "kind": "search-usability-review-incomplete",
+                    "owner": "architect",
+                    "phase": "phase-6-integration-review",
+                    "path": "runs/current/evidence/frontend-usability.md",
+                    "reason": "frontend usability review must declare search_relevance_validation: approved for shipped custom search, found missing",
+                },
+                {
                     "kind": "acceptance-review-coverage",
                     "owner": "product_manager",
                     "phase": "phase-7-product-acceptance",
@@ -270,6 +291,9 @@ class RecoverRunQueueTests(unittest.TestCase):
                     ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
                     ("architect", "phase-6-integration-review", "runs/current/evidence/ui-previews/manifest.md"),
                     ("architect", "phase-6-integration-review", "runs/current/artifacts/architecture/integration-review.md"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/frontend-browser-proof.md"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/frontend-browser-proof.md"),
+                    ("architect", "phase-6-integration-review", "runs/current/evidence/frontend-usability.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/artifacts/product/acceptance-review.md"),
                     ("product_manager", "phase-7-product-acceptance", "runs/current/evidence/final/review-index.md"),
                     ("qa", "phase-8-qa-pre-delivery-validation", "runs/current/evidence/qa-delivery-review.md"),
