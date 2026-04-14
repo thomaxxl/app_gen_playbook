@@ -34,6 +34,14 @@ details that need more precision than the global summary.
   stall intervention or an explicit operator request.
 - During normal execution, CEO MUST NOT be treated as an additional default
   participant in the phase pipeline.
+- Blocked self-handoffs and CEO/orchestrator recovery notes MAY include a
+  `## Required Scope` section with exact file paths or narrow globs needed for
+  that one repair turn.
+- When present, `Required Scope` temporarily extends only the addressed role's
+  runtime writable roots for that turn in addition to role-core writable
+  paths.
+- `Required Scope` MUST stay narrowly targeted and MUST NOT bypass global
+  forbidden-write zones such as `specs/**`, `templates/**`, or `examples/**`.
 - Any process an agent starts for a turn is part of that turn's responsibility.
   Agents MUST terminate servers, watchers, previews, or helper processes they
   started before moving the claimed inflight item into `processed/`.

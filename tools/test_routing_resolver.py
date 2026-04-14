@@ -908,6 +908,153 @@ class RoutingResolverTests(unittest.TestCase):
         self.assertIn("runs/current/artifacts/architecture/route-and-entry-model.md", writable)
         self.assertIn("runs/current/artifacts/architecture/data-sourcing-contract.md", writable)
 
+    def test_blocked_self_handoff_required_scope_extends_runtime_write_scope(self) -> None:
+        repo_root = self.build_repo()
+        headers = {
+            "from": "architect",
+            "to": "architect",
+            "topic": "validator-tooling-repair-write-scope-required",
+        }
+        sections = {
+            "gate status": "blocked",
+            "required scope": [
+                "tools/validators/coverage/compile_product_scope.py",
+                "runs/current/facts/**",
+            ],
+        }
+        message_path = repo_root / "runs/current/role-state/architect/inbox/blocked-repair.md"
+        self.write(
+            repo_root,
+            "runs/current/role-state/architect/inbox/blocked-repair.md",
+            "\n".join(
+                [
+                    "from: architect",
+                    "to: architect",
+                    "topic: validator-tooling-repair-write-scope-required",
+                    "",
+                    "## Gate Status",
+                    "- blocked",
+                    "",
+                    "## Required Scope",
+                    "- `tools/validators/coverage/compile_product_scope.py`",
+                    "- `runs/current/facts/**`",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "architect",
+            message_headers=headers,
+            message_sections=sections,
+        )
+
+        self.assertIn("tools/validators/coverage/compile_product_scope.py", writable)
+        self.assertIn("runs/current/facts/**", writable)
+        self.assertTrue(
+            is_allowed_change(
+                repo_root,
+                "architect",
+                "tools/validators/coverage/compile_product_scope.py",
+                [],
+                message_path=message_path,
+            )
+        )
+        self.assertTrue(
+            is_allowed_change(
+                repo_root,
+                "architect",
+                "runs/current/facts/product-scope.json",
+                [],
+                message_path=message_path,
+            )
+        )
+
+    def test_blocked_required_scope_allows_absolute_external_app_path_without_widening_app_scope(self) -> None:
+        repo_root = self.build_repo()
+        self.write(
+            repo_root,
+            "playbook/routing/role-core.yaml",
+            "\n".join(
+                [
+                    "architect:",
+                    "  always_load:",
+                    "    - playbook/summaries/global-core.md",
+                    "  writable:",
+                    "    - runs/current/role-state/architect/**",
+                    "    - app/README.md",
+                    "  cannot_write:",
+                    "    - app/**",
+                ]
+            )
+            + "\n",
+        )
+        self.write(repo_root, "app/reference/admin.yaml", "resources: {}\n")
+
+        local_app_root = repo_root / "app"
+        external_app_root = repo_root.parent / f"{repo_root.name}-workspace-app"
+        local_app_root.rename(external_app_root)
+        local_app_root.symlink_to(external_app_root, target_is_directory=True)
+        absolute_admin_path = (external_app_root / "reference" / "admin.yaml").resolve()
+
+        headers = {
+            "from": "architect",
+            "to": "architect",
+            "topic": "customers-demographic-admin-yaml-write-scope-required",
+        }
+        sections = {
+            "gate status": "blocked",
+            "required scope": [str(absolute_admin_path)],
+        }
+        message_path = repo_root / "runs/current/role-state/architect/inbox/admin-repair.md"
+        self.write(
+            repo_root,
+            "runs/current/role-state/architect/inbox/admin-repair.md",
+            "\n".join(
+                [
+                    "from: architect",
+                    "to: architect",
+                    "topic: customers-demographic-admin-yaml-write-scope-required",
+                    "",
+                    "## Gate Status",
+                    "- blocked",
+                    "",
+                    "## Required Scope",
+                    f"- `{absolute_admin_path}`",
+                ]
+            )
+            + "\n",
+        )
+
+        writable = resolve_writable_paths(
+            repo_root,
+            "architect",
+            message_headers=headers,
+            message_sections=sections,
+        )
+
+        self.assertIn("app/reference/admin.yaml", writable)
+        self.assertIn("app/**", resolve_forbidden_paths(repo_root, "architect"))
+        self.assertTrue(
+            is_allowed_change(
+                repo_root,
+                "architect",
+                "app/reference/admin.yaml",
+                [],
+                message_path=message_path,
+            )
+        )
+        self.assertFalse(
+            is_allowed_change(
+                repo_root,
+                "architect",
+                "app/frontend/src/App.tsx",
+                [],
+                message_path=message_path,
+            )
+        )
+
     def test_forbidden_paths_and_diff_validation_enforce_cannot_write(self) -> None:
         repo_root = self.build_repo()
 

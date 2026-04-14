@@ -395,6 +395,8 @@ def validate_message(repo_root: Path, runtime_role: str, message_path: Path) -> 
                     explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
                     explicit_phase=headers.get("phase"),
                     message_required_reads=required_reads,
+                    message_headers=headers,
+                    message_sections=sections,
                 )
             if any(path_matches_rule(output_path, rule) for rule in resolved_writable):
                 continue

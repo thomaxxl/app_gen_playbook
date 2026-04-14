@@ -15,7 +15,12 @@ from orchestrator_common import (
     relpath,
     resolve_repo_root,
 )
-from routing_resolver import resolve_forbidden_paths, resolve_read_packet, resolve_writable_paths
+from routing_resolver import (
+    resolve_forbidden_paths,
+    resolve_message_scoped_writable_paths,
+    resolve_read_packet,
+    resolve_writable_paths,
+)
 
 
 SQLITE_SUFFIXES = (
@@ -216,6 +221,7 @@ def emit_full_prompt(
     read_only_required_paths: list[str],
     sqlite_input_paths: list[str],
     forbidden_paths: list[str],
+    turn_specific_write_exceptions: list[str],
     canonical_outputs: list[str],
     skill_paths: list[str],
     priority_order: list[str],
@@ -231,6 +237,12 @@ def emit_full_prompt(
     print("\nAllowed writes:\n")
     for path in write_paths:
         print(f"- {path}")
+
+    if turn_specific_write_exceptions:
+        print("\nTurn-specific write exceptions:\n")
+        print("- These explicit paths override broader forbidden rules only for this turn.")
+        for path in turn_specific_write_exceptions:
+            print(f"- {path}")
 
     if sqlite_input_paths:
         print("\nSQLite input files (read-only, schema-first):\n")
@@ -322,6 +334,7 @@ def emit_short_prompt(
     read_only_required_paths: list[str],
     sqlite_input_paths: list[str],
     forbidden_paths: list[str],
+    turn_specific_write_exceptions: list[str],
     canonical_outputs: list[str],
     skill_paths: list[str],
     priority_order: list[str],
@@ -341,6 +354,12 @@ def emit_short_prompt(
     for path in write_paths:
         print(f"- {absolutize(repo_root, path)}")
     print("")
+    if turn_specific_write_exceptions:
+        print("Turn-specific write exceptions:")
+        print("- These explicit paths override broader forbidden rules only for this turn.")
+        for path in turn_specific_write_exceptions:
+            print(f"- {absolutize(repo_root, path)}")
+        print("")
     if sqlite_input_paths:
         print("SQLite input files (read-only, schema-first):")
         for path in sqlite_input_paths:
@@ -434,12 +453,20 @@ def main() -> int:
         explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
         explicit_phase=headers.get("phase"),
         message_required_reads=[item for item in sections.get("required reads", []) if isinstance(item, str)],
+        message_headers=headers,
+        message_sections=sections,
     )
     sqlite_input_paths = build_sqlite_input_paths(read_paths)
     write_paths = build_visible_write_paths(write_paths, sqlite_input_paths)
     canonical_outputs = filter_canonical_outputs(canonical_outputs, sqlite_input_paths)
     read_only_required_paths = build_read_only_required_paths(read_paths, write_paths)
     forbidden_paths = resolve_forbidden_paths(repo_root, args.runtime_role)
+    turn_specific_write_exceptions = resolve_message_scoped_writable_paths(
+        repo_root,
+        args.runtime_role,
+        headers,
+        sections,
+    )
     skill_paths = packet_skill_paths(packet)
     priority_order = packet_priority_order(packet)
     external_reference_lines = packet_external_reference_lines(packet)
@@ -456,6 +483,7 @@ def main() -> int:
             read_only_required_paths,
             sqlite_input_paths,
             forbidden_paths,
+            turn_specific_write_exceptions,
             canonical_outputs,
             skill_paths,
             priority_order,
@@ -474,6 +502,7 @@ def main() -> int:
             read_only_required_paths,
             sqlite_input_paths,
             forbidden_paths,
+            turn_specific_write_exceptions,
             canonical_outputs,
             skill_paths,
             priority_order,

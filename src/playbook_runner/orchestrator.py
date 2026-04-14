@@ -533,15 +533,22 @@ class Orchestrator:
 
     def clear_stale_runtime_operator_note(self) -> None:
         note_path = self.paths.operator_action_required_md
-        if self.config.runtime_env != "host" or not note_path.exists():
+        if not note_path.exists():
             return
         note_text = note_path.read_text(encoding="utf-8")
-        if "PLAYBOOK_RUNTIME_ENV=host" not in note_text and "host execution context" not in note_text:
+        host_runtime_note = self.config.runtime_env == "host" and (
+            "PLAYBOOK_RUNTIME_ENV=host" in note_text or "host execution context" in note_text
+        )
+        prereq_note = (
+            "Reason:\n- execution prereqs failed" in note_text
+            or "Execution environment preflight failed before run startup." in note_text
+        )
+        if not host_runtime_note and not prereq_note:
             return
         note_path.unlink()
         self.append_remark(
             "Cleared stale runtime operator block",
-            "Removed `runs/current/orchestrator/operator-action-required.md` after host-mode "
+            "Removed stale `runs/current/orchestrator/operator-action-required.md` after "
             "execution prereqs passed in the current runner context.",
         )
 
@@ -874,6 +881,8 @@ class Orchestrator:
             message_required_reads=required_reads,
             explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
             explicit_phase=headers.get("phase"),
+            message_headers=headers,
+            message_sections=sections,
         )
 
         add_dirs: list[Path] = []
@@ -903,6 +912,8 @@ class Orchestrator:
             message_required_reads=required_reads,
             explicit_task_bundle=headers.get("taskbundle") or headers.get("task_bundle"),
             explicit_phase=headers.get("phase"),
+            message_headers=headers,
+            message_sections=sections,
         )
 
         write_dirs: list[Path] = []
@@ -1187,6 +1198,8 @@ class Orchestrator:
             message_required_reads=required_reads,
             explicit_task_bundle=explicit_task_bundle,
             explicit_phase=explicit_phase,
+            message_headers=headers,
+            message_sections=sections,
         )
         forbidden_rules = resolve_forbidden_paths(self.config.repo_root, runtime_role)
         add_dirs = self.resolve_turn_add_dirs(runtime_role, message_path)

@@ -23,6 +23,13 @@ PLACEHOLDER_PREFIXES = (
     "fill ",
     "(none)",
 )
+MESSAGE_SCOPED_WRITE_PREFIXES = (
+    "runs/current/",
+    "app/",
+    "playbook/",
+    "scripts/",
+    "tools/",
+)
 DEFAULT_CHANGE_ARTIFACT_RULES = {
     "product_manager": (
         "runs/current/artifacts/product/**",
@@ -392,6 +399,72 @@ def _clean_declared_paths(values: list[str]) -> list[str]:
             continue
         cleaned.append(normalized)
     return cleaned
+
+
+def _normalize_message_scoped_path(repo_root: Path, value: str) -> str:
+    match = re.search(r"`([^`]+)`", value)
+    normalized = match.group(1).strip() if match else value.strip().strip("`")
+    if not normalized:
+        return ""
+
+    if normalized.startswith(MESSAGE_SCOPED_WRITE_PREFIXES):
+        return normalized
+
+    candidate = Path(normalized)
+    if candidate.is_absolute():
+        try:
+            normalized = relpath(candidate, repo_root)
+        except ValueError:
+            app_root = (repo_root / "app").resolve()
+            resolved_candidate = candidate.resolve()
+            try:
+                normalized = f"app/{resolved_candidate.relative_to(app_root).as_posix()}"
+            except ValueError:
+                return ""
+        return normalized if normalized.startswith(MESSAGE_SCOPED_WRITE_PREFIXES) else ""
+
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized if normalized.startswith(MESSAGE_SCOPED_WRITE_PREFIXES) else ""
+
+
+def resolve_message_scoped_writable_paths(
+    repo_root: Path,
+    runtime_role: str,
+    headers: Mapping[str, Any] | None,
+    sections: Mapping[str, Any] | None,
+) -> list[str]:
+    if not isinstance(headers, Mapping) or not isinstance(sections, Mapping):
+        return []
+
+    receiver = str(headers.get("to") or headers.get("receiver") or "").strip().lower()
+    if receiver and receiver != runtime_role:
+        return []
+
+    sender = str(headers.get("from") or headers.get("sender") or "").strip().lower()
+    gate_status = str(sections.get("gate status", "")).strip().lower()
+    if gate_status in {"unspecified", ""}:
+        gate_status = ""
+    if gate_status and gate_status != "blocked":
+        return []
+
+    if sender not in {runtime_role, "orchestrator", "ceo"}:
+        return []
+
+    required_scope = sections.get("required scope", [])
+    if isinstance(required_scope, str):
+        scope_values = [required_scope]
+    elif isinstance(required_scope, list):
+        scope_values = [item for item in required_scope if isinstance(item, str)]
+    else:
+        return []
+
+    scoped_paths = [
+        _normalize_message_scoped_path(repo_root, value)
+        for value in scope_values
+        if _normalize_message_scoped_path(repo_root, value)
+    ]
+    return _clean_declared_paths(scoped_paths)
 
 
 def _parse_markdown_path_list(path: Path) -> list[str]:
@@ -888,6 +961,8 @@ def resolve_writable_paths(
     explicit_task_bundle: str | None = None,
     explicit_phase: str | None = None,
     message_required_reads: list[str] | None = None,
+    message_headers: Mapping[str, Any] | None = None,
+    message_sections: Mapping[str, Any] | None = None,
 ) -> list[str]:
     role_config = resolve_role_config(repo_root, runtime_role)
     packet = resolve_read_packet(
@@ -910,6 +985,8 @@ def resolve_writable_paths(
             role_load_payload,
             bundle_payload=bundle_payload if isinstance(bundle_payload, dict) else None,
         )
+
+    writable.extend(resolve_message_scoped_writable_paths(repo_root, runtime_role, message_headers, message_sections))
 
     writable.append("runs/current/role-state/*/inbox/*.md")
     for role_state_dir in role_state_dir_names(runtime_role):

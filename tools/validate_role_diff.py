@@ -15,6 +15,7 @@ from orchestrator_common import (
     write_json,
 )
 from routing_resolver import resolve_forbidden_paths, resolve_writable_paths
+from routing_resolver import resolve_message_scoped_writable_paths
 
 
 def allowed_prefixes(
@@ -26,6 +27,8 @@ def allowed_prefixes(
     required_reads: list[str] = []
     explicit_task_bundle: str | None = None
     explicit_phase: str | None = None
+    headers: dict[str, str] = {}
+    sections: dict[str, list[str] | str] = {}
 
     if message_path is not None and message_path.exists():
         message_text = message_path.read_text(encoding="utf-8")
@@ -41,7 +44,23 @@ def allowed_prefixes(
         explicit_task_bundle=explicit_task_bundle,
         explicit_phase=explicit_phase,
         message_required_reads=required_reads,
+        message_headers=headers,
+        message_sections=sections,
     )
+
+
+def scoped_write_exceptions(
+    repo_root: Path,
+    runtime_role: str,
+    *,
+    message_path: Path | None = None,
+) -> list[str]:
+    if message_path is None or not message_path.exists():
+        return []
+    message_text = message_path.read_text(encoding="utf-8")
+    headers = parse_message_headers(message_text)
+    sections = parse_message_sections(message_text, headers=headers)
+    return resolve_message_scoped_writable_paths(repo_root, runtime_role, headers, sections)
 
 
 def ignored_prefixes(ignore_runtime_roles: list[str]) -> list[str]:
@@ -96,6 +115,10 @@ def is_allowed_change(
     if relative_path.startswith("runs/current/role-state/") and relative_path.endswith(".md"):
         if "/inbox/" in relative_path:
             return True
+
+    exception_rules = scoped_write_exceptions(repo_root, runtime_role, message_path=message_path)
+    if any(path_matches_rule(relative_path, rule) for rule in exception_rules):
+        return True
 
     forbidden_prefixes = (
         list(forbidden_write_rules)

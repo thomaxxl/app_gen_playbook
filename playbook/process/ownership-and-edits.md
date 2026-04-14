@@ -37,6 +37,14 @@ Rules:
 - `playbook/routing/role-core.yaml` is the canonical routing manifest for
   role startup and writable targets
 - this file is the canonical ownership and edit-policy reference
+- blocked self-handoffs and CEO/orchestrator recovery notes MAY declare a
+  `## Required Scope` section when a single repair turn needs narrow shared
+  tooling, fact-generation, or runtime-path writes outside the receiver's
+  steady-state role-core surface
+- `Required Scope` paths extend only that addressed turn's writable roots in
+  addition to role-core writable targets; they MUST use exact file paths or
+  narrow globs and MUST NOT override forbidden zones such as `specs/**`,
+  `templates/**`, or `examples/**`
 - non-owning roles must request changes through inbox handoff unless
   ownership is explicitly delegated
 - `runs/current/remarks.md` and `runs/current/notes.md` are shared run-level
